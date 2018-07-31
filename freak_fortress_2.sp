@@ -7283,7 +7283,7 @@ public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MA
 			return Plugin_Changed;
 		}
 
-		if(KvGetNum(view_as<Handle>(GetArrayCell(bossesArray, character[boss])), "block voice", 0))
+		if(character[boss]<GetArraySize(bossesArray) && KvGetNum(view_as<Handle>(GetArrayCell(bossesArray, character[boss])), "block voice", 0))
 		{
 			return Plugin_Stop;
 		}
