@@ -631,7 +631,7 @@ public Action Timer_RemoveEntity(Handle timer, int entid)
 	int entity=EntRefToEntIndex(entid);
 	if(IsValidEntity(entity) && entity>MaxClients)
 	{
-		RemoveEntity(entity);
+		AcceptEntityInput(entity, "Kill");
 	}
 }
 
