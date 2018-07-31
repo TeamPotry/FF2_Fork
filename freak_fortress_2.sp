@@ -137,7 +137,6 @@ ConVar cvarPreroundBossDisconnect;
 
 ArrayList bossesArray;
 ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
-ArrayList voicesArray;       // TODO: Rename this or remove it in favor of something else
 ArrayList subpluginArray;
 ArrayList chancesArray;
 
@@ -460,7 +459,6 @@ public void OnPluginStart()
 
 	bossesArray=CreateArray();
 	bossesArrayShadow=CreateArray();
-	voicesArray=CreateArray();
 
 	char oldVersion[64];
 	cvarVersion.GetString(oldVersion, sizeof(oldVersion));
@@ -933,7 +931,6 @@ public void LoadCharacter(const char[] characterName)
 	char extensions[][]={".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd"};
 	kv.SetString("filename", characterName);
 	kv.GetString("name", config, sizeof(config));
-	PushArrayCell(voicesArray, kv.GetNum("block voice", 0));
 	kv.GotoFirstSubKey();
 
 	while(kv.GotoNextKey())
@@ -7286,7 +7283,7 @@ public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MA
 			return Plugin_Changed;
 		}
 
-		if(GetArrayCell(voicesArray, character[boss]))
+		if(KvGetNum(view_as<Handle>(GetArrayCell(bossesArray, character[boss])), "block voice", 0))
 		{
 			return Plugin_Stop;
 		}
