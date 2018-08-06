@@ -34,9 +34,11 @@ public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
     return Plugin_Continue;
 }
 
-public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
+public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool& result)
 {
-    if(FF2_GetBossIndex(client) != -1) {
-        FF2_SetBossCharge(FF2_GetBossIndex(client), 0, 100.0); // TODO: 최대 분노량 조절
-    }
+	if(FF2_GetBossIndex(client) != -1) {
+		FF2_SetBossCharge(FF2_GetBossIndex(client), 0, 100.0); // TODO: 최대 분노량 조절
+	}
+
+	return Plugin_Continue;
 }
