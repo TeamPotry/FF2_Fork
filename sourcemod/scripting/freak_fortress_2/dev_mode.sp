@@ -36,7 +36,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
 
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool& result)
 {
-	if(FF2_GetBossIndex(client) != -1) {
+	if(g_bDEVmode && FF2_GetBossIndex(client) != -1) {
 		FF2_SetBossCharge(FF2_GetBossIndex(client), 0, 100.0); // TODO: 최대 분노량 조절
 	}
 
