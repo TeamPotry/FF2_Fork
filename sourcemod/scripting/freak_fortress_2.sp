@@ -839,51 +839,47 @@ public void FindCharacters()
 
 stock void ParseChangelog()
 {
+	KeyValues kv=LoadChangelog();
+	if(kv == null)	return;
+
+	changelogMenu=CreateMenu(Handler_ChangelogMenu);
+	changelogMenu.SetTitle("%t", "Changelog");
+
+	int id;
+	if(kv.GotoFirstSubKey())
+	{
+		char version[64], temp[70];
+		do
+		{
+			kv.GetSectionName(version, sizeof(version));
+			kv.GetSectionSymbol(id);
+			Format(temp, sizeof(temp), "%i", id);
+			changelogMenu.AddItem(temp, version);
+		}
+		while(kv.GotoNextKey());
+
+		delete kv;
+	}
+	else
+	{
+		LogError("[FF2] Changelog is empty!");
+	}
+}
+
+stock KeyValues LoadChangelog()
+{
 	char changelog[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, changelog, sizeof(changelog), "%s/%s", FF2_SETTINGS, CHANGELOG);
 	if(!FileExists(changelog))
 	{
 		LogError("[FF2] Changelog %s does not exist!", changelog);
-		return;
+		return null;
 	}
 
 	KeyValues kv=new KeyValues("Changelog");
 	kv.ImportFromFile(changelog);
 
-	changelogMenu=CreateMenu(Handler_ChangelogMenu);
-	changelogMenu.SetTitle("%t", "Changelog");
-
-	int i, j;
-	if(kv.GotoFirstSubKey())
-	{
-		char version[64], text[256], temp[70];
-		do
-		{
-			kv.GetSectionName(version, sizeof(version));
-			Format(temp, sizeof(temp), "%i", i);
-			changelogMenu.AddItem(temp, version, ITEMDRAW_DISABLED);
-			i++;
-
-			if(kv.GotoFirstSubKey(false))
-			{
-				j=0;
-				do
-				{
-					kv.GetString(NULL_STRING, text, sizeof(text));
-					Format(temp, sizeof(temp), "%s %i", version, j);
-					changelogMenu.AddItem(temp, text, ITEMDRAW_DISABLED);
-					j++;
-				}
-				while(kv.GotoNextKey(false));
-				kv.GoBack();
-			}
-		}
-		while(kv.GotoNextKey());
-	}
-	else
-	{
-		LogError("[FF2] Changelog %s is empty!", changelog);
-	}
+	return kv;
 }
 
 public void LoadCharacter(const char[] characterName)
@@ -6981,7 +6977,36 @@ public int Handler_FF2Panel(Menu menu, MenuAction action, int client, int select
 
 public int Handler_ChangelogMenu(Menu menu, MenuAction action, int client, int selection)
 {
-	//noop
+	if(IsValidClient(client) && action==MenuAction_Select)
+	{
+		KeyValues kv=LoadChangelog();
+		Menu logMenu=new Menu(Handler_Temp);
+		int id;
+		char infoBuf[8], text[256], temp[32];
+		menu.GetItem(selection, infoBuf, 8, id, temp, sizeof(temp));
+
+		id=StringToInt(infoBuf);
+		kv.JumpToKeySymbol(id);
+		kv.GetSectionName(text, sizeof(text));
+		logMenu.SetTitle(text);
+		logMenu.ExitButton=true;
+
+		if(kv.GotoFirstSubKey(false))
+		{
+			do
+			{
+				kv.GetString(NULL_STRING, text, sizeof(text));
+				logMenu.AddItem(temp, text, ITEMDRAW_DISABLED);
+			}
+			while(kv.GotoNextKey(false));
+		}
+		logMenu.Display(client, MENU_TIME_FOREVER);
+	}
+}
+
+public int Handler_Temp(Menu menu, MenuAction action, int client, int selection)
+{
+	// Nop
 }
 
 public Action Command_ShowChangelog(int client, int args)
