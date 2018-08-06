@@ -7,7 +7,7 @@ public Plugin myinfo=
 	name="Freak Fortress 2: Developer Mode",
 	author="Nopied",
 	description="FF2: Abilities test.",
-	version=PLUGIN_VERSION,
+	version="2(1.0)",
 };
 
 bool g_bDEVmode = false;
@@ -34,9 +34,9 @@ public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
     return Plugin_Continue;
 }
 
-public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
+public void OnPlayerRunCmdPost(int client, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
 {
-    if(g_bDEVmode) {
-      FF2_SetBossCharge(boss, 0, 100.0); // TODO: 최대 분노량 조절
+    if(FF2_GetBossIndex(client) != -1) {
+        FF2_SetBossCharge(FF2_GetBossIndex(client), 0, 100.0); // TODO: 최대 분노량 조절
     }
 }
