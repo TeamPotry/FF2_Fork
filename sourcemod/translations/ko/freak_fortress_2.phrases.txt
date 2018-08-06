@@ -157,7 +157,7 @@
 	"Points Earned"
 	{
 		"#format"	"{1:i}"
-		"ko"		"{1} 스코어를 흭득하셨습니다."
+		"ko"		"{1} 대기열 포인트를 흭득하셨습니다."
 	}
 	"Boss Victory"
 	{
