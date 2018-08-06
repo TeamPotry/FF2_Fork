@@ -1,0 +1,356 @@
+"Phrases"
+{
+	"More Players Needed"
+	{
+		"en"		"Freak Fortress 2 is currently disabled.  More players are required."
+	}
+	"Type ff2 to Open Menu"
+	{
+		"en"		"Type {olive}/ff2{default} in chat to open the menu"
+	}
+	"Wait for Health Value"
+	{
+		"#format"	"{1:i},{2:s}"
+		"en"		"You cannot check the boss' health right now. Wait {1} more second(s).  The last known health value was {2}."
+	}
+	"Damage Dealt"
+	{
+		"#format"	"{1:i}"
+		"en"		"Damage dealt by you - {1}"
+	}
+	"Point Unlocked"
+	{
+		"#format"	"{1:i}"
+		"en"		"Only {1} player(s) left, the control point has been unlocked!"
+	}
+	"Top 3"
+	{
+		"en"		"Most damage dealt by"
+	}
+	"Ubercharge"
+	{
+		"en"		"Ubercharge rate"
+	}
+	"Boss Lives Left"
+	{
+		"#format" "{1:i},{2:i}"
+		"en"	"{1} out of {2} lives left"
+	}
+	"Activate Rage"
+	{
+		"en"		"Call for medic to activate your \"RAGE\" ability!"
+	}
+	"Rage Meter"
+	{
+		"#format"	"{1:i}"
+		"en"		"Rage is {1} percent ready"
+	}
+	"Super Duper Jump"
+	{
+		"en"		"Super Duper Jump is ready!"
+	}
+	"Teleportation Charge"
+	{
+		"#format"	"{1:i}"
+		"en"		"Teleportation is {1} percent ready. When at 100 percent look up and stand up"
+	}
+	"Super Jump Charge"
+	{
+		"#format"	"{1:i}"
+		"en"		"Super Jump charge is {1} percent. Look upwards and stand up for jump"
+	}
+	"Teleportation Cooldown"
+	{
+		"#format"	"{1:i}"
+		"en"		"Teleportation will be available in {1} second(s)"
+	}
+	"Super Jump Cooldown"
+	{
+		"#format"	"{1:i}"
+		"en"		"Super Jump will be available in {1} second(s)"
+	}
+	"Scout Advice"
+	{
+		"en"		"The Crit-a-Cola grants crits instead of minicrits.\nThe Fan O' War removes 5%% rage on hit.\nPistols gain minicrits.\nThe Candy Cane drops a health pack on hit."
+	}
+	"Soldier Advice"
+	{
+		"en"		"The Battalion's Backup fills its meter when hit.  Damage is heavily reduced to nearby players while active.\nThe Half-Zatoichi heals 35HP on hit, overheals to +25, and honorbound is removed on hit.\nBoots reduce fall damage and Mantreads create greater rocket jumps.\nAll guns minicrit Boss in midair (Direct Hit gets crits), and the Reserve Shooter has faster weapon switch and a small damage buff.\nAir Strike gains an extra shot every 200 damage."
+	}
+	"Pyro Advice"
+	{
+		"en"		"Postal Pummeler and skins uses stats of Fire Axe.\nThe Flare Gun is replaced by the Mega Detonator.\nAirblasting the boss builds rage and lengthens the Vagineer's uber."
+	}
+	"Demo Advice"
+	{
+		"en"		"The shields block one hit from the Boss.\nEyelander gains heads on hit.\nThe Tide Turner recharges if you hit the boss.\nThe Half-Zatoichi heals 35HP on hit and can overheal to +25. Honorbound is removed on hit."
+	}
+	"Heavy Advice"
+	{
+		"en"		"Natascha and the KGB are replaced with the\nMinigun and Fists, respectively.\nThe Gloves of Running are quite quick but cause you to lose more health.\nThe Holiday Punch will remove any stun on you if you hit Boss while stunned."
+	}
+	"Engineer Advice"
+	{
+		"en"		"All maps only have small ammo packs.\nThe Frontier Justice gains crits only while your sentry is targeting the Boss."
+	}
+	"Medic Advice"
+	{
+		"en"		"Your medigun is a combination of the Medigun, Kritzkrieg, and Quick-Fix. Charge starts at 40 percent and lasts for 150 percent after activation.\nSyringe Gun: on hit: +5%% ubercharge, has Overdose's speed effect.\nCrossbow: Always crits, +150%% damage, +10%% uber on hit."
+	}
+	"Sniper Advice"
+	{
+		"en"		"All of your weapons have critical hits.\nJarate removes 8%% rage.\nBack-equipped weapons are replaced with SMG.\nDefault Sniper Rifle causes Boss to glow. Glow time scales with charge."
+	}
+	"Spy Advice"
+	{
+		"en"		"Backstab does about 10 percent of Boss's max health.\nThe Cloak and Dagger is replaced with the normal watch.\nAll revolvers minicrit.\nYour Eternal Reward/Wanga Prick backstabs will disguise you instantly.\nKunai backstabs will give you a health bonus."
+	}
+	"Melee Advice"
+	{
+		"en"		"All melee weapons (except the Spy knives) deal critical hits.\nUse /ff2 menu to disable these notifications."
+	}
+	"Boss Queue"
+	{
+		"en"		"Boss Queue"
+	}
+	"What's Up"
+	{
+		"en"		"What's up?"
+	}
+	"Observe Health Value"
+	{
+		"en"		"Investigate the boss's current health level (/ff2_hp)"
+	}
+	"FF2 Help"
+	{
+		"en"		"FF2 help (/ff2_help)."
+	}
+	"What's New in FF2"
+	{
+		"en"		"What's new? (/ff2_changelog)."
+	}
+	"View Queue Points"
+	{
+		"en"		"Queue points"
+	}
+	"Exit Menu"
+	{
+		"en"		"Exit"
+	}
+	"FF2 Objective"
+	{
+		"en"		"===Freak Fortress 2===\nOne (or more) players become one of the Bosses.\nThe other players have to defeat them."
+	}
+	"Changelog"
+	{
+		"en"		"Freak Fortress 2 Changelog"
+	}
+	"Class Changes"
+	{
+		"en"		"Changes to my class in FF2 (/ff2_classinfo)"
+	}
+	"Total Damage Dealt"
+	{
+		"#format"	"{1:i}"
+		"en"		"You dealt {1} damage in this round"
+	}
+	"Points Earned"
+	{
+		"#format"	"{1:i}"
+		"en"		"You earned {1} points in this round"
+	}
+	"Boss Victory"
+	{
+		"en"		"Congratulations!  You won!"
+	}
+	"Boss Defeat"
+	{
+		"en"		"Oh no, you lost!  Don't worry, there's always next time"
+	}
+	"Boss Info"
+	{
+		"#format"	"{1:N},{2:s},{3:i},{4:s}"
+		"en"		"{1} became\n {2}\n with {3}{4} health"
+	}
+	"Boss Current Health"
+	{
+		"#format"	"{1:s},{2:i},{3:i},{4:s}"
+		"en"		"{1}'s current health is {2} of {3}{4}"
+	}
+	"Boss Win Final Health"
+	{
+		"#format" "{1:s},{2:N},{3:i},{4:i},{5:s}"
+		"en"	"{1} ({2}) won with {3} out of {4}{5} hp left"
+	}
+	"Vote for Character Set"
+	{
+		"en"		"Please vote for the character set for the next map."
+	}
+	"Your Queue Points"
+	{
+		"#format"	"{1:i}"
+		"en"		"You have {1} queue point(s)."
+	}
+	"Reset Queue Points"
+	{
+		"en"		"Set to 0"
+	}
+	"Reset Queue Points Confirmation"
+	{
+		"en"		"Do you really want to set your queue points to 0?"
+	}
+	"Reset Player's Queue Points"
+	{
+		"#format"	"{1:N}"
+		"en"		"Do you really want to set {1}'s queue points to 0?"
+	}
+	"Reset Queue Points Done"
+	{
+		"en"		"Now you have {olive}0{default} queue points"
+	}
+	"Reset Player's Points Done"
+	{
+		"#format"	"{1:N}"
+		"en"		"Now {olive}{1}{default} has {olive}0{default} queue points"
+	}
+	"Queue Points Reset by Admin"
+	{
+		"#format"	"{1:N}"
+		"en"		"{olive}{1}{default} reset your queue points to {olive}0{default}"
+	}
+	"Next Boss"
+	{
+		"en"		"You will become the Boss soon. Type {olive}/ff2_next{default} to make sure."
+	}
+	"Arena Rounds Left"
+	{
+		"#format"	"{1:i}"
+		"en"		"Waiting for players to finish loading.  FF2 will start in {1} more rounds"
+	}
+	"FF2 Music"
+	{
+		"#format"	"{1:s}"
+		"en"		"Freak Fortress 2 Boss's music is now {1}"
+	}
+	"FF2 Voice"
+	{
+		"#format"	"{1:s}"
+		"en"		"FF2 monologues are now {1}"
+	}
+	"FF2 Voice 2"
+	{
+		"en"		"Other sounds will be playing, but very quietly"
+	}
+	"Toggle Music"
+	{
+		"en"		"Toggle music (/ff2_music)"
+	}
+	"Toggle Monologue"
+	{
+		"en"		"Toggle monologues (/ff2_voice)"
+	}
+	"Toggle Class Changes"
+	{
+		"en"		"Toggle info about class changes in FF2"
+	}
+	"FF2 Class Info"
+	{
+		"#format"	"{1:s}"
+		"en"		"Info about class changes in FF2 is now {1}"
+	}
+	"Last FF2 Update"
+	{
+		"#format"	"{1:s}"
+		"en"		"Type {olive}/ff2_changelog{default} to view the {olive}{1}{default} changelog."
+	}
+	"Charge Status"
+	{
+		"#format"	"{1:i}"
+		"en"		"Charge is {1} percent ready. When at 100 percent let go of the charge button."
+	}
+	"Character Set Next Map"
+	{
+		"#format"	"{1:s},{2:s}"
+		"en"		"The character set for {1} will be {2}."
+	}
+	"Ability uses Reload"
+	{
+		"en"		"Press reload to use ability!"
+	}
+	"Ability uses Right Mouse"
+	{
+		"en"		"Press right mouse to use ability!"
+	}
+	"Boss with Multiple Lives Left"
+	{
+		"#format"	"{1:s},{2:i}"
+		"en"		"{1} lost a life! There are {2} more!"
+	}
+	"Boss with 1 Life Left"
+	{
+		"#format"	"{1:s}"
+		"en"		"{1} lost a life! There is 1 more!"
+	}
+	"Seeldier Rage Message"
+	{
+		"#format"	"{1:s}"
+		"en"		"Now you are {1}'s minion! Go attack the other team!"
+	}
+	"VSH and FF2 Group"
+	{
+		"en"		"VS Saxton Hale/Freak Fortress 2 group: {olive}http://steamcommunity.com/groups/vssaxtonhale{default}"
+	}
+	"FF2 Contributors"
+	{
+		"#format"	"{1:s}"
+		"en"		"=== Freak Fortress 2 v{1} (based on VS Saxton Hale Mode by {olive}RainBolt Dash{default} and {olive}FlaminSarge{default}) ==="
+	}
+	"Boss Suicide Denied"
+	{
+		"en"	"You are not allowed to suicide as the boss!"
+	}
+	"Boss Suicide Pre-round"
+	{
+		"en"	"You are not allowed to suicide before the round starts!"
+	}
+	"Boss Disconnected"
+	{
+		"#format" "{1:N},{2:N}"
+		"en"	"{1} has disconnected and now {2} is the new boss!"
+	}
+	"Replace Disconnected Boss"
+	{
+		"en"	"Surprise! You are now the boss!"
+	}
+	"Backstab"
+	{
+		"en"	"You just backstabbed the boss!"
+	}
+	"Backstabbed"
+	{
+		"en"	"You just got backstabbed!"
+	}
+	"Market Gardener"
+	{
+		"en"	"You just market-gardened the boss!"
+	}
+	"Market Gardened"
+	{
+		"en"	"You just got market-gardened!"
+	}
+	"Detonations Left"
+	{
+		"#format"	"{1:i}"
+		"en"		"You have {1} detonations left!"
+	}
+	"Spectator Damage Dealt"
+	{
+		"#format"	"{1:N},{2:i}"
+		"en"		"{1}'s Damage: {2}"
+	}
+	"Your Damage Dealt"
+	{
+		"#format"	"{1:i}"
+		"en"		"Damage: {1}"
+	}
+}
