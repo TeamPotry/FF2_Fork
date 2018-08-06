@@ -1,0 +1,356 @@
+"Phrases"
+{
+	"More Players Needed"
+	{
+		"ko"		"Freak Fortress 2가 현재 비활성화 상태입니다. 즐기시기 위해서는 플레이어가 더 필요합니다."
+	}
+	"Type ff2 to Open Menu"
+	{
+		"ko"		"{olive}/ff2{default} 명령어를 채팅에 입력하여 메뉴를 여실 수 있습니다."
+	}
+	"Wait for Health Value"
+	{
+		"#format"	"{1:i},{2:s}"
+		"ko"		"{1}초 후에 다시 확인하실 수 있습니다. 가장 최근에 확인한 체력: {2}."
+	}
+	"Damage Dealt"
+	{
+		"#format"	"{1:i}"
+		"ko"		"내 피해량: {1}"
+	}
+	"Point Unlocked"
+	{
+		"#format"	"{1:i}"
+		"ko"		"{1}명만 남았을 경우, 점령 지점이 열리게 됩니다!"
+	}
+	"Top 3"
+	{
+		"ko"		"피해를 가장 많이 입혀준 플레이어들"
+	}
+	"Ubercharge"
+	{
+		"ko"		"우버차지"
+	}
+	"Boss Lives Left"
+	{
+		"#format" "{1:i},{2:i}"
+		"ko"	"라이프: {1} / {2}"
+	}
+	"Activate Rage"
+	{
+		"ko"		"메딕을 불러 \"분노\" 능력을 사용하세요!"
+	}
+	"Rage Meter"
+	{
+		"#format"	"{1:i}"
+		"ko"		"분노: {1}%%"
+	}
+	"Super Duper Jump"
+	{
+		"ko"		"긴급 슈퍼점프가 준비되었습니다!"
+	}
+	"Teleportation Charge"
+	{
+		"#format"	"{1:i}"
+		"ko"		"텔레포트: {1} / 100 \n위를 보고 버튼을 때면 발동"
+	}
+	"Super Jump Charge"
+	{
+		"#format"	"{1:i}"
+		"ko"		"슈퍼점프: {1} / 100 \n위를 보고 버튼을 때면 발동"
+	}
+	"Teleportation Cooldown"
+	{
+		"#format"	"{1:i}"
+		"ko"		"텔레포트 사용 대기시간: {1}초"
+	}
+	"Super Jump Cooldown"
+	{
+		"#format"	"{1:i}"
+		"ko"		"슈퍼점프 사용 대기시간: {1}초"
+	}
+	"Scout Advice"
+	{
+		"ko"		"훅가콜라는 소형 치명타 대신 치명타를 부여받습니다.\n죽음의 부채는 적중 시 보스의 분노를 5%% 감소합니다.\n권총은 소형 치명타를 부여받습니다.\n지팡이 사탕이 적중 시 치료제를 떨굽니다."
+	}
+	"Soldier Advice"
+	{
+		"ko"		"부대지원은 내가 피격당할 때도 게이지를 채웁니다. 버프는 내 가까운 모든 아군에게 강한 데미지 감소를 부여합니다.\n부츠는 낙하 데미지를 감소시키고 보스를 밟을 수 있습니다.\n모든 총기류로 공중에 뜬 보스를 맞출 시 소형 치명타(직격포는 치명타)"
+	}
+	"Pyro Advice"
+	{
+		"ko"		"Postal Pummeler and skins uses stats of Fire Axe.\nThe Flare Gun is replaced by the Mega Detonator.\nAirblasting the boss builds rage and lengthens the Vagineer's uber."
+	}
+	"Demo Advice"
+	{
+		"ko"		"The shields block one hit from the Boss.\nEyelander gains heads on hit.\nThe Tide Turner recharges if you hit the boss.\nThe Half-Zatoichi heals 35HP on hit and can overheal to +25. Honorbound is removed on hit."
+	}
+	"Heavy Advice"
+	{
+		"ko"		"Natascha and the KGB are replaced with the\nMinigun and Fists, respectively.\nThe Gloves of Running are quite quick but cause you to lose more health.\nThe Holiday Punch will remove any stun on you if you hit Boss while stunned."
+	}
+	"Engineer Advice"
+	{
+		"ko"		"All maps only have small ammo packs.\nThe Frontier Justice gains crits only while your sentry is targeting the Boss."
+	}
+	"Medic Advice"
+	{
+		"ko"		"Your medigun is a combination of the Medigun, Kritzkrieg, and Quick-Fix. Charge starts at 40 percent and lasts for 150 percent after activation.\nSyringe Gun: on hit: +5%% ubercharge, has Overdose's speed effect.\nCrossbow: Always crits, +150%% damage, +10%% uber on hit."
+	}
+	"Sniper Advice"
+	{
+		"ko"		"All of your weapons have critical hits.\nJarate removes 8%% rage.\nBack-equipped weapons are replaced with SMG.\nDefault Sniper Rifle causes Boss to glow. Glow time scales with charge."
+	}
+	"Spy Advice"
+	{
+		"ko"		"Backstab does about 10 percent of Boss's max health.\nThe Cloak and Dagger is replaced with the normal watch.\nAll revolvers minicrit.\nYour Eternal Reward/Wanga Prick backstabs will disguise you instantly.\nKunai backstabs will give you a health bonus."
+	}
+	"Melee Advice"
+	{
+		"ko"		"All melee weapons (except the Spy knives) deal critical hits.\nUse /ff2 menu to disable these notifications."
+	}
+	"Boss Queue"
+	{
+		"ko"		"보스 대기열"
+	}
+	"What's Up"
+	{
+		"ko"		"무슨 일 이세요?"
+	}
+	"Observe Health Value"
+	{
+		"ko"		"보스의 체력 확인하기 (/ff2_hp)"
+	}
+	"FF2 Help"
+	{
+		"ko"		"FF2 도움말 (/ff2_help)."
+	}
+	"What's New in FF2"
+	{
+		"ko"		"뭐가 새로워졌을까요? (/ff2_changelog)."
+	}
+	"View Queue Points"
+	{
+		"ko"		"대기열"
+	}
+	"Exit Menu"
+	{
+		"ko"		"나가기"
+	}
+	"FF2 Objective"
+	{
+		"ko"		"===Freak Fortress 2===\n한명(혹은 다수가) 보스가 됩니다!\n다른 플레이어들은 그 보스를 쓰러뜨리는 것이 목표입니다."
+	}
+	"Changelog"
+	{
+		"ko"		"Freak Fortress 2 변경사항"
+	}
+	"Class Changes"
+	{
+		"ko"		"내 병과에서의 바뀐 점 확인 (/ff2_classinfo)"
+	}
+	"Total Damage Dealt"
+	{
+		"#format"	"{1:i}"
+		"ko"		"이번 라운드에 {1} 피해를 입혔습니다."
+	}
+	"Points Earned"
+	{
+		"#format"	"{1:i}"
+		"ko"		"{1} 스코어를 흭득하셨습니다."
+	}
+	"Boss Victory"
+	{
+		"ko"		"축하드립니다! 이기셨어요!"
+	}
+	"Boss Defeat"
+	{
+		"ko"		"헉! 지셨네요.. 하지만 다음 기회는 항상 있으니까요!"
+	}
+	"Boss Info"
+	{
+		"#format"	"{1:N},{2:s},{3:i},{4:s}"
+		"ko"		"{1}님의 {2}\nHP: {3}{4}"
+	}
+	"Boss Current Health"
+	{
+		"#format"	"{1:s},{2:i},{3:i},{4:s}"
+		"ko"		"{1}의 현재 HP: {2} / {3}{4}"
+	}
+	"Boss Win Final Health"
+	{
+		"#format" "{1:s},{2:N},{3:i},{4:i},{5:s}"
+		"ko"	"{1}님이({2}) 승리하셨습니다!/n남은 체력: {3} / {4}{5}"
+	}
+	"Vote for Character Set"
+	{
+		"ko"		"다음 맵에서 사용될 캐릭터 셋을 투표해주십시요."
+	}
+	"Your Queue Points"
+	{
+		"#format"	"{1:i}"
+		"ko"		"내 대기열 포인트: {1}"
+	}
+	"Reset Queue Points"
+	{
+		"ko"		"0으로 초기화"
+	}
+	"Reset Queue Points Confirmation"
+	{
+		"ko"		"대기열 포인트를 0으로 초기화하시겠습니까?"
+	}
+	"Reset Player's Queue Points"
+	{
+		"#format"	"{1:N}"
+		"ko"		"{1}님의 대기열 포인트를 0으로 초기화하시겠습니까?"
+	}
+	"Reset Queue Points Done"
+	{
+		"ko"		"대기열 포인트를 {olive}0{default}으로 초기화하였습니다."
+	}
+	"Reset Player's Points Done"
+	{
+		"#format"	"{1:N}"
+		"ko"		"{olive}{1}{default}님의 대기열 포인트를 {olive}0{default}으로 초기화하였습니다."
+	}
+	"Queue Points Reset by Admin"
+	{
+		"#format"	"{1:N}"
+		"ko"		"{olive}{1}{default}님이 당신의 대기열 포인트를 {olive}0{default}으로 초기화하였습니다."
+	}
+	"Next Boss"
+	{
+		"ko"		"곧 보스로 플레이하게 됩니다. {olive}/ff2_next{default} 명령어로 확인하실 수 있습니다."
+	}
+	"Arena Rounds Left"
+	{
+		"#format"	"{1:i}"
+		"ko"		"로딩 중인 플레이어를 기다리고 있습니다. FF2가 {1} 라운드 후에 시작됩니다."
+	}
+	"FF2 Music"
+	{
+		"#format"	"{1:s}"
+		"ko"		"Freak Fortress 2 전체 보스 음악: {1}"
+	}
+	"FF2 Voice"
+	{
+		"#format"	"{1:s}"
+		"ko"		"FF2 전체 보스 대사: {1}"
+	}
+	"FF2 Voice 2"
+	{
+		"ko"		"다른 소리들은 아마 여전히 조용하게나마 들릴 수 있습니다."
+	}
+	"Toggle Music"
+	{
+		"ko"		"보스 음악 설정 (/ff2_music)"
+	}
+	"Toggle Monologue"
+	{
+		"ko"		"보스 대사 ON / OFF (/ff2_voice)"
+	}
+	"Toggle Class Changes"
+	{
+		"ko"		"FF2에서의 병과 변경점 ON / OFF"
+	}
+	"FF2 Class Info"
+	{
+		"#format"	"{1:s}"
+		"ko"		"FF2에서의 병과 변경점 알림: {1}"
+	}
+	"Last FF2 Update"
+	{
+		"#format"	"{1:s}"
+		"ko"		"{olive}/ff2_changelog{default} 명령어로 {olive}{1}{default}에서의 변경점을 보실 수 있습니다."
+	}
+	"Charge Status"
+	{
+		"#format"	"{1:i}"
+		"ko"		"Charge is {1} percent ready. When at 100 percent let go of the charge button."
+	}
+	"Character Set Next Map"
+	{
+		"#format"	"{1:s},{2:s}"
+		"ko"		"다음 맵({1})에서 사용될 캐릭터 셋이 {2}로 정해졌습니다."
+	}
+	"Ability uses Reload"
+	{
+		"ko"		"재장전 버튼을 눌러 능력을 사용!"
+	}
+	"Ability uses Right Mouse"
+	{
+		"ko"		"우클릭으로 능력을 사용!"
+	}
+	"Boss with Multiple Lives Left"
+	{
+		"#format"	"{1:s},{2:i}"
+		"ko"		"{1}(이)가 라이프를 잃었습니다! 아직 {2}개 남았습니다!"
+	}
+	"Boss with 1 Life Left"
+	{
+		"#format"	"{1:s}"
+		"ko"		"{1}(이)가 라이프를 잃었습니다! 이제 마지막 라이프입니다!"
+	}
+	"Seeldier Rage Message"
+	{
+		"#format"	"{1:s}"
+		"ko"		"당신은 이제 {1}의 하수인입니다. 다른 팀을 공격하세요!"
+	}
+	"VSH and FF2 Group"
+	{
+		"ko"		"VS Saxton Hale/Freak Fortress 2 그룹: {olive}http://steamcommunity.com/groups/vssaxtonhale{default}"
+	}
+	"FF2 Contributors"
+	{
+		"#format"	"{1:s}"
+		"ko"		"=== Freak Fortress 2 v{1} (VS Saxton Hale Mode 기반 by {olive}RainBolt Dash{default} and {olive}FlaminSarge{default}) ==="
+	}
+	"Boss Suicide Denied"
+	{
+		"ko"	"보스로 자살하실 수 없습니다!"
+	}
+	"Boss Suicide Pre-round"
+	{
+		"ko"	"라운드 시작 전에 자살하실 수 없습니다!"
+	}
+	"Boss Disconnected"
+	{
+		"#format" "{1:N},{2:N}"
+		"ko"	"{1}님이 서버에서 퇴장하여 {2}님이 새로운 보스로 정해졌습니다!"
+	}
+	"Replace Disconnected Boss"
+	{
+		"ko"	"와! 보스가 되었습니다!"
+	}
+	"Backstab"
+	{
+		"ko"	"백스탭 했습니다!"
+	}
+	"Backstabbed"
+	{
+		"ko"	"백스탭 당했습니다!"
+	}
+	"Market Gardener"
+	{
+		"ko"	"마켓가든 공격을 했습니다!"
+	}
+	"Market Gardened"
+	{
+		"ko"	"마켓가든 공격을 당했습니다!"
+	}
+	"Detonations Left"
+	{
+		"#format"	"{1:i}"
+		"ko"		"남은 폭발물 갯수: {1}"
+	}
+	"Spectator Damage Dealt"
+	{
+		"#format"	"{1:N},{2:i}"
+		"ko"		"{1}님의 데미지: {2}"
+	}
+	"Your Damage Dealt"
+	{
+		"#format"	"{1:i}"
+		"ko"		"데미지: {1}"
+	}
+}
