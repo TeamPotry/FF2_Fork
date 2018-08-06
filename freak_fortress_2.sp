@@ -593,6 +593,9 @@ public void OnMapStart()
 			SetArrayCell(bossesArrayShadow, index, INVALID_HANDLE);
 		}
 	}
+
+	ResizeArray(bossesArray, 0);
+	ResizeArray(bossesArrayShadow, 0);
 }
 
 public void OnMapEnd()
