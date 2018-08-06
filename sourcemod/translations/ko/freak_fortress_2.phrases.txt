@@ -131,7 +131,7 @@
 	}
 	"View Queue Points"
 	{
-		"ko"		"대기열"
+		"ko"		"보스 대기열 보기 (/ff2_next)"
 	}
 	"Exit Menu"
 	{
@@ -170,17 +170,17 @@
 	"Boss Info"
 	{
 		"#format"	"{1:N},{2:s},{3:i},{4:s}"
-		"ko"		"{1}님의 {2}\nHP: {3}{4}"
+		"ko"		"{1}님의 {2} \nHP: {3}{4}"
 	}
 	"Boss Current Health"
 	{
 		"#format"	"{1:s},{2:i},{3:i},{4:s}"
-		"ko"		"{1}의 현재 HP: {2} / {3}{4}"
+		"ko"		"{1}의 HP: {2} / {3}{4}"
 	}
 	"Boss Win Final Health"
 	{
 		"#format" "{1:s},{2:N},{3:i},{4:i},{5:s}"
-		"ko"	"{1}님이({2}) 승리하셨습니다!/n남은 체력: {3} / {4}{5}"
+		"ko"	"{1}님이({2}) 승리하셨습니다!\n남은 체력: {3} / {4}{5}"
 	}
 	"Vote for Character Set"
 	{
