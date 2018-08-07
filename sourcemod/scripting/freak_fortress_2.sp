@@ -1695,18 +1695,13 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	int boss;
 	if(isBossAlive)
 	{
-		char text[128];  //Do not decl this
-		char bossName[64], lives[8];
-		for(int target; target<=MaxClients; target++)
+		char bossName[64], lives[8], text[128];
+		int bossindexs[MAXPLAYERS+1], bosscount=0;
+		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
 			{
-				boss=Boss[target];
-				KvRewind(GetArrayCell(bossesArray, character[boss]));
-				KvGetString(GetArrayCell(bossesArray, character[boss]), "name", bossName, sizeof(bossName), "=Failed name=");
-				BossLives[boss]>1 ? Format(lives, sizeof(lives), "x%i", BossLives[boss]) : strcopy(lives, 2, "");
-				Format(text, sizeof(text), "%s\n%t", text, "Boss Win Final Health", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-				CPrintToChatAll("{olive}[FF2]{default} %t", "Boss Win Final Health", bossName, target, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+				bossindexs[bosscount++]=Boss[target];
 			}
 		}
 
@@ -1715,6 +1710,16 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		{
 			if(IsValidClient(client))
 			{
+				SetGlobalTransTarget(client);
+				Format(text, sizeof(text), "");
+
+				for(int loop; loop<bosscount; loop++)
+				{
+					GetBossName(bossindexs[loop], bossName, sizeof(bossName), client);
+					BossLives[bossindexs[loop]]>1 ? Format(lives, sizeof(lives), "x%i", BossLives[bossindexs[loop]]) : strcopy(lives, 2, "");
+					Format(text, sizeof(text), "%s\n%t", text, "Boss Win Final Health", bossName, Boss[bossindexs[loop]], BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], lives);
+					CPrintToChat(client, "{olive}[FF2]{default} %t", "Boss Win Final Health", bossName, Boss[bossindexs[loop]], BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], lives);
+				}
 				FF2_ShowHudText(client, -1, "%s", text);
 			}
 		}
@@ -1775,7 +1780,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	PrintCenterTextAll("");
 
 	char text[128];  //Do not decl this
-	for(int client; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
@@ -2283,30 +2288,14 @@ public Action MessageTimer(Handle timer)
 	}
 
 	SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
-	char text[512];  //Do not decl this
-	char textChat[512];
-	char lives[8];
-	char name[64];
-	for(int client; client<=MaxClients; client++)
+	char text[512], textChat[512], lives[8], name[64];  //Do not decl this
+	int bossindexs[MAXPLAYERS+1], bosscount=0;
+
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsBoss(client))
 		{
-			int boss=Boss[client];
-			KvRewind(GetArrayCell(bossesArray, character[boss]));
-			KvGetString(GetArrayCell(bossesArray, character[boss]), "name", name, sizeof(name), "=Failed name=");
-			if(BossLives[boss]>1)
-			{
-				Format(lives, sizeof(lives), "x%i", BossLives[boss]);
-			}
-			else
-			{
-				strcopy(lives, 2, "");
-			}
-
-			Format(text, sizeof(text), "%s\n%t", text, "Boss Info", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
-			Format(textChat, sizeof(textChat), "{olive}[FF2]{default} %t!", "Boss Info", Boss[boss], name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), lives);
-			ReplaceString(textChat, sizeof(textChat), "\n", "");  //Get rid of newlines
-			CPrintToChatAll("%s", textChat);
+			bossindexs[bosscount++]=Boss[client];
 		}
 	}
 
@@ -2315,6 +2304,26 @@ public Action MessageTimer(Handle timer)
 		if(IsValidClient(client))
 		{
 			SetGlobalTransTarget(client);
+			Format(text, sizeof(text), "");
+
+			for(int loop; loop<bosscount; loop++)
+			{
+				GetBossName(bossindexs[loop], name, sizeof(name), client);
+				if(BossLives[bossindexs[loop]]>1)
+				{
+					Format(lives, sizeof(lives), "x%i", BossLives[bossindexs[loop]]);
+				}
+				else
+				{
+					strcopy(lives, 2, "");
+				}
+
+				Format(text, sizeof(text), "%s\n%t", text, "Boss Info", Boss[bossindexs[loop]], name, BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), lives);
+				Format(textChat, sizeof(textChat), "{olive}[FF2]{default} %t!", "Boss Info", Boss[bossindexs[loop]], name, BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), lives);
+				ReplaceString(textChat, sizeof(textChat), "\n", "");  //Get rid of newlines
+			}
+
+			CPrintToChat(client, "%s", textChat);
 			FF2_ShowSyncHudText(client, infoHUD, text);
 		}
 	}
@@ -3559,24 +3568,14 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 	{
 		char text[512];  //Do not decl this
 		char lives[8], name[64];
+		int bossindexs[MAXPLAYERS+1], bosscount=0;
+
 		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
 			{
-				int boss=Boss[target];
-				KvRewind(GetArrayCell(bossesArray, character[boss]));
-				KvGetString(GetArrayCell(bossesArray, character[boss]), "name", name, sizeof(name), "=Failed name=");
-				if(BossLives[boss]>1)
-				{
-					Format(lives, sizeof(lives), "x%i", BossLives[boss]);
-				}
-				else
-				{
-					strcopy(lives, 2, "");
-				}
-				Format(text, sizeof(text), "%s\n%t", text, "Boss Current Health", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-				CPrintToChatAll("{olive}[FF2]{default} %t", "Boss Current Health", name, BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-				BossHealthLast[boss]=BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1);
+				bossindexs[bosscount++]=Boss[target];
+				BossHealthLast[bossindexs[bosscount]]=BossHealth[bossindexs[bosscount]]-BossHealthMax[bossindexs[bosscount]]*(BossLives[bossindexs[bosscount]]-1);
 			}
 		}
 
@@ -3585,6 +3584,22 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 			if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 			{
 				SetGlobalTransTarget(target);
+				Format(text, sizeof(text), "");
+
+				for(int loop; loop<bosscount; loop++)
+				{
+					GetBossName(bossindexs[loop], name, sizeof(name), target);
+					if(BossLives[bossindexs[loop]]>1)
+					{
+						Format(lives, sizeof(lives), "x%i", BossLives[bossindexs[loop]]);
+					}
+					else
+					{
+						strcopy(lives, 2, "");
+					}
+					Format(text, sizeof(text), "%s\n%t", text, "Boss Current Health", name, BossHealthLast[bossindexs[loop]], BossHealthMax[bossindexs[loop]], lives);
+					CPrintToChat(target, "{olive}[FF2]{default} %t", "Boss Current Health", name, BossHealthLast[bossindexs[loop]], BossHealthMax[bossindexs[loop]], lives);
+				}
 				PrintCenterText(target, text);
 			}
 		}
@@ -4381,26 +4396,14 @@ public Action BossTimer(Handle timer)
 
 		if(RedAlivePlayers==1)
 		{
-			char message[512];  //Do not decl this
-			char name[64];
-			for(int target; target<=MaxClients; target++)  //TODO: Why is this for loop needed when we're already in a boss for loop
+			char message[512], name[64], bossLives[10];  //Do not decl this
+			int bossindexs[MAXPLAYERS+1], bosscount=0;
+
+			for(int target=1; target<=MaxClients; target++)  //TODO: Why is this for loop needed when we're already in a boss for loop
 			{
 				if(IsBoss(target))
 				{
-					int boss2=GetBossIndex(target);
-					KvRewind(GetArrayCell(bossesArray, character[boss2]));
-					KvGetString(GetArrayCell(bossesArray, character[boss2]), "name", name, sizeof(name), "=Failed name=");
-					//Format(bossLives, sizeof(bossLives), ((BossLives[boss2]>1) ? ("x%i", BossLives[boss2]) : ("")));
-					char bossLives[10];
-					if(BossLives[boss2]>1)
-					{
-						Format(bossLives, sizeof(bossLives), "x%i", BossLives[boss2]);
-					}
-					else
-					{
-						Format(bossLives, sizeof(bossLives), "");
-					}
-					Format(message, sizeof(message), "%s\n%t", message, "Boss Current Health", name, BossHealth[boss2]-BossHealthMax[boss2]*(BossLives[boss2]-1), BossHealthMax[boss2], bossLives);
+					bossindexs[bosscount++]=GetBossIndex(target);
 				}
 			}
 
@@ -4409,6 +4412,18 @@ public Action BossTimer(Handle timer)
 				if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 				{
 					SetGlobalTransTarget(target);
+					Format(message, sizeof(message), "");
+
+					for(int loop; loop<bosscount; loop++)
+					{
+						GetBossName(bossindexs[loop], name, sizeof(name), target);
+
+						if(BossLives[bossindexs[loop]]>1)
+							Format(bossLives, sizeof(bossLives), "x%i", BossLives[bossindexs[loop]]);
+						else
+							Format(bossLives, sizeof(bossLives), "");
+						Format(message, sizeof(message), "%s\n%t", message, "Boss Current Health", name, BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], bossLives);
+					}
 					PrintCenterText(target, message);
 				}
 			}
