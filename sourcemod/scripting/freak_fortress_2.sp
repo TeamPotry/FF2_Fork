@@ -1410,7 +1410,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		CreateTimer(71.0, Timer_EnableCap, _, TIMER_FLAG_NO_MAPCHANGE);
 		bool toRed;
 		TFTeam team;
-		for(int client; client<=MaxClients; client++)
+		for(int client=1; client<=MaxClients; client++)
 		{
 			if(IsValidClient(client) && (team=TF2_GetClientTeam(client))>TFTeam_Spectator)
 			{
@@ -1711,7 +1711,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		}
 
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
-		for(int client; client<=MaxClients; client++)
+		for(int client=1; client<=MaxClients; client++)
 		{
 			if(IsValidClient(client))
 			{
@@ -2310,7 +2310,7 @@ public Action MessageTimer(Handle timer)
 		}
 	}
 
-	for(int client; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
@@ -3559,7 +3559,7 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 	{
 		char text[512];  //Do not decl this
 		char lives[8], name[64];
-		for(int target; target<=MaxClients; target++)
+		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
 			{
@@ -3580,7 +3580,7 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 			}
 		}
 
-		for(int target; target<=MaxClients; target++)
+		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 			{
@@ -3600,7 +3600,7 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 	if(RedAlivePlayers>1)
 	{
 		char waitTime[128];
-		for(int target; target<=MaxClients; target++)
+		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsBoss(target))
 			{
@@ -3679,7 +3679,7 @@ public Action Command_Points(int client, int args)
 
 	if(matches>1)
 	{
-		for(int target; target<matches; target++)
+		for(int target=1; target<matches; target++)
 		{
 			if(!IsClientSourceTV(targets[target]) && !IsClientReplay(targets[target]))
 			{
@@ -3716,7 +3716,7 @@ public Action Command_StartMusic(int client, int args)
 
 			if(matches>1)
 			{
-				for(int target; target<matches; target++)
+				for(int target=1; target<matches; target++)
 				{
 					StartMusic(targets[target]);
 				}
@@ -3756,7 +3756,7 @@ public Action Command_StopMusic(int client, int args)
 
 			if(matches>1)
 			{
-				for(int target; target<matches; target++)
+				for(int target=1; target<matches; target++)
 				{
 					StopMusic(targets[target], true);
 				}
@@ -4404,7 +4404,7 @@ public Action BossTimer(Handle timer)
 				}
 			}
 
-			for(int target; target<=MaxClients; target++)
+			for(int target=1; target<=MaxClients; target++)
 			{
 				if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 				{
@@ -4461,7 +4461,7 @@ public Action Timer_BotRage(Handle timer, int bot)
 stock int OnlyScoutsLeft()
 {
 	int scouts;
-	for(int client; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && IsPlayerAlive(client) && TF2_GetClientTeam(client)!=BossTeam)
 		{
@@ -4998,7 +4998,7 @@ public Action Timer_DrawGame(Handle timer)
 	}
 
 	SetHudTextParams(-1.0, 0.17, 1.1, 255, 255, 255, 255);
-	for(int client; client<=MaxClients; client++)
+	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
@@ -5720,7 +5720,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 		int[] healers=new int[MaxClients+1];
 		int healerCount;
-		for(int target; target<=MaxClients; target++)
+		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsValidClient(target) && IsPlayerAlive(target) && (GetHealingTarget(target, true)==attacker))
 			{
@@ -5729,7 +5729,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			}
 		}
 
-		for(int target; target<healerCount; target++)
+		for(int target=1; target<healerCount; target++)
 		{
 			if(IsValidClient(healers[target]) && IsPlayerAlive(healers[target]))
 			{
@@ -6782,7 +6782,7 @@ public Action ResetQueuePointsCmd(int client, int args)
 
 	if(matches>1)
 	{
-		for(int target; target<matches; target++)
+		for(int target=1; target<matches; target++)
 		{
 			TurnToZeroPanel(client, targets[target]);  //FIXME:  This can only handle one client currently and doesn't iterate through all clients
 		}
