@@ -7605,12 +7605,25 @@ public int Native_GetBossTeam(Handle plugin, int numParams)
 	return view_as<int>(GetBossTeam());
 }
 
-public bool GetBossName(int boss, char[] bossName, int length)
+public bool GetBossName(int boss, char[] bossName, int length, int client)
 {
 	if(boss>=0 && boss<=MaxClients && character[boss]>=0 && character[boss]<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, character[boss]))!=null)
 	{
 		KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
+		if(client > 0)
+		{
+			char language[8];
+			GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
+			if(KvJumpToKey(GetArrayCell(bossesArray, character[boss]), "name_lang"))
+			{
+				KvGetString(GetArrayCell(bossesArray, character[boss]), language, bossName, length, "");
+				if(bossName[0]!='\0')
+					return true;
+			}
+			KvGoBack(GetArrayCell(bossesArray, character[boss]));
+		}
 		KvGetString(GetArrayCell(bossesArray, character[boss]), "name", bossName, length);
+
 		return true;
 	}
 	return false;
@@ -7620,7 +7633,7 @@ public int Native_GetBossName(Handle plugin, int numParams)
 {
 	int length=GetNativeCell(3);
 	char[] bossName=new char[length];
-	bool bossExists=GetBossName(GetNativeCell(1), bossName, length);
+	bool bossExists=GetBossName(GetNativeCell(1), bossName, length, GetNativeCell(4));
 	SetNativeString(2, bossName, length);
 	return bossExists;
 }

@@ -101,9 +101,10 @@ native TFTeam FF2_GetBossTeam();
  * @param boss              Boss's index
  * @param bossName          Buffer for boss's character name
  * @param length            Length of buffer string
+ * @param client            If client is valid, this will follow client's language setting.
  * @return                  True if boss exists, false if not
  */
-native bool FF2_GetBossName(int boss=0, char[] bossName, int length);
+native bool FF2_GetBossName(int boss=0, char[] bossName, int length, const int client=0);
 
 /**
  * Gets a Boss's KV handle
