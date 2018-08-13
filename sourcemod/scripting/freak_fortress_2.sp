@@ -1708,7 +1708,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		SetHudTextParams(-1.0, 0.2, 10.0, 255, 255, 255, 255);
 		for(int client=1; client<=MaxClients; client++)
 		{
-			if(IsValidClient(client))
+			if(IsValidClient(client) && !IsFakeClient(client))
 			{
 				SetGlobalTransTarget(client);
 				Format(text, sizeof(text), "");
@@ -2301,7 +2301,7 @@ public Action MessageTimer(Handle timer)
 
 	for(int client=1; client<=MaxClients; client++)
 	{
-		if(IsValidClient(client))
+		if(IsValidClient(client) && !IsFakeClient(client))
 		{
 			SetGlobalTransTarget(client);
 			Format(text, sizeof(text), "");
@@ -3581,7 +3581,7 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 
 		for(int target=1; target<=MaxClients; target++)
 		{
-			if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
+			if(IsValidClient(target) && !IsFakeClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 			{
 				SetGlobalTransTarget(target);
 				Format(text, sizeof(text), "");
@@ -4409,7 +4409,7 @@ public Action BossTimer(Handle timer)
 
 			for(int target=1; target<=MaxClients; target++)
 			{
-				if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
+				if(IsValidClient(target) && !IsFakeClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 				{
 					SetGlobalTransTarget(target);
 					Format(message, sizeof(message), "");
