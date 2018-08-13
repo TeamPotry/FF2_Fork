@@ -4300,6 +4300,7 @@ public Action BossTimer(Handle timer)
 			continue;
 		}
 		validBoss=true;
+		SetGlobalTransTarget(client);
 
 		SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.7*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
 
