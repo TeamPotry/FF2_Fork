@@ -4061,7 +4061,7 @@ public Action ClientTimer(Handle timer)
 				int observer=GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
 				if(IsValidClient(observer) && !IsBoss(observer) && observer!=client)
 				{
-					FF2_ShowSyncHudText(client, rageHUD, "%t-%t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
+					FF2_ShowSyncHudText(client, rageHUD, "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
 				}
 				else
 				{
