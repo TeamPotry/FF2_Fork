@@ -5698,14 +5698,13 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 				BossLives[boss]=lives;
 
 				char bossName[64];
-				kv.Rewind();
-				kv.GetString("name", bossName, sizeof(bossName), "=Failed name=");
-
 				strcopy(ability, sizeof(ability), BossLives[boss]==1 ? "Boss with 1 Life Left" : "Boss with Multiple Lives Left");
+
 				for(int target=1; target<=MaxClients; target++)
 				{
 					if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
 					{
+						GetBossName(boss, bossName, sizeof(bossName), target);
 						PrintCenterText(target, "%t", ability, bossName, BossLives[boss]);
 					}
 				}
