@@ -4054,6 +4054,8 @@ public Action ClientTimer(Handle timer)
 		if(IsValidClient(client) && !IsBoss(client) && !(FF2Flags[client] & FF2FLAG_CLASSTIMERDISABLED))
 		{
 			SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
+			SetGlobalTransTarget(client);
+
 			if(!IsPlayerAlive(client))
 			{
 				int observer=GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
