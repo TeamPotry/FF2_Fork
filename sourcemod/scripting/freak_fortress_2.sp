@@ -7624,7 +7624,10 @@ public bool GetBossName(int boss, char[] bossName, int length, int client)
 {
 	if(boss>=0 && boss<=MaxClients && character[boss]>=0 && character[boss]<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, character[boss]))!=null)
 	{
+		Handle clonedBossKV = CloneHandle(view_as<Handle>(GetArrayCell(bossesArray, character[boss])));
+		KvRewind(clonedBossKV);
 		KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
+
 		if(client > 0)
 		{
 			char language[8];
@@ -7635,9 +7638,10 @@ public bool GetBossName(int boss, char[] bossName, int length, int client)
 				if(bossName[0]!='\0')
 					return true;
 			}
-			KvGoBack(GetArrayCell(bossesArray, character[boss]));
+			KvRewind(clonedBossKV);
 		}
 		KvGetString(GetArrayCell(bossesArray, character[boss]), "name", bossName, length);
+		delete clonedBossKV;
 
 		return true;
 	}
