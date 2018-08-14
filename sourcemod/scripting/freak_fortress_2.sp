@@ -1943,7 +1943,7 @@ public Action StartBossTimer(Handle timer)
 		}
 	}
 
-	CreateTimer(0.2, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.05, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, StartRound, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, ClientTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -4313,7 +4313,7 @@ public Action BossTimer(Handle timer)
 
 		if(BossLivesMax[boss]>1)
 		{
-			SetHudTextParams(-1.0, 0.77, 0.15, 255, 255, 255, 255);
+			SetHudTextParams(-1.0, 0.77, 0.06, 255, 255, 255, 255);
 			FF2_ShowSyncHudText(client, livesHUD, "%t", "Boss Lives Left", BossLives[boss], BossLivesMax[boss]);
 		}
 
@@ -4326,7 +4326,7 @@ public Action BossTimer(Handle timer)
 			}
 			else
 			{
-				SetHudTextParams(-1.0, 0.83, 0.15, 255, 64, 64, 255);
+				SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
 				FF2_ShowSyncHudText(client, rageHUD, "%t", "Activate Rage");
 
 				char sound[PLATFORM_MAX_PATH];
@@ -4341,12 +4341,12 @@ public Action BossTimer(Handle timer)
 		}
 		else
 		{
-			SetHudTextParams(-1.0, 0.83, 0.15, 255, 255, 255, 255);
+			SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
 			FF2_ShowSyncHudText(client, rageHUD, "%t", "Rage Meter", RoundFloat(BossCharge[boss][0]));
 		}
-		SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
+		SetHudTextParams(-1.0, 0.88, 0.06, 255, 255, 255, 255);
 
-		SetClientGlow(client, -0.2);
+		SetClientGlow(client, -0.05);
 
 		KeyValues kv=GetArrayCell(bossesArray, character[boss]);
 		kv.Rewind();
@@ -4439,7 +4439,7 @@ public Action BossTimer(Handle timer)
 
 		if(BossCharge[boss][0]<100.0)
 		{
-			BossCharge[boss][0]+=OnlyScoutsLeft()*0.2;
+			BossCharge[boss][0]+=OnlyScoutsLeft()*0.05;
 			if(BossCharge[boss][0]>100.0)
 			{
 				BossCharge[boss][0]=100.0;
@@ -4456,7 +4456,7 @@ public Action BossTimer(Handle timer)
 		{
 			if(KSpreeTimer[client2]>0)
 			{
-				KSpreeTimer[client2]-=0.2;
+				KSpreeTimer[client2]-=0.05;
 			}
 		}
 	}
@@ -8001,7 +8001,7 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(2);  //Ready
 				Call_Finish();
-				float charge=100.0*0.2/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.5);
+				float charge=100.0*0.05/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.5);
 				if(BossCharge[boss][slot]+charge<100.0)
 				{
 					BossCharge[boss][slot]+=charge;
