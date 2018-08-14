@@ -44,7 +44,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 	#define PLUGIN_VERSION MAJOR_REVISION..."."...MINOR_REVISION..."."...STABLE_REVISION..."-"...DEV_REVISION  //semver.org
 #endif
 
-#define UPDATE_URL "http://50dkp.github.io/FF2-Official/update.txt"
+#define UPDATE_URL ""
 
 #define MAXENTITIES 2048
 
