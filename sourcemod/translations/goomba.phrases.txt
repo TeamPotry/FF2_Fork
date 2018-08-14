@@ -1,0 +1,60 @@
+"Phrases"
+{
+	"Goomba Stomp"
+	{
+		"#format"		"{1:N},{2:N}"
+		"fr"			"{olive}>> {teamcolor}{1} {default}a stompé {olive}{2} {default}!"
+		"en"			"{olive}>> {teamcolor}{1} {default}goomba stomped {olive}{2} {default}!"
+	}
+	"Goomba Stomp TeamKill"
+	{
+		"#format"		"{1:N},{2:N}"
+		"fr"			"{olive}>> {teamcolor}{1} {default}a stompé {teamcolor}{2} {default}!"
+		"en"			"{olive}>> {teamcolor}{1} {default}goomba stomped {teamcolor}{2} {default}!"
+	}
+	"Victim Stomped"
+	{
+		"fr"			"Vous avez été stompé !"
+		"en"			"You've been stomped !"
+	}
+	"Victim Immun"
+	{
+		"fr"			"{lightgreen}Le stomp est désactivé pour la victime."
+		"en"			"{lightgreen}Stomp is disabled for the victim."
+	}
+	"Immun Disabled"
+	{
+		"fr"			"Le système d'immunité n'est pas actif."
+		"en"			"Immunity system is disabled."
+	}
+	"Immun On"
+	{
+		"fr"			"Stomp désactivé, l'option sera active à la prochaine réapparition."
+		"en"			"Stomp disabled, the option will be applied at respawn."
+	}
+	"Immun Off"
+	{
+		"fr"			"Stomp activé, l'option sera active à la prochaine réapparition."
+		"en"			"Stomp enabled, the option will be applied at respawn."
+	}
+	"Status On"
+	{
+		"fr"			"Le stomp est actuellement actif."
+		"en"			"Stomp is currently enabled."
+	}
+	"Status Off"
+	{
+		"fr"			"Le stomp est actuellement inactif."
+		"en"			"Stomp is currently disabled."
+	}
+	"Status Next On"
+	{
+		"fr"			"Le stomp sera actif à la prochaine réapparition."
+		"en"			"Stomp will be enabled at respawn."
+	}
+	"Status Next Off"
+	{
+		"fr"			"Le stomp sera inactif à la prochaine réapparition."
+		"en"			"Stomp will be disabled at respawn."
+	}
+}
