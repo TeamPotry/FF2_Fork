@@ -1,0 +1,22 @@
+"Phrases"
+{
+    "Boss Goomba Stomped"
+    {
+        "en"    "You just goomba stomped somebody!"
+    }
+
+    "Boss Got Goomba Stomped"
+    {
+        "en"    "You were just goomba stomped!"
+    }
+
+    "Human Goomba Stomped"
+    {
+        "en"    "You just goomba stomped the boss!"
+    }
+
+    "Human Got Goomba Stomped"
+    {
+        "en"    "Ouch!  Watch your head!!"
+    }
+}

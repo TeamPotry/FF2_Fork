@@ -1,0 +1,22 @@
+"Phrases"
+{
+    "Boss Goomba Stomped"
+    {
+        "ko"    "누군가를 굼바하셨습니다!"
+    }
+
+    "Boss Got Goomba Stomped"
+    {
+        "ko"    "누군가에게 굼바당했습니다!"
+    }
+
+    "Human Goomba Stomped"
+    {
+        "ko"    "보스를 굼바하셨습니다!"
+    }
+
+    "Human Got Goomba Stomped"
+    {
+        "ko"    "아야! 머리 조심하세요!"
+    }
+}

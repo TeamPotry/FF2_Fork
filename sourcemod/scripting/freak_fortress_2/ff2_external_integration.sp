@@ -38,6 +38,8 @@ public void OnPluginStart()
 	cvarBossRTD=CreateConVar("ff2_boss_rtd", "0", "Allow the boss to use RTD?", _, true, 0.0, true, 1.0);
 
 	AutoExecConfig(false, "ff2_external_integration", "sourcemod/freak_fortress_2");
+
+	LoadTranslations("ff2_external_integration.phrases");
 }
 
 public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &damageBonus, float &JumpPower)
@@ -50,16 +52,16 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
 			damageMultiplier=900.0;
 			JumpPower=0.0;
-			PrintCenterText(victim, "Ouch!  Watch your head!");
-			PrintCenterText(attacker, "You just goomba stomped somebody!");
+			PrintCenterText(victim, "%t", "Human Got Goomba Stomped");
+			PrintCenterText(attacker, "%t", "Boss Goomba Stomped");
 			return Plugin_Changed;
 		}
 		else if(FF2_GetBossIndex(victim)!=-1)
 		{
 			damageMultiplier=cvarGoombaDamage.FloatValue;
 			JumpPower=cvarGoombaRebound.FloatValue;
-			PrintCenterText(victim, "You were just goomba stomped!");
-			PrintCenterText(attacker, "You just goomba stomped the boss!");
+			PrintCenterText(victim, "%t", "Boss Got Goomba Stomped");
+			PrintCenterText(attacker, "%t", "Human Goomba Stomped");
 			return Plugin_Changed;
 		}
 	}
