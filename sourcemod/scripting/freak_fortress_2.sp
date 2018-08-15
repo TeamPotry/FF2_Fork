@@ -17,6 +17,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 
 #include <sourcemod>
 #include <freak_fortress_2>
+#include <ff2_potry>
 #include <adt_array>
 #include <clientprefs>
 #include <morecolors>
@@ -76,6 +77,7 @@ int character[MAXPLAYERS+1];
 int Incoming[MAXPLAYERS+1];
 
 int Damage[MAXPLAYERS+1];
+int Assist[MAXPLAYERS+1];
 int uberTarget[MAXPLAYERS+1];
 int shield[MAXPLAYERS+1];
 int detonations[MAXPLAYERS+1];
@@ -338,6 +340,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnParseUnknownVariable=CreateGlobalForward("FF2_OnParseUnknownVariable", ET_Hook, Param_String, Param_FloatByRef);  //Variable, value
 
 	RegPluginLibrary("freak_fortress_2");
+	RegPluginLibrary("ff2_potry");
 
 	subpluginArray=CreateArray(64); // Create this as soon as possible so that subplugins have access to it
 
