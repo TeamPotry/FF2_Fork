@@ -1717,7 +1717,10 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 				{
 					GetBossName(bossindexs[loop], bossName, sizeof(bossName), client);
 					BossLives[bossindexs[loop]]>1 ? Format(lives, sizeof(lives), "x%i", BossLives[bossindexs[loop]]) : strcopy(lives, 2, "");
-					Format(text, sizeof(text), "%s\n%t", text, "Boss Win Final Health", bossName, Boss[bossindexs[loop]], BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], lives);
+
+					if(loop == 0) {
+						Format(text, sizeof(text), "%s\n%t", text, "Boss Win Final Health", bossName, Boss[bossindexs[loop]], BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], lives);
+					}
 					CPrintToChat(client, "{olive}[FF2]{default} %t", "Boss Win Final Health", bossName, Boss[bossindexs[loop]], BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], lives);
 				}
 				FF2_ShowHudText(client, -1, "%s", text);
@@ -2321,9 +2324,9 @@ public Action MessageTimer(Handle timer)
 				Format(text, sizeof(text), "%s\n%t", text, "Boss Info", Boss[bossindexs[loop]], name, BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), lives);
 				Format(textChat, sizeof(textChat), "{olive}[FF2]{default} %t!", "Boss Info", Boss[bossindexs[loop]], name, BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), lives);
 				ReplaceString(textChat, sizeof(textChat), "\n", "");  //Get rid of newlines
+				CPrintToChat(client, "%s", textChat);
 			}
 
-			CPrintToChat(client, "%s", textChat);
 			FF2_ShowSyncHudText(client, infoHUD, text);
 		}
 	}
