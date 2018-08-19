@@ -328,6 +328,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_ClearSoundFlags", Native_ClearSoundFlags);
 	CreateNative("FF2_CheckSoundFlags", Native_CheckSoundFlags);
 
+	// ff2_potry.inc
+	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
+	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
+	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
+
 	PreAbility=CreateGlobalForward("FF2_PreAbility", ET_Hook, Param_Cell, Param_String, Param_String, Param_Cell, Param_CellByRef);  //Boss, plugin name, ability name, slot, enabled
 	OnAbility=CreateGlobalForward("FF2_OnAbility", ET_Hook, Param_Cell, Param_String, Param_String, Param_Cell, Param_Cell);  //Boss, plugin name, ability name, slot, status
 	OnMusic=CreateGlobalForward("FF2_OnMusic", ET_Hook, Param_Cell, Param_String, Param_CellByRef);
@@ -373,7 +378,7 @@ public void OnPluginStart()
 	cvarHealthBar=CreateConVar("ff2_health_bar", "1", "0-Disable the health bar, 1-Show the health bar", _, true, 0.0, true, 1.0);
 	cvarLastPlayerGlow=CreateConVar("ff2_last_player_glow", "1", "0-Don't outline the last player, 1-Outline the last player alive", _, true, 0.0, true, 1.0);
 	cvarBossTeleporter=CreateConVar("ff2_boss_teleporter", "1", "-1 to disallow all bosses from using teleporters, 0 to use TF2 logic, 1 to allow all bosses", _, true, -1.0, true, 1.0);
-	cvarBossSuicide=CreateConVar("ff2_boss_suicide", "1", "Allow the boss to suicide after the round starts?", _, true, 0.0, true, 1.0);
+	cvarBossSuicide=CreateConVar("ff2_boss_suicide", "0", "Allow the boss to suicide after the round starts?", _, true, 0.0, true, 1.0);
 	cvarPreroundBossDisconnect=CreateConVar("ff2_replace_disconnected_boss", "1", "If a boss disconnects before the round starts, use the next player in line instead? 0 - No, 1 - Yes", _, true, 0.0, true, 1.0);
 	cvarCaberDetonations=CreateConVar("ff2_caber_detonations", "5", "Amount of times somebody can detonate the Ullapool Caber");
 	cvarShieldCrits=CreateConVar("ff2_shield_crits", "1", "0 to disable grenade launcher crits when equipping a shield, 1 for minicrits, 2 for crits", _, true, 0.0, true, 2.0);
@@ -1388,6 +1393,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	for(int client=1; client<=MaxClients; client++)
 	{
 		Damage[client]=0;
+		Assist[client]=0;
 		uberTarget[client]=-1;
 		emitRageSound[client]=true;
 		if(IsValidClient(client) && TF2_GetClientTeam(client)>TFTeam_Spectator)
@@ -1739,12 +1745,17 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 	int top[3];
 	Damage[0]=0;
+
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(!IsValidClient(client) || Damage[client]<=0 || IsBoss(client))
 		{
 			continue;
 		}
+
+		if(Assist[client]>10)
+			Damage[client]+=Assist[client]/2;
+		Assist[client]=0;
 
 		if(Damage[client]>=Damage[top[0]])
 		{
@@ -3915,6 +3926,7 @@ public void OnClientPostAdminCheck(int client)
 
 	FF2Flags[client]=0;
 	Damage[client]=0;
+	Assist[client]=0;
 	uberTarget[client]=-1;
 
 	if(playBGM[0])
@@ -5530,7 +5542,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					int teleowner=FindTeleOwner(attacker);
 					if(IsValidClient(teleowner) && teleowner!=attacker)
 					{
-						Damage[teleowner]+=9001*3/5;
+						Assist[teleowner]+=9001*3/5;
 						if(!(FF2Flags[teleowner] & FF2FLAG_HUDDISABLED))
 						{
 							PrintHintText(teleowner, "TELEFRAG ASSIST!  Nice job setting it up!");
@@ -5758,11 +5770,11 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			{
 				if(damage<10 || uberTarget[healers[target]]==attacker)
 				{
-					Damage[healers[target]]+=damage;
+					Assist[healers[target]]+=damage;
 				}
 				else
 				{
-					Damage[healers[target]]+=damage/(healerCount+1);
+					Assist[healers[target]]+=damage/(healerCount+1);
 				}
 			}
 		}
@@ -7071,9 +7083,9 @@ public Action HelpPanel3(int client)
 	}
 
 	Panel panel=CreatePanel();
-	panel.SetTitle("Turn the Freak Fortress 2 class info...");
-	panel.DrawItem("On");
-	panel.DrawItem("Off");
+	panel.SetTitle("FF2 병과 정보를..");
+	panel.DrawItem("ON");
+	panel.DrawItem("OFF");
 	panel.Send(client, ClassInfoTogglePanelH, MENU_TIME_FOREVER);
 	delete panel;
 	return Plugin_Handled;
@@ -7680,6 +7692,21 @@ public int Native_GetBossKV(Handle plugin, int numParams)
 	return view_as<int>(GetBossKV(GetNativeCell(1)));
 }
 
+public KeyValues GetCharacterKV(int characterIndex)
+{
+	if(characterIndex>=0 && characterIndex<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, characterIndex))!=null)
+	{
+		KvRewind(GetArrayCell(bossesArrayShadow, characterIndex));
+		return view_as<KeyValues>(GetArrayCell(bossesArray, characterIndex));
+	}
+	return null;
+}
+
+public int Native_GetCharacterKV(Handle plugin, int numParams)
+{
+	return view_as<int>(GetCharacterKV(GetNativeCell(1)));
+}
+
 public int GetBossHealth(int boss)
 {
 	return BossHealth[boss];
@@ -7870,6 +7897,26 @@ public int SetClientDamage(int client, int damage)
 public int Native_SetClientDamage(Handle plugin, int numParams)
 {
 	SetClientDamage(GetNativeCell(1), GetNativeCell(2));
+}
+
+public int GetClientAssist(int client)
+{
+	return Assist[client];
+}
+
+public int Native_GetClientAssist(Handle plugin, int numParams)
+{
+	return GetClientAssist(GetNativeCell(1));
+}
+
+public void SetClientAssist(int client, int assist)
+{
+	Assist[client]=assist;
+}
+
+public int Native_SetClientAssist(Handle plugin, int numParams)
+{
+	SetClientAssist(GetNativeCell(1), GetNativeCell(2));
 }
 
 public bool HasAbility(int boss, const char[] pluginName, const char[] abilityName)
