@@ -1,0 +1,45 @@
+"Phrases"
+{
+    "FF2Boss InGame Only"
+    {
+        "ko"    "게임 안에서만 사용하실 수 있습니다."
+    }
+
+    "FF2Boss Dont Play Boss"
+    {
+        "ko"    "선택 안함."
+    }
+
+    "FF2Boss Saved QueuePoints"
+    {
+        "#format"   "{1:d}"
+        "ko"    "저장된 대기열 포인트: {1}"
+    }
+
+    "FF2Boss Menu Title"
+    {
+        "#format"   "{1:s}"
+        "ko"    "현재 선택한 보스: {1}"
+    }
+
+    "FF2Boss Menu Random"
+    {
+        "ko"    "무작위 보스"
+    }
+
+    "FF2Boss Menu None"
+    {
+        "ko"    "보스를 하지 않습니다."
+    }
+
+    "FF2Boss Selected"
+    {
+        "#format"   "{1:s}"
+        "ko"    "보스 선택: {orange}{1}{default}"
+    }
+
+    "FF2Boss Cant Chosse This Map"
+    {
+        "ko"    "이 맵에선 금지되었습니다!"
+    }
+}
