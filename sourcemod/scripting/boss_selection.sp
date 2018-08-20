@@ -240,6 +240,10 @@ public Action Command_SetMyBoss(int client, int args)
 		ReplyToCommand(client, "[SM] %t", "FF2Boss InGame Only");
 		return Plugin_Handled;
 	}
+
+	if(FF2_GetBossIndex(client) != -1)
+		return Plugin_Handled;
+
 /*
 	if(Steam_RequestGroupStatus(client, PORTY_GROUP_ID) && !IsPlayerInGroup[client])
 	{
