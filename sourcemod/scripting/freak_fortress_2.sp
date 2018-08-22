@@ -592,12 +592,12 @@ public void OnMapStart()
 	{
 		if(view_as<Handle>(GetArrayCell(bossesArray, index))!=null)
 		{
-			CloseHandle(GetArrayCell(bossesArray, index));
+			delete view_as<Handle>(GetArrayCell(bossesArray, index));
 			SetArrayCell(bossesArray, index, INVALID_HANDLE);
 		}
 		if(view_as<Handle>(GetArrayCell(bossesArrayShadow, index))!=null)
 		{
-			CloseHandle(GetArrayCell(bossesArrayShadow, index));
+			delete view_as<Handle>(GetArrayCell(bossesArrayShadow, index));
 			SetArrayCell(bossesArrayShadow, index, INVALID_HANDLE);
 		}
 	}
