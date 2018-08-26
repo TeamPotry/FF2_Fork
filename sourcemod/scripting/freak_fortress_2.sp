@@ -25,6 +25,9 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2_stocks>
 #include <tf2items>
 #include <tf2attributes>
+
+#include "ff2_module/hud.sp"
+
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
@@ -332,6 +335,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
 	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
 	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
+
+	//ff2_module/hud.sp
+	HudInit();
 
 	PreAbility=CreateGlobalForward("FF2_PreAbility", ET_Hook, Param_Cell, Param_String, Param_String, Param_Cell, Param_CellByRef);  //Boss, plugin name, ability name, slot, enabled
 	OnAbility=CreateGlobalForward("FF2_OnAbility", ET_Hook, Param_Cell, Param_String, Param_String, Param_Cell, Param_Cell);  //Boss, plugin name, ability name, slot, status
