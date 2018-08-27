@@ -4083,14 +4083,21 @@ public Action ClientTimer(Handle timer)
 			if(!IsPlayerAlive(client))
 			{
 				int observer=GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+				// FF2HudDisplay display = new FF2HudDisplay("test", "");
+				// char hudText[100];
 				if(IsValidClient(observer) && !IsBoss(observer) && observer!=client)
 				{
+					// Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
+					// display.SetDisplay(hudText);
 					FF2_ShowSyncHudText(client, rageHUD, "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
 				}
 				else
 				{
+					// Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client]);
+					// display.SetDisplay(hudText);
 					FF2_ShowSyncHudText(client, rageHUD, "%t", "Your Damage Dealt", Damage[client]);
 				}
+				// display.ShowSyncHudDisplayText(client, rageHUD);
 				continue;
 			}
 			FF2_ShowSyncHudText(client, rageHUD, "%t", "Your Damage Dealt", Damage[client]);
