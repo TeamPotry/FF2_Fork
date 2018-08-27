@@ -3515,6 +3515,7 @@ public Action OnUberDeployed(Event event, const char[] name, bool dontBroadcast)
 			if(StrEqual(classname, "tf_weapon_medigun"))
 			{
 				TF2_AddCondition(client, TFCond_HalloweenCritCandy, 0.5, client);
+				TF2_AddCondition(client, TFCond_Ubercharged, 0.5);
 				int target=GetHealingTarget(client);
 				if(IsValidClient(target, false) && IsPlayerAlive(target))
 				{
