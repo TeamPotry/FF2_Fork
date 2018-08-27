@@ -3521,6 +3521,7 @@ public Action OnUberDeployed(Event event, const char[] name, bool dontBroadcast)
 			if(StrEqual(classname, "tf_weapon_medigun"))
 			{
 				TF2_AddCondition(client, TFCond_HalloweenCritCandy, 0.5, client);
+				TF2_AddCondition(client, TFCond_Ubercharged, 0.5);
 				int target=GetHealingTarget(client);
 				if(IsValidClient(target, false) && IsPlayerAlive(target))
 				{
@@ -3541,7 +3542,7 @@ public Action OnUberDeployed(Event event, const char[] name, bool dontBroadcast)
 public Action Timer_Uber(Handle timer, int medigunid)
 {
 	int medigun=EntRefToEntIndex(medigunid);
-	if(medigun && IsValidEntity(medigun) && CheckRoundState()==FF2RoundState_RoundRunning)
+	if(medigun && IsValidEntity(medigun) && CheckRoundState()==FF2RoundState_RoundRunning && GetEntProp(medigun, Prop_Send, "m_bChargeRelease")>0)
 	{
 		int client=GetEntPropEnt(medigun, Prop_Send, "m_hOwnerEntity");
 		float charge=GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel");
