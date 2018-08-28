@@ -4887,7 +4887,7 @@ public Action Timer_Damage(Handle timer, int userid)
 	int client=GetClientOfUserId(userid);
 	if(IsValidClient(client, false))
 	{
-		CPrintToChat(client, "{olive}[FF2] %t. %t{default}", "Total Damage Dealt", Damage[client], "Points Earned", RoundFloat(Damage[client]/600.0));
+		CPrintToChat(client, "{olive}[FF2] %t.{default}", "Total Damage Dealt", Damage[client]);
 	}
 	return Plugin_Continue;
 }
