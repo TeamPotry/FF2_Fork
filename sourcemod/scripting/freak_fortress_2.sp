@@ -5275,7 +5275,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(damagecustom==TF_CUSTOM_HEADSHOT)
 						{
-							damage=255.0;
+							damage=255.0 > damage ? damage : 255.0;
 							return Plugin_Changed;
 						}
 					}
