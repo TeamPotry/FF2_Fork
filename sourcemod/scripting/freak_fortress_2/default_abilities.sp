@@ -24,7 +24,7 @@ Handle OnSuperJump;
 Handle OnRage;
 Handle OnWeighdown;
 
-Handle gravityDatapack[MAXPLAYERS+1];
+// Handle gravityDatapack[MAXPLAYERS+1];
 
 Handle jumpHUD;
 
@@ -527,53 +527,42 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 		return;
 	}
 
-	float charge=FF2_GetBossCharge(boss, slot)+0.2;
 	if(!(GetEntityFlags(client) & FL_ONGROUND))
 	{
-		if(charge>=4.0)
+		float angles[3];
+		GetClientEyeAngles(client, angles);
+		if(angles[0]>60.0)
 		{
-			float angles[3];
-			GetClientEyeAngles(client, angles);
-			if(angles[0]>60.0)
+			Action action;
+			Call_StartForward(OnWeighdown);
+			Call_PushCell(boss);
+			Call_Finish(action);
+			if(action==Plugin_Handled || action==Plugin_Stop)
 			{
-				Action action;
-				Call_StartForward(OnWeighdown);
-				Call_PushCell(boss);
-				Call_Finish(action);
-				if(action==Plugin_Handled || action==Plugin_Stop)
-				{
-					return;
-				}
-
-				DataPack data;
-				float velocity[3];
-				if(gravityDatapack[client]==null)
-				{
-					gravityDatapack[client]=CreateDataTimer(2.0, Timer_ResetGravity, data, TIMER_FLAG_NO_MAPCHANGE);
-					data.WriteCell(GetClientUserId(client));
-					data.WriteFloat(GetEntityGravity(client));
-					data.Reset();
-				}
-
-				GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-				velocity[2]=-1000.0;
-				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
-				SetEntityGravity(client, 6.0);
-
-				FF2_SetBossCharge(boss, slot, 0.0);
+				return;
 			}
+
+			// DataPack data;
+			float velocity[3];
+			/*
+			if(gravityDatapack[client]==null)
+			{
+				gravityDatapack[client]=CreateDataTimer(2.0, Timer_ResetGravity, data, TIMER_FLAG_NO_MAPCHANGE);
+				data.WriteCell(GetClientUserId(client));
+				data.WriteFloat(GetEntityGravity(client));
+				data.Reset();
+			}
+			*/
+
+			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+			velocity[2]=-2500.0;
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+
+			FF2_SetBossCharge(boss, slot, 0.0);
 		}
-		else
-		{
-			FF2_SetBossCharge(boss, slot, charge);
-		}
-	}
-	else if(charge>0.3 || charge<0)
-	{
-		FF2_SetBossCharge(boss, slot, 0.0);
 	}
 }
-
+/*
 public Action Timer_ResetGravity(Handle timer, DataPack data)
 {
 	int client=GetClientOfUserId(data.ReadCell());
@@ -584,6 +573,7 @@ public Action Timer_ResetGravity(Handle timer, DataPack data)
 	gravityDatapack[client]=null;
 	return Plugin_Continue;
 }
+*/
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
