@@ -555,7 +555,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 			*/
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-			velocity[2]=-2500.0;
+			velocity[2]=-1200.0;
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 
 			FF2_SetBossCharge(boss, slot, 0.0);
