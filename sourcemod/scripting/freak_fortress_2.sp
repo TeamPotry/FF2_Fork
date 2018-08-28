@@ -5123,9 +5123,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		return Plugin_Continue;
 	}
 
-	if((attacker<=0 || client==attacker) && IsBoss(client))
+	if(IsBoss(client))
 	{
-		damage=0.0;
+		if(attacker<=0)
+			damage=1.0;
+		else if(client==attacker)
+			damage=0.0; // TODO: For now.
 		return Plugin_Changed;
 	}
 
