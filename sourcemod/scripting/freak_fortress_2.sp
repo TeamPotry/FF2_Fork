@@ -3479,10 +3479,10 @@ stock void RemovePlayerBack(int client, int[] indices, int length)
 stock int FindPlayerBack(int client, int index)
 {
 	int entity=MaxClients+1;
-	while((entity=FindEntityByClassname2(entity, "tf_wearable"))!=-1)
+	while((entity=FindEntityByClassname2(entity, "tf_wearable*"))!=-1)
 	{
 		char netclass[32];
-		if(GetEntityNetClass(entity, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable") && GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex")==index && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
+		if(GetEntityNetClass(entity, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearable")!=-1 && GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex")==index && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
 		{
 			return entity;
 		}
@@ -5168,7 +5168,15 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 			if(shield[client] && damage)
 			{
-				RemoveShield(client, attacker, position);
+				if(GetEntProp(shield[client], Prop_Send, "m_iItemDefinitionIndex")==57
+				&& GetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", TFWeaponSlot_Secondary)>=100.0)
+				{
+					PlayShieldBreakSound(client, attacker, position);
+					SetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", 0.0, TFWeaponSlot_Secondary);
+				}
+				else
+					RemoveShield(client, attacker, position);
+
 				return Plugin_Handled;
 			}
 
@@ -7538,12 +7546,17 @@ public Action Timer_UseBossCharge(Handle timer, DataPack data)
 stock void RemoveShield(int client, int attacker, float position[3])
 {
 	TF2_RemoveWearable(client, shield[client]);
-	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	PlayShieldBreakSound(client, attacker, position);
 	TF2_AddCondition(client, TFCond_Bonked, 0.1); // Shows "MISS!" upon breaking shield
 	shield[client]=0;
+}
+
+stock void PlayShieldBreakSound(int client, int attacker, float position[3])
+{
+	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 }
 
 //Natives aren't inlined because of https://github.com/50DKP/FF2-Official/issues/263
