@@ -155,6 +155,20 @@ methodmap FF2HudQueue < ArrayList
         this.Resize(size + 1);
     }
 
+    public FF2HudQueue KillSelf()
+    {
+        FF2HudDisplay willDeleted;
+        for(int loop = 0; this.Length > loop; loop++)
+        {
+            willDeleted = this.GetHud(loop);
+            if(willDeleted != null)
+                delete willDeleted;// willDeleted.KillSelf();
+        }
+
+        delete this;
+        return null;
+    }
+
     public native void ShowSyncHudQueueText(Handle sync = null);
 }
 
