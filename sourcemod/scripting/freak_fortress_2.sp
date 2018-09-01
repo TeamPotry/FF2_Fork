@@ -4072,36 +4072,36 @@ public Action ClientTimer(Handle timer)
 		return Plugin_Stop;
 	}
 
-	char classname[32];
+	char classname[32], hudText[64];
 	TFCond cond;
+	FF2HudQueue hudQueue;
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && !IsBoss(client) && !(FF2Flags[client] & FF2FLAG_CLASSTIMERDISABLED))
 		{
 			SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
 			SetGlobalTransTarget(client);
+			hudQueue = new FF2HudQueue(client);
 
 			if(!IsPlayerAlive(client))
 			{
 				int observer=GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-				// FF2HudDisplay display = new FF2HudDisplay("test", "");
-				// char hudText[100];
 				if(IsValidClient(observer) && !IsBoss(observer) && observer!=client)
 				{
-					// Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
-					// display.SetDisplay(hudText);
-					FF2_ShowSyncHudText(client, rageHUD, "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
+					Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
+					hudQueue.PushHud(new FF2HudDisplay("Observer Target Player Hud", hudText));
 				}
 				else
 				{
-					// Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client]);
-					// display.SetDisplay(hudText);
-					FF2_ShowSyncHudText(client, rageHUD, "%t", "Your Damage Dealt", Damage[client]);
+					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+					hudQueue.PushHud(new FF2HudDisplay("Observer Target Boss Hud", hudText));
 				}
-				// display.ShowSyncHudDisplayText(client, rageHUD);
 				continue;
 			}
-			FF2_ShowSyncHudText(client, rageHUD, "%t", "Your Damage Dealt", Damage[client]);
+			Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+			hudQueue.PushHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+			hudQueue.ShowSyncHudQueueText(rageHUD);
+			hudQueue.KillSelf();
 
 			TFClassType playerclass=TF2_GetPlayerClass(client);
 			int weapon=GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -4333,9 +4333,12 @@ public Action BossTimer(Handle timer)
 		{
 			continue;
 		}
+		FF2HudQueue bossHudQueue = new FF2HudQueue(client);
 		validBoss=true;
 		SetGlobalTransTarget(client);
+		char text[64];
 
+		// TODO: "use_fixed_speed"
 		SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.7*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
 
 		if(BossHealth[boss]<=0 && IsPlayerAlive(client))  //Wat.  TODO:  Investigate
@@ -4349,6 +4352,11 @@ public Action BossTimer(Handle timer)
 			FF2_ShowSyncHudText(client, livesHUD, "%t", "Boss Lives Left", BossLives[boss], BossLivesMax[boss]);
 		}
 
+		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
+		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
+
+		bossHudQueue.PushHud(new FF2HudDisplay("Rage Meter", text));
+
 		if(RoundFloat(BossCharge[boss][0])==100.0)
 		{
 			if(IsFakeClient(client) && !(FF2Flags[client] & FF2FLAG_BOTRAGE))
@@ -4359,7 +4367,8 @@ public Action BossTimer(Handle timer)
 			else
 			{
 				SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
-				FF2_ShowSyncHudText(client, rageHUD, "%t", "Activate Rage");
+				Format(text, sizeof(text), "%t", "Activate Rage");
+				bossHudQueue.PushHud(new FF2HudDisplay("Activate Rage", text));
 
 				char sound[PLATFORM_MAX_PATH];
 				if(FindSound("full rage", sound, sizeof(sound), boss) && emitRageSound[boss])
@@ -4371,11 +4380,8 @@ public Action BossTimer(Handle timer)
 				}
 			}
 		}
-		else
-		{
-			SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
-			FF2_ShowSyncHudText(client, rageHUD, "%t", "Rage Meter", RoundFloat(BossCharge[boss][0]));
-		}
+		bossHudQueue.ShowSyncHudQueueText(rageHUD);
+		bossHudQueue.KillSelf();
 		SetHudTextParams(-1.0, 0.88, 0.06, 255, 255, 255, 255);
 
 		SetClientGlow(client, -0.05);
