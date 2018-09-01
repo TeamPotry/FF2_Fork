@@ -1,3 +1,4 @@
+Handle OnCalledQueue;
 Handle OnDisplayHud, OnDisplayHudPost;
 
 // Native things
@@ -7,6 +8,7 @@ void HudInit()
     CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
     CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
 
+    OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
     OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
     OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
 }
@@ -63,6 +65,13 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
         FF2_ShowSyncHudText(queue.ClientIndex, sync, text);
     else
         FF2_ShowHudText(queue.ClientIndex, -1, text);
+}
+
+public void Forward_OnCalledQueue(FF2HudQueue hudQueue)
+{
+    Call_StartForward(OnCalledQueue);
+    Call_PushCell(hudQueue);
+    Call_Finish();
 }
 
 public Action Forward_OnDisplayHud(int client, const char[] info, char[] display)

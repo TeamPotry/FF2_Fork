@@ -190,6 +190,7 @@ methodmap FF2HudQueue < ArrayList
     public native void ShowSyncHudQueueText(Handle sync = null);
 }
 
+forward void FF2_OnCalledQueue(FF2HudQueue hudQueue);
 forward Action FF2_OnDisplayHud(const int client, const char[] info, char[] display);
 forward void FF2_OnDisplayHud_Post(const int client, const char[] info, const char[] display);
 
