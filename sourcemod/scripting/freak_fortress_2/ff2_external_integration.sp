@@ -5,6 +5,8 @@
 
 #include <sourcemod>
 #include <freak_fortress_2>
+#include <tf2>
+#include <tf2_stocks>
 #undef REQUIRE_PLUGIN
 #tryinclude <goomba>
 #tryinclude <rtd>
@@ -46,6 +48,7 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 {
 	if(FF2_IsFF2Enabled() && cvarGoomba.BoolValue)
 	{
+		/*
 		if(FF2_GetBossIndex(attacker)!=-1)
 		{
 			float position[3];
@@ -56,7 +59,8 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			PrintCenterText(attacker, "%t", "Boss Goomba Stomped");
 			return Plugin_Changed;
 		}
-		else if(FF2_GetBossIndex(victim)!=-1)
+		*/
+		if(FF2_GetBossTeam() != TF2_GetClientTeam(attacker))
 		{
 			damageMultiplier=cvarGoombaDamage.FloatValue;
 			JumpPower=cvarGoombaRebound.FloatValue;
@@ -64,6 +68,8 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			PrintCenterText(attacker, "%t", "Human Goomba Stomped");
 			return Plugin_Changed;
 		}
+
+		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
