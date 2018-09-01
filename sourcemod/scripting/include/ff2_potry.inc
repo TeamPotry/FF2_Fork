@@ -107,12 +107,11 @@ methodmap FF2HudQueue < ArrayList
 {
     public FF2HudQueue(int client, int initialSize = 2)
     {
-        FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList());
-        this.Set(view_as<int>(HudQueue_ClientIndex), client);
-        this.Resize(initialSize + 1);
+        FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList(64, initialSize + view_as<int>(HudQueueValue_Last)));
+        array.Set(view_as<int>(HudQueue_ClientIndex), client);
 
-        for(int loop = view_as<int>(HudQueueValue_Last); loop < initialSize + 1; loop++)
-            this.Set(loop, INVALID_HANDLE);
+        for(int loop = view_as<int>(HudQueueValue_Last); loop < initialSize + view_as<int>(HudQueueValue_Last); loop++)
+            array.Set(loop, view_as<FF2HudQueue>(null));
 
         return array;
     }
@@ -153,12 +152,20 @@ methodmap FF2HudQueue < ArrayList
             }
         }
         this.Resize(size + 1);
+
+        if(size > beforeSize)
+        {
+            for(int loop = beforeSize; size >= loop; loop++)
+            {
+                this.SetHud(loop, view_as<FF2HudDisplay>(null));
+            }
+        }
     }
 
     public FF2HudQueue KillSelf()
     {
         FF2HudDisplay willDeleted;
-        for(int loop = 0; this.Length > loop; loop++)
+        for(int loop = 1; loop < this.Length; loop++)
         {
             willDeleted = this.GetHud(loop);
             if(willDeleted != null)

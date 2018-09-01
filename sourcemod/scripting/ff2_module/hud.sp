@@ -37,18 +37,25 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
     FF2HudDisplay displayArray;
 
     char text[300], info[64], display[64];
+    int displayCount = 0;
+    Forward_OnCalledQueue(queue);
 
     for(int loop = 1; loop < queue.Length; loop++)
     {
         displayArray = queue.GetHud(loop);
+        if(displayArray == null)
+            continue;
 
+        displayCount++;
         displayArray.GetInfo(info, 64);
         displayArray.GetDisplay(display, 64);
         Action action = Forward_OnDisplayHud(queue.ClientIndex, info, display);
 
         if(action != Plugin_Handled && action != Plugin_Stop)
         {
-            Format(text, sizeof(text), "%s%s%s", loop > 1 ? " | " : "", text, display);
+            if(displayCount > 1)
+                Format(text, sizeof(text), "%s | ", text);
+            Format(text, sizeof(text), "%s%s", text, display);
         }
     }
 
