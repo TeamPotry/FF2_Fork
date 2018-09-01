@@ -7371,9 +7371,20 @@ public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MA
 			return Plugin_Changed;
 		}
 
-		if(character[boss]<GetArraySize(bossesArray) && KvGetNum(view_as<Handle>(GetArrayCell(bossesArray, character[boss])), "block voice", 0))
-		{
-			return Plugin_Stop;
+
+		if(character[boss]<GetArraySize(bossesArray))
+		{ // FIXME: ?? WHAT THE FUCK?
+			bool isBlockVoice=false;
+			KeyValues bossKv=view_as<Handle>(GetArrayCell(bossesArray, character[boss]));
+			int kvId;
+			this.GetSectionSymbol(kvId);
+			bossKv.Rewind();
+			isBlockVoice=this.GetNum("block voice", 0);
+			this.JumpToKeySymbol(kvId);
+			if(isBlockVoice)
+			{
+				return Plugin_Stop;
+			}
 		}
 	}
 	return Plugin_Continue;
