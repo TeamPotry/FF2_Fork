@@ -2403,15 +2403,17 @@ void EquipBoss(int boss)
 				kv.GetString("attributes", attributes, sizeof(attributes));
 				if(attributes[0]!='\0')
 				{
-					Format(attributes, sizeof(attributes), "68 ; %i ; 2 ; 3.1 ; %s", TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2 , attributes);
+					Format(attributes, sizeof(attributes), "68 ; %i ; 259 ; 1.0 ; 2 ; 3.1 ; %s", TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2 , attributes);
 						//68: +2 cap rate
 						//2: x3.1 damage
+						//259: Deals 3x falling damage to the player you land on
 				}
 				else
 				{
-					Format(attributes, sizeof(attributes), "68 ; %i ; 2 ; 3.1", TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
+					Format(attributes, sizeof(attributes), "68 ; %i ; 259 ; 1.0 ; 2 ; 3.1", TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
 						//68: +2 cap rate
 						//2: x3.1 damage
+						//259: Deals 3x falling damage to the player you land on
 				}
 
 				int weapon=SpawnWeapon(client, classname, index, 101, 5, attributes);
