@@ -126,6 +126,17 @@ methodmap FF2HudQueue < ArrayList
         this.Set(index, hudDisplay);
     }
 
+     // TODO: 제대로 됨?
+    public void PushHud(FF2HudDisplay hudDisplay)
+    {
+        for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
+            if(this.GetHud(loop) == null)
+            {
+                this.SetHud(loop, hudDisplay);
+                return;
+            }
+    }
+
     property int ClientIndex {
         public get()
         {
