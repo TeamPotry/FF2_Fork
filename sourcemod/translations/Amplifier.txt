@@ -1,0 +1,80 @@
+﻿"Phrases"
+{
+	"AmplifierM"
+	{
+		"en"		"{default}Say {olive}/amp{default} as engineer to select 2nd building. {default}Say {olive}/amp_help{default} to show info."
+		"pl"		"{default} Wpisz {olive}/amp {default}w czat jako Engineer by wybrać drugi budynek. {default}Wpisz {olive}/amp_help{default} w czat by otworzyć pomoc"
+		"ru"		"{default}Введите {olive}/amp{default} для выбора 2го строения Инженера. {default}Введите {olive}/amp_help{default} для справи."
+		"ko"		"{default}명령어 {olive}/amp{default}로 보조 건물을 선택하실 수 있습니다. {default}{olive}/amp_help{default}로 확인"
+	}
+	"AmplifierA"
+	{
+		"en"		"Select your 2nd building:"
+		"pl"		"Wybierz drugi budynek:"
+		"ru"		"Выберите 2е строение Инженера:"
+		"ko"		"보조 건물 선택:"
+	}
+	"AmplifierB"
+	{
+		"en"		"Dispenser"
+		"pl"		"Zasobnik"
+		"ru"		"Раздатчик"
+		"ko"		"디스펜서"
+	}
+	"AmplifierC"
+	{
+		"en"		"Amplifier"
+		"pl"		"Wzmacniacz"
+		"ru"		"Усилитель"
+		"ko"		"크리펜서"
+	}
+	"AmplifierD"
+	{
+		"en"		"Dispenser, don't ask me again"
+		"pl"		"Zasobnik, nie pytaj mnie drugi raz"
+		"ru"		"Раздатчик, не спрашивать больше"
+		"ko"		"디스펜서, 다시 보지 않기"
+	}
+	"AmplifierE"
+	{
+		"en"		"Amplifier, don't ask me again"
+		"pl"		"Wzmacniacz, nie pytaj mnie drugi raz"
+		"ru"		"Усилитель, не спрашивать больше"
+		"ko"		"크리펜서, 다시 보지 않기"
+	}
+	"Amplifier1"
+	{
+		"en"		"=== The Amplifier ==="
+		"pl"		"=== Wzmacniacz ==="
+		"ru"		"=== Усилитель ==="
+		"ko"		"=== 크리펜서 ==="
+	}
+	"Amplifier2"
+	{
+		"en"		"Dispenser's replacement, give crits to teammates (and enemy Spies)"
+		"pl"		"Zamiennik Zasobnika, daje obrażenia krytyczne twojej druzynie (wrogim Szpiegom również)
+		"ru"		"Замена Раздатчику, раздающая криты тиммейтам (и вражеским Шпионам)"
+		"ko"		"디스펜서 대체품, 아군(적 스파이까지)에게 치명을 부여합니다."
+	}
+	"Amplifier3"
+	{
+		"en"		"near Amplifier (200 inch). You can see distance on waves."
+		"pl"		"w pobliżu Wzmacniacza (5 metrów). Możesz zobaczyć na odległość na fali"
+		"ru"		"которые неподалеку (5 метров). Дистанция видна по волнам."
+		"ko"		"부여받을 수 있는 거리는 웨이브를 통해 보실 수 있습니다."
+	}
+	"Amplifier4"
+	{
+		"en"		"On spawn (or type /amp in chat) select 2 or 4 to use Amplifier"
+		"pl"		"Po odrodzeniu się(lub wpisaniu /amp w czat) wybierz 2 lub 4 by wybudować Wzmacniacz"
+		"ru"		"На возрождении (или вводе в чат /amp) выберите Усилитель (2 или 4)"
+		"ko"		"부활할 때, 2번 과 4번을 통해 크리펜서를 사용하실 수 있습니다."
+	}
+	"Amplifier5"
+	{
+		"en"		"and build as Dispenser"
+		"pl"		"i wybudować go jako Zasobnik"
+		"ru"		"и стройте как Раздатчик"
+		"en"		"디스펜서도요!"
+	}
+}
