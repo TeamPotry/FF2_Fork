@@ -58,6 +58,12 @@ methodmap FF2HudDisplay < ArrayList
         return array;
     }
 
+    public FF2HudDisplay KillSelf()
+    {
+        delete this;
+        return null;
+    }
+
     public any GetValue(HudValue valueType)
     {
         return this.Get(view_as<int>(valueType));
@@ -159,7 +165,7 @@ methodmap FF2HudQueue < ArrayList
             for(int loop = 0; between > loop; loop++) {
                 willDeleted = this.GetHud(size + loop);
                 if(willDeleted != null)
-                    delete willDeleted;// willDeleted.KillSelf();
+                    willDeleted.KillSelf();
             }
         }
         this.Resize(size + 1);
@@ -180,7 +186,7 @@ methodmap FF2HudQueue < ArrayList
         {
             willDeleted = this.GetHud(loop);
             if(willDeleted != null)
-                delete willDeleted;// willDeleted.KillSelf();
+                willDeleted.KillSelf();
         }
 
         delete this;
