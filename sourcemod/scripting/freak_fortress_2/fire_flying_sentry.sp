@@ -14,6 +14,11 @@ public Plugin myinfo=
     version="2018_09_03",
 };
 
+public void OnPluginStart()
+{
+    FF2_RegisterSubplugin(PLUGIN_NAME);
+}
+
 public void OnEntityCreated(int entity, const char[] classname)
 {
     SDKHook(entity, SDKHook_SpawnPost, OnProjectileSpawn);
