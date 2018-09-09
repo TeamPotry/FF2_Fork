@@ -5179,11 +5179,15 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 			if(shield[client] && damage)
 			{
-				if(GetEntProp(shield[client], Prop_Send, "m_iItemDefinitionIndex")==57
-				&& GetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", TFWeaponSlot_Secondary)>=100.0)
+				if(GetEntProp(shield[client], Prop_Send, "m_iItemDefinitionIndex")==57)
 				{
-					PlayShieldBreakSound(client, attacker, position);
-					SetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", 0.0, TFWeaponSlot_Secondary);
+					if(GetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", TFWeaponSlot_Secondary)>=100.0)
+					{
+						PlayShieldBreakSound(client, attacker, position);
+						SetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", 0.0, TFWeaponSlot_Secondary);
+						return Plugin_Handled;
+					}
+					return Plugin_Continue;
 				}
 				else
 					RemoveShield(client, attacker, position);
@@ -7709,8 +7713,8 @@ public bool GetBossName(int boss, char[] bossName, int length, int client)
 			}
 			KvRewind(clonedBossKV);
 		}
-		KvGetString(GetArrayCell(bossesArray, character[boss]), "name", bossName, length);
-		delete clonedBossKV;
+		bossKv.GetString("name", bossName, length);
+		bossKv.JumpToKeySymbol(posId);
 
 		return true;
 	}
