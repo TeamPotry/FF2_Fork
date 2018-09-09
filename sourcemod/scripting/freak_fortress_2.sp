@@ -4098,10 +4098,12 @@ public Action ClientTimer(Handle timer)
 					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
 					hudQueue.PushHud(new FF2HudDisplay("Observer Target Boss Hud", hudText));
 				}
-				continue;
 			}
-			Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-			hudQueue.PushHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+			else
+			{
+				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+				hudQueue.PushHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+			}
 			hudQueue.ShowSyncHudQueueText(rageHUD);
 			hudQueue.KillSelf();
 
@@ -5134,10 +5136,15 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 	if(IsBoss(client))
 	{
 		if(attacker<=0)
+		{
 			damage=1.0;
+			return Plugin_Changed;
+		}
 		else if(client==attacker)
+		{
 			damage=0.0; // TODO: For now.
-		return Plugin_Changed;
+			return Plugin_Changed;
+		}
 	}
 
 	if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
@@ -5243,7 +5250,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				}*/
 
 				//Sniper rifles aren't handled by the switch/case because of the amount of reskins there are
-				if(!StrContains(classname, "tf_weapon_sniperrifle"))
+				if(StrContains(classname, "tf_weapon_sniperrifle")!=-1)
 				{
 					if(CheckRoundState()!=FF2RoundState_RoundEnd)
 					{
