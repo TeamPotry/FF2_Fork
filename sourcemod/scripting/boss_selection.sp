@@ -80,9 +80,10 @@ methodmap FF2BossCookie {
 		char tempStr[8];
 		Format(tempStr, sizeof(tempStr), "%d", queuepoints);
 
-		if(queuepoints <= -1 && FF2BossCookie.GetSavedQueuePoints(client) > -1)
+		if(queuepoints <= -1)
 		{
-			FF2_SetQueuePoints(client, FF2BossCookie.GetSavedQueuePoints(client));
+			if(FF2BossCookie.GetSavedQueuePoints(client) > -1)
+				FF2_SetQueuePoints(client, FF2BossCookie.GetSavedQueuePoints(client));
 			SetClientCookie(client, bossCookie, "");
 		}
 		else
@@ -97,6 +98,9 @@ methodmap FF2BossCookie {
 		Handle bossCookie = FF2BossCookie.FindBossIndexCookie(g_strCurrentCharacter);
 		char tempStr[8];
 		GetClientCookie(client, bossCookie, tempStr, sizeof(tempStr));
+
+		if(tempStr[0] == '\0')
+			return -1;
 		return StringToInt(tempStr);
 	}
 
@@ -106,7 +110,14 @@ methodmap FF2BossCookie {
 		char tempStr[8];
 		Format(tempStr, sizeof(tempStr), "%d", bossIndex);
 
-		SetClientCookie(client, bossCookie, tempStr);
+		if(bossIndex <= -1)
+		{
+			SetClientCookie(client, bossCookie, "");
+		}
+		else
+		{
+			SetClientCookie(client, bossCookie, tempStr);
+		}
 	}
 
 	public static bool IsPlayBoss(int client)
@@ -123,7 +134,11 @@ methodmap FF2BossCookie {
 		if(FindBossIndexByName(bossName) != bossindex)
 		{
 			FF2BossCookie.SetSavedIncoming(client, "");
-			FF2BossCookie.SetSavedIncomeIndex(client, 0);
+			FF2BossCookie.SetSavedIncomeIndex(client, -1);
+		}
+		else
+		{
+			strcopy(Incoming[client], MAX_NAME, bossName);
 		}
 	}
 }
@@ -226,10 +241,7 @@ public void OnClientPutInServer(client)
 {
 	if(AreClientCookiesCached(client))
 	{
-		char CookieV[MAX_NAME];
 		FF2BossCookie.InitializeData(client);
-		FF2BossCookie.GetSavedIncoming(client, CookieV, MAX_NAME);
-		strcopy(Incoming[client], sizeof(Incoming[]), CookieV);
 	}
 }
 
@@ -251,10 +263,9 @@ public Action Command_SetMyBoss(int client, int args)
 		return Plugin_Handled;
 	}
 */
-	char CookieV[MAX_NAME], menutext[MAX_NAME*2], bossName[MAX_NAME];
+	char menutext[MAX_NAME*2], bossName[MAX_NAME];
 	KeyValues BossKV;
 	Handle dMenu = CreateMenu(Command_SetMyBossH);
-	FF2BossCookie.GetSavedIncoming(client, CookieV, MAX_NAME);
 	BossKV = FF2_GetCharacterKV(FF2BossCookie.GetSavedIncomeIndex(client));
 
 	SetGlobalTransTarget(client);
@@ -265,7 +276,7 @@ public Action Command_SetMyBoss(int client, int args)
 		Format(menutext, sizeof(menutext), "%s\n%t", menutext, "FF2Boss Saved QueuePoints", FF2BossCookie.GetSavedQueuePoints(client));
 		SetMenuTitle(dMenu, menutext);
 	}
-	else if(StrEqual(CookieV, ""))
+	else if(BossKV == null)
 	{
 		Format(menutext, sizeof(menutext), "%t", "FF2Boss Menu Random");
 		SetMenuTitle(dMenu, "%t", "FF2Boss Menu Title", menutext);
@@ -331,6 +342,7 @@ public Command_SetMyBossH(Handle menu, MenuAction action, int client, int item)
 					Incoming[client] = "";
 
 					FF2BossCookie.SetSavedIncoming(client, Incoming[client]);
+					FF2BossCookie.SetSavedIncomeIndex(client, -1);
 					Format(text, sizeof(text), "%t", "FF2Boss Menu Random");
 					CReplyToCommand(client, "{olive}[FF2]{default} %t", "FF2Boss Selected", text);
 					FF2BossCookie.SetSavedQueuePoints(client, -1);
