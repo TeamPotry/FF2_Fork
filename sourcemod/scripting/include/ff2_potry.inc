@@ -132,29 +132,6 @@ methodmap FF2HudQueue < ArrayList
         this.Set(index, hudDisplay);
     }
 
-     // TODO: 제대로 됨?
-    public void PushHud(FF2HudDisplay hudDisplay)
-    {
-        for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
-            if(this.GetHud(loop) == null)
-            {
-                this.SetHud(loop, hudDisplay);
-                return;
-            }
-    }
-
-    property int ClientIndex {
-        public get()
-        {
-            return this.Get(view_as<int>(HudQueue_ClientIndex));
-        }
-
-        public set(int client)
-        {
-            this.Set(view_as<int>(HudQueue_ClientIndex), client);
-        }
-    }
-
     public void ResizeQueue(int size)
     {
         int beforeSize = this.Length;
@@ -176,6 +153,32 @@ methodmap FF2HudQueue < ArrayList
             {
                 this.SetHud(loop, view_as<FF2HudDisplay>(null));
             }
+        }
+    }
+
+     // TODO: 제대로 됨?
+    public void PushHud(FF2HudDisplay hudDisplay)
+    {
+        for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
+            if(this.GetHud(loop) == null)
+            {
+                this.SetHud(loop, hudDisplay);
+                return;
+            }
+
+        this.ResizeQueue(this.Length);
+        this.SetHud(this.Length-1, hudDisplay);
+    }
+
+    property int ClientIndex {
+        public get()
+        {
+            return this.Get(view_as<int>(HudQueue_ClientIndex));
+        }
+
+        public set(int client)
+        {
+            this.Set(view_as<int>(HudQueue_ClientIndex), client);
         }
     }
 
