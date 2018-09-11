@@ -40,7 +40,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 
 #define MAJOR_REVISION "2"
 #define MINOR_REVISION "1"
-#define STABLE_REVISION "5"
+#define STABLE_REVISION "6"
 #define DEV_REVISION "alpha"
 #if !defined DEV_REVISION
 	#define PLUGIN_VERSION MAJOR_REVISION..."."...MINOR_REVISION..."."...STABLE_REVISION  //2.0.0
