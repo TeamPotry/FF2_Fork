@@ -16,6 +16,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <clientprefs>
 #include <freak_fortress_2>
 #include <ff2_potry>
 #include <adt_array>
