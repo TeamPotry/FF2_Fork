@@ -19,7 +19,6 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <freak_fortress_2>
 #include <ff2_potry>
 #include <adt_array>
-#include <clientprefs>
 #include <morecolors>
 #include <sdkhooks>
 #include <tf2_stocks>
@@ -104,6 +103,7 @@ int BossLivesMax[MAXPLAYERS+1];
 int BossRageDamage[MAXPLAYERS+1];
 float BossSpeed[MAXPLAYERS+1];
 float BossCharge[MAXPLAYERS+1][8];
+
 float Stabbed[MAXPLAYERS+1];
 float Marketed[MAXPLAYERS+1];
 float KSpreeTimer[MAXPLAYERS+1];
@@ -4068,18 +4068,18 @@ public Action ClientTimer(Handle timer)
 				if(IsValidClient(observer) && !IsBoss(observer) && observer!=client)
 				{
 					Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
-					hudQueue.PushHud(new FF2HudDisplay("Observer Target Player Hud", hudText));
+					hudQueue.AddHud(new FF2HudDisplay("Observer Target Player Hud", hudText));
 				}
 				else
 				{
 					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-					hudQueue.PushHud(new FF2HudDisplay("Observer Target Boss Hud", hudText));
+					hudQueue.AddHud(new FF2HudDisplay("Observer Target Boss Hud", hudText));
 				}
 			}
 			else
 			{
 				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-				hudQueue.PushHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+				hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
 			}
 			hudQueue.ShowSyncHudQueueText(rageHUD);
 			hudQueue.KillSelf();
@@ -4336,7 +4336,7 @@ public Action BossTimer(Handle timer)
 		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
 		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
-		bossHudQueue.PushHud(new FF2HudDisplay("Rage Meter", text));
+		bossHudQueue.AddHud(new FF2HudDisplay("Rage Meter", text));
 
 		if(RoundFloat(BossCharge[boss][0])==100.0)
 		{
@@ -4349,7 +4349,7 @@ public Action BossTimer(Handle timer)
 			{
 				SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
 				Format(text, sizeof(text), "%t", "Activate Rage");
-				bossHudQueue.PushHud(new FF2HudDisplay("Activate Rage", text));
+				bossHudQueue.AddHud(new FF2HudDisplay("Activate Rage", text));
 
 				char sound[PLATFORM_MAX_PATH];
 				if(FindSound("full rage", sound, sizeof(sound), boss) && emitRageSound[boss])

@@ -32,6 +32,16 @@ native KeyValues FF2_GetCharacterKV(int characterIndex);
     THE HUD UPDATE
 ****/
 
+enum HudSettingValue
+{
+    HudSetting_None = -1, // Cookie is ""
+    HudSetting_View = 0,
+    HudSetting_ViewAble,
+    HudSetting_ViewDisable,
+
+    HudSettingValue_Last
+};
+
 enum HudQueueValue
 {
     HudQueue_ClientIndex = 0,
@@ -46,6 +56,38 @@ enum HudValue
 
     HudValue_Last
 };
+
+methodmap FF2HudCookie {
+    public static Handle FindHudCookie(const char[] hudId)
+    {
+        char cookieName[80];
+        Format(cookieName, sizeof(cookieName), "ff2_hud_%s", hudId);
+
+        return FindCookieEx(cookieName);
+    }
+
+    public static HudSettingValue GetSetting(int client, const char[] hudId)
+    {
+        Handle cookie = FF2HudCookie.FindHudCookie(hudId);
+
+        char tempStr[8];
+        GetClientCookie(client, cookie, tempStr, sizeof(tempStr));
+
+        if(tempStr[0] == '\0')
+        return HudSetting_None;
+
+        return view_as<HudSettingValue>(StringToInt(tempStr));
+    }
+
+    public static void SetSetting(int client, const char[] hudId, HudSettingValue value)
+    {
+        Handle cookie = FF2HudCookie.FindHudCookie(hudId);
+
+        char tempStr[8];
+        Format(tempStr, sizeof(tempStr), "%d", view_as<int>(value));
+        SetClientCookie(client, cookie, tempStr);
+    }
+}
 
 methodmap FF2HudDisplay < ArrayList
 {
@@ -122,6 +164,18 @@ methodmap FF2HudQueue < ArrayList
         return array;
     }
 
+    property int ClientIndex {
+        public get()
+        {
+            return this.Get(view_as<int>(HudQueue_ClientIndex));
+        }
+
+        public set(int client)
+        {
+            this.Set(view_as<int>(HudQueue_ClientIndex), client);
+        }
+    }
+
     public FF2HudDisplay GetHud(int index)
     {
         return this.Get(index);
@@ -156,30 +210,59 @@ methodmap FF2HudQueue < ArrayList
         }
     }
 
-     // TODO: 제대로 됨?
-    public void PushHud(FF2HudDisplay hudDisplay)
+    public int PushHud(FF2HudDisplay hudDisplay)
     {
         for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
             if(this.GetHud(loop) == null)
             {
                 this.SetHud(loop, hudDisplay);
-                return;
+                return loop;
             }
 
         this.ResizeQueue(this.Length);
         this.SetHud(this.Length-1, hudDisplay);
+
+        return this.Length-1;
     }
 
-    property int ClientIndex {
-        public get()
-        {
-            return this.Get(view_as<int>(HudQueue_ClientIndex));
+    // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
+    public int AddHud(FF2HudDisplay hudDisplay, int other = 0)
+    {
+        char info[80];
+        hudDisplay.GetInfo(info, sizeof(info));
+        HudSettingValue value;
+
+        if((value = FF2HudCookie.GetSetting(this.ClientIndex, info)) > HudSetting_None) { // 나도 안보고 타인에게도 안보여줌
+            if(other > 0) {
+                if(FF2HudCookie.GetSetting(other, info) == HudSetting_ViewDisable) {
+                    return -1;
+                }
+            }
+            else {
+                if(value == HudSetting_ViewAble) // 난 안보지만 타인은 볼 수 있음.
+                    return -1;
+            }
         }
 
-        public set(int client)
+        return this.PushHud(hudDisplay);
+    }
+
+    public int FindHud(const char[] hudId)
+    {
+        char info[80];
+        FF2HudDisplay hudDisplay;
+
+        for(int loop = 1; this.Length > loop; loop++)
         {
-            this.Set(view_as<int>(HudQueue_ClientIndex), client);
+            if((hudDisplay = this.GetHud(loop)) != null)
+            {
+                hudDisplay.GetInfo(info, sizeof(info));
+                if(StrEqual(info, hudId))
+                    return loop;
+            }
         }
+
+        return -1;
     }
 
     public FF2HudQueue KillSelf()
