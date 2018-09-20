@@ -8,6 +8,10 @@
 	{
 		"en"		"Type {olive}/ff2{default} in chat to open the menu"
 	}
+	"Type ff2_advance to Open Menu"
+	{
+		"en"		"Type {olive}/ff2_advance{default} in chat to open the advance menu"
+	}
 	"Wait for Health Value"
 	{
 		"#format"	"{1:i},{2:s}"
@@ -132,6 +136,18 @@
 	"View Queue Points"
 	{
 		"en"		"Queue points"
+	}
+	"Advance Menu Title"
+	{
+		"en"		"Advance Setting Menu (/ff2_advance)"
+	}
+	"Boss Difficulty Setting"
+	{
+		"en"		"Set My Boss Difficulty (/ff2_diffculty)"
+	}
+	"Hud Setting"
+	{
+		"en"		"Set My HUD Setting (/ff2_hud)"
 	}
 	"Exit Menu"
 	{

@@ -438,6 +438,7 @@ public void OnPluginStart()
 
 
 	RegConsoleCmd("ff2", FF2Panel);
+	RegConsoleCmd("ff2_advance", AdvanceMenu);
 	RegConsoleCmd("ff2_hp", Command_GetHPCmd);
 	RegConsoleCmd("ff2_next", QueuePanelCmd);
 	RegConsoleCmd("ff2_classinfo", Command_HelpPanelClass);
@@ -1197,6 +1198,10 @@ public Action Timer_Announce(Handle timer)
 				CPrintToChatAll("{olive}[FF2]{default} %t", "Type ff2 to Open Menu");
 			}
 			case 5:
+			{
+				CPrintToChatAll("{olive}[FF2]{default} %t", "Type ff2_advance to Open Menu");
+			}
+			case 6:
 			{
 				announcecount=0;
 				CPrintToChatAll("{olive}[FF2]{default} %t", "Last FF2 Update", PLUGIN_VERSION);
@@ -6933,6 +6938,8 @@ public Action FF2Panel(int client, int args)  //._.
 		panel.DrawItem(text);
 		Format(text, sizeof(text), "%t", "Toggle Class Changes");
 		panel.DrawItem(text);
+		Format(text, sizeof(text), "%t", "Advance Menu Title");
+		panel.DrawItem(text);
 		Format(text, sizeof(text), "%t", "Exit Menu");
 		panel.DrawItem(text);
 		panel.Send(client, Handler_FF2Panel, MENU_TIME_FOREVER);
@@ -6976,6 +6983,10 @@ public int Handler_FF2Panel(Menu menu, MenuAction action, int client, int select
 			{
 				HelpPanel3(client);
 			}
+			case 8:
+			{
+				AdvanceMenu(client, 0);
+			}
 			default:
 			{
 				return;
@@ -6984,6 +6995,57 @@ public int Handler_FF2Panel(Menu menu, MenuAction action, int client, int select
 	}
 }
 
+public Action AdvanceMenu(int client, int args)
+{
+	if(Enabled2 && IsValidClient(client, false))
+	{
+		Panel panel=CreatePanel();
+		char text[512];
+		SetGlobalTransTarget(client);
+		Format(text, sizeof(text), "%t", "Advance Menu Title");
+		panel.SetTitle(text);
+		Format(text, sizeof(text), "%t", "Boss Difficulty Setting");
+		panel.DrawItem(text, ITEMDRAW_DISABLED); // TODO: For Now.
+		Format(text, sizeof(text), "%t", "Hud Setting");
+		panel.DrawItem(text);
+		Format(text, sizeof(text), "%t", "Exit Menu");
+		panel.DrawItem(text);
+		panel.Send(client, Handler_AdvanceMenuPanel, MENU_TIME_FOREVER);
+		delete panel;
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
+}
+
+public int Handler_AdvanceMenuPanel(Menu menu, MenuAction action, int client, int selection)
+{
+	if(action==MenuAction_Select)
+	{
+		switch(selection)
+		{
+			case 1:
+			{
+				BossDifficultyMenu(client, 0);
+			}
+			case 2:
+			{
+				HudMenu(client, 0);
+			}
+			default:
+			{
+				return;
+			}
+		}
+	}
+}
+
+public Action BossDifficultyMenu(int client, int args)
+{
+
+}
+
+public Action HudMenu(int client, int args)
+{
 public int Handler_ChangelogMenu(Menu menu, MenuAction action, int client, int selection)
 {
 	if(IsValidClient(client) && action==MenuAction_Select)

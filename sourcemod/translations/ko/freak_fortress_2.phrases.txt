@@ -8,6 +8,10 @@
 	{
 		"ko"		"{olive}/ff2{default} 명령어를 채팅에 입력하여 메뉴를 여실 수 있습니다."
 	}
+	"Type ff2_advance to Open Menu"
+	{
+		"ko"		"{olive}/ff2_advance{default} 명령어를 채팅에 입력하여 고급 메뉴를 여실 수 있습니다."
+	}
 	"Wait for Health Value"
 	{
 		"#format"	"{1:i},{2:s}"
@@ -132,6 +136,18 @@
 	"View Queue Points"
 	{
 		"ko"		"보스 대기열 보기 (/ff2_next)"
+	}
+	"Advance Menu Title"
+	{
+		"ko"		"고급 설정 (/ff2_advance)"
+	}
+	"Boss Difficulty Setting"
+	{
+		"ko"		"내 보스 난이도 설정 (/ff2_diffculty)"
+	}
+	"Hud Setting"
+	{
+		"ko"		"HUD 설정 (/ff2_hud)"
 	}
 	"Exit Menu"
 	{
