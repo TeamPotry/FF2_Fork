@@ -4093,15 +4093,31 @@ public Action ClientTimer(Handle timer)
 			if(!IsPlayerAlive(client))
 			{
 				int observer=GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-				if(IsValidClient(observer) && !IsBoss(observer) && observer!=client)
+				if(IsValidClient(observer) && observer!=client)
 				{
-					Format(hudText, sizeof(hudText), "%t - %t", "Your Damage Dealt", Damage[client], "Spectator Damage Dealt", observer, Damage[observer]);
-					hudQueue.AddHud(new FF2HudDisplay("Observer Target Player Hud", hudText));
+					if(!IsBoss(observer))
+					{
+						Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+						hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
+						hudQueue.AddHud(new FF2HudDisplay("Observer Target Player Hud", hudText), observer);
+					}
+					else if(IsBoss(observer))
+					{
+						int boss=GetBossIndex(observer);
+						char lives[8];
+						if(BossLives[boss]>1)
+						{
+							Format(lives, 8, "x%d", BossLives[boss]);
+						}
+						Format(hudText, sizeof(hudText), "HP: %d / %d%s", BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
+						hudQueue.AddHud(new FF2HudDisplay("Observer Target Boss Hud", hudText));
+					}
 				}
 				else
 				{
 					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-					hudQueue.AddHud(new FF2HudDisplay("Observer Target Boss Hud", hudText));
+					hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
 				}
 			}
 			else
