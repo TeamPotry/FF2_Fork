@@ -149,6 +149,30 @@
 	{
 		"ko"		"HUD 설정 (/ff2_hud)"
 	}
+	"HudMenu Title"
+	{
+		"ko"		"HUD 설정"
+	}
+	"HudMenu Boss"
+	{
+		"ko"		"보스 시점"
+	}
+	"HudMenu Player"
+	{
+		"ko"		"플레이어 시점"
+	}
+	"HudMenu Observer"
+	{
+		"ko"		"관전자 시점"
+	}
+	"HudMenu Other"
+	{
+		"ko"		"그 외의 HUD"
+	}
+	"Hud Setting Not Found!"
+	{
+		"ko"		"그 항목에서는 설정할 항목이 없습니다!"
+	}
 	"Exit Menu"
 	{
 		"ko"		"나가기"

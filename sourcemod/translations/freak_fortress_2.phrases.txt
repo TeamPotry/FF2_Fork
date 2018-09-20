@@ -149,6 +149,30 @@
 	{
 		"en"		"Set My HUD Setting (/ff2_hud)"
 	}
+	"HudMenu Title"
+	{
+		"en"		"HUD Setting"
+	}
+	"HudMenu Boss"
+	{
+		"en"		"Playing Boss"
+	}
+	"HudMenu Player"
+	{
+		"en"		"Playing Human"
+	}
+	"HudMenu Observer"
+	{
+		"en"		"Observer"
+	}
+	"HudMenu Other"
+	{
+		"en"		"Other HUD"
+	}
+	"Hud Setting Not Found!"
+	{
+		"en"		"Hud Setting Not Found!"
+	}
 	"Exit Menu"
 	{
 		"en"		"Exit"

@@ -65,6 +65,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #define DOORS_CONFIG "doors.cfg"
 #define WEAPONS_CONFIG "weapons.cfg"
 #define MAPS_CONFIG	"maps.cfg"
+#define HUDS_CONFIG "hud_setting.cfg"
 #define CHANGELOG "changelog.txt"
 
 #if defined _steamtools_included
@@ -217,6 +218,7 @@ int changeGamemode;
 
 //Handle kvWeaponSpecials;
 KeyValues kvWeaponMods;
+KeyValues kvHudConfigs;
 
 enum FF2RoundState
 {
@@ -654,6 +656,10 @@ public void EnableFF2()
 
 	ParseChangelog();
 
+	if(kvHudConfigs != null)
+		delete kvHudConfigs;
+	kvHudConfigs=LoadHudConfig();
+
 	//Cache cvars
 	SetConVarString(FindConVar("ff2_version"), PLUGIN_VERSION);
 	Announce=cvarAnnounce.FloatValue;
@@ -896,6 +902,22 @@ stock KeyValues LoadChangelog()
 
 	KeyValues kv=new KeyValues("Changelog");
 	kv.ImportFromFile(changelog);
+
+	return kv;
+}
+
+stock KeyValues LoadHudConfig()
+{
+	char config[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, config, sizeof(config), "%s/%s", FF2_SETTINGS, HUDS_CONFIG);
+	if(!FileExists(config))
+	{
+		LogError("[FF2] HUDS_CONFIG %s does not exist!", config);
+		return null;
+	}
+
+	KeyValues kv=new KeyValues("hud_setting");
+	kv.ImportFromFile(config);
 
 	return kv;
 }
@@ -7046,6 +7068,112 @@ public Action BossDifficultyMenu(int client, int args)
 
 public Action HudMenu(int client, int args)
 {
+	if(Enabled2 && IsValidClient(client, false))
+	{
+		Menu menu=new Menu(HudMenu_Handler);
+		char text[512];
+		Format(text, sizeof(text), "%t", "Advance Menu Title");
+		Format(text, sizeof(text), "%s > %t", text, "HudMenu Title");
+		menu.SetTitle(text);
+		Format(text, sizeof(text), "%t", "HudMenu Boss");
+		menu.AddItem("Boss", text);
+		Format(text, sizeof(text), "%t", "HudMenu Player");
+		menu.AddItem("Player", text);
+		Format(text, sizeof(text), "%t", "HudMenu Observer");
+		menu.AddItem("Observer", text);
+		Format(text, sizeof(text), "%t", "HudMenu Other");
+		menu.AddItem("Other", text);
+
+		menu.ExitButton=true;
+		menu.Display(client, MENU_TIME_FOREVER);
+	}
+}
+
+public int HudMenu_Handler(Menu menu, MenuAction action, int client, int selection)
+{
+	if(action==MenuAction_Select)
+	{
+		int drawStyle;
+		char infoBuf[64];
+		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
+		HudSettingMenu(client, infoBuf);
+	}
+}
+
+public void HudSettingMenu(int client, const char[] name)
+{
+	int posId;
+	kvHudConfigs.GetSectionSymbol(posId);
+	kvHudConfigs.Rewind();
+
+	char infoBuf[64], text[512], languageId[4], statusString[8];
+	if(!kvHudConfigs.JumpToKey(name))
+	{
+		CPrintToChat(client, "{olive}[FF2]{default} %t", "Hud Setting Not Found!");
+		return;
+	}
+
+	SetGlobalTransTarget(client);
+	GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
+	Menu afterMenu=new Menu(HudSetting_Handler);
+	HudSettingValue value;
+	bool changedLanguage=false;
+
+	afterMenu.SetTitle(name);
+
+	if(kvHudConfigs.GotoFirstSubKey(true))
+	{
+		do
+		{
+			kvHudConfigs.GetSectionName(infoBuf, sizeof(infoBuf));
+			value=FF2HudCookie.GetSetting(client, infoBuf);
+			if(!StrEqual(languageId, "en"))
+				changedLanguage=kvHudConfigs.JumpToKey(languageId);
+			else
+				changedLanguage=false;
+
+			GetHudSettingString(value, statusString, 8);
+			kvHudConfigs.GetString("title", text, sizeof(text));
+			Format(text, sizeof(text), "%s: %s", text, statusString);
+			afterMenu.AddItem(infoBuf, text);
+
+			if(changedLanguage)
+				kvHudConfigs.GoBack();
+		}
+		while(kvHudConfigs.GotoNextKey(true));
+	}
+
+	afterMenu.ExitButton=true;
+	afterMenu.Display(client, MENU_TIME_FOREVER);
+	kvHudConfigs.JumpToKeySymbol(posId);
+}
+
+public int HudSetting_Handler(Menu menu, MenuAction action, int client, int selection)
+{
+	if(action==MenuAction_Select)
+	{
+		int drawStyle;
+		char infoBuf[64], statusString[8];
+		HudSettingValue value;
+		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
+
+		value=FF2HudCookie.GetSetting(client, infoBuf);
+		if(value==HudSetting_None)
+			value=HudSetting_View;
+		view_as<int>(value)++;
+		if(value >= HudSettingValue_Last)
+			value=HudSetting_View;
+
+		FF2HudCookie.SetSetting(client, infoBuf, value);
+		GetHudSettingString(value, statusString, 8);
+
+		CPrintToChat(client, "{olive}[FF2]{default} %s: %s", infoBuf, statusString);
+		menu.GetTitle(infoBuf, sizeof(infoBuf));
+
+		HudSettingMenu(client, infoBuf);
+	}
+}
+
 public int Handler_ChangelogMenu(Menu menu, MenuAction action, int client, int selection)
 {
 	if(IsValidClient(client) && action==MenuAction_Select)

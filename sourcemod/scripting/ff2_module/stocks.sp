@@ -1,3 +1,13 @@
+public void GetHudSettingString(HudSettingValue value, char[] statusString, int buffer)
+{
+    if(value <= HudSetting_View)
+        Format(statusString, buffer, "VIEW");
+    else if(value == HudSetting_ViewAble)
+        Format(statusString, buffer, "PUBLIC");
+    else if(value == HudSetting_ViewDisable)
+        Format(statusString, buffer, "PRIVATE");
+}
+
 stock Handle FindCookieEx(char[] cookieName)
 {
     Handle cookieHandle = FindClientCookie(cookieName);
