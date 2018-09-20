@@ -74,7 +74,7 @@ methodmap FF2HudCookie {
         GetClientCookie(client, cookie, tempStr, sizeof(tempStr));
 
         if(tempStr[0] == '\0')
-        return HudSetting_None;
+            return HudSetting_None;
 
         return view_as<HudSettingValue>(StringToInt(tempStr));
     }
@@ -232,14 +232,15 @@ methodmap FF2HudQueue < ArrayList
         hudDisplay.GetInfo(info, sizeof(info));
         HudSettingValue value;
 
-        if((value = FF2HudCookie.GetSetting(this.ClientIndex, info)) > HudSetting_None) { // 나도 안보고 타인에게도 안보여줌
-            if(other > 0) {
+        if((value = FF2HudCookie.GetSetting(this.ClientIndex, info)) > HudSetting_None) {
+            if(other > 0) { // 나도 안보고 타인에게도 안보여줌
                 if(FF2HudCookie.GetSetting(other, info) == HudSetting_ViewDisable) {
                     return -1;
                 }
             }
             else {
-                if(value == HudSetting_ViewAble) // 난 안보지만 타인은 볼 수 있음.
+                if(value == HudSetting_ViewAble
+                    || value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
                     return -1;
             }
         }
