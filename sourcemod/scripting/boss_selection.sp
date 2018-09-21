@@ -55,12 +55,14 @@ methodmap FF2BossCookie {
 	{
 		Handle bossCookie = FF2BossCookie.FindBossCookie(g_strCurrentCharacter);
 		GetClientCookie(client, bossCookie, incoming, buffer);
+		delete bossCookie;
 	}
 
 	public static void SetSavedIncoming(int client, const char[] incoming)
 	{
 		Handle bossCookie = FF2BossCookie.FindBossCookie(g_strCurrentCharacter);
 		SetClientCookie(client, bossCookie, incoming);
+		delete bossCookie;
 	}
 
 	public static int GetSavedQueuePoints(int client)
@@ -68,6 +70,7 @@ methodmap FF2BossCookie {
 		Handle bossCookie = FF2BossCookie.FindBossQueueCookie(g_strCurrentCharacter);
 		char tempStr[8];
 		GetClientCookie(client, bossCookie, tempStr, sizeof(tempStr));
+		delete bossCookie;
 
 		if(tempStr[0] == '\0')
 			return -1;
@@ -91,6 +94,8 @@ methodmap FF2BossCookie {
 			FF2_SetQueuePoints(client, -1);
 			SetClientCookie(client, bossCookie, tempStr);
 		}
+
+		delete bossCookie;
 	}
 
 	public static int GetSavedIncomeIndex(int client)
@@ -98,6 +103,7 @@ methodmap FF2BossCookie {
 		Handle bossCookie = FF2BossCookie.FindBossIndexCookie(g_strCurrentCharacter);
 		char tempStr[8];
 		GetClientCookie(client, bossCookie, tempStr, sizeof(tempStr));
+		delete bossCookie;
 
 		if(tempStr[0] == '\0')
 			return -1;
@@ -118,6 +124,7 @@ methodmap FF2BossCookie {
 		{
 			SetClientCookie(client, bossCookie, tempStr);
 		}
+		delete bossCookie;
 	}
 
 	public static bool IsPlayBoss(int client)

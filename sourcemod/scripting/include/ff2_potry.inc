@@ -75,7 +75,7 @@ methodmap FF2HudCookie {
 
         if(tempStr[0] == '\0')
             return HudSetting_None;
-
+        delete cookie;
         return view_as<HudSettingValue>(StringToInt(tempStr));
     }
 
@@ -86,6 +86,7 @@ methodmap FF2HudCookie {
         char tempStr[8];
         Format(tempStr, sizeof(tempStr), "%d", view_as<int>(value));
         SetClientCookie(client, cookie, tempStr);
+        delete cookie;
     }
 }
 
