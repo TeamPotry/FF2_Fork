@@ -33,10 +33,10 @@ public int Native_FF2HudCookie_GetSetting(Handle plugin, int numParams)
     Handle cookie = FF2HudCookie.FindHudCookie(hudId);
 
     GetClientCookie(client, cookie, tempStr, sizeof(tempStr));
+    delete cookie;
 
     if(tempStr[0] == '\0')
         return view_as<int>(HudSetting_None);
-    delete cookie;
 
     return StringToInt(tempStr);
 }
