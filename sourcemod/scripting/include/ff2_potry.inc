@@ -45,6 +45,7 @@ enum HudSettingValue
 enum HudQueueValue
 {
     HudQueue_ClientIndex = 0,
+    HudQueue_Name,
 
     HudQueueValue_Last
 };
@@ -129,10 +130,11 @@ methodmap FF2HudDisplay < ArrayList
 
 methodmap FF2HudQueue < ArrayList
 {
-    public FF2HudQueue(int client, int initialSize = 2)
+    public FF2HudQueue(int client, const char[] name, int initialSize = 2)
     {
         FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList(64, initialSize + view_as<int>(HudQueueValue_Last)));
         array.Set(view_as<int>(HudQueue_ClientIndex), client);
+        array.SetString(view_as<int>(HudQueue_Name), name);
 
         for(int loop = view_as<int>(HudQueueValue_Last); loop < initialSize + view_as<int>(HudQueueValue_Last); loop++)
             array.Set(loop, view_as<FF2HudQueue>(null));
@@ -150,6 +152,16 @@ methodmap FF2HudQueue < ArrayList
         {
             this.Set(view_as<int>(HudQueue_ClientIndex), client);
         }
+    }
+
+    public void GetName(char[] name, int length)
+    {
+        this.GetString(view_as<int>(HudQueue_Name), name, length);
+    }
+
+    public void SetName(const char[] name)
+    {
+        this.SetString(view_as<int>(HudQueue_Name), name);
     }
 
     public FF2HudDisplay GetHud(int index)

@@ -4088,7 +4088,7 @@ public Action ClientTimer(Handle timer)
 		{
 			SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
 			SetGlobalTransTarget(client);
-			hudQueue = new FF2HudQueue(client);
+			hudQueue = new FF2HudQueue(client, "Player");
 
 			if(!IsPlayerAlive(client))
 			{
@@ -4097,6 +4097,7 @@ public Action ClientTimer(Handle timer)
 				{
 					if(!IsBoss(observer))
 					{
+						hudQueue.SetName("Observer Target Player");
 						Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
 						hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
 						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
@@ -4104,6 +4105,7 @@ public Action ClientTimer(Handle timer)
 					}
 					else if(IsBoss(observer))
 					{
+						hudQueue.SetName("Observer Target Boss");
 						int boss=GetBossIndex(observer);
 						char lives[8];
 						if(BossLives[boss]>1)
@@ -4358,7 +4360,7 @@ public Action BossTimer(Handle timer)
 		{
 			continue;
 		}
-		FF2HudQueue bossHudQueue = new FF2HudQueue(client);
+		FF2HudQueue bossHudQueue = new FF2HudQueue(client, "Boss");
 		validBoss=true;
 		SetGlobalTransTarget(client);
 		char text[64];
