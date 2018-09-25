@@ -82,7 +82,7 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
     int displayCount = 0;
     Forward_OnCalledQueue(queue);
 
-    for(int loop = 1; loop < queue.Length; loop++)
+    for(int loop = view_as<int>(HudQueueValue_Last); loop < queue.Length; loop++)
     {
         displayArray = queue.GetHud(loop);
         if(displayArray == null)

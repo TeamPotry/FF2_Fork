@@ -175,11 +175,11 @@ methodmap FF2HudQueue < ArrayList
                     willDeleted.KillSelf();
             }
         }
-        this.Resize(size + 1);
+        this.Resize(size + view_as<int>(HudQueueValue_Last));
 
         if(size > beforeSize)
         {
-            for(int loop = beforeSize; size >= loop; loop++)
+            for(int loop = beforeSize; this.Length > loop; loop++)
             {
                 this.SetHud(loop, view_as<FF2HudDisplay>(null));
             }
@@ -229,7 +229,7 @@ methodmap FF2HudQueue < ArrayList
         char info[80];
         FF2HudDisplay hudDisplay;
 
-        for(int loop = 1; this.Length > loop; loop++)
+        for(int loop = view_as<int>(HudQueueValue_Last); this.Length > loop; loop++)
         {
             if((hudDisplay = this.GetHud(loop)) != null)
             {
@@ -245,7 +245,7 @@ methodmap FF2HudQueue < ArrayList
     public FF2HudQueue KillSelf()
     {
         FF2HudDisplay willDeleted;
-        for(int loop = 1; loop < this.Length; loop++)
+        for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
         {
             willDeleted = this.GetHud(loop);
             if(willDeleted != null)
