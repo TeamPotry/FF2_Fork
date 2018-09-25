@@ -393,4 +393,8 @@
 		"#format"	"{1:i}"
 		"en"		"Damage: {1}"
 	}
+	"Dev Mode"
+	{
+		"en"	"Developer Mode(∞)"
+	}
 }
