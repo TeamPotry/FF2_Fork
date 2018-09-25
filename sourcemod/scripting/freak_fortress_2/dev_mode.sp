@@ -14,9 +14,9 @@ bool g_bDEVmode = false;
 
 public void OnPluginStart()
 {
-    RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
+	RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
 
-    HookEvent("teamplay_round_start", OnRoundStart);
+	HookEvent("teamplay_round_start", OnRoundStart);
 }
 
 public Action Command_DevMode(int client, int args)
