@@ -58,36 +58,11 @@ enum HudValue
 };
 
 methodmap FF2HudCookie {
-    public static Handle FindHudCookie(const char[] hudId)
-    {
-        char cookieName[80];
-        Format(cookieName, sizeof(cookieName), "ff2_hud_%s", hudId);
+    public static native Handle FindHudCookie(const char[] hudId);
 
-        return FindCookieEx(cookieName);
-    }
+    public static native HudSettingValue GetSetting(int client, const char[] hudId);
 
-    public static HudSettingValue GetSetting(int client, const char[] hudId)
-    {
-        Handle cookie = FF2HudCookie.FindHudCookie(hudId);
-
-        char tempStr[8];
-        GetClientCookie(client, cookie, tempStr, sizeof(tempStr));
-
-        if(tempStr[0] == '\0')
-            return HudSetting_None;
-        delete cookie;
-        return view_as<HudSettingValue>(StringToInt(tempStr));
-    }
-
-    public static void SetSetting(int client, const char[] hudId, HudSettingValue value)
-    {
-        Handle cookie = FF2HudCookie.FindHudCookie(hudId);
-
-        char tempStr[8];
-        Format(tempStr, sizeof(tempStr), "%d", view_as<int>(value));
-        SetClientCookie(client, cookie, tempStr);
-        delete cookie;
-    }
+    public static native void SetSetting(int client, const char[] hudId, HudSettingValue value);
 }
 
 methodmap FF2HudDisplay < ArrayList

@@ -5,12 +5,52 @@ Handle OnDisplayHud, OnDisplayHudPost;
 
 void HudInit()
 {
+    CreateNative("FF2HudCookie.FindHudCookie", Native_FF2HudCookie_FindHudCookie);
+    CreateNative("FF2HudCookie.GetSetting", Native_FF2HudCookie_GetSetting);
+    CreateNative("FF2HudCookie.SetSetting", Native_FF2HudCookie_SetSetting);
     CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
     CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
 
     OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
     OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
     OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
+}
+
+public int Native_FF2HudCookie_FindHudCookie(Handle plugin, int numParams)
+{
+    char cookieName[80], hudId[64];
+    GetNativeString(1, hudId, sizeof(hudId));
+    Format(cookieName, sizeof(cookieName), "ff2_hud_%s", hudId);
+
+    return view_as<int>(FindCookieEx(cookieName));
+}
+
+public int Native_FF2HudCookie_GetSetting(Handle plugin, int numParams)
+{
+    char tempStr[8], hudId[64];
+    int client = GetNativeCell(1);
+    GetNativeString(2, hudId, sizeof(hudId));
+    Handle cookie = FF2HudCookie.FindHudCookie(hudId);
+
+    GetClientCookie(client, cookie, tempStr, sizeof(tempStr));
+
+    if(tempStr[0] == '\0')
+        return view_as<int>(HudSetting_None);
+    delete cookie;
+
+    return StringToInt(tempStr);
+}
+
+public int Native_FF2HudCookie_SetSetting(Handle plugin, int numParams)
+{
+    char tempStr[8], hudId[64];
+    int client = GetNativeCell(1), value = GetNativeCell(3);
+    GetNativeString(2, hudId, sizeof(hudId));
+    Handle cookie = FF2HudCookie.FindHudCookie(hudId);
+
+    Format(tempStr, sizeof(tempStr), "%d", view_as<int>(value));
+    SetClientCookie(client, cookie, tempStr);
+    delete cookie;
 }
 
 public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numParams)
