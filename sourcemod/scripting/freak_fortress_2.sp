@@ -966,71 +966,64 @@ public void LoadCharacter(const char[] characterName)
 	}
 	kv.Rewind();
 
-	char file[PLATFORM_MAX_PATH], section[64];
+	char file[PLATFORM_MAX_PATH];
 	char extensions[][]={".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd"};
 	kv.SetString("filename", characterName);
 	kv.GetString("name", config, sizeof(config));
-	kv.GotoFirstSubKey();
 
-	while(kv.GotoNextKey())
+	if(kv.JumpToKey("downloads"))
 	{
-		kv.GetSectionName(section, sizeof(section));
-		if(StrEqual(section, "downloads"))
+		kv.GotoFirstSubKey();
+
+		do
 		{
-			while(kv.GotoNextKey())
+			if(kv.GetNum("model"))
+			{
+				for(int extension; extension<sizeof(extensions); extension++)
+				{
+					kv.GetSectionName(file, sizeof(file));
+					Format(file, sizeof(file), "%s%s", file, extensions[extension]);
+
+					if(FileExists(file, true))
+					{
+						AddFileToDownloadsTable(file);
+					}
+					else
+					{
+						LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
+					}
+				}
+
+				if(kv.GetNum("phy"))
+				{
+					kv.GetSectionName(file, sizeof(file));
+					Format(file, sizeof(file), "%s.phy", file);
+					if(FileExists(file, true))
+					{
+						AddFileToDownloadsTable(file);
+					}
+					else
+					{
+						LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
+					}
+				}
+			}
+			else if(kv.GetNum("material"))
 			{
 				kv.GetSectionName(file, sizeof(file));
-				if(kv.GetNum("model"))
+				Format(file, sizeof(file), "%s.vmt", file);
+				if(FileExists(file, true))
 				{
-					for(int extension; extension<sizeof(extensions); extension++)
-					{
-						Format(file, sizeof(file), "%s%s", file, extensions[extension]);
-						if(FileExists(file, true))
-						{
-							AddFileToDownloadsTable(file);
-						}
-						else
-						{
-							LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
-						}
-					}
-
-					if(kv.GetNum("phy"))
-					{
-						Format(file, sizeof(file), "%s.phy", file);
-						if(FileExists(file, true))
-						{
-							AddFileToDownloadsTable(file);
-						}
-						else
-						{
-							LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
-						}
-					}
+					AddFileToDownloadsTable(file);
 				}
-				else if(kv.GetNum("material"))
+				else
 				{
-					Format(file, sizeof(file), "%s.vmt", file);
-					if(FileExists(file, true))
-					{
-						AddFileToDownloadsTable(file);
-					}
-					else
-					{
-						LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
-					}
-
-					Format(file, sizeof(file), "%s.vtf", file);
-					if(FileExists(file, true))
-					{
-						AddFileToDownloadsTable(file);
-					}
-					else
-					{
-						LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
-					}
+					LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
 				}
-				else if(FileExists(file, true))
+
+				kv.GetSectionName(file, sizeof(file));
+				Format(file, sizeof(file), "%s.vtf", file);
+				if(FileExists(file, true))
 				{
 					AddFileToDownloadsTable(file);
 				}
@@ -1039,9 +1032,20 @@ public void LoadCharacter(const char[] characterName)
 					LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
 				}
 			}
+			else if(FileExists(file, true))
+			{
+				AddFileToDownloadsTable(file);
+			}
+			else
+			{
+				if(file[0] == '\0')	continue;
+				LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
+			}
 		}
+		while(kv.GotoNextKey());
 	}
 }
+
 
 public void PrecacheCharacter(int characterIndex)
 {
