@@ -55,17 +55,33 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 	char text[256];
 	hudQueue.GetName(text, sizeof(text));
 
-	if(StrEqual(text, "Observer Target Boss")
-	|| StrEqual(text, "Boss"))
+	bool changed = false;
+
+	if(StrEqual(text, "Boss"))
 	{
 		int noticehudId = hudQueue.FindHud("Activate Rage");
 		if(noticehudId != -1)
 		{
 			hudQueue.SetHud(noticehudId, hudQueue.GetHud(noticehudId).KillSelf());
 		}
+		changed = true;
+	}
+	else if(StrEqual(text, "Observer"))
+	{
+		int observer = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+		changed = IsBoss(observer);
+	}
+
+	if(changed)
+	{
 		Format(text, sizeof(text), "%t", "Dev Mode");
 		hudQueue.PushHud(new FF2HudDisplay("Dev Mode", text));
 	}
 
 	return;
+}
+
+stock bool IsBoss(int client)
+{
+    return FF2_GetBossIndex(client) != -1;
 }
