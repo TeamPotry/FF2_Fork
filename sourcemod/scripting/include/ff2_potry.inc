@@ -135,7 +135,7 @@ methodmap FF2HudDisplay < ArrayList
 
 methodmap FF2HudQueue < ArrayList
 {
-    public FF2HudQueue(int client, const char[] name, int initialSize = 2)
+    public FF2HudQueue(int client, const char[] name, int initialSize = 8)
     {
         FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList(64, initialSize + view_as<int>(HudQueueValue_Last)));
         array.Set(view_as<int>(HudQueue_ClientIndex), client);
@@ -178,7 +178,7 @@ methodmap FF2HudQueue < ArrayList
     {
         this.Set(index, hudDisplay);
     }
-
+/*
     public void ResizeQueue(int size)
     {
         int beforeSize = this.Length;
@@ -202,20 +202,20 @@ methodmap FF2HudQueue < ArrayList
             }
         }
     }
+*/
 
     public int PushHud(FF2HudDisplay hudDisplay)
     {
-        for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
-            if(this.GetHud(loop) == null)
-            {
-                this.SetHud(loop, hudDisplay);
-                return loop;
-            }
+/*
+        int index = (this.Length - view_as<int>(HudQueueValue_Last)) + 1;
+        this.ResizeQueue(index);
+        this.SetHud(index, hudDisplay);
+*/
+        int index = this.FindValue(view_as<FF2HudDisplay>(null));
+        if(index != -1)
+            this.SetHud(index, hudDisplay);
 
-        this.ResizeQueue(this.Length);
-        this.SetHud(this.Length-1, hudDisplay);
-
-        return this.Length-1;
+        return index;
     }
 
     // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
