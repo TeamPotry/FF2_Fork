@@ -4086,6 +4086,8 @@ public Action ClientTimer(Handle timer)
 			{
 				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
 				hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+
+				// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText)));
 			}
 			hudQueue.ShowSyncHudQueueText(rageHUD);
 			hudQueue.KillSelf();
