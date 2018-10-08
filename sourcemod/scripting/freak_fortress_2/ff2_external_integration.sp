@@ -5,8 +5,10 @@
 
 #include <sourcemod>
 #include <freak_fortress_2>
+#include <ff2_potry>
 #include <tf2>
 #include <tf2_stocks>
+#include <morecolors>
 #undef REQUIRE_PLUGIN
 #tryinclude <goomba>
 #tryinclude <rtd>
@@ -22,6 +24,8 @@ ConVar cvarGoombaDamage;
 ConVar cvarGoombaRebound;
 ConVar cvarRTD;
 ConVar cvarBossRTD;
+
+KeyValues KvText;
 
 public Plugin myinfo=
 {
@@ -42,6 +46,10 @@ public void OnPluginStart()
 	AutoExecConfig(false, "ff2_external_integration", "sourcemod/freak_fortress_2");
 
 	LoadTranslations("ff2_external_integration.phrases");
+
+	if(KvText != null)
+		delete KvText;
+	KvText = LoadSpecialAttackText();
 }
 
 public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &damageBonus, float &JumpPower)
@@ -66,10 +74,53 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			JumpPower=cvarGoombaRebound.FloatValue;
 			PrintCenterText(victim, "%t", "Boss Got Goomba Stomped");
 			PrintCenterText(attacker, "%t", "Human Goomba Stomped");
+
+			int boss = FF2_GetBossIndex(victim);
+			if(boss != -1)
+				FF2_SpecialAttackToBoss(attacker, boss, "goomba", (FF2_GetBossHealth(boss)-FF2_GetBossMaxHealth(boss)*(FF2_GetBossLives(boss)-1))*damageMultiplier);
 			return Plugin_Changed;
 		}
 	}
 	return Plugin_Continue;
+}
+
+public void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[] name, float damage)
+{
+	if(KvText == null)	return;
+
+	char bossName[64], how[80], langId[4];
+	KvText.Rewind();
+	if(!KvText.JumpToKey(name))
+		return;
+
+	int roundDamage = RoundFloat(damage);
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		if(!IsClientInGame(client)) continue;
+
+		GetLanguageInfo(GetClientLanguage(client), langId, sizeof(langId));
+		KvText.GetString(langId, how, sizeof(how), "EMPTY NAME!");
+		FF2_GetBossName(victimBoss, bossName, sizeof(bossName), client);
+
+		CPrintToChat(client, "{olive}[FF2]{default} %t", "Special Attack", attacker, bossName, how, roundDamage);
+	}
+}
+
+stock KeyValues LoadSpecialAttackText()
+{
+	char config[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, config, sizeof(config), "data/freak_fortress_2/special_attack_text.cfg");
+	if(!FileExists(config))
+	{
+		LogError("[FF2] special_attack_text %s does not exist!", config);
+		return null;
+	}
+
+	KeyValues kv = new KeyValues("special_attack_text");
+	kv.ImportFromFile(config);
+	kv.Rewind();
+
+	return kv;
 }
 
 public Action RTD_CanRollDice(int client)

@@ -19,4 +19,9 @@
     {
         "ko"    "아야! 머리 조심하세요!"
     }
+    "Special Attack"
+    {
+        "#format"   "{1:N},{2:s},{3:s},{4:d}"
+        "ko"    "{red}{1}{default}님의 {orange}{3}{default}! ➔ {blue}{2}{default} (-{orange}{4}{default})"
+    }
 }
