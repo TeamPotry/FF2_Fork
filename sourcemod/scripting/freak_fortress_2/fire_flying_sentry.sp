@@ -4,6 +4,8 @@
 #include <freak_fortress_2>
 #include <sdkhooks>
 
+#tryinclude <ff2_potry>
+
 #define PLUGIN_NAME "fire_flying_sentry"
 
 public Plugin myinfo=
@@ -11,12 +13,14 @@ public Plugin myinfo=
     name="Freak Fortress 2 : Fire throw sentry",
     author="Nopied",
     description="....",
-    version="2018_09_03",
+    version="2018_10_08",
 };
 
 public void OnPluginStart()
 {
-    FF2_RegisterSubplugin(PLUGIN_NAME);
+    #if defined _FF2_POTRY_included
+        FF2_RegisterSubplugin(PLUGIN_NAME);
+    #endif
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
