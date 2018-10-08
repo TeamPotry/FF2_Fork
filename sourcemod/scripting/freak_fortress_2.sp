@@ -990,6 +990,7 @@ public void LoadCharacter(const char[] characterName)
 			}
 			else if(FileExists(file, true))
 			{
+				kv.GetSectionName(file, sizeof(file));
 				AddFileToDownloadsTable(file);
 			}
 			else
