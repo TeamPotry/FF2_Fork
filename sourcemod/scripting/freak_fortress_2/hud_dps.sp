@@ -20,8 +20,11 @@ int g_Count=0;
 public void OnPluginStart()
 {
     HookEvent("teamplay_round_start", OnRoundStart);
+}
 
-    CreateTimer(0.2, DPSTimer, _, TIMER_REPEAT);
+public void OnMapStart()
+{
+	CreateTimer(0.2, DPSTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
