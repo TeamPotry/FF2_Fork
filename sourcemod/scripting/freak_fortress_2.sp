@@ -246,6 +246,9 @@ Handle OnLoseLife;
 Handle OnAlivePlayersChanged;
 Handle OnParseUnknownVariable;
 
+// ff2_potry.inc
+Handle OnPlayBoss;
+
 public Plugin myinfo=
 {
 	name="Freak Fortress 2",
@@ -312,6 +315,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
 	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
 	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
+
+	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 
 	//ff2_module/hud.sp
 	HudInit();
@@ -2544,6 +2549,10 @@ public Action MakeBoss(Handle timer, int boss)
 	KSpreeCount[boss]=0;
 	BossCharge[boss][0]=0.0;
 	SetClientQueuePoints(client, 0);
+
+	Call_StartForward(OnPlayBoss);
+	Call_PushCell(boss);
+	Call_Finish();
 	return Plugin_Continue;
 }
 

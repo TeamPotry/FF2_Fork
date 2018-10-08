@@ -28,6 +28,14 @@ native void FF2_SetClientAssist(int client, int assist);
  */
 native KeyValues FF2_GetCharacterKV(int characterIndex);
 
+/**
+ * Called when Player became boss.
+ *
+ * @param boss    boss index
+ * @noreturn
+ */
+forward void FF2_OnPlayBoss(int boss);
+
 /****
     THE HUD UPDATE
 ****/
