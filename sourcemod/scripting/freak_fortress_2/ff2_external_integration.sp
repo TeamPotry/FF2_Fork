@@ -76,8 +76,9 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			PrintCenterText(attacker, "%t", "Human Goomba Stomped");
 
 			int boss = FF2_GetBossIndex(victim);
+			int adddmg = RoundFloat(FindConVar("goomba_dmg_add").FloatValue);
 			if(boss != -1)
-				FF2_SpecialAttackToBoss(attacker, boss, "goomba", (FF2_GetBossHealth(boss)-FF2_GetBossMaxHealth(boss)*(FF2_GetBossLives(boss)-1))*damageMultiplier);
+				FF2_SpecialAttackToBoss(attacker, boss, "goomba", ((FF2_GetBossHealth(boss) - FF2_GetBossMaxHealth(boss) * (FF2_GetBossLives(boss) - 1)) * damageMultiplier) + adddmg);
 			return Plugin_Changed;
 		}
 	}
