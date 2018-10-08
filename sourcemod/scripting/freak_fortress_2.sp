@@ -191,7 +191,6 @@ int changeGamemode;
 
 //Handle kvWeaponSpecials;
 KeyValues kvWeaponMods;
-KeyValues kvHudConfigs;
 
 enum FF2RoundState
 {
@@ -875,22 +874,6 @@ stock KeyValues LoadChangelog()
 
 	KeyValues kv=new KeyValues("Changelog");
 	kv.ImportFromFile(changelog);
-
-	return kv;
-}
-
-stock KeyValues LoadHudConfig()
-{
-	char config[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, config, sizeof(config), "%s/%s", FF2_SETTINGS, HUDS_CONFIG);
-	if(!FileExists(config))
-	{
-		LogError("[FF2] HUDS_CONFIG %s does not exist!", config);
-		return null;
-	}
-
-	KeyValues kv=new KeyValues("hud_setting");
-	kv.ImportFromFile(config);
 
 	return kv;
 }

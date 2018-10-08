@@ -1,10 +1,55 @@
+KeyValues kvHudConfigs;
+
 Handle OnCalledQueue;
 Handle OnDisplayHud, OnDisplayHudPost;
+
+stock KeyValues LoadHudConfig()
+{
+	char config[PLATFORM_MAX_PATH];// , key[80];
+	BuildPath(Path_SM, config, sizeof(config), "%s/%s", FF2_SETTINGS, HUDS_CONFIG);
+	if(!FileExists(config))
+	{
+		LogError("[FF2] HUDS_CONFIG %s does not exist!", config);
+		return null;
+	}
+
+	KeyValues kv=new KeyValues("hud_setting");
+	// Handle cookie;
+	kv.ImportFromFile(config);
+	kv.Rewind();
+/*
+	if(kv.GotoFirstSubKey(true))
+	{
+		do
+		{
+			if(kv.GotoFirstSubKey(true))
+			{
+				do
+				{
+					kv.GetSectionName(key, sizeof(key));
+
+					cookie = FF2HudCookie.FindHudCookie(key);
+					delete cookie;
+				}
+				while(kv.GotoNextKey(true));
+			}
+			kv.GoBack();
+		}
+		while(kv.GotoNextKey(true));
+	}
+
+	kv.Rewind();
+*/
+	return kv;
+}
 
 // Native things
 
 void HudInit()
 {
+	// CreateNative("FF2HudConfig.GetConfigKeyValue", Native_FF2HudConfig_GetConfigKeyValue);
+	CreateNative("FF2HudConfig.GetDefaultSettiing", Native_FF2HudConfig_GetDefaultSettiing);
+
 	CreateNative("FF2HudCookie.FindHudCookie", Native_FF2HudCookie_FindHudCookie);
 	CreateNative("FF2HudCookie.GetSetting", Native_FF2HudCookie_GetSetting);
 	CreateNative("FF2HudCookie.SetSetting", Native_FF2HudCookie_SetSetting);
@@ -16,6 +61,23 @@ void HudInit()
 	OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
 	OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
 	OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
+}
+
+public int Native_FF2HudConfig_GetConfigKeyValue(Handle plugin, int numParams)
+{
+    return view_as<int>(kvHudConfigs);
+}
+
+public int Native_FF2HudConfig_GetDefaultSettiing(Handle plugin, int numParams)
+{
+	char name[80];
+	kvHudConfigs.Rewind();
+	GetNativeString(1, name, sizeof(name));
+	kvHudConfigs.JumpToKey(name);
+	GetNativeString(2, name, sizeof(name));
+	kvHudConfigs.JumpToKey(name);
+
+	return kvHudConfigs.GetNum("default_setting", -1);
 }
 
 public int Native_FF2HudCookie_FindHudCookie(Handle plugin, int numParams)

@@ -58,6 +58,11 @@ enum HudValue
     HudValue_Last
 };
 
+methodmap FF2HudConfig {
+    // public static native FF2HudConfig GetConfigKeyValue();
+    public static native HudSettingValue GetDefaultSettiing(const char[] name, const char[] info);
+}
+
 methodmap FF2HudCookie {
     public static native Handle FindHudCookie(const char[] hudId);
 
