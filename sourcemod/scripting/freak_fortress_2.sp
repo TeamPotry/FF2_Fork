@@ -248,6 +248,8 @@ Handle OnParseUnknownVariable;
 
 // ff2_potry.inc
 Handle OnPlayBoss;
+Handle OnSpecialAttack;
+Handle OnSpecialAttack_Post;
 
 public Plugin myinfo=
 {
@@ -314,9 +316,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// ff2_potry.inc
 	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
 	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
+	CreateNative("FF2_SpecialAttackToBoss", Native_SpecialAttackToBoss);
 	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
 
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
+	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
+	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 
 	//ff2_module/hud.sp
 	HudInit();
@@ -5398,6 +5403,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							damage=(Pow(float(BossHealthMax[boss]), 0.74074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
 							damagetype|=DMG_CRIT;
 
+							if(SpecialAttackToBoss(attacker, boss, "market_garden", damage) == Plugin_Handled)
+								return Plugin_Handled;
+
 							if(Marketed[client]<5)
 							{
 								Marketed[client]++;
@@ -5492,6 +5500,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/90);
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
+
+					if(SpecialAttackToBoss(attacker, boss, "backstab", damage) == Plugin_Handled)
+						return Plugin_Handled;
 
 					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
@@ -8062,6 +8073,52 @@ public void SetClientAssist(int client, int assist)
 public int Native_SetClientAssist(Handle plugin, int numParams)
 {
 	SetClientAssist(GetNativeCell(1), GetNativeCell(2));
+}
+
+public Action SpecialAttackToBoss(int attacker, int victimBoss, char[] name, float damage)
+{
+	return Forward_OnSpecialAttack(attacker, victimBoss, name, damage);
+}
+
+public int Native_SpecialAttackToBoss(Handle plugin, int numParams)
+{
+	char name[80];
+	GetNativeString(3, name, sizeof(name));
+	SpecialAttackToBoss(GetNativeCell(1), GetNativeCell(2), name, GetNativeCell(4));
+}
+
+public Action Forward_OnSpecialAttack(int attacker, int victimBoss, const char[] name, float damage)
+{
+	float tempDamage;
+	Action action;
+	Call_StartForward(OnSpecialAttack);
+	Call_PushCell(attacker);
+	Call_PushCell(victimBoss);
+	Call_PushString(name);
+	Call_PushFloatRef(tempDamage);
+	Call_Finish(action);
+
+	if(action == Plugin_Stop || action == Plugin_Handled)
+	{
+		return Plugin_Handled;
+	}
+	else if(action == Plugin_Changed)
+	{
+		damage = tempDamage;
+	}
+
+	Forward_OnSpecialAttack_Post(attacker, victimBoss, name, damage);
+	return Plugin_Continue;
+}
+
+public void Forward_OnSpecialAttack_Post(int attacker, int victimBoss, const char[] name, float damage)
+{
+	Call_StartForward(OnSpecialAttack_Post);
+	Call_PushCell(attacker);
+	Call_PushCell(victimBoss);
+	Call_PushString(name);
+	Call_PushFloat(damage);
+	Call_Finish();
 }
 
 public bool HasAbility(int boss, const char[] pluginName, const char[] abilityName)

@@ -21,6 +21,15 @@ native int FF2_GetClientAssist(int client);
 native void FF2_SetClientAssist(int client, int assist);
 
 /**
+ * @param attacker 	attacker's index
+ * @param victimBoss	victim boss index
+ * @param name    Special Attack name
+ * @param damage    Special Attack damage
+ * @noreturn
+ */
+native void FF2_SpecialAttackToBoss(int attacker, int victimBoss, const char[] name, float damage);
+
+/**
  * Gets a Character's KV handle
  *
  * @param characterIndex    character's index (config)
@@ -35,6 +44,21 @@ native KeyValues FF2_GetCharacterKV(int characterIndex);
  * @noreturn
  */
 forward void FF2_OnPlayBoss(int boss);
+
+/**
+ * Called when Boss damaged that was Special Attack.
+ *
+ * @param attacker    attacker client index
+ * @param victimBoss    victim boss index
+ * @param name    Special Attack name
+ * @param damage    Special Attack damage
+ * @return
+ *  - Plugin_Continue: Nothing..
+ *  - Plugin_Changed: Change result.
+ *  - Plugin_Stop, Plugin_Handled: Change result.
+ */
+forward Action FF2_OnSpecialAttack(int attacker, int victimBoss, const char[] name, float &damage);
+forward void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[] name, float damage);
 
 /****
     THE HUD UPDATE
@@ -314,6 +338,7 @@ public __pl_FF2_POTRY_SetNTVOptional()
 {
     MarkNativeAsOptional("FF2_GetClientAssist");
     MarkNativeAsOptional("FF2_SetClientAssist");
+    MarkNativeAsOptional("FF2_SpecialAttackToBoss");
     MarkNativeAsOptional("FF2_GetCharacterKV");
 }
 #endif
