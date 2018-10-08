@@ -5,15 +5,17 @@ Handle OnDisplayHud, OnDisplayHudPost;
 
 void HudInit()
 {
-    CreateNative("FF2HudCookie.FindHudCookie", Native_FF2HudCookie_FindHudCookie);
-    CreateNative("FF2HudCookie.GetSetting", Native_FF2HudCookie_GetSetting);
-    CreateNative("FF2HudCookie.SetSetting", Native_FF2HudCookie_SetSetting);
-    CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
-    CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
+	CreateNative("FF2HudCookie.FindHudCookie", Native_FF2HudCookie_FindHudCookie);
+	CreateNative("FF2HudCookie.GetSetting", Native_FF2HudCookie_GetSetting);
+	CreateNative("FF2HudCookie.SetSetting", Native_FF2HudCookie_SetSetting);
 
-    OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
-    OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
-    OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
+	CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
+
+	CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
+
+	OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
+	OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
+	OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
 }
 
 public int Native_FF2HudCookie_FindHudCookie(Handle plugin, int numParams)
