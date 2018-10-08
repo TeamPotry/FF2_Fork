@@ -142,7 +142,7 @@ methodmap FF2HudQueue < ArrayList
         array.SetString(view_as<int>(HudQueue_Name), name);
 
         for(int loop = view_as<int>(HudQueueValue_Last); loop < initialSize + view_as<int>(HudQueueValue_Last); loop++)
-            array.Set(loop, view_as<FF2HudQueue>(null));
+            array.Set(loop, view_as<FF2HudDisplay>(null));
 
         return array;
     }
