@@ -244,7 +244,11 @@ methodmap FF2HudQueue < ArrayList
             }
         }
 
-        return this.PushHud(hudDisplay);
+        int index = this.PushHud(hudDisplay);
+        if(index == -1)
+            hudDisplay.KillSelf();
+
+        return index;
     }
 
     public int FindHud(const char[] hudId)
