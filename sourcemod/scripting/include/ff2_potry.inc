@@ -221,11 +221,17 @@ methodmap FF2HudQueue < ArrayList
     // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
     public int AddHud(FF2HudDisplay hudDisplay, int other = 0)
     {
-        char info[80];
+        char info[80], name[64];
+        this.GetName(name, sizeof(name));
         hudDisplay.GetInfo(info, sizeof(info));
-        HudSettingValue value;
+        HudSettingValue value = FF2HudCookie.GetSetting(this.ClientIndex, info);
 
-        if((value = FF2HudCookie.GetSetting(this.ClientIndex, info)) > HudSetting_None) {
+        if(value == HudSetting_None)
+        {
+            value = FF2HudConfig.GetDefaultSettiing(name, info);
+        }
+
+        if(value > HudSetting_None) {
             if(other > 0) { // 나도 안보고 타인에게도 안보여줌
                 if(FF2HudCookie.GetSetting(other, info) == HudSetting_ViewDisable) {
                     return -1;
