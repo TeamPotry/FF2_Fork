@@ -68,8 +68,6 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			PrintCenterText(attacker, "%t", "Human Goomba Stomped");
 			return Plugin_Changed;
 		}
-
-		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
