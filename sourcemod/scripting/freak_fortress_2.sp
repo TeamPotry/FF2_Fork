@@ -5213,6 +5213,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 	else
 	{
 		int boss=GetBossIndex(client);
+		float victimPosition[3];
+		GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
+		GetEntPropVector(client, Prop_Send, "m_vecOrigin", victimPosition);
 		if(boss!=-1)
 		{
 			if(attacker<=MaxClients)
@@ -5275,18 +5278,15 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							}
 						}
 
-						if(!(damagetype & DMG_CRIT) && !TF2_IsPlayerInCondition(attacker, TFCond_CritCola) && !TF2_IsPlayerInCondition(attacker, TFCond_Buffed))
-						{
-							if(index!=230 || BossCharge[boss][0]>90.0)  //Sydney Sleeper
-							{
-								damage*=3.0;
-							}
-							else
-							{
-								damage*=2.4;
-							}
-							return Plugin_Changed;
-						}
+						if(GetVectorDistance(position, victimPosition)>600.0)
+							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+
+						if(damagecustom == TF_CUSTOM_HEADSHOT)
+							damage*=1.05;
+						else
+							damage*=2.0;
+
+						return Plugin_Changed;
 					}
 				}
 
