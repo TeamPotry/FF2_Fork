@@ -5286,6 +5286,11 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						else
 							damage*=2.0;
 
+						if(damagetype & DMG_CRIT)
+							damage*=0.33;
+						else if(TF2_IsPlayerInCondition(attacker, TFCond_Buffed) && !TF2_IsPlayerInCondition(client, TFCond_DefenseBuffed))
+							damage*=0.66;
+
 						return Plugin_Changed;
 					}
 				}
