@@ -303,6 +303,13 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 		}
 		case 3:
 		{
+			float angles[3];
+			GetClientEyeAngles(client, angles);
+			if(angles[0]>-45.0)
+			{
+				return;
+			}
+
 			bool superJump=enableSuperDuperJump[boss];
 			Action action;
 			Call_StartForward(OnSuperJump);
@@ -339,8 +346,6 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			}
 			else
 			{
-				float angles[3];
-				GetClientEyeAngles(client, angles);
 				if(enableSuperDuperJump[boss])
 				{
 					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*500*multiplier;
@@ -357,6 +362,7 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			}
 
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+
 			char sound[PLATFORM_MAX_PATH];
 			if(FF2_FindSound("ability", sound, sizeof(sound), boss, true, slot))
 			{

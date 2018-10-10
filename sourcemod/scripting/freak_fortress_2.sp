@@ -8275,12 +8275,11 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 		}
 		else if(BossCharge[boss][slot]>0.3)
 		{
-			float angles[3];
-			GetClientEyeAngles(Boss[boss], angles);
-			if(angles[0]<-45.0)
+			Call_PushCell(3);  //In use
+			Call_Finish();
+
+			if(GetAbilityArgumentFloat(boss, pluginName, abilityName, "cooldown", 0.0) > 0.0)
 			{
-				Call_PushCell(3);  //In use
-				Call_Finish();
 				DataPack data;
 				CreateDataTimer(0.1, Timer_UseBossCharge, data);
 				data.WriteCell(boss);
