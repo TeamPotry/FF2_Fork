@@ -5281,15 +5281,11 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						if(GetVectorDistance(position, victimPosition)>600.0)
 							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 
-						if(damagecustom == TF_CUSTOM_HEADSHOT)
-							damage*=1.05;
-						else
-							damage*=2.0;
-
-						if(damagetype & DMG_CRIT)
-							damage*=0.33;
-						else if(TF2_IsPlayerInCondition(attacker, TFCond_Buffed) && !TF2_IsPlayerInCondition(client, TFCond_DefenseBuffed))
-							damage*=0.66;
+						if(!(damagetype & DMG_CRIT))
+						{
+							if(damagecustom != TF_CUSTOM_HEADSHOT)
+								damage*=1.6;
+						}
 
 						return Plugin_Changed;
 					}
