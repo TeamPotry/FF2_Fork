@@ -7664,12 +7664,6 @@ stock int FindEntityByClassname2(int startEnt, const char[] classname)
 	return FindEntityByClassname(startEnt, classname);
 }
 
-public Action Timer_UseBossCharge(Handle timer, DataPack data)
-{
-	BossCharge[data.ReadCell()][data.ReadCell()]=data.ReadFloat();
-	return Plugin_Continue;
-}
-
 stock void RemoveShield(int client, int attacker, float position[3])
 {
 	TF2_RemoveWearable(client, shield[client]);
@@ -7954,7 +7948,7 @@ public int Native_GetBossCharge(Handle plugin, int numParams)
 	return view_as<int>(GetBossCharge(GetNativeCell(1), GetNativeCell(2)));
 }
 
-public int SetBossCharge(int boss, int slot, float charge)  //FIXME: This duplicates logic found in Timer_UseBossCharge
+public int SetBossCharge(int boss, int slot, float charge)
 {
 	BossCharge[boss][slot]=charge;
 }
@@ -8271,26 +8265,22 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(1);  //Recharging
 				Call_Finish();
-				BossCharge[boss][slot]+=0.2;
+				BossCharge[boss][slot]+=0.12;
 			}
 		}
 		else if(BossCharge[boss][slot]>0.3)
 		{
 			Call_PushCell(3);  //In use
-			Call_Finish();
+			float cooldown=GetAbilityArgumentFloat(boss, pluginName, abilityName, "cooldown", 0.0);
 
-			if(GetAbilityArgumentFloat(boss, pluginName, abilityName, "cooldown", 0.0) > 0.0)
+			if(cooldown>0.0)
 			{
-				DataPack data;
-				CreateDataTimer(0.1, Timer_UseBossCharge, data);
-				data.WriteCell(boss);
-				data.WriteCell(slot);
-				data.WriteFloat(-1.0*GetAbilityArgumentFloat(boss, pluginName, abilityName, "cooldown", 5.0));
-				data.Reset();
+				Call_Finish();
+				BossCharge[boss][slot] = -1.0*cooldown;
 			}
 			else
 			{
-				Call_PushCell(0);  //Not in use
+				// Call_PushCell(0);  //Not in use
 				Call_Finish();
 				BossCharge[boss][slot]=0.0;
 			}
@@ -8299,7 +8289,7 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 		{
 			Call_PushCell(1);  //Recharging
 			Call_Finish();
-			BossCharge[boss][slot]+=0.2;
+			BossCharge[boss][slot]+=0.12;
 		}
 		else
 		{

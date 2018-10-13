@@ -6,6 +6,7 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <freak_fortress_2>
+#include <ff2_potry>
 
 #pragma newdecls required
 
@@ -117,6 +118,24 @@ public Action Timer_GetBossTeam(Handle timer)
 	BossTeam=FF2_GetBossTeam();
 	return Plugin_Continue;
 }
+
+/*
+public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot);
+{
+	if(StrEqual(abilityName, "bravejump", false)
+	|| StrEqual(abilityName, "teleport", false))
+	{
+		float angles[3];
+		GetClientEyeAngles(client, angles);
+		if(angles[0]>-45.0)
+		{
+			return Plugin_Handled;
+		}
+	}
+
+	return Plugin_Handled;
+}
+*/
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 {
@@ -307,6 +326,7 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			GetClientEyeAngles(client, angles);
 			if(angles[0]>-45.0)
 			{
+				ResetBossCharge(boss, slot);
 				return;
 			}
 
@@ -403,6 +423,14 @@ void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 		}
 		case 3:
 		{
+			float angles[3];
+			GetClientEyeAngles(client, angles);
+			if(angles[0]>-45.0)
+			{
+				ResetBossCharge(boss, slot);
+				return;
+			}
+
 			Action action;
 			bool superJump=enableSuperDuperJump[boss];
 			Call_StartForward(OnSuperJump);

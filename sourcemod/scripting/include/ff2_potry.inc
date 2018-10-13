@@ -322,6 +322,23 @@ forward void FF2_OnCalledQueue(FF2HudQueue hudQueue);
 forward Action FF2_OnDisplayHud(const int client, const char[] info, char[] display);
 forward void FF2_OnDisplayHud_Post(const int client, const char[] info, const char[] display);
 
+stock void ResetBossCharge(int boss, int slot)
+{
+    ArrayList pack = new ArrayList();
+    CreateTimer(0.001, ResetTimer, pack);
+
+    pack.Push(boss);
+    pack.Push(slot);
+}
+
+public Action ResetTimer(Handle timer, ArrayList pack)
+{
+    int boss = pack.Get(0);
+    int slot = pack.Get(1);
+    FF2_SetBossCharge(boss, slot, 0.0);
+    delete pack;
+}
+
 public SharedPlugin __pl_FF2_POTRY=
 {
 	name="ff2_potry",
