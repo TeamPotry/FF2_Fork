@@ -8,6 +8,28 @@ public void GetHudSettingString(HudSettingValue value, char[] statusString, int 
         Format(statusString, buffer, "PRIVATE");
 }
 
+public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
+{
+	int currentSpot;
+	characterKv.GetSectionSymbol(currentSpot);
+	characterKv.Rewind();
+
+	if(client > 0)
+	{
+		char language[8];
+		GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
+		if(characterKv.JumpToKey("name_lang"))
+		{
+			characterKv.GetString(language, bossName, size, "");
+			if(bossName[0] != '\0')
+				return;
+		}
+		characterKv.Rewind();
+	}
+	characterKv.GetString("name", bossName, size);
+	characterKv.JumpToKeySymbol(currentSpot);
+}
+
 stock Handle FindCookieEx(char[] cookieName)
 {
     Handle cookieHandle = FindClientCookie(cookieName);
