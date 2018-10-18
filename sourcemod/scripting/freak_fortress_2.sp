@@ -2455,6 +2455,9 @@ void EquipBoss(int boss)
 	{
 		TF2_SetPlayerClass(client, playerclass, _, !GetEntProp(client, Prop_Send, "m_iDesiredPlayerClass") ? true : false);
 	}
+
+	TF2Attrib_RemoveByDefIndex(client, 112);
+	TF2Attrib_RemoveByDefIndex(client, 113);
 }
 
 public Action MakeBoss(Handle timer, int boss)
@@ -3053,6 +3056,21 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 	}
 
+	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "870 ; 4.0 ; 871 ; 4.0 ; 872 ; 1.0", false);
+			//870: falling_impact_radius_pushback
+			//871: falling_impact_radius_stun
+			//872: thermal_thruster_air_launch
+			//96: Reload time increased
+
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
 	if(TF2_GetPlayerClass(client)==TFClass_Soldier && (!StrContains(classname, "tf_weapon_rocketlauncher", false) || !StrContains(classname, "tf_weapon_shotgun", false)))
 	{
 		Handle itemOverride;
@@ -3075,11 +3093,24 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 	}
 
+	if(!StrContains(classname, "tf_weapon_pda_engineer_build"))  // Construction PDA
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 3.00", false);
+			//345: engy dispenser radius increased
+
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
 	if(!StrContains(classname, "tf_weapon_syringegun_medic"))  //Syringe guns
 	{
 		Handle itemOverride=PrepareItemHandle(item, _, _, "17 ; 0.05 ; 144 ; 1", false);
 			//17: 5% uber on hit
 			//144: Sets weapon mode - *possibly* the overdose speed effect
+
 		if(itemOverride!=null)
 		{
 			item=itemOverride;
@@ -3384,6 +3415,9 @@ public Action CheckItems(Handle timer, int userid)
 	{
 		TF2Attrib_RemoveByDefIndex(client, 58);
 	}
+
+	TF2Attrib_SetByDefIndex(client, 112, 0.05); // NOTE: 무한탄약
+	TF2Attrib_SetByDefIndex(client, 113, 30.0); // NOTE: 무한금속
 
 	int entity=-1;
 	while((entity=FindEntityByClassname2(entity, "tf_wearable_demoshield"))!=-1)  //Demoshields
