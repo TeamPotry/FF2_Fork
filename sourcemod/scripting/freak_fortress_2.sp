@@ -4521,7 +4521,7 @@ public Action BossTimer(Handle timer)
 			}
 		}
 
-		HPTime-=0.2;
+		HPTime-=0.12;
 		if(HPTime<0)
 		{
 			HPTime=0.0;
