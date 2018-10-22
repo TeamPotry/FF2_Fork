@@ -56,9 +56,9 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 {
 	if(FF2_IsFF2Enabled() && cvarGoomba.BoolValue)
 	{
+		/*
 		if(FF2_GetBossTeam() == TF2_GetClientTeam(attacker))
 		{
-			/*
 			float position[3];
 			GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
 			damageMultiplier=900.0;
@@ -66,10 +66,10 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			PrintCenterText(victim, "%t", "Human Got Goomba Stomped");
 			PrintCenterText(attacker, "%t", "Boss Goomba Stomped");
 			return Plugin_Changed;
-			*/
 			return Plugin_Handled;
 		}
-		else
+		*/
+		if(FF2_GetBossIndex(victim) != -1)
 		{
 			damageMultiplier=cvarGoombaDamage.FloatValue;
 			JumpPower=cvarGoombaRebound.FloatValue;
