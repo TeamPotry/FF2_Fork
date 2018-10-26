@@ -2484,7 +2484,7 @@ public Action MakeBoss(Handle timer, int boss)
 
 	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
 	kv.Rewind();
-	if(TF2_GetClientTeam(client)!=BossTeam)
+	if(CheckRoundState() != FF2RoundState_RoundRunning && TF2_GetClientTeam(client)!=BossTeam)
 	{
 		AssignTeam(client, BossTeam);
 	}
