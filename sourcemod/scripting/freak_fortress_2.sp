@@ -5362,6 +5362,17 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						IncrementHeadCount(attacker);
 					}
+					case 142:
+					{
+						if(damagecustom==TF_CUSTOM_COMBO_PUNCH)
+						{
+							damage*=2.0;
+							ScaleVector(damageForce, 4.0);
+							SpecialAttackToBoss(attacker, boss, "combo_punch", damage);
+
+							return Plugin_Changed;
+						}
+					}
 					case 214:  //Powerjack
 					{
 						int health=GetClientHealth(attacker);
