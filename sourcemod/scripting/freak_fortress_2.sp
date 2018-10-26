@@ -5429,6 +5429,19 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							SetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter", charge+25.0);
 						}
 					}
+					case 349:
+					{
+						if(TF2_IsPlayerInCondition(client, TFCond_OnFire))
+						{
+							damage*=2.0;
+							return Plugin_Changed;
+						}
+						else
+						{
+							TF2_IgnitePlayer(client, attacker);
+						}
+					}
+
 					case 355:  //Fan O' War
 					{
 						if(BossCharge[boss][0]>0.0)
