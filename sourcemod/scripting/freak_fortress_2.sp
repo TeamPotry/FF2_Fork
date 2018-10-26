@@ -318,6 +318,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
 	CreateNative("FF2_SpecialAttackToBoss", Native_SpecialAttackToBoss);
 	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
+	CreateNative("FF2_MakePlayerToBoss", Native_MakePlayerToBoss);
 
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
@@ -435,6 +436,7 @@ public void OnPluginStart()
 	RegConsoleCmd("say", Command_Say);
 	RegConsoleCmd("say_team", Command_Say);
 
+	RegAdminCmd("ff2_change_boss", ChangeBossCmd, ADMFLAG_CHEATS);
 	RegAdminCmd("ff2_special", Command_SetNextBoss, ADMFLAG_CHEATS, "Usage:  ff2_special <boss>.  Forces next round to use that boss");
 	RegAdminCmd("ff2_addpoints", Command_Points, ADMFLAG_CHEATS, "Usage:  ff2_addpoints <target> <points>.  Adds queue points to any player");
 	RegAdminCmd("ff2_point_enable", Command_Point_Enable, ADMFLAG_CHEATS, "Enable the control point if ff2_point_type is 0");
@@ -4072,6 +4074,27 @@ public Action OnPostInventoryApplication(Event event, const char[] name, bool do
 	return Plugin_Continue;
 }
 
+void MakePlayerToBoss(int client, int characterIndex)
+{
+	int boss = client;
+	if(IsBoss(client))
+	{
+		boss=GetBossIndex(client);
+		Boss[boss]=0;
+		character[boss]=0;
+	}
+	Boss[boss]=client;
+	character[boss]=characterIndex;
+
+	MakeBoss(INVALID_HANDLE, boss);
+	// CreateTimer(0.2, MakeBoss, boss, TIMER_FLAG_NO_MAPCHANGE); // FIXME: 보스인 상태에서
+}
+
+public int Native_MakePlayerToBoss(Handle plugin, int numParams)
+{
+	MakePlayerToBoss(GetNativeCell(1), GetNativeCell(2));
+}
+
 public Action Timer_RegenPlayer(Handle timer, int userid)
 {
 	int client=GetClientOfUserId(userid);
@@ -6911,6 +6934,48 @@ public Action TurnToZeroPanel(int client, int target)
 	panel.Send(client, TurnToZeroPanelH, MENU_TIME_FOREVER);
 	delete panel;
 	return Plugin_Handled;
+}
+
+public Action ChangeBossCmd(int client, int args)
+{
+	if(!Enabled2 || !IsValidClient(client))
+	{
+		return Plugin_Continue;
+	}
+
+	char bossName[64], realName[64];
+	Menu menu = new Menu(ChangeBossMenuHandler);
+	KeyValues BossKV;
+	for (int i = 0; (BossKV = GetCharacterKV(i)) != null; i++)
+	{
+		GetCharacterName(BossKV, realName, 64, 0);
+		GetCharacterName(BossKV, bossName, 64, client);
+		menu.AddItem(realName, bossName);
+	}
+	menu.ExitButton = true;
+	menu.Display(client, 90);
+
+	return Plugin_Continue;
+}
+
+public int ChangeBossMenuHandler(Handle menu, MenuAction action, int client, int item)
+{
+	switch(action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+
+		case MenuAction_Select:
+		{
+			char realName[64];
+			KeyValues BossKV = GetCharacterKV(item);
+			GetCharacterName(BossKV, realName, 64, 0);
+			CPrintToChatAll("{olive}[FF2]{default} {red}%N{default} -> {orange}%s{default}", client, realName);
+			MakePlayerToBoss(client, item);
+		}
+	}
 }
 
 bool GetClientClassInfoCookie(int client)

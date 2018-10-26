@@ -20,6 +20,12 @@ native int FF2_GetClientAssist(int client);
  */
 native void FF2_SetClientAssist(int client, int assist);
 
+/*
+* @param client 	     attacker's index
+* @param characterIndex	 boss index
+*/
+native void FF2_MakePlayerToBoss(int client, int characterIndex);
+
 /**
  * @param attacker 	attacker's index
  * @param victimBoss	victim boss index
