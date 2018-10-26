@@ -238,6 +238,9 @@ void Rage_Clone(const char[] abilityName, int boss)
 	int clip=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "clip", -1);
 	int health=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "health", 0);
 
+	int bossClient=GetClientOfUserId(FF2_GetBossUserId(boss));
+	TFTeam bossTeam=TF2_GetClientTeam(bossClient);
+
 	float position[3], velocity[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Data, "m_vecOrigin", position);
 
@@ -284,7 +287,7 @@ void Rage_Clone(const char[] abilityName, int boss)
 		players.Erase(temp);
 
 		FF2_SetFF2Flags(clone, FF2_GetFF2Flags(clone)|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_CLASSTIMERDISABLED);
-		TF2_ChangeClientTeam(clone, BossTeam);
+		TF2_ChangeClientTeam(clone, bossTeam);
 		TF2_RespawnPlayer(clone);
 		CloneOwnerIndex[clone]=boss;
 		TF2_SetPlayerClass(clone, (playerclass ? (view_as<TFClassType>(playerclass)) : (view_as<TFClassType>(bossKV[config].GetNum("class", 0)))), _, false);
@@ -373,6 +376,7 @@ void Rage_Clone(const char[] abilityName, int boss)
 	}
 	delete players;
 
+	// FIXME: 각 개인별로 감지 후 삭제할 것
 	int entity, owner;
 	while((entity=FindEntityByClassname(entity, "tf_wearable"))!=-1)
 	{
