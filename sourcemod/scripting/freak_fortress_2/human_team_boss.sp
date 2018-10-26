@@ -29,7 +29,7 @@ public Action RoundStart(Handle timer)
 	ArrayList clientArray = GetAlivePlayers(false);
 	ArrayList bossArray = GetBossPlayers();
 
-	if((bossCount = (clientArray.Length + bossArray.Length) / 8) > 0)
+	if((bossCount = (clientArray.Length + bossArray.Length) / 12) > 0)
 	{
 		int random, index, bossindex;
 		int healthPoint = 500 + (300 * bossCount);
