@@ -32,7 +32,7 @@ public Action RoundStart(Handle timer)
 	if((bossCount = (clientArray.Length + bossArray.Length) / 8) > 0)
 	{
 		int random, index, bossindex;
-		int healthPoint = 1000 + (500 * bossCount);
+		int healthPoint = 500 + (300 * bossCount);
 		char bossName[64];
 		for(int loop = 0; loop < bossCount; loop++)
 		{
@@ -47,7 +47,7 @@ public Action RoundStart(Handle timer)
 			FF2_SetBossMaxHealth(bossindex, healthPoint);
 			FF2_SetBossHealth(bossindex, healthPoint);
 			FF2_SetBossLives(bossindex, 1);
-			FF2_SetBossRageDamage(bossindex, 1200 + (50 * bossCount));
+			FF2_SetBossRageDamage(bossindex, 550 + (150 * bossCount));
 
 			for(int cloop=0; cloop < clientArray.Length; cloop++)
 			{
