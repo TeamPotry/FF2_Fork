@@ -261,7 +261,10 @@ public Action Command_SetMyBoss(int client, int args)
 	}
 
 	if(FF2_GetBossIndex(client) != -1)
+	{
+		CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2Boss Can't change while playing boss");
 		return Plugin_Handled;
+	}
 
 /*
 	if(Steam_RequestGroupStatus(client, PORTY_GROUP_ID) && !IsPlayerInGroup[client])

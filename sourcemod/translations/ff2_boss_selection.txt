@@ -5,6 +5,11 @@
         "en"    "In-game only"
     }
 
+    "FF2Boss Can't change while playing boss."
+    {
+        "en"    "You can not change boss while playing boss."
+    }
+
     "FF2Boss Dont Play Boss"
     {
         "en"    "leaved queue. (Queue point saved.)"
