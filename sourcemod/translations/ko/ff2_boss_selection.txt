@@ -7,7 +7,7 @@
 
     "FF2Boss Dont Play Boss"
     {
-        "ko"    "선택 안함."
+        "ko"    "보스를 플레이하지 않습니다. (대기열 포인트가 저장되었습니다.)"
     }
 
     "FF2Boss Saved QueuePoints"

@@ -7,7 +7,7 @@
 
     "FF2Boss Dont Play Boss"
     {
-        "en"    "Not Selected."
+        "en"    "leaved queue. (Queue point saved.)"
     }
 
     "FF2Boss Saved QueuePoints"
