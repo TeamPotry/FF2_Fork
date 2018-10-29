@@ -1019,7 +1019,7 @@ public void LoadCharacter(const char[] characterName)
 public void PrecacheCharacter(int characterIndex)
 {
 	char file[PLATFORM_MAX_PATH], filePath[PLATFORM_MAX_PATH], bossName[64];
-	KeyValues kv=GetArrayCell(bossesArray, characterIndex);
+	KeyValues kv=GetCharacterKV(characterIndex);
 	kv.Rewind();
 	kv.GetString("filename", bossName, sizeof(bossName));
 
@@ -1039,10 +1039,11 @@ public void PrecacheCharacter(int characterIndex)
 				LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
 			}
 
-			if(kv.GetNum("download"))
+			if(kv.GetNum("download", 0)>0)
 			{
 				if(FileExists(filePath, true))
 				{
+					LogMessage("Add to Download ''%s''", filePath);
 					AddFileToDownloadsTable(filePath); // ...but AddFileToDownloadsTable isn't
 				}
 				else
