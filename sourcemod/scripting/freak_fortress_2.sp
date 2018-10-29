@@ -934,11 +934,46 @@ public void LoadCharacter(const char[] characterName)
 	}
 	kv.Rewind();
 
-	char file[PLATFORM_MAX_PATH];
+	char file[PLATFORM_MAX_PATH], filePath[PLATFORM_MAX_PATH];
 	char extensions[][]={".mdl", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd"};
 	kv.SetString("filename", characterName);
 	kv.GetString("name", config, sizeof(config));
 
+	if(kv.JumpToKey("sounds"))
+	{
+		kv.GotoFirstSubKey();
+
+		do
+		{
+			kv.GetSectionName(file, sizeof(file));
+			Format(filePath, sizeof(filePath), "sound/%s", file);
+
+			if(FileExists(filePath, true))
+			{
+				PrecacheSound(file); // PrecacheSound is relative to the sounds/ folder
+			}
+			else
+			{
+				LogError("[FF2 Bosses] Character %s is missing file '%s'!", characterName, filePath);
+			}
+
+			if(kv.GetNum("download", 0)>0)
+			{
+				if(FileExists(filePath, true))
+				{
+					LogMessage("Add to Download ''%s''", filePath);
+					AddFileToDownloadsTable(filePath); // ...but AddLateDownload isn't
+				}
+				else
+				{
+					LogError("[FF2 Bosses] Character %s is missing file '%s'!", characterName, filePath);
+				}
+			}
+		}
+		while(kv.GotoNextKey());
+	}
+
+	kv.Rewind();
 	if(kv.JumpToKey("downloads"))
 	{
 		kv.GotoFirstSubKey();
@@ -1023,6 +1058,7 @@ public void PrecacheCharacter(int characterIndex)
 	kv.Rewind();
 	kv.GetString("filename", bossName, sizeof(bossName));
 
+/*
 	if(kv.JumpToKey("sounds"))
 	{
 		kv.GotoFirstSubKey();
@@ -1054,6 +1090,7 @@ public void PrecacheCharacter(int characterIndex)
 		}
 		while(kv.GotoNextKey());
 	}
+*/
 
 	kv.Rewind();
 	if(kv.JumpToKey("downloads"))
