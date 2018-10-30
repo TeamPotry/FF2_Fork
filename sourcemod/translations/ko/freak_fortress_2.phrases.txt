@@ -285,6 +285,10 @@
 	{
 		"ko"		"보스 음악 설정 (/ff2_music)"
 	}
+	"Toggle Music Switch"
+	{
+		"ko"		"보스 음악 ON/OFF"
+	}
 	"Toggle Monologue"
 	{
 		"ko"		"보스 대사 ON / OFF (/ff2_voice)"

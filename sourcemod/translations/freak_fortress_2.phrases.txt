@@ -285,6 +285,10 @@
 	{
 		"en"		"Toggle music (/ff2_music)"
 	}
+	"Toggle Music Switch"
+	{
+		"en"		"Turn the Freak Fortress 2 music..."
+	}
 	"Toggle Monologue"
 	{
 		"en"		"Toggle monologues (/ff2_voice)"

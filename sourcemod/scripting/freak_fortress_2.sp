@@ -2277,10 +2277,14 @@ public void SetSoundFlags(int client, int soundFlags)
 		return;
 	}
 
-	char buffer[5];
-	GetClientCookie(client, FF2Cookie_MuteSound, buffer, sizeof(buffer));
-	IntToString((StringToInt(buffer) | soundFlags), buffer, sizeof(buffer));
-	SetClientCookie(client, FF2Cookie_MuteSound, buffer);
+	char authId[25], buffer[5];
+	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
+
+	int tempflags=ff2Database.GetValue(authId, "sound_mute_flag");
+	CPrintToChatAll("%d", tempflags);
+	IntToString((tempflags | soundFlags), buffer, sizeof(buffer));
+	ff2Database.SetValue(authId, "sound_mute_flag", buffer);
+	CPrintToChatAll("%s", buffer);
 	muteSound[client] |= soundFlags;
 }
 
@@ -2291,10 +2295,12 @@ public void ClearSoundFlags(int client, int soundFlags)
 		return;
 	}
 
-	char buffer[5];
-	GetClientCookie(client, FF2Cookie_MuteSound, buffer, sizeof(buffer));
-	IntToString((StringToInt(buffer) & ~soundFlags), buffer, sizeof(buffer));
-	SetClientCookie(client, FF2Cookie_MuteSound, buffer);
+	char authId[25], buffer[5];
+	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
+
+	int tempflags=ff2Database.GetValue(authId, "sound_mute_flag");
+	IntToString((tempflags & ~soundFlags), buffer, sizeof(buffer));
+	ff2Database.SetValue(authId, "sound_mute_flag", buffer);
 	muteSound[client]&=~soundFlags;
 }
 
@@ -4005,6 +4011,8 @@ public void OnClientPostAdminCheck(int client)
 		char authId[25];
 		GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
 		ff2Database.InitializePlayerData(authId);
+
+		muteSound[client]=ff2Database.GetValue(authId, "sound_mute_flag");
 	}
 
 	if(playBGM[0])
@@ -4030,13 +4038,6 @@ public void OnClientCookiesCached(int client)
 		SetClientCookie(client, FF2Cookie_QueuePoints, "0");
 	}
 	queuePoints[client]=StringToInt(buffer);
-
-	GetClientCookie(client, FF2Cookie_MuteSound, buffer, sizeof(buffer));
-	if(!buffer[0])
-	{
-		SetClientCookie(client, FF2Cookie_MuteSound, "0");
-	}
-	muteSound[client]=StringToInt(buffer);
 
 	GetClientCookie(client, FF2Cookie_DisplayInfo, buffer, sizeof(buffer));
 	if(!buffer[0])
@@ -7583,10 +7584,14 @@ public Action MusicTogglePanel(int client)
 		return Plugin_Continue;
 	}
 
+	char text[128];
 	Panel panel=CreatePanel();
-	panel.SetTitle("Turn the Freak Fortress 2 music...");
-	panel.DrawItem("On");
-	panel.DrawItem("Off");
+	SetGlobalTransTarget(client);
+	Format(text, sizeof(text), "%t", "Toggle Music Switch");
+
+	panel.SetTitle(text);
+	panel.DrawItem("ON");
+	panel.DrawItem("OFF");
 	panel.Send(client, MusicTogglePanelH, MENU_TIME_FOREVER);
 	delete panel;
 	return Plugin_Continue;
