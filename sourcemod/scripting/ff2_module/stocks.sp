@@ -1,11 +1,24 @@
 public void GetHudSettingString(HudSettingValue value, char[] statusString, int buffer)
 {
-    if(value <= HudSetting_View)
-        Format(statusString, buffer, "VIEW");
-    else if(value == HudSetting_ViewAble)
-        Format(statusString, buffer, "PUBLIC");
-    else if(value == HudSetting_ViewDisable)
-        Format(statusString, buffer, "PRIVATE");
+    switch(value)
+    {
+      case HudSetting_None:
+      {
+          Format(statusString, buffer, "NONE");
+      }
+      case HudSetting_View:
+      {
+          Format(statusString, buffer, "VIEW");
+      }
+      case HudSetting_ViewAble:
+      {
+          Format(statusString, buffer, "PUBLIC");
+      }
+      case HudSetting_ViewDisable:
+      {
+          Format(statusString, buffer, "PRIVATE");
+      }
+    }
 }
 
 public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
