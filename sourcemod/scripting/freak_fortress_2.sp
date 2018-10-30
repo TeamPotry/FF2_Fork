@@ -26,6 +26,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2items>
 #include <tf2attributes>
 
+#include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
 #include "ff2_module/stocks.sp"
 
@@ -324,6 +325,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 
+	//ff2_module/database.sp
+	DB_Native_Init();
+
 	//ff2_module/hud.sp
 	HudInit();
 
@@ -573,6 +577,10 @@ public void OnConfigsExecuted()
 
 public void OnMapStart()
 {
+
+	ff2Database = new FF2DBSettingData();
+	// ff2Database.InitializeTable();
+
 	HPTime=0.0;
 	doorCheckTimer=null;
 	RoundCount=0;
@@ -3991,6 +3999,13 @@ public void OnClientPostAdminCheck(int client)
 	Damage[client]=0;
 	Assist[client]=0;
 	uberTarget[client]=-1;
+
+	if(!IsFakeClient(client))
+	{
+		char authId[25];
+		GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
+		ff2Database.InitializePlayerData(authId);
+	}
 
 	if(playBGM[0])
 	{

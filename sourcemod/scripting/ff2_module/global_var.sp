@@ -25,3 +25,5 @@
 #define MAPS_CONFIG	"maps.cfg"
 #define HUDS_CONFIG "hud_setting.cfg"
 #define CHANGELOG "changelog.txt"
+
+FF2DBSettingData ff2Database;
