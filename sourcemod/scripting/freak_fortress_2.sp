@@ -2281,10 +2281,8 @@ public void SetSoundFlags(int client, int soundFlags)
 	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
 
 	int tempflags=ff2Database.GetValue(authId, "sound_mute_flag");
-	CPrintToChatAll("%d", tempflags);
 	IntToString((tempflags | soundFlags), buffer, sizeof(buffer));
 	ff2Database.SetValue(authId, "sound_mute_flag", buffer);
-	CPrintToChatAll("%s", buffer);
 	muteSound[client] |= soundFlags;
 }
 
