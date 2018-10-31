@@ -124,7 +124,6 @@ ArrayList subpluginArray;
 ArrayList chancesArray;
 
 Handle FF2Cookie_QueuePoints;
-Handle FF2Cookie_MuteSound;
 Handle FF2Cookie_DisplayInfo;
 
 Menu changelogMenu;
@@ -455,7 +454,6 @@ public void OnPluginStart()
 	AutoExecConfig(true, "freak_fortress_2", "sourcemod/freak_fortress_2");
 
 	FF2Cookie_QueuePoints=RegClientCookie("ff2_cookie_queuepoints", "Client's queue points", CookieAccess_Protected);
-	FF2Cookie_MuteSound=RegClientCookie("ff2_cookie_mutesound", "Client's sound preferences", CookieAccess_Public);
 	FF2Cookie_DisplayInfo=RegClientCookie("ff2_cookie_displayinfo", "Client's display info preferences", CookieAccess_Public);
 
 	jumpHUD=CreateHudSynchronizer();
