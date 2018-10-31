@@ -293,6 +293,10 @@
 	{
 		"ko"		"보스 대사 ON / OFF (/ff2_voice)"
 	}
+	"Toggle Monologue Switch"
+	{
+		"ko"		"보스 대사 및 효과음 ON / OFF"
+	}
 	"Toggle Class Changes"
 	{
 		"ko"		"FF2에서의 병과 변경점 ON / OFF"

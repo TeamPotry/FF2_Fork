@@ -7635,10 +7635,14 @@ public Action VoiceTogglePanel(int client)
 		return Plugin_Continue;
 	}
 
+	char text[128];
 	Panel panel=CreatePanel();
-	panel.SetTitle("Turn the Freak Fortress 2 voices...");
-	panel.DrawItem("On");
-	panel.DrawItem("Off");
+	SetGlobalTransTarget(client);
+	Format(text, sizeof(text), "%t", "Toggle Monologue Switch");
+
+	panel.SetTitle(text);
+	panel.DrawItem("ON");
+	panel.DrawItem("OFF");
 	panel.Send(client, VoiceTogglePanelH, MENU_TIME_FOREVER);
 	delete panel;
 	return Plugin_Continue;

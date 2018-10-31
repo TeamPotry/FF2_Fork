@@ -293,6 +293,10 @@
 	{
 		"en"		"Toggle monologues (/ff2_voice)"
 	}
+	"Toggle Monologue Switch"
+	{
+		"en"		"Turn the Freak Fortress 2 voices..."
+	}
 	"Toggle Class Changes"
 	{
 		"en"		"Toggle info about class changes in FF2"
