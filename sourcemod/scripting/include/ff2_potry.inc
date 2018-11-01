@@ -44,6 +44,18 @@ native void FF2_SpecialAttackToBoss(int attacker, int victimBoss, const char[] n
 native KeyValues FF2_GetCharacterKV(int characterIndex);
 
 /**
+ * Called when boss uses minion spawn ability.
+ *
+ * @param client    victim client index
+ * @param ownerBossIndex    owner boss index
+ * @return
+ *  - Plugin_Continue: Nothing..
+ *  - Plugin_Changed: Change result.
+ *  - Plugin_Stop, Plugin_Handled: Block this event.
+ */
+forward Action FF2_OnMinionSpawn(int client, int &ownerBossIndex);
+
+/**
  * Called when Player became boss.
  *
  * @param boss    boss index

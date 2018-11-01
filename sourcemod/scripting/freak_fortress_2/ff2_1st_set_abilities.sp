@@ -36,6 +36,7 @@ Handle SlowMoTimer;
 int oldTarget;
 
 Handle OnRage;
+Handle OnMinionSpawn;
 
 ConVar cvarTimeScale;
 ConVar cvarCheats;
@@ -45,6 +46,7 @@ TFTeam BossTeam=TFTeam_Blue;
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	OnRage=CreateGlobalForward("FF2_OnRage", ET_Hook, Param_Cell, Param_CellByRef);  //Boss, distance
+	OnMinionSpawn=CreateGlobalForward("FF2_OnMinionSpawn", ET_Hook, Param_Cell, Param_CellByRef);  //client, ownerBossIndex
 	return APLRes_Success;
 }
 
@@ -279,17 +281,23 @@ void Rage_Clone(const char[] abilityName, int boss)
 
 	int totalMinions=(ratio ? RoundToCeil(alive*ratio) : MaxClients);  //If ratio is 0, use MaxClients instead
 	int config=GetRandomInt(0, maxKV-1);
-	int clone, temp;
+	int clone, temp, tempBossIndex;
+	Action action;
 	for(int i=1; i<=dead && i<=totalMinions; i++)
 	{
+		tempBossIndex = boss;
 		temp=GetRandomInt(0, players.Length-1);
 		clone=players.Get(temp);
 		players.Erase(temp);
 
+		action = Forward_OnMinionSpawn(i, tempBossIndex);
+		if(action != Plugin_Stop && action != Plugin_Handled)
+			continue;
+
 		FF2_SetFF2Flags(clone, FF2_GetFF2Flags(clone)|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_CLASSTIMERDISABLED);
 		TF2_ChangeClientTeam(clone, bossTeam);
 		TF2_RespawnPlayer(clone);
-		CloneOwnerIndex[clone]=boss;
+		CloneOwnerIndex[clone]=tempBossIndex;
 		TF2_SetPlayerClass(clone, (playerclass ? (view_as<TFClassType>(playerclass)) : (view_as<TFClassType>(bossKV[config].GetNum("class", 0)))), _, false);
 
 		if(changeModel)
@@ -401,6 +409,22 @@ void Rage_Clone(const char[] abilityName, int boss)
 			TF2_RemoveWearable(owner, entity);
 		}
 	}
+}
+
+public Action Forward_OnMinionSpawn(int client, int ownerBossIndex)
+{
+	int tempOwnerBossIndex = ownerBossIndex;
+	Action action;
+
+	Call_StartForward(OnMinionSpawn);
+	Call_PushCell(client);
+	Call_PushCellRef(tempOwnerBossIndex);
+	Call_Finish(action);
+
+	if(action == Plugin_Changed)
+		ownerBossIndex = tempOwnerBossIndex;
+
+	return action;
 }
 
 public Action Timer_EquipModel(Handle timer, DataPack pack)
