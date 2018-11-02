@@ -4182,8 +4182,13 @@ public Action ClientTimer(Handle timer)
 					if(!IsBoss(observer))
 					{
 						Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+						if(Assist[client] > 0)
+							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 						hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
+
 						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
+						if(Assist[observer] > 0)
+							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
 						hudQueue.AddHud(new FF2HudDisplay("Observer Target Player Damage", hudText), observer);
 					}
 					else if(IsBoss(observer))
@@ -4505,6 +4510,14 @@ public Action BossTimer(Handle timer)
 				}
 			}
 		}
+		else if(BossTeam != TF2_GetClientTeam(client))
+		{
+			Format(text, sizeof(text), "%t", "Your Damage Dealt", Damage[client]);
+			if(Assist[client] > 0)
+				Format(text, sizeof(text), "%s + ASSIST: %d", text, Assist[client]);
+			bossHudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", text));
+		}
+
 		bossHudQueue.ShowSyncHudQueueText(rageHUD);
 		bossHudQueue.KillSelf();
 		SetHudTextParams(-1.0, 0.88, 0.06, 255, 255, 255, 255);
