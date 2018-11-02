@@ -1762,7 +1762,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		int bossindexs[MAXPLAYERS+1], bosscount=0;
 		for(int target=1; target<=MaxClients; target++)
 		{
-			if(IsBoss(target))
+			if(IsBoss(target) && BossTeam == TF2_GetClientTeam(target))
 			{
 				bossindexs[bosscount++]=Boss[target];
 			}
@@ -1802,7 +1802,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 	for(int client=1; client<=MaxClients; client++)
 	{
-		if(!IsValidClient(client) || Damage[client]<=0 || IsBoss(client))
+		if(!IsValidClient(client) || Damage[client]<=0 || (IsBoss(client) && BossTeam == TF2_GetClientTeam(client)))
 		{
 			continue;
 		}
