@@ -5314,10 +5314,20 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		return Plugin_Changed;
 	}
 
+	bool bChanged=false;
 	float position[3];
 	GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
 	if(IsBoss(attacker))
 	{
+		if(damagecustom == TF_CUSTOM_BACKSTAB && IsBoss(client))
+		{
+			int boss=GetBossIndex(client);
+			damagecustom=0;
+			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/90)) * 2.0;
+			damagetype|=DMG_CRIT;
+
+			bChanged=true;
+		}
 		if(IsValidClient(client) && !IsBoss(client) && !TF2_IsPlayerInCondition(client, TFCond_Bonked))
 		{
 			if(TF2_IsPlayerInCondition(client, TFCond_DefenseBuffed))
@@ -5864,7 +5874,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			}
 		}
 	}
-	return Plugin_Continue;
+	return bChanged ? Plugin_Continue : Plugin_Changed;
 }
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
