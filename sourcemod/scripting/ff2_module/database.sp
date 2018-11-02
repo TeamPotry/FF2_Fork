@@ -66,11 +66,12 @@ public int Native_FF2DBSettingData_GetValue(Handle plugin, int numParams)
 {
     FF2DBSettingData thisDB = GetNativeCell(1);
 
-    char authId[24], settingId[128], queryStr[256], resultStr[64];
+    char authId[24], settingId[256], queryStr[256], resultStr[64];
     int buffer = GetNativeCell(5);
     GetNativeString(2, authId, 24);
     GetNativeString(3, settingId, 128);
-    // TODO: SQL 인젝션 방지
+    thisDB.Escape(settingId, settingId, 256);
+
     Format(queryStr, sizeof(queryStr), "SELECT `%s` FROM `ff2_player` WHERE `steam_id` = '%s'", settingId, authId);
 
     DBResultSet query = SQL_Query(thisDB, queryStr);
@@ -97,14 +98,14 @@ public int Native_FF2DBSettingData_SetValue(Handle plugin, int numParams)
 {
     FF2DBSettingData thisDB = GetNativeCell(1);
 
-    char authId[24], settingId[128], queryStr[256], timeStr[64], valueString[64];
+    char authId[24], settingId[256], queryStr[256], timeStr[64], valueString[64];
     GetNativeString(2, authId, 24);
     GetNativeString(3, settingId, 128);
     GetNativeString(4, valueString, 64);
 
+    thisDB.Escape(settingId, settingId, 256);
     FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S");
 
-    // TODO: SQL 인젝션 방지
     Format(queryStr, sizeof(queryStr), "UPDATE `ff2_player` SET `%s` = '%s', `last_saved_time` = '%s' WHERE `steam_id` = '%s'", settingId, valueString, timeStr, authId);
     thisDB.Query(QueryErrorCheck, queryStr);
 }
