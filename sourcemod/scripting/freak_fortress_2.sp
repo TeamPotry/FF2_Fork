@@ -393,6 +393,7 @@ public void OnPluginStart()
 	HookEvent("object_destroyed", OnObjectDestroyed, EventHookMode_Pre);
 	HookEvent("object_deflected", OnObjectDeflected, EventHookMode_Pre);
 	HookEvent("deploy_buff_banner", OnDeployBackup);
+	HookEvent("player_healed", OnPlayerHealed);
 
 	HookUserMessage(GetUserMessageId("PlayerJarated"), OnJarate);  //Used to subtract rage when a boss is jarated (not through Sydney Sleeper)
 
@@ -5057,6 +5058,28 @@ public Action OnDeployBackup(Event event, const char[] name, bool dontBroadcast)
 	{
 		FF2Flags[GetClientOfUserId(event.GetInt("buff_owner"))]|=FF2FLAG_ISBUFFED;
 	}
+	return Plugin_Continue;
+}
+
+public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("patient"));
+	int healer = GetClientOfUserId(event.GetInt("healer"));
+	int healed = event.GetInt("amount");
+
+	if(CheckRoundState() != FF2RoundState_RoundRunning)
+		return Plugin_Continue;
+
+	if(IsBoss(healer)) // TODO: 자가치유 가능 여부 설정
+	{
+		// BossHealth[GetBossIndex(healer)] += healed;
+		UpdateHealthBar();
+	}
+	else if(client != healer)
+	{
+		Assist[healer] += healed/2;
+	}
+
 	return Plugin_Continue;
 }
 
