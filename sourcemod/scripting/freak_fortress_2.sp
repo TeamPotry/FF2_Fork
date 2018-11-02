@@ -64,7 +64,6 @@ int detonations[MAXPLAYERS+1];
 bool playBGM[MAXPLAYERS+1]=true;
 int queuePoints[MAXPLAYERS+1];
 int muteSound[MAXPLAYERS+1];
-bool displayInfo[MAXPLAYERS+1];
 
 char currentBGM[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
@@ -124,7 +123,6 @@ ArrayList subpluginArray;
 ArrayList chancesArray;
 
 Handle FF2Cookie_QueuePoints;
-Handle FF2Cookie_DisplayInfo;
 
 Menu changelogMenu;
 
@@ -455,7 +453,6 @@ public void OnPluginStart()
 	AutoExecConfig(true, "freak_fortress_2", "sourcemod/freak_fortress_2");
 
 	FF2Cookie_QueuePoints=RegClientCookie("ff2_cookie_queuepoints", "Client's queue points", CookieAccess_Protected);
-	FF2Cookie_DisplayInfo=RegClientCookie("ff2_cookie_displayinfo", "Client's display info preferences", CookieAccess_Public);
 
 	jumpHUD=CreateHudSynchronizer();
 	rageHUD=CreateHudSynchronizer();
@@ -4035,14 +4032,6 @@ public void OnClientCookiesCached(int client)
 		SetClientCookie(client, FF2Cookie_QueuePoints, "0");
 	}
 	queuePoints[client]=StringToInt(buffer);
-
-	GetClientCookie(client, FF2Cookie_DisplayInfo, buffer, sizeof(buffer));
-	if(!buffer[0])
-	{
-		SetClientCookie(client, FF2Cookie_DisplayInfo, "1");
-		buffer="1";
-	}
-	displayInfo[client]=view_as<bool>(StringToInt(buffer));
 }
 
 public void OnClientDisconnect(int client)
@@ -7114,12 +7103,10 @@ public int ChangeBossMenuHandler(Handle menu, MenuAction action, int client, int
 
 bool GetClientClassInfoCookie(int client)
 {
-	if(!IsValidClient(client) || IsFakeClient(client))
-	{
-		return false;
-	}
+	char authId[25];
+	GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
 
-	return displayInfo[client];
+	return ff2Database.GetValue(authId, "class_info_view") > 0;
 }
 
 int GetClientQueuePoints(int client)
@@ -7496,8 +7483,9 @@ public int ClassInfoTogglePanelH(Menu menu, MenuAction action, int client, int s
 	{
 		if(action==MenuAction_Select)
 		{
-			SetClientCookie(client, FF2Cookie_DisplayInfo, selection==2 ? "0" : "1");
-			displayInfo[client] = selection==2 ? false : true;
+			char authId[25];
+			GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
+			ff2Database.SetValue(authId, "class_info_view", selection==2 ? "0" : "1");
 			CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Class Info", selection==2 ? "off" : "on");
 		}
 	}
