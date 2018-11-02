@@ -39,11 +39,12 @@ public Action OnStartTouch(int entity, int other)
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
-    if(!(GetEntityFlags(client) & FL_ONGROUND) && !(GetEntityFlags(client) & FL_INWATER))
+	if(!(GetEntityFlags(client) & FL_ONGROUND) && !(GetEntityFlags(client) & FL_INWATER))
 	{
 		if(g_bTouched[client] && IsBoss(client) && TF2_IsPlayerInCondition(client, TFCond_BlastJumping))
 		{
-			FF2_SpecialAttackToBoss(attacker, FF2_GetBossIndex(client), "projectile_airshot", damageFloat);
+			if(damageFloat > 90.0)
+				FF2_SpecialAttackToBoss(attacker, FF2_GetBossIndex(client), "projectile_airshot", damageFloat);
 		}
 	}
 	g_bTouched[client] = false;
