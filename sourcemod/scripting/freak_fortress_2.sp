@@ -3688,7 +3688,7 @@ public Action Command_GetHP(int client)  //TODO: This can rarely show a very lar
 
 		for(int target=1; target<=MaxClients; target++)
 		{
-			if(IsBoss(target))
+			if(IsBoss(target) && BossTeam == TF2_GetClientTeam(target))
 			{
 				bossindexs[bosscount++]=Boss[target];
 				BossHealthLast[bossindexs[bosscount]]=BossHealth[bossindexs[bosscount]]-BossHealthMax[bossindexs[bosscount]]*(BossLives[bossindexs[bosscount]]-1);
@@ -4196,17 +4196,31 @@ public Action ClientTimer(Handle timer)
 						}
 						Format(hudText, sizeof(hudText), "HP: %d / %d%s", BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
 						hudQueue.AddHud(new FF2HudDisplay("Observer Target Boss HP", hudText));
+
+						if(BossTeam != TF2_GetClientTeam(observer))
+						{
+							Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
+							if(Assist[observer] > 0)
+								Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
+							hudQueue.AddHud(new FF2HudDisplay("Observer Target Player Damage", hudText), observer);
+						}
 					}
 				}
 				else
 				{
 					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+					if(Assist[client] > 0)
+						Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
+
 					hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
 				}
 			}
 			else
 			{
 				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
+				if(Assist[client] > 0)
+					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
+
 				hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText));
 
 				// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText)));
