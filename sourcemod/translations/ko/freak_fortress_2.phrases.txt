@@ -75,43 +75,43 @@
 	}
 	"Scout Advice"
 	{
-		"ko"		"훅가콜라는 소형 치명타 대신 치명타를 부여받습니다.\n죽음의 부채는 적중 시 보스의 분노를 5%% 감소합니다.\n권총은 소형 치명타를 부여받습니다.\n지팡이 사탕이 적중 시 치료제를 떨굽니다."
+		"ko"		""
 	}
 	"Soldier Advice"
 	{
-		"ko"		"부대지원은 내가 피격당할 때도 게이지를 채웁니다. 버프는 내 가까운 모든 아군에게 강한 데미지 감소를 부여합니다.\n부츠는 낙하 데미지를 감소시키고 보스를 밟을 수 있습니다.\n모든 총기류로 공중에 뜬 보스를 맞출 시 소형 치명타(직격포는 치명타)"
+		"ko"		"모든 총기류로 공중에 뜬 보스를 맞출 시 소형 치명타(직격포는 치명타)"
 	}
 	"Pyro Advice"
 	{
-		"ko"		"Postal Pummeler and skins uses stats of Fire Axe.\nThe Flare Gun is replaced by the Mega Detonator.\nAirblasting the boss builds rage and lengthens the Vagineer's uber."
+		"ko"		"압축공기 분사는 보스의 분노와 버지니어 분노의 시간을 늘립니다."
 	}
 	"Demo Advice"
 	{
-		"ko"		"The shields block one hit from the Boss.\nEyelander gains heads on hit.\nThe Tide Turner recharges if you hit the boss.\nThe Half-Zatoichi heals 35HP on hit and can overheal to +25. Honorbound is removed on hit."
+		"ko"		""
 	}
 	"Heavy Advice"
 	{
-		"ko"		"Natascha and the KGB are replaced with the\nMinigun and Fists, respectively.\nThe Gloves of Running are quite quick but cause you to lose more health.\nThe Holiday Punch will remove any stun on you if you hit Boss while stunned."
+		"ko"		""
 	}
 	"Engineer Advice"
 	{
-		"ko"		"All maps only have small ammo packs.\nThe Frontier Justice gains crits only while your sentry is targeting the Boss."
+		"ko"		""
 	}
 	"Medic Advice"
 	{
-		"ko"		"Your medigun is a combination of the Medigun, Kritzkrieg, and Quick-Fix. Charge starts at 40 percent and lasts for 150 percent after activation.\nSyringe Gun: on hit: +5%% ubercharge, has Overdose's speed effect.\nCrossbow: Always crits, +150%% damage, +10%% uber on hit."
+		"ko"		"모든 메디건이 기본 + 응급조치 + 크리츠크리그의 능력을 모두 갖습니다."
 	}
 	"Sniper Advice"
 	{
-		"ko"		"All of your weapons have critical hits.\nJarate removes 8%% rage.\nBack-equipped weapons are replaced with SMG.\nDefault Sniper Rifle causes Boss to glow. Glow time scales with charge."
+		"ko"		"대부분의 무기에 치명타를 부여받습니다.\n뒤에 착용한 배낭은 SMG도 부여받습니다.\n기본 저격소총은 충전량에 비례하여 적중한 보스에게 운곽선을 오래 씌웁니다."
 	}
 	"Spy Advice"
 	{
-		"ko"		"Backstab does about 10 percent of Boss's max health.\nThe Cloak and Dagger is replaced with the normal watch.\nAll revolvers minicrit.\nYour Eternal Reward/Wanga Prick backstabs will disguise you instantly.\nKunai backstabs will give you a health bonus."
+		"ko"		"백스탭은 보스의 체력에 비례하여 큰 피해를 입힙니다.\n망도와 단검은 일반 은폐시계로 교체됩니다.\n모든 리볼버에 소형 치명타가 부여됩니다."
 	}
 	"Melee Advice"
 	{
-		"ko"		"All melee weapons (except the Spy knives) deal critical hits.\nUse /ff2 menu to disable these notifications."
+		"ko"		"칼을 제외한 모든 근접무기에 치명타가 부여됩니다!\n명령어 /ff2를 이용해 이 알림을 끄실 수 있습니다."
 	}
 	"Boss Queue"
 	{
