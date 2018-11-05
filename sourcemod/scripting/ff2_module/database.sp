@@ -31,13 +31,16 @@ methodmap FF2DBSettingData < Database {
 
     public native int GetValue(const char[] authid, const char[] settingid, char[] value = "", int buffer = 0);
     public native void SetValue(const char[] authid, const char[] settingid, const char[] value);
+
+    public native HudSettingValue GetHudSeting(const char[] authid, const char[] settingid);
+    public native void SetHudSeting(const char[] authid, const char[] hudId, HudSettingValue value);
 }
 
 public void QueryErrorCheck(Database db, DBResultSet results, const char[] error, any data)
 {
     if(results == null || error[0] != '\0')
     {
-        SetFailState("[FF2] Ahh.. Something is wrong in QueryErrorCheck. check your DB. ERROR: %s", error);
+        LogError("[FF2] Ahh.. Something is wrong in QueryErrorCheck. check your DB. ERROR: %s", error);
     }
 }
 
@@ -47,6 +50,9 @@ void DB_Native_Init()
 
     CreateNative("FF2DBSettingData.GetValue", Native_FF2DBSettingData_GetValue);
     CreateNative("FF2DBSettingData.SetValue", Native_FF2DBSettingData_SetValue);
+
+    CreateNative("FF2DBSettingData.GetHudSeting", Native_FF2DBSettingData_GetHudSeting);
+    CreateNative("FF2DBSettingData.SetHudSeting", Native_FF2DBSettingData_SetHudSeting);
 }
 
 public int Native_FF2DBSettingData_InitializePlayerData(Handle plugin, int numParams)
@@ -108,4 +114,49 @@ public int Native_FF2DBSettingData_SetValue(Handle plugin, int numParams)
 
     Format(queryStr, sizeof(queryStr), "UPDATE `ff2_player` SET `%s` = '%s', `last_saved_time` = '%s' WHERE `steam_id` = '%s'", settingId, valueString, timeStr, authId);
     thisDB.Query(QueryErrorCheck, queryStr);
+}
+
+public int Native_FF2DBSettingData_GetHudSeting(Handle plugin, int numParams)
+{
+    FF2DBSettingData thisDB = GetNativeCell(1);
+
+    char authId[24], hudId[256], queryStr[256];
+    GetNativeString(2, authId, 24);
+    GetNativeString(3, hudId, 128);
+    thisDB.Escape(hudId, hudId, 256);
+
+    Format(queryStr, sizeof(queryStr), "SELECT `setting_value` FROM `ff2_player_hud_setting` WHERE `steam_id` = '%s' AND `hud_id` = '%s'", authId, hudId);
+
+    DBResultSet query = SQL_Query(thisDB, queryStr);
+    if(query == null) return -1;
+
+    if(!query.HasResults || !query.FetchRow())
+    {
+        delete query;
+        return -1;
+    }
+
+    int result = query.FetchInt(0);
+
+    delete query;
+    return result;
+}
+
+public int Native_FF2DBSettingData_SetHudSeting(Handle plugin, int numParams)
+{
+    FF2DBSettingData thisDB = GetNativeCell(1);
+
+    char authId[24], hudId[256], queryStr[512], valueString[4], timeStr[64];
+    int value = GetNativeCell(4);
+    GetNativeString(2, authId, 24);
+    GetNativeString(3, hudId, 128);
+    IntToString(value, valueString, sizeof(valueString));
+
+    thisDB.Escape(hudId, hudId, 256);
+    FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S");
+    Format(queryStr, sizeof(queryStr),
+    "INSERT INTO `ff2_player_hud_setting` (`steam_id`, `hud_id`, `setting_value`) VALUES ('%s', '%s', '%s') ON DUPLICATE KEY UPDATE `steam_id` = '%s',  `hud_id` = '%s', `setting_value` = '%s', `last_saved_time` = '%s'",
+    authId, hudId, valueString, authId, hudId, valueString, timeStr);
+
+    SQL_FastQuery(thisDB, queryStr, strlen(queryStr)+1);
 }

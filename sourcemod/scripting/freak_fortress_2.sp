@@ -7327,7 +7327,7 @@ public void HudSettingMenu(int client, const char[] name)
 	kvHudConfigs.GetSectionSymbol(posId);
 	kvHudConfigs.Rewind();
 
-	char infoBuf[64], text[512], languageId[4], statusString[8];
+	char infoBuf[64], text[512], languageId[4], statusString[8], authId[25];
 	if(!kvHudConfigs.JumpToKey(name))
 	{
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "Hud Setting Not Found!");
@@ -7335,6 +7335,7 @@ public void HudSettingMenu(int client, const char[] name)
 	}
 
 	SetGlobalTransTarget(client);
+	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
 	GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
 	Menu afterMenu=new Menu(HudSetting_Handler);
 	HudSettingValue value;
@@ -7347,7 +7348,7 @@ public void HudSettingMenu(int client, const char[] name)
 		do
 		{
 			kvHudConfigs.GetSectionName(infoBuf, sizeof(infoBuf));
-			value=FF2HudCookie.GetSetting(client, infoBuf);
+			value=ff2Database.GetHudSeting(authId, infoBuf);
 			if(!StrEqual(languageId, "en"))
 				changedLanguage=kvHudConfigs.JumpToKey(languageId);
 			else
@@ -7374,18 +7375,20 @@ public int HudSetting_Handler(Menu menu, MenuAction action, int client, int sele
 	if(action==MenuAction_Select)
 	{
 		int drawStyle;
-		char infoBuf[64], statusString[8];
+		char infoBuf[64], statusString[8], authId[25];
 		HudSettingValue value;
+
+		GetClientAuthId(client, AuthId_SteamID64, authId, 25);
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
-		value=FF2HudCookie.GetSetting(client, infoBuf);
+		value=ff2Database.GetHudSeting(authId, infoBuf);
 		if(value==HudSetting_None)
 			value=HudSetting_View;
 		view_as<int>(value)++;
 		if(value >= HudSettingValue_Last)
 			value=HudSetting_View;
 
-		FF2HudCookie.SetSetting(client, infoBuf, value);
+		ff2Database.SetHudSeting(authId, infoBuf, value);
 		GetHudSettingString(value, statusString, 8);
 
 		CPrintToChat(client, "{olive}[FF2]{default} %s: %s", infoBuf, statusString);
