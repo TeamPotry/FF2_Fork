@@ -68,7 +68,7 @@ public Action RoundStart(Handle timer)
 stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 {
 	ArrayList array = new ArrayList();
-	int count = 0;
+	int count = 0, index;
 
 	for (int loop = 0; FF2_GetCharacterKV(loop) != null; loop++)
 	{
@@ -76,7 +76,25 @@ stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 	    count++;
 	}
 
+	if(count > 0)
+	{
+		ArrayList bossArray = GetBossPlayers();
+
+		for (int loop = 0; loop < bossArray.Length; loop++)
+		{
+			index = array.FindValue(bossArray.Get(loop));
+			if(index != -1)
+			{
+				array.ShiftUp(index);
+				count--;
+			}
+		}
+
+		delete bossArray;
+	}
+
 	int result = count > 0 ? array.Get(GetRandomInt(0, count-1)) : -1;
+
 	delete array;
 	return result;
 }
