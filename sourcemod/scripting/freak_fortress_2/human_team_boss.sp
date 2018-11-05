@@ -31,11 +31,15 @@ public Action RoundStart(Handle timer)
 
 	if((bossCount = (clientArray.Length + bossArray.Length) / 12) > 0)
 	{
+		delete bossArray;
+
 		int random, index, bossindex;
 		int healthPoint = 500 + (300 * bossCount);
 		char bossName[64];
 		for(int loop = 0; loop < bossCount; loop++)
 		{
+			SetRandomSeed(GetTime()+loop);
+
 			index = GetRandomInt(0, clientArray.Length-1);
 			random = clientArray.Get(index);
 			bossindex = GetRandomBoss();
