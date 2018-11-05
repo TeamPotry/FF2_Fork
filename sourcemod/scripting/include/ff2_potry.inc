@@ -113,14 +113,6 @@ methodmap FF2HudConfig {
     public static native HudSettingValue GetDefaultSettiing(const char[] name, const char[] info);
 }
 
-methodmap FF2HudCookie {
-    public static native Handle FindHudCookie(const char[] hudId);
-
-    public static native HudSettingValue GetSetting(int client, const char[] hudId);
-
-    public static native void SetSetting(int client, const char[] hudId, HudSettingValue value);
-}
-
 methodmap FF2HudDisplay < ArrayList
 {
     public FF2HudDisplay(char[] info, char[] display)
