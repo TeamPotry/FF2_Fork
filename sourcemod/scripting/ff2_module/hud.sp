@@ -56,11 +56,84 @@ void HudInit()
 
 	CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
 
+	CreateNative("FF2HudQueue.PushHud", Native_FF2HudQueue_PushHud);
+	CreateNative("FF2HudQueue.AddHud", Native_FF2HudQueue_AddHud);
+	CreateNative("FF2HudQueue.FindHud", Native_FF2HudQueue_FindHud);
 	CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
 
 	OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
 	OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
 	OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
+}
+
+public int Native_FF2HudQueue_PushHud(Handle plugin, int numParams)
+{
+	FF2HudQueue queue = GetNativeCell(1);
+	FF2HudDisplay hudDisplay = GetNativeCell(2);
+
+	int index = queue.FindValue(view_as<FF2HudDisplay>(null));
+	if(index != -1)
+		queue.SetHud(index, hudDisplay);
+
+	return index;
+}
+public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
+{
+	FF2HudQueue queue = GetNativeCell(1);
+	FF2HudDisplay hudDisplay = GetNativeCell(2);
+	int other = GetNativeCell(3);
+
+	char authId[25], info[80], name[64];
+	queue.GetName(name, sizeof(name));
+	hudDisplay.GetInfo(info, sizeof(info));
+	GetClientAuthId(queue.ClientIndex, AuthId_SteamID64, authId, 25);
+	HudSettingValue value = ff2Database.GetHudSeting(authId, info);
+
+	if(value == HudSetting_None)
+	{
+		value = FF2HudConfig.GetDefaultSettiing(name, info);
+	}
+
+	if(value > HudSetting_None) {
+		if(other > 0) { // 나도 안보고 타인에게도 안보여줌
+			GetClientAuthId(other, AuthId_SteamID64, authId, 25);
+			if(ff2Database.GetHudSeting(authId, info) == HudSetting_ViewDisable) {
+				return -1;
+			}
+		}
+		else {
+			if(value == HudSetting_ViewAble
+				|| value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
+				return -1;
+		}
+	}
+
+	int index = queue.PushHud(hudDisplay);
+	if(index == -1)
+		hudDisplay.KillSelf();
+
+	return index;
+}
+public int Native_FF2HudQueue_FindHud(Handle plugin, int numParams)
+{
+	FF2HudQueue queue = GetNativeCell(1);
+	char hudId[80];
+	GetNativeString(2, hudId, sizeof(hudId));
+
+	char info[80];
+	FF2HudDisplay hudDisplay;
+
+	for(int loop = view_as<int>(HudQueueValue_Last); queue.Length > loop; loop++)
+	{
+		if((hudDisplay = queue.GetHud(loop)) != null)
+		{
+			hudDisplay.GetInfo(info, sizeof(info));
+			if(StrEqual(info, hudId))
+				return loop;
+		}
+	}
+
+	return -1;
 }
 
 public int Native_FF2HudConfig_GetConfigKeyValue(Handle plugin, int numParams)

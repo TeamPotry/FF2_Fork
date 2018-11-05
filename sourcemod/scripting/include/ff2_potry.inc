@@ -253,72 +253,6 @@ methodmap FF2HudQueue < ArrayList
         }
     }
 */
-
-    public int PushHud(FF2HudDisplay hudDisplay)
-    {
-/*
-        int index = (this.Length - view_as<int>(HudQueueValue_Last)) + 1;
-        this.ResizeQueue(index);
-        this.SetHud(index, hudDisplay);
-*/
-        int index = this.FindValue(view_as<FF2HudDisplay>(null));
-        if(index != -1)
-            this.SetHud(index, hudDisplay);
-
-        return index;
-    }
-
-    // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
-    public int AddHud(FF2HudDisplay hudDisplay, int other = 0)
-    {
-        char info[80], name[64];
-        this.GetName(name, sizeof(name));
-        hudDisplay.GetInfo(info, sizeof(info));
-        HudSettingValue value = FF2HudCookie.GetSetting(this.ClientIndex, info);
-
-        if(value == HudSetting_None)
-        {
-            value = FF2HudConfig.GetDefaultSettiing(name, info);
-        }
-
-        if(value > HudSetting_None) {
-            if(other > 0) { // 나도 안보고 타인에게도 안보여줌
-                if(FF2HudCookie.GetSetting(other, info) == HudSetting_ViewDisable) {
-                    return -1;
-                }
-            }
-            else {
-                if(value == HudSetting_ViewAble
-                    || value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
-                    return -1;
-            }
-        }
-
-        int index = this.PushHud(hudDisplay);
-        if(index == -1)
-            hudDisplay.KillSelf();
-
-        return index;
-    }
-
-    public int FindHud(const char[] hudId)
-    {
-        char info[80];
-        FF2HudDisplay hudDisplay;
-
-        for(int loop = view_as<int>(HudQueueValue_Last); this.Length > loop; loop++)
-        {
-            if((hudDisplay = this.GetHud(loop)) != null)
-            {
-                hudDisplay.GetInfo(info, sizeof(info));
-                if(StrEqual(info, hudId))
-                    return loop;
-            }
-        }
-
-        return -1;
-    }
-
     public FF2HudQueue KillSelf()
     {
         FF2HudDisplay willDeleted;
@@ -326,12 +260,19 @@ methodmap FF2HudQueue < ArrayList
         {
             willDeleted = this.GetHud(loop);
             if(willDeleted != null)
-                willDeleted.KillSelf();
+            willDeleted.KillSelf();
         }
 
         delete this;
         return null;
     }
+
+    public native int PushHud(FF2HudDisplay hudDisplay);
+
+    // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
+    public native int AddHud(FF2HudDisplay hudDisplay, int other = 0);
+
+    public native int FindHud(const char[] hudId);
 
     public native void ShowSyncHudQueueText(Handle sync = null);
 }
