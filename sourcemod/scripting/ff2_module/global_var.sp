@@ -27,3 +27,5 @@
 #define CHANGELOG "changelog.txt"
 
 FF2DBSettingData ff2Database;
+
+int ChangeLogLastTime;

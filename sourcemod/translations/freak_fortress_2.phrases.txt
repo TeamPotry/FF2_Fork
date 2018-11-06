@@ -327,6 +327,11 @@
 		"#format"	"{1:s}"
 		"en"		"Type {olive}/ff2_changelog{default} to view the {olive}{1}{default} changelog."
 	}
+	"FF2 Changelog Notice"
+	{
+		"#format"	"{1:s}"
+		"ko"		"Type {olive}/ff2_changelog{default}: There is new changes since you last seen. ({1})"
+	}
 	"Charge Status"
 	{
 		"#format"	"{1:i}"

@@ -888,6 +888,7 @@ stock KeyValues LoadChangelog()
 		return null;
 	}
 
+	ChangeLogLastTime = GetFileTime(changelog, FileTime_LastChange);
 	KeyValues kv=new KeyValues("Changelog");
 	kv.ImportFromFile(changelog);
 
@@ -1241,7 +1242,25 @@ public Action Timer_Announce(Handle timer)
 			case 6:
 			{
 				announcecount=0;
-				CPrintToChatAll("{olive}[FF2]{default} %t", "Last FF2 Update", PLUGIN_VERSION);
+				char authId[25], timeStr[64];
+				FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", ChangeLogLastTime);
+
+				for(int client=1; client<=MaxClients; client++)
+				{
+					if(!IsClientInGame(client)) continue;
+					SetGlobalTransTarget(client);
+
+					GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
+					if(ff2Database.GetSavedTime(authId)<=ChangeLogLastTime)
+					{
+
+						CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Changelog Notice", timeStr);
+					}
+					else
+					{
+						CPrintToChat(client, "{olive}[FF2]{default} %t", "Last FF2 Update", PLUGIN_VERSION);
+					}
+				}
 			}
 			default:
 			{

@@ -34,6 +34,8 @@ methodmap FF2DBSettingData < Database {
 
     public native HudSettingValue GetHudSeting(const char[] authid, const char[] settingid);
     public native void SetHudSeting(const char[] authid, const char[] hudId, HudSettingValue value);
+
+    public native int GetSavedTime(const char[] authid);
 }
 
 public void QueryErrorCheck(Database db, DBResultSet results, const char[] error, any data)
@@ -50,6 +52,7 @@ void DB_Native_Init()
 
     CreateNative("FF2DBSettingData.GetValue", Native_FF2DBSettingData_GetValue);
     CreateNative("FF2DBSettingData.SetValue", Native_FF2DBSettingData_SetValue);
+    CreateNative("FF2DBSettingData.GetSavedTime", Native_FF2DBSettingData_GetSavedTime);
 
     CreateNative("FF2DBSettingData.GetHudSeting", Native_FF2DBSettingData_GetHudSeting);
     CreateNative("FF2DBSettingData.SetHudSeting", Native_FF2DBSettingData_SetHudSeting);
@@ -114,6 +117,30 @@ public int Native_FF2DBSettingData_SetValue(Handle plugin, int numParams)
 
     Format(queryStr, sizeof(queryStr), "UPDATE `ff2_player` SET `%s` = '%s', `last_saved_time` = '%s' WHERE `steam_id` = '%s'", settingId, valueString, timeStr, authId);
     thisDB.Query(QueryErrorCheck, queryStr);
+}
+
+public int Native_FF2DBSettingData_GetSavedTime(Handle plugin, int numParams)
+{
+    FF2DBSettingData thisDB = GetNativeCell(1);
+
+    char authId[24], queryStr[256];
+    GetNativeString(2, authId, 24);
+
+    Format(queryStr, sizeof(queryStr), "SELECT UNIX_TIMESTAMP(`changelog_last_view_time`) FROM `ff2_player` WHERE `steam_id` = '%s'", authId);
+
+    DBResultSet query = SQL_Query(thisDB, queryStr);
+    if(query == null) return -1;
+
+    if(!query.HasResults || !query.FetchRow())
+    {
+        delete query;
+        return -1;
+    }
+
+    int result = query.FetchInt(0);
+
+    delete query;
+    return result;
 }
 
 public int Native_FF2DBSettingData_GetHudSeting(Handle plugin, int numParams)

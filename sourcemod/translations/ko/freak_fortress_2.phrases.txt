@@ -327,6 +327,11 @@
 		"#format"	"{1:s}"
 		"ko"		"{olive}/ff2_changelog{default} 명령어로 {olive}{1}{default}에서의 변경점을 보실 수 있습니다."
 	}
+	"FF2 Changelog Notice"
+	{
+		"#format"	"{1:s}"
+		"ko"		"명령어 {olive}/ff2_changelog{default}: 마지막으로 변경사항을 확인한 이후 새로운 변경사항이 추가되었습니다. ({1})"
+	}
 	"Charge Status"
 	{
 		"#format"	"{1:i}"
