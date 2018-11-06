@@ -1253,7 +1253,6 @@ public Action Timer_Announce(Handle timer)
 					GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
 					if(ff2Database.GetSavedTime(authId)<=ChangeLogLastTime)
 					{
-
 						CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Changelog Notice", timeStr);
 					}
 					else
@@ -4198,10 +4197,12 @@ public Action ClientTimer(Handle timer)
 						hudQueue.AddHud(hudDisplay);
 						delete hudDisplay;
 
-						hudDisplay=new FF2HudDisplay("Observer Target Player Damage", hudText);
+
 						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
 						if(Assist[observer] > 0)
 							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
+
+						hudDisplay=new FF2HudDisplay("Observer Target Player Damage", hudText);
 						hudQueue.AddHud(hudDisplay, observer);
 						delete hudDisplay;
 					}
