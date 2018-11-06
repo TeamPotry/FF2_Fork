@@ -259,8 +259,11 @@ methodmap FF2HudQueue < ArrayList
         return null;
     }
 
+/*
+    // NOTE: 서브 플러그인에서 직접 사용하지 마세요. DO NOT Use this function on any subplugin.
+    // TODO: 은닉
     public native int PushHud(FF2HudDisplay hudDisplay);
-
+*/
     // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
     public native int AddHud(FF2HudDisplay hudDisplay, int other = 0);
 

@@ -58,27 +58,34 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 {
-    int client = hudQueue.ClientIndex;
+	int client = hudQueue.ClientIndex;
 
-    char text[256];
-    hudQueue.GetName(text, sizeof(text));
+	char text[256];
+	FF2HudDisplay hudDisplay = null;
+	hudQueue.GetName(text, sizeof(text));
 
-    if(StrEqual(text, "Player"))
-    {
-        Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(client));
-        hudQueue.AddHud(new FF2HudDisplay("Your DPS", text));
+	if(StrEqual(text, "Player"))
+	{
+		Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(client));
+		hudDisplay = new FF2HudDisplay("Your DPS", text);
+		hudQueue.AddHud(hudDisplay);
+		delete hudDisplay;
 		// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Your DPS", text)));
-    }
-    else if(StrEqual(text, "Observer"))
-    {
-        int observer = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-        if(!IsBoss(observer))
-        {
+	}
+	else if(StrEqual(text, "Observer"))
+	{
+		int observer = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+		if(!IsBoss(observer))
+		{
 			Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(observer));
-			hudQueue.AddHud(new FF2HudDisplay("Observer Target Player DPS", text), observer);
+			hudDisplay = new FF2HudDisplay("Observer Target Player DPS", text);
+			hudQueue.AddHud(hudDisplay, observer);
 			// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Observer Target Player DPS", text), observer));
 		}
-    }
+	}
+
+	if(hudDisplay != null)
+		delete hudDisplay;
 }
 
 float GetPlayerDPS(int client)

@@ -51,7 +51,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 
 	int client = hudQueue.ClientIndex;
 	SetGlobalTransTarget(client);
-
+	FF2HudDisplay hudDisplay = null;
 	char text[256];
 	hudQueue.GetName(text, sizeof(text));
 
@@ -75,7 +75,10 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 	if(changed)
 	{
 		Format(text, sizeof(text), "%t", "Dev Mode");
-		hudQueue.PushHud(new FF2HudDisplay("Dev Mode", text));
+
+		hudDisplay = new FF2HudDisplay("Dev Mode", text);
+		hudQueue.AddHud(hudDisplay);
+		delete hudDisplay;
 	}
 
 	return;
