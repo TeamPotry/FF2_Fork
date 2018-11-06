@@ -169,6 +169,22 @@
 	{
 		"en"		"Other HUD"
 	}
+	"Hud Setting NONE"
+	{
+		"en"		"You did nothing on this! (Same as VIEW)"
+	}
+	"Hud Setting VIEW"
+	{
+		"en"		"Can view = YOU, Other Players"
+	}
+	"Hud Setting PUBLIC"
+	{
+		"en"		"Can view = Other Players"
+	}
+	"Hud Setting PRIVATE"
+	{
+		"en"		"Can view = NO ONE."
+	}
 	"Hud Setting Not Found!"
 	{
 		"en"		"Hud Setting Not Found!"

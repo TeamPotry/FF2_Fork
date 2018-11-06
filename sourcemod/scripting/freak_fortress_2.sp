@@ -7398,26 +7398,52 @@ public int HudSetting_Handler(Menu menu, MenuAction action, int client, int sele
 	if(action==MenuAction_Select)
 	{
 		int drawStyle;
-		char infoBuf[64], statusString[8], authId[25];
-		HudSettingValue value;
+		char infoBuf[64];
+		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
+		HudDataMenu(client, infoBuf);
+	}
+}
+
+void HudDataMenu(int client, char[] name)
+{
+	char authId[25], text[256], tempText[80];
+	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
+
+	HudSettingValue value=ff2Database.GetHudSeting(authId, name);
+	Menu menu=new Menu(HudData_Handler);
+	GetHudSettingString(value, text, 8);
+
+	menu.SetTitle("HUD SETTING > %s: %s", name, text);
+
+	for(HudSettingValue loop=HudSetting_None; loop < HudSettingValue_Last; view_as<int>(loop)++)
+	{
+		GetHudSettingString(loop, text, 8);
+		Format(tempText, sizeof(tempText), "Hud Setting %s", text);
+
+		Format(text, sizeof(tempText), "%s: %t", text, tempText);
+		menu.AddItem(name, text, (loop == HudSetting_None || loop == value) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+	}
+
+	menu.ExitButton=true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int HudData_Handler(Menu menu, MenuAction action, int client, int selection)
+{
+	if(action==MenuAction_Select)
+	{
+		int drawStyle;
+		char authId[25], infoBuf[64], statusString[8];
 		GetClientAuthId(client, AuthId_SteamID64, authId, 25);
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
-		value=ff2Database.GetHudSeting(authId, infoBuf);
-		if(value==HudSetting_None)
-			value=HudSetting_View;
-		view_as<int>(value)++;
-		if(value >= HudSettingValue_Last)
-			value=HudSetting_View;
-
+		HudSettingValue value = view_as<HudSettingValue>(selection+1);
 		ff2Database.SetHudSeting(authId, infoBuf, value);
 		GetHudSettingString(value, statusString, 8);
 
 		CPrintToChat(client, "{olive}[FF2]{default} %s: %s", infoBuf, statusString);
-		menu.GetTitle(infoBuf, sizeof(infoBuf));
-
-		HudSettingMenu(client, infoBuf);
+		HudMenu(client, 0);
 	}
 }
 
@@ -7471,6 +7497,12 @@ public Action ShowChangelog(int client)
 	if(Enabled2)
 	{
 		DisplayMenu(changelogMenu, client, MENU_TIME_FOREVER);
+
+		char authId[25], timeStr[64];
+		GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
+		FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S");
+
+		ff2Database.SetValue(authId, "changelog_last_view_time", timeStr);
 	}
 	return Plugin_Continue;
 }
