@@ -11,7 +11,7 @@ methodmap FF2DBSettingData < Database {
         database = SQL_Connect(FF2DATABASE_CONFIG_NAME, true, errorMessage, sizeof(errorMessage));
         if(database == null)
         {
-            SetFailState("[SA] Can't connect to DB! Error: %s", errorMessage);
+            SetFailState("Can't connect to DB! Error: %s", errorMessage);
         }
 
         driver = database.Driver;
@@ -19,7 +19,7 @@ methodmap FF2DBSettingData < Database {
 
         if(!StrEqual("mysql", driverString))
         {
-            SetFailState("[SA] This plugin is only allowed to use mysql!");
+            SetFailState("This plugin is only allowed to use mysql!");
         }
 
         database.SetCharset("utf8");
@@ -42,7 +42,7 @@ public void QueryErrorCheck(Database db, DBResultSet results, const char[] error
 {
     if(results == null || error[0] != '\0')
     {
-        LogError("[FF2] Ahh.. Something is wrong in QueryErrorCheck. check your DB. ERROR: %s", error);
+        LogError("Ahh.. Something is wrong in QueryErrorCheck. check your DB. ERROR: %s", error);
     }
 }
 
