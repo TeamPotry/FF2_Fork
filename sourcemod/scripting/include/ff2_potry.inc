@@ -123,13 +123,13 @@ methodmap FF2HudDisplay < ArrayList
 
         return array;
     }
-
+/*
     public FF2HudDisplay KillSelf()
     {
         delete this;
         return null;
     }
-
+*/
     public any GetValue(HudValue valueType)
     {
         return this.Get(view_as<int>(valueType));
@@ -245,20 +245,7 @@ methodmap FF2HudQueue < ArrayList
         }
     }
 */
-    public FF2HudQueue KillSelf()
-    {
-        FF2HudDisplay willDeleted;
-        for(int loop = view_as<int>(HudQueueValue_Last); loop < this.Length; loop++)
-        {
-            willDeleted = this.GetHud(loop);
-            if(willDeleted != null)
-            willDeleted.KillSelf();
-        }
-
-        delete this;
-        return null;
-    }
-
+    public native void KillSelf();
 /*
     // NOTE: 서브 플러그인에서 직접 사용하지 마세요. DO NOT Use this function on any subplugin.
     // TODO: 은닉
