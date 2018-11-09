@@ -7458,7 +7458,7 @@ public int HudData_Handler(Menu menu, MenuAction action, int client, int selecti
 		GetClientAuthId(client, AuthId_SteamID64, authId, 25);
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
-		HudSettingValue value = view_as<HudSettingValue>(selection+1);
+		HudSettingValue value = view_as<HudSettingValue>(selection-1);
 		ff2Database.SetHudSeting(authId, infoBuf, value);
 		GetHudSettingString(value, statusString, 8);
 
