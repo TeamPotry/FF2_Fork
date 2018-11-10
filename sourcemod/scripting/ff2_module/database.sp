@@ -84,7 +84,12 @@ public int Native_FF2DBSettingData_GetValue(Handle plugin, int numParams)
     Format(queryStr, sizeof(queryStr), "SELECT `%s` FROM `ff2_player` WHERE `steam_id` = '%s'", settingId, authId);
 
     DBResultSet query = SQL_Query(thisDB, queryStr);
-    if(!query.FetchRow()) return -1;
+    if(query == null) return -1;
+    if(!query.HasResults || !query.FetchRow())
+    {
+        delete query;
+        return -1;
+    }
 
     int result;
     if(buffer > 0)
@@ -130,7 +135,6 @@ public int Native_FF2DBSettingData_GetSavedTime(Handle plugin, int numParams)
 
     DBResultSet query = SQL_Query(thisDB, queryStr);
     if(query == null) return -1;
-
     if(!query.HasResults || !query.FetchRow())
     {
         delete query;
@@ -156,8 +160,7 @@ public int Native_FF2DBSettingData_GetHudSeting(Handle plugin, int numParams)
 
     DBResultSet query = SQL_Query(thisDB, queryStr);
     if(query == null) return -1;
-
-    if(!query.HasResults || !query.FetchRow())
+    else if(!query.HasResults || !query.FetchRow())
     {
         delete query;
         return -1;
