@@ -29,3 +29,5 @@
 FF2DBSettingData ff2Database;
 
 int ChangeLogLastTime;
+
+int Boss[MAXPLAYERS+1];

@@ -69,7 +69,6 @@ char currentBGM[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
 int FF2Flags[MAXPLAYERS+1];
 
-int Boss[MAXPLAYERS+1];
 int BossHealthMax[MAXPLAYERS+1];
 int BossHealth[MAXPLAYERS+1];
 int BossHealthLast[MAXPLAYERS+1];
