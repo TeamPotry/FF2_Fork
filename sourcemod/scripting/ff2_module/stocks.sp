@@ -153,3 +153,18 @@ stock bool IsValidClient(int client, bool replaycheck=true)
 	}
 	return true;
 }
+
+stock bool IsBoss(int client)
+{
+	if(IsValidClient(client))
+	{
+		for(int boss; boss<=MaxClients; boss++)
+		{
+			if(Boss[boss]==client)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}

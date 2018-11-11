@@ -7177,21 +7177,6 @@ void SetClientQueuePoints(int client, int points)
 	}
 }
 
-stock bool IsBoss(int client)
-{
-	if(IsValidClient(client))
-	{
-		for(int boss; boss<=MaxClients; boss++)
-		{
-			if(Boss[boss]==client)
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
 void DoOverlay(int client, const char[] overlay)
 {
 	int flags=GetCommandFlags("r_screenoverlay");
