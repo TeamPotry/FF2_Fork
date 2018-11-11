@@ -25,6 +25,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2_stocks>
 #include <tf2items>
 #include <tf2attributes>
+#include <tutorial_text>
 
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
@@ -2626,6 +2627,10 @@ public Action MakeBoss(Handle timer, int boss)
 	Call_StartForward(OnPlayBoss);
 	Call_PushCell(boss);
 	Call_Finish();
+
+	// 튜토리얼 텍스트
+ 	FireBossTTextEvent(GetBossKV(boss), "on_play", client);
+
 	return Plugin_Continue;
 }
 
@@ -4818,6 +4823,9 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, client);
 		}
 		emitRageSound[boss]=true;
+
+		FireBossTTextEvent(GetBossKV(boss), "on_rage", client);
+		FireBossTTextEvent(GetBossKV(boss), "on_rage_alert");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -6013,6 +6021,9 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 				}
 
 				UpdateHealthBar();
+
+				FireBossTTextEvent(GetBossKV(boss), "on_lose_life", client);
+				FireBossTTextEvent(GetBossKV(boss), "on_lose_life_alert");
 				break;
 			}
 		}

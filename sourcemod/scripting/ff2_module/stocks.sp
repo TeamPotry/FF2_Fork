@@ -21,6 +21,51 @@ public void GetHudSettingString(HudSettingValue value, char[] statusString, int 
     }
 }
 
+void FireBossTTextEvent(KeyValues characterKv, char[] id, int client = 0)
+{
+    int currentSpot;
+    char bossFileName[68], messageId[80];
+
+    characterKv.GetSectionSymbol(currentSpot);
+    characterKv.Rewind();
+
+    characterKv.GetString("tutorial_text_filename", bossFileName, sizeof(bossFileName));
+    if(characterKv.JumpToKey("tutorial_text"))
+    {
+        characterKv.GetString(id, messageId, sizeof(messageId), "");
+
+        if(client > 0)
+        {
+            FireHelpTTextEvent(client, bossFileName, messageId);
+        }
+        else
+        {
+            for(int target = 1; target < MaxClients; target++)
+            {
+                if(IsClientInGame(target) && IsPlayerAlive(target) && !IsBoss(target))
+                    FireHelpTTextEvent(target, bossFileName, messageId);
+            }
+        }
+    }
+
+    characterKv.JumpToKeySymbol(currentSpot);
+}
+
+void FireHelpTTextEvent(int client, char[] bossFileName, char[] messageId)
+{
+    // CPrintToChatAll("%s, %s", bossFileName, messageId);
+    TTextEvent event = null;
+    float position[3];
+    GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
+
+    event = TTextEvent.InitTTextEvent();
+    TT_LoadMessageID(event, bossFileName, messageId);
+    event.SetPosition(position);
+
+    event.ChangeTextLanguage(bossFileName, messageId, client);
+    event.FireTutorialText(bossFileName, messageId, client);
+}
+
 public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
 {
 	int currentSpot;
