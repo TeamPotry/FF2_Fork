@@ -103,7 +103,7 @@
 	}
 	"Sniper Advice"
 	{
-		"en"		"All of your weapons have critical hits.\nBack-equipped weapons are replaced with SMG.\nDefault Sniper Rifle causes Boss to glow. Glow time scales with charge."
+		"en"		"All of your weapons have critical hits.\nBack-equipped weapons are replaced with SMG."
 	}
 	"Spy Advice"
 	{
