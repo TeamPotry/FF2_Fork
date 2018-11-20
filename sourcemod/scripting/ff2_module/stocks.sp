@@ -21,6 +21,29 @@ public void GetHudSettingString(HudSettingValue value, char[] statusString, int 
     }
 }
 
+public bool GetWeaponHint(int client, int weapon, char[] text, int buffer)
+{
+    int index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+    char classname[32], temp[8], languageId[4];
+
+    GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
+    GetEntityClassname(weapon, classname, sizeof(classname));
+    IntToString(index, temp, sizeof(temp));
+
+    kvWeaponMods.Rewind();
+
+    if(kvWeaponMods.JumpToKey(temp) || kvWeaponMods.JumpToKey(classname))
+    {
+        if(kvWeaponMods.JumpToKey("hint_text"))
+        {
+            kvWeaponMods.GetString(languageId, text, buffer, "Empty.");
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 void FireBossTTextEvent(KeyValues characterKv, char[] id, int client = 0)
 {
     int currentSpot;

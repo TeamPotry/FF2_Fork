@@ -188,7 +188,6 @@ static bool executed2;
 int changeGamemode;
 
 //Handle kvWeaponSpecials;
-KeyValues kvWeaponMods;
 
 enum FF2RoundState
 {
@@ -7639,6 +7638,15 @@ public Action HelpPanelClass(int client)
 	if(playerclass!=TFClass_Sniper)
 	{
 		Format(text, sizeof(text), "%t\n%s", "Melee Advice", text);
+	}
+
+	int weapon;
+	char weaponHintText[100];
+	for(int loop = TFWeaponSlot_Primary; loop <= TFWeaponSlot_PDA; loop++)
+	{
+		weapon = GetPlayerWeaponSlot(client, loop);
+		if(IsValidEntity(weapon) && GetWeaponHint(client, weapon, weaponHintText, sizeof(weaponHintText)))
+			Format(text, sizeof(text), "%s\n%s", text, weaponHintText);
 	}
 
 	Panel panel=CreatePanel();

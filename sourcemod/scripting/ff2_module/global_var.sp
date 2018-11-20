@@ -27,6 +27,7 @@
 #define CHANGELOG "changelog.txt"
 
 FF2DBSettingData ff2Database;
+KeyValues kvWeaponMods;
 
 int ChangeLogLastTime;
 
