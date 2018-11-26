@@ -74,12 +74,17 @@ public Action RoundStart(Handle timer)
 stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 {
 	ArrayList array = new ArrayList();
+	KeyValues bossKV;
 	int count = 0, index;
 
-	for (int loop = 0; FF2_GetCharacterKV(loop) != null; loop++)
+	for (int loop = 0; (bossKV = FF2_GetCharacterKV(loop)) != null; loop++)
 	{
-	    array.Push(loop);
-	    count++;
+		bossKV.Rewind();
+		if(bossKV.GetNum("ban_boss_vs_boss", 0) > 0)
+			continue;
+
+		array.Push(loop);
+		count++;
 	}
 
 	if(count > 0)
