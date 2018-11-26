@@ -25,6 +25,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public Action RoundStart(Handle timer)
 {
+	if(!FF2_IsFF2Enabled()) return Plugin_Continue;
+
 	int bossCount;
 	ArrayList clientArray = GetAlivePlayers(false);
 	ArrayList bossArray = GetBossPlayers();
