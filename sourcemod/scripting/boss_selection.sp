@@ -6,6 +6,10 @@
 #include <ff2_potry>
 #include <clientprefs>
 
+#undef REQUIRE_PLUGIN
+#include <serverside_achievement>
+#define REQUIRE_PLUGIN
+
 #define PLUGIN_VERSION "2(1.0)"
 #define MAX_NAME 64
 // #define PORTY_GROUP_ID 7824949
@@ -18,6 +22,8 @@ char Incoming[MAXPLAYERS+1][64];
 char g_strChatCommand[42][50];
 
 Handle g_hCvarChatCommand;
+
+Handle OnCheckSelectRules;
 
 public Plugin:myinfo = {
 	name = "Freak Fortress 2: Boss Selection EX",
@@ -152,7 +158,7 @@ methodmap FF2BossCookie {
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, err_max)
 {
-	// Nothing for now.
+	OnCheckSelectRules = CreateGlobalForward("FF2_OnCheckSelectRules", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Cell); // Client, characterIndex, Rule String, value;
 	return APLRes_Success;
 }
 
@@ -179,6 +185,25 @@ public void OnPluginStart()
 	LoadTranslations("ff2_boss_selection");
 
 	ChangeChatCommand();
+}
+
+public void SA_OnLoadedAchievements()
+{
+	KeyValues BossKV;
+	char achievementId[80];
+	int maxProcessInteger;
+
+	for (int i = 0; (BossKV = FF2_GetCharacterKV(i)) != null; i++)
+	{
+		BossKV.Rewind();
+
+		if((maxProcessInteger = BossKV.GetNum("challenge_hp")) > 0)
+		{
+			BossKV.GetString("filename", achievementId, sizeof(achievementId), "");
+			Format(achievementId, sizeof(achievementId), "ff2_boss_%s", achievementId);
+			SA_CreateTemporaryAchievement(achievementId, maxProcessInteger);
+		}
+	}
 }
 
 public Action Listener_Say(int client, const char[] command, int argc)
@@ -243,6 +268,19 @@ public Action FF2_OnAddQueuePoints(int add_points[MAXPLAYERS+1])
 	return Plugin_Changed;
 }
 
+public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, int value)
+{
+	if(StrEqual(ruleName, "admin"))
+	{
+		AdminId adminId = GetUserAdmin(client);
+		if(adminId != INVALID_ADMIN_ID && adminId.HasFlag(view_as<AdminFlag>(value), Access_Real))
+			return Plugin_Continue;
+	}
+	if(StrEqual(ruleName, "test"))	return Plugin_Handled;
+
+	return Plugin_Continue;
+}
+
 
 public void OnClientPutInServer(client)
 {
@@ -303,20 +341,53 @@ public Action Command_SetMyBoss(int client, int args)
 	Format(menutext, sizeof(menutext), "%t", "FF2Boss Menu None");
 	AddMenuItem(dMenu, "None", menutext); // FIXME: 대기열 포인트 저장 방식 변경
 
-	char spcl[MAX_NAME], banMaps[500], map[100];
+	char spcl[MAX_NAME], banMaps[500], map[100], ruleName[80];
 	GetCurrentMap(map, sizeof(map));
 
 	int itemflags;
+	bool checked = true;
+	Action action;
+
 	for (int i = 0; (BossKV = FF2_GetCharacterKV(i)) != null; i++)
 	{
 		itemflags = 0;
+		checked = true;
 		BossKV.Rewind();
 
 		if (BossKV.GetNum("hidden", 0) > 0) continue;
+
 		BossKV.GetString("ban_map", banMaps, 500);
 		Format(spcl, sizeof(spcl), "%d", i);
 		GetCharacterName(BossKV, bossName, MAX_NAME, client);
 
+		BossKV.Rewind(); // LOL?
+		if(BossKV.JumpToKey("require") && BossKV.JumpToKey("selectable") && BossKV.GotoFirstSubKey(false))
+		{
+			do
+			{
+				BossKV.GetSectionName(ruleName, sizeof(ruleName));
+
+				Call_StartForward(OnCheckSelectRules);
+				Call_PushCell(client);
+				Call_PushCell(i);
+				Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+				Call_PushCell(BossKV.GetNum(NULL_STRING, 0));
+				Call_Finish(action);
+
+				if(action == Plugin_Stop || action == Plugin_Handled)
+				{
+					checked = false;
+					break;
+				}
+
+			}
+			while(BossKV.GotoNextKey(false));
+
+			if(!checked) continue;
+		}
+
+
+/*
 		if(banMaps[0] != '\0' && !StrContains(banMaps, map, false))
 		{
 			Format(menutext, sizeof(menutext), "%s (%t)", bossName, "FF2Boss Cant Chosse This Map");
@@ -324,7 +395,8 @@ public Action Command_SetMyBoss(int client, int args)
 		}
 		else
 			Format(menutext, sizeof(menutext), "%s", bossName);
-
+*/
+		Format(menutext, sizeof(menutext), "%s", bossName);
 		AddMenuItem(dMenu, spcl, menutext, itemflags);
 	}
 	SetMenuExitButton(dMenu, true);
