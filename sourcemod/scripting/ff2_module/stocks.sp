@@ -21,6 +21,78 @@ public void GetHudSettingString(HudSettingValue value, char[] statusString, int 
     }
 }
 
+stock ArrayList CreateChancesArray(int client)
+{
+    char config[64], ruleName[80];
+    ArrayList chancesArray = new ArrayList();
+    KeyValues bossKv;
+    Action action;
+
+    kvCharacterConfig.Rewind();
+    kvCharacterConfig.JumpToKey(FF2CharSetString); // This *should* always return true
+
+    if(kvCharacterConfig.GotoFirstSubKey(false))
+    {
+        int index, tempIndex, tempChance;
+        do
+        {
+            bool checked = true, changed = false;
+            kvCharacterConfig.GetSectionName(config, sizeof(config));
+            int chance = kvCharacterConfig.GetNum(NULL_STRING, -1);
+            bossKv = GetCharacterKV(index);
+            tempIndex = index;
+            tempChance = chance;
+
+            if(chance < 0 || bossKv == null)
+            {
+                LogError("[FF2 Bosses] Character %s has an invalid chance - assuming 0", config);
+                continue;
+            }
+
+            bossKv.Rewind();
+            if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
+            {
+                do
+                {
+                    bossKv.GetSectionName(ruleName, sizeof(ruleName));
+
+                    Call_StartForward(OnCheckRules);
+                    Call_PushCell(client);
+                    Call_PushCellRef(tempIndex);
+                    Call_PushCellRef(tempChance);
+                    Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+                    Call_PushCell(bossKv.GetNum(NULL_STRING, 0));
+                    Call_Finish(action);
+
+                    if(action == Plugin_Stop || action == Plugin_Handled)
+                    {
+                        checked = false;
+                        break;
+                    }
+                    else if(action == Plugin_Changed)
+                    {
+                        changed = true;
+                    }
+                }
+                while(bossKv.GotoNextKey(false));
+            }
+
+            if(checked)
+            {
+                int count = changed ? tempChance : chance;
+                for(int j; j < count; j++)
+                {
+                    chancesArray.Push(changed ? index : tempIndex);
+                }
+            }
+            index++;
+        }
+        while(kvCharacterConfig.GotoNextKey(false));
+    }
+
+    return chancesArray;
+}
+
 public bool GetWeaponHint(int client, int weapon, char[] text, int buffer)
 {
     int index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");

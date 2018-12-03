@@ -26,6 +26,15 @@
 #define HUDS_CONFIG "hud_setting.cfg"
 #define CHANGELOG "changelog.txt"
 
+int FF2CharSet;
+int validCharsets[64];
+char FF2CharSetString[42];
+bool isCharSetSelected;
+
+KeyValues kvCharacterConfig;
+
+Handle OnCheckRules;
+
 FF2DBSettingData ff2Database;
 KeyValues kvWeaponMods;
 

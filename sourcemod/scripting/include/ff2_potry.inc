@@ -78,6 +78,12 @@ forward void FF2_OnPlayBoss(int boss);
 forward Action FF2_OnSpecialAttack(int attacker, int victimBoss, const char[] name, float &damage);
 forward void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[] name, float damage);
 
+/*
+*   Before FF2_OnBossSelected.
+*   with CreateChancesArray();
+*
+*/
+forward Action FF2_OnCheckRules(int client, int &characterIndex, int &chance, const char[] ruleName, int value);
 /****
     THE HUD UPDATE
 ****/

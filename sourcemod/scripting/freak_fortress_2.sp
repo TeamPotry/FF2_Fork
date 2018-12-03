@@ -120,7 +120,6 @@ ConVar cvarPreroundBossDisconnect;
 ArrayList bossesArray;
 ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
 ArrayList subpluginArray;
-ArrayList chancesArray;
 
 Handle FF2Cookie_QueuePoints;
 
@@ -173,11 +172,6 @@ float tf_feign_death_damage_scale;
 char mp_humans_must_join_team[16];
 
 ConVar cvarNextmap;
-
-int FF2CharSet;
-int validCharsets[64];
-char FF2CharSetString[42];
-bool isCharSetSelected;
 
 int healthBar=-1;
 int g_Monoculus=-1;
@@ -320,6 +314,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
+	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_String, Param_Cell); // Client, characterIndex, chance, Rule String, value
 
 	//ff2_module/database.sp
 	DB_Native_Init();
@@ -751,8 +746,6 @@ public void DisableFF2()
 
 public void FindCharacters()
 {
-	chancesArray=CreateArray();
-
 	char config[PLATFORM_MAX_PATH], charset[42];
 	BuildPath(Path_SM, config, sizeof(config), "%s/%s", FF2_SETTINGS, BOSS_CONFIG);
 
@@ -763,8 +756,11 @@ public void FindCharacters()
 		return;
 	}
 
-	KeyValues kv=new KeyValues("");
-	kv.ImportFromFile(config);
+	if(kvCharacterConfig!=null)
+		delete kvCharacterConfig;
+
+	kvCharacterConfig=new KeyValues("");
+	kvCharacterConfig.ImportFromFile(config);
 
 	Action action;
 	Call_StartForward(OnLoadCharacterSet);
@@ -777,10 +773,10 @@ public void FindCharacters()
 		{
 			int i;
 
-			kv.Rewind();
-			while(kv.GotoNextKey())
+			kvCharacterConfig.Rewind();
+			while(kvCharacterConfig.GotoNextKey())
 			{
-				kv.GetSectionName(config, sizeof(config));
+				kvCharacterConfig.GetSectionName(config, sizeof(config));
 				if(StrEqual(config, charset))
 				{
 					FF2CharSet=i;
@@ -792,34 +788,19 @@ public void FindCharacters()
 		}
 	}
 
-	kv.Rewind();
-	kv.JumpToKey(FF2CharSetString); // This *should* always return true
+	kvCharacterConfig.Rewind();
+	kvCharacterConfig.JumpToKey(FF2CharSetString); // This *should* always return true
 
-	if(kv.GotoFirstSubKey(false))
+	if(kvCharacterConfig.GotoFirstSubKey(false))
 	{
-		int index;
+		// int index;
 		do
 		{
-			kv.GetSectionName(config, sizeof(config));
-			int chance=KvGetNum(kv, NULL_STRING, -1);
-
-			if(chance<0)
-			{
-				LogError("[FF2 Bosses] Character %s has an invalid chance - assuming 0", config);
-			}
-
-			for(int j; j<chance; j++)
-			{
-				PushArrayCell(chancesArray, index);
-			}
-
-			if(chance>0)
-			{
-				LoadCharacter(config);
-			}
-			index++;
+			kvCharacterConfig.GetSectionName(config, sizeof(config));
+			LoadCharacter(config);
+			// index++;
 		}
-		while(KvGotoNextKey(kv, false));
+		while(kvCharacterConfig.GotoNextKey(false));
 	}
 	else
 	{
@@ -827,8 +808,6 @@ public void FindCharacters()
 		Enabled2=false;
 		return;
 	}
-
-	delete kv;
 
 	if(FileExists("sound/saxton_hale/9000.wav", true))
 	{
@@ -6642,6 +6621,7 @@ public bool PickCharacter(int boss, int companion)
 {
 	if(boss==companion)
 	{
+		ArrayList chancesArray = CreateChancesArray(Boss[boss]);
 		character[boss]=Incoming[boss];
 		Incoming[boss]=-1;
 		if(character[boss]!=-1)  //We've already picked a boss through Command_SetNextBoss
@@ -6713,6 +6693,8 @@ public bool PickCharacter(int boss, int companion)
 			return true;
 		}
 
+		character[boss]=GetRandomInt(0, GetArraySize(chancesArray)-1);
+/*
 		for(int tries; tries<100; tries++)
 		{
 			character[boss]=GetRandomInt(0, GetArraySize(chancesArray)-1);
@@ -6729,6 +6711,9 @@ public bool PickCharacter(int boss, int companion)
 			}
 			break;
 		}
+*/
+
+		delete chancesArray;
 	}
 	else
 	{
@@ -6856,10 +6841,21 @@ void FindCompanion(int boss, int players, bool[] omit)
 	playersNeeded=3;  //Reset the amount of players needed back to 3 after we're done
 }
 
+// NOTE:
+public Action FF2_OnCheckRules(int client, int &characterIndex, int &chance, const char[] ruleName, int value)
 {
 	if(StrEqual(ruleName, "admin"))
 	{
+		AdminId adminId = GetUserAdmin(client);
+		if(adminId != INVALID_ADMIN_ID && adminId.HasFlag(view_as<AdminFlag>(value), Access_Real))
+			return Plugin_Continue;
 	}
+	if(StrEqual(ruleName, "blocked"))
+	{
+		return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
 }
 
 public int HintPanelH(Menu menu, MenuAction action, int client, int selection)
