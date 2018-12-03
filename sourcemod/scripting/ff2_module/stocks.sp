@@ -56,6 +56,7 @@ void FireBossTTextEvent(KeyValues characterKv, char[] id, int client = 0)
     if(characterKv.JumpToKey("tutorial_text"))
     {
         characterKv.GetString(id, messageId, sizeof(messageId), "");
+        if(messageId[0] == '\0')    return;
 
         if(client > 0)
         {
