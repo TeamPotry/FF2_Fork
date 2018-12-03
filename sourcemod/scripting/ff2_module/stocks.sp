@@ -40,7 +40,7 @@ public bool GetWeaponHint(int client, int weapon, char[] text, int buffer)
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -193,6 +193,77 @@ stock void RandomlyDisguise(int client)	//Original code was mecha's, but the ori
 			SetEntProp(client, Prop_Send, "m_iDisguiseHealth", 200);
 		}
 	}
+}
+
+/*
+ * Equips a new weapon for a given client
+ *
+ * @param client		Client to equip new weapon for
+ * @param classname		Classname of the weapon
+ * @param index			Index of the weapon
+ * @param level			Level of the weapon
+ * @param quality		Quality of the weapon
+ * @param attributeList	String of attributes in a 'name ; value' pattern (optional)
+ *
+ * @return				Weapon entity index on success, -1 on failure
+ */
+stock int SpawnWeapon(int client, char[] classname, int index, int level=1, int quality=0, char[] attributeList="")
+{
+	Handle weapon=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+	if(weapon==null)
+	{
+		return -1;
+	}
+
+	TF2Items_SetClassname(weapon, classname);
+	TF2Items_SetItemIndex(weapon, index);
+	TF2Items_SetLevel(weapon, level);
+	TF2Items_SetQuality(weapon, quality);
+	char attributes[32][32];
+	int count=ExplodeString(attributeList, ";", attributes, 32, 32);
+
+	if(count==1) // ExplodeString returns the original string if no matching delimiter was found so we need to special-case this
+	{
+		if(attributeList[0]!='\0') // Ignore empty attribute list
+		{
+			LogError("[FF2 Weapons] Unbalanced attributes array '%s' for weapon %s", attributeList, classname);
+			delete weapon;
+			return -1;
+		}
+		else
+		{
+			TF2Items_SetNumAttributes(weapon, 0);
+		}
+	}
+	else if(count % 2) // Unbalanced array, eg "2 ; 10 ; 3"
+	{
+		LogError("[FF2 Weapons] Unbalanced attributes array '%s' for weapon %s", attributeList, classname);
+		delete weapon;
+		return -1;
+	}
+	else
+	{
+		TF2Items_SetNumAttributes(weapon, count/2);
+		int i2;
+		for(int i; i<count; i+=2)
+		{
+			int attribute=StringToInt(attributes[i]);
+			if(!attribute)
+			{
+				LogError("[FF2 Weapons] Bad weapon attribute passed: %s ; %s", attributes[i], attributes[i+1]);
+				delete weapon;
+				return -1;
+			}
+
+			TF2Items_SetAttribute(weapon, i2, attribute, StringToFloat(attributes[i+1]));
+			i2++;
+		}
+	}
+
+	int entity=TF2Items_GiveNamedItem(client, weapon);
+	delete weapon;
+	EquipPlayerWeapon(client, entity);
+	return entity;
 }
 
 stock bool IsValidClient(int client, bool replaycheck=true)
