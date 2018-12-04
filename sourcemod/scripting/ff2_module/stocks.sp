@@ -1,3 +1,31 @@
+stock bool GetDayChange(DateTimeCheck type, const char[] dateTime, const char[] targetDateTime)
+{
+    char dateTimeCopy[2][32], dateTimeFirst[3][10], dateTimeLast[3][10];
+    char targetDateTimeCopy[2][32], targetDateTimeFirst[3][10], targetDateTimeLast[3][10];
+    // char year[12], month[12], date[12], hour[12], month[12], second[12];
+
+    ExplodeString(dateTime, " ", dateTimeCopy, sizeof(dateTimeCopy), sizeof(dateTimeCopy[]));
+    ExplodeString(targetDateTime, " ", targetDateTimeCopy, sizeof(targetDateTimeCopy), sizeof(targetDateTimeCopy[]));
+
+    ExplodeString(dateTimeCopy[0], "-", dateTimeFirst, sizeof(dateTimeFirst), sizeof(dateTimeFirst[]));
+    ExplodeString(dateTimeCopy[1], ":", dateTimeLast, sizeof(dateTimeLast), sizeof(dateTimeLast[]));
+
+    ExplodeString(targetDateTimeCopy[0], "-", targetDateTimeFirst, sizeof(targetDateTimeFirst), sizeof(targetDateTimeFirst[]));
+    ExplodeString(targetDateTimeCopy[1], ":", targetDateTimeLast, sizeof(targetDateTimeLast), sizeof(targetDateTimeLast[]));
+
+    for(int loop = view_as<int>(type); loop >= 0; loop--)
+    {
+        if(loop > 2)
+            if(StringToInt(targetDateTimeLast[loop-3]) > StringToInt(dateTimeLast[loop-3]))
+                return true;
+        else {
+            if(StringToInt(targetDateTimeFirst[loop]) > StringToInt(dateTimeFirst[loop]))
+                return true;
+        }
+    }
+    return false;
+}
+
 public void GetHudSettingString(HudSettingValue value, char[] statusString, int buffer)
 {
     switch(value)
@@ -61,7 +89,7 @@ stock ArrayList CreateChancesArray(int client)
                     Call_PushCellRef(tempIndex);
                     Call_PushCellRef(tempChance);
                     Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-                    BossKV.GetString(NULL_STRING, value, 120);
+                    bossKv.GetString(NULL_STRING, value, 120);
                     Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
                     Call_Finish(action);
 
