@@ -275,7 +275,7 @@ public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[
 	if(StrEqual(ruleName, "admin"))
 	{
 		AdminId adminId = GetUserAdmin(client);
-		if(adminId != INVALID_ADMIN_ID && adminId.HasFlag(view_as<AdminFlag>(value), Access_Real))
+		if(adminId != INVALID_ADMIN_ID && adminId.HasFlag(view_as<AdminFlag>(integerValue), Access_Real))
 			return Plugin_Continue;
 	}
 	if(StrEqual(ruleName, "test"))	return Plugin_Handled;
