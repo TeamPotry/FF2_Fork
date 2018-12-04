@@ -158,7 +158,7 @@ methodmap FF2BossCookie {
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, err_max)
 {
-	OnCheckSelectRules = CreateGlobalForward("FF2_OnCheckSelectRules", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Cell); // Client, characterIndex, Rule String, value;
+	OnCheckSelectRules = CreateGlobalForward("FF2_OnCheckSelectRules", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_String); // Client, characterIndex, Rule String, value;
 	return APLRes_Success;
 }
 
@@ -268,8 +268,10 @@ public Action FF2_OnAddQueuePoints(int add_points[MAXPLAYERS+1])
 	return Plugin_Changed;
 }
 
-public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, int value)
+public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, const char[] value)
 {
+	int integerValue = StringToInt(value);
+
 	if(StrEqual(ruleName, "admin"))
 	{
 		AdminId adminId = GetUserAdmin(client);
@@ -341,7 +343,7 @@ public Action Command_SetMyBoss(int client, int args)
 	Format(menutext, sizeof(menutext), "%t", "FF2Boss Menu None");
 	AddMenuItem(dMenu, "None", menutext); // FIXME: 대기열 포인트 저장 방식 변경
 
-	char spcl[MAX_NAME], banMaps[500], map[100], ruleName[80];
+	char spcl[MAX_NAME], banMaps[500], map[100], ruleName[80], value[120];
 	GetCurrentMap(map, sizeof(map));
 
 	int itemflags;
@@ -371,7 +373,8 @@ public Action Command_SetMyBoss(int client, int args)
 				Call_PushCell(client);
 				Call_PushCell(i);
 				Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-				Call_PushCell(BossKV.GetNum(NULL_STRING, 0));
+				BossKV.GetString(NULL_STRING, value, 120);
+				Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
 				Call_Finish(action);
 
 				if(action == Plugin_Stop || action == Plugin_Handled)

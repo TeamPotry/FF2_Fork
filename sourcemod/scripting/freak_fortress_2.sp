@@ -314,7 +314,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
-	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_String, Param_Cell); // Client, characterIndex, chance, Rule String, value
+	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
 
 	//ff2_module/database.sp
 	DB_Native_Init();
@@ -6842,12 +6842,14 @@ void FindCompanion(int boss, int players, bool[] omit)
 }
 
 // NOTE:
-public Action FF2_OnCheckRules(int client, int &characterIndex, int &chance, const char[] ruleName, int value)
+public Action FF2_OnCheckRules(int client, int &characterIndex, int &chance, const char[] ruleName, const char[] value)
 {
+	int integerValue = StringToInt(value);
+
 	if(StrEqual(ruleName, "admin"))
 	{
 		AdminId adminId = GetUserAdmin(client);
-		if(adminId == INVALID_ADMIN_ID || !adminId.HasFlag(view_as<AdminFlag>(value), Access_Real))
+		if(adminId == INVALID_ADMIN_ID || !adminId.HasFlag(view_as<AdminFlag>(integerValue), Access_Real))
 			return Plugin_Handled;
 	}
 	if(StrEqual(ruleName, "blocked"))
