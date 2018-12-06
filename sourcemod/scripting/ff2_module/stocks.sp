@@ -15,9 +15,10 @@ stock bool GetDayChange(DateTimeCheck type, const char[] dateTime, const char[] 
 
     for(int loop = view_as<int>(type); loop >= 0; loop--)
     {
-        if(loop > 2)
+        if(loop > 2) {
             if(StringToInt(targetDateTimeLast[loop-3]) > StringToInt(dateTimeLast[loop-3]))
                 return true;
+        }
         else {
             if(StringToInt(targetDateTimeFirst[loop]) > StringToInt(dateTimeFirst[loop]))
                 return true;

@@ -3990,7 +3990,8 @@ public void OnClientAuthorized(int client, const char[] auth)
 {
 	if(IsFakeClient(client))	return;
 
-	LoadedPlayerData[client] = new FF2PlayerData(client);
+	LoadedPlayerData[client]=new FF2PlayerData(client);
+	LoadedHudData[client]=new FF2HudData(client);
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -4067,7 +4068,10 @@ public void OnClientDisconnect(int client)
 	if(!IsFakeClient(client))
 	{
 		LoadedPlayerData[client].Update();
+		LoadedHudData[client].Update();
+
 		delete LoadedPlayerData[client];
+		delete LoadedHudData[client];
 	}
 }
 
@@ -7081,10 +7085,15 @@ public Action DataDumpCmd(int client, int args)
 
 	char authId[25], dataFile[PLATFORM_MAX_PATH];
 	LoadedPlayerData[client].Rewind();
+	LoadedHudData[client].Rewind();
+
 	LoadedPlayerData[client].GetString("authid", authId, sizeof(authId));
 
 	BuildPath(Path_SM, dataFile, sizeof(dataFile), "data/ff2_player_data/%s.txt", authId);
 	LoadedPlayerData[client].ExportToFile(dataFile);
+
+	BuildPath(Path_SM, dataFile, sizeof(dataFile), "data/ff2_hud_data/%s.txt", authId);
+	LoadedHudData[client].ExportToFile(dataFile);
 
 	return Plugin_Continue;
 }
@@ -7313,19 +7322,19 @@ public int HudMenu_Handler(Menu menu, MenuAction action, int client, int selecti
 
 public void HudSettingMenu(int client, const char[] name)
 {
+	SetGlobalTransTarget(client);
+
 	int posId;
 	kvHudConfigs.GetSectionSymbol(posId);
 	kvHudConfigs.Rewind();
 
-	char infoBuf[64], text[512], languageId[4], statusString[8], authId[25];
+	char infoBuf[64], text[512], languageId[4], statusString[8];
 	if(!kvHudConfigs.JumpToKey(name))
 	{
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "Hud Setting Not Found!");
 		return;
 	}
 
-	SetGlobalTransTarget(client);
-	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
 	GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
 	Menu afterMenu=new Menu(HudSetting_Handler);
 	HudSettingValue value;
@@ -7338,7 +7347,7 @@ public void HudSettingMenu(int client, const char[] name)
 		do
 		{
 			kvHudConfigs.GetSectionName(infoBuf, sizeof(infoBuf));
-			value=ff2Database.GetHudSeting(authId, infoBuf);
+			value=GetHudSetting(client, infoBuf);
 			if(!StrEqual(languageId, "en"))
 				changedLanguage=kvHudConfigs.JumpToKey(languageId);
 			else
@@ -7374,10 +7383,9 @@ public int HudSetting_Handler(Menu menu, MenuAction action, int client, int sele
 
 void HudDataMenu(int client, char[] name)
 {
-	char authId[25], text[256], tempText[80];
-	GetClientAuthId(client, AuthId_SteamID64, authId, 25);
+	char text[256], tempText[80];
 
-	HudSettingValue value=ff2Database.GetHudSeting(authId, name);
+	HudSettingValue value=GetHudSetting(client, name);
 	Menu menu=new Menu(HudData_Handler);
 	GetHudSettingString(value, text, 8);
 
@@ -7401,12 +7409,11 @@ public int HudData_Handler(Menu menu, MenuAction action, int client, int selecti
 	if(action==MenuAction_Select)
 	{
 		int drawStyle;
-		char authId[25], infoBuf[64], statusString[8];
-		GetClientAuthId(client, AuthId_SteamID64, authId, 25);
+		char infoBuf[64], statusString[8];
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
 		HudSettingValue value = view_as<HudSettingValue>(selection-1);
-		ff2Database.SetHudSeting(authId, infoBuf, value);
+		SetHudSetting(client, infoBuf, value);
 		GetHudSettingString(value, statusString, 8);
 
 		CPrintToChat(client, "{olive}[FF2]{default} %s: %s", infoBuf, statusString);

@@ -32,8 +32,8 @@ methodmap FF2DBSettingData < Database {
     public native int GetValue(const char[] authid, const char[] settingid, char[] value = "", int buffer = 0);
     public native void SetValue(const char[] authid, const char[] settingid, const char[] value);
 
-    public native HudSettingValue GetHudSeting(const char[] authid, const char[] settingid);
-    public native void SetHudSeting(const char[] authid, const char[] hudId, HudSettingValue value);
+    // public native HudSettingValue GetHudSeting(const char[] authid, const char[] settingid);
+    // public native void SetHudSeting(const char[] authid, const char[] hudId, HudSettingValue value);
 
     public native int GetSavedTime(const char[] authid);
 }
@@ -54,8 +54,8 @@ void DB_Native_Init()
     CreateNative("FF2DBSettingData.SetValue", Native_FF2DBSettingData_SetValue);
     CreateNative("FF2DBSettingData.GetSavedTime", Native_FF2DBSettingData_GetSavedTime);
 
-    CreateNative("FF2DBSettingData.GetHudSeting", Native_FF2DBSettingData_GetHudSeting);
-    CreateNative("FF2DBSettingData.SetHudSeting", Native_FF2DBSettingData_SetHudSeting);
+    // CreateNative("FF2DBSettingData.GetHudSeting", Native_FF2DBSettingData_GetHudSeting);
+    // CreateNative("FF2DBSettingData.SetHudSeting", Native_FF2DBSettingData_SetHudSeting);
 }
 
 public int Native_FF2DBSettingData_InitializePlayerData(Handle plugin, int numParams)
@@ -146,7 +146,7 @@ public int Native_FF2DBSettingData_GetSavedTime(Handle plugin, int numParams)
     delete query;
     return result;
 }
-
+/*
 public int Native_FF2DBSettingData_GetHudSeting(Handle plugin, int numParams)
 {
     FF2DBSettingData thisDB = GetNativeCell(1);
@@ -190,3 +190,4 @@ public int Native_FF2DBSettingData_SetHudSeting(Handle plugin, int numParams)
 
     SQL_FastQuery(thisDB, queryStr, strlen(queryStr)+1);
 }
+*/

@@ -1,5 +1,3 @@
-KeyValues kvHudConfigs;
-
 Handle OnCalledQueue;
 Handle OnDisplayHud, OnDisplayHudPost;
 
@@ -43,6 +41,18 @@ stock KeyValues LoadHudConfig()
 	return kv;
 }
 
+stock HudSettingValue GetHudSetting(int client, char[] hudId)
+{
+	LoadedHudData[client].GoToHudData(hudId);
+	return view_as<HudSettingValue>(LoadedHudData[client].GetNum("setting_value", -1));
+}
+
+stock void SetHudSetting(int client, char[] hudId, HudSettingValue value)
+{
+	LoadedHudData[client].GoToHudData(hudId, true);
+	LoadedHudData[client].SetNum("setting_value", view_as<int>(value));
+}
+
 // Native things
 
 void HudInit()
@@ -83,11 +93,10 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	FF2HudDisplay hudDisplay = GetNativeCell(2);
 	int other = GetNativeCell(3);
 
-	char authId[25], info[80], name[64];
+	char info[80], name[64];
 	queue.GetName(name, sizeof(name));
 	hudDisplay.GetInfo(info, sizeof(info));
-	GetClientAuthId(queue.ClientIndex, AuthId_SteamID64, authId, 25);
-	HudSettingValue value = ff2Database.GetHudSeting(authId, info);
+	HudSettingValue value = GetHudSetting(queue.ClientIndex, info);
 
 	if(value == HudSetting_None)
 	{
@@ -96,8 +105,7 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 
 	if(value > HudSetting_None) {
 		if(other > 0) { // 나도 안보고 타인에게도 안보여줌
-			GetClientAuthId(other, AuthId_SteamID64, authId, 25);
-			if(ff2Database.GetHudSeting(authId, info) == HudSetting_ViewDisable) {
+			if(GetHudSetting(other, info) == HudSetting_ViewDisable) {
 				return -1;
 			}
 		}
