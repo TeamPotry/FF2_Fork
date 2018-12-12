@@ -271,12 +271,17 @@ public Action FF2_OnAddQueuePoints(int add_points[MAXPLAYERS+1])
 public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, const char[] value)
 {
 	int integerValue = StringToInt(value);
+	// CPrintToChatAll("%s: %s, %d", ruleName, value, integerValue);
 
 	if(StrEqual(ruleName, "admin"))
 	{
 		AdminId adminId = GetUserAdmin(client);
-		if(adminId != INVALID_ADMIN_ID && adminId.HasFlag(view_as<AdminFlag>(integerValue), Access_Real))
-			return Plugin_Continue;
+
+		if(adminId == INVALID_ADMIN_ID)
+		{
+			if(!adminId.HasFlag(view_as<AdminFlag>(integerValue), Access_Real))
+				return Plugin_Handled;
+		}
 	}
 	if(StrEqual(ruleName, "test"))	return Plugin_Handled;
 
@@ -373,8 +378,8 @@ public Action Command_SetMyBoss(int client, int args)
 				Call_PushCell(client);
 				Call_PushCell(i);
 				Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-				BossKV.GetString(NULL_STRING, value, 120);
-				Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+				BossKV.GetString(NULL_STRING, value, 120, "");
+				Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 				Call_Finish(action);
 
 				if(action == Plugin_Stop || action == Plugin_Handled)

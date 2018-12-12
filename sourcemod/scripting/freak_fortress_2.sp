@@ -6854,8 +6854,12 @@ public Action FF2_OnCheckRules(int client, int &characterIndex, int &chance, con
 	if(StrEqual(ruleName, "admin"))
 	{
 		AdminId adminId = GetUserAdmin(client);
-		if(adminId == INVALID_ADMIN_ID || !adminId.HasFlag(view_as<AdminFlag>(integerValue), Access_Real))
-			return Plugin_Handled;
+
+		if(adminId == INVALID_ADMIN_ID)
+		{
+			if(!adminId.HasFlag(view_as<AdminFlag>(integerValue), Access_Real))
+				return Plugin_Handled;
+		}
 	}
 	if(StrEqual(ruleName, "blocked"))
 	{

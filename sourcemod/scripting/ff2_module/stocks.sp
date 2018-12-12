@@ -89,9 +89,9 @@ stock ArrayList CreateChancesArray(int client)
                     Call_PushCell(client);
                     Call_PushCellRef(tempIndex);
                     Call_PushCellRef(tempChance);
-                    Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+                    Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
                     bossKv.GetString(NULL_STRING, value, 120);
-                    Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_COPY|SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+                    Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
                     Call_Finish(action);
 
                     if(action == Plugin_Stop || action == Plugin_Handled)
