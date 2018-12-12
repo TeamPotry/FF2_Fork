@@ -3988,8 +3988,6 @@ public Action Command_Point_Enable(int client, int args)
 
 public void OnClientAuthorized(int client, const char[] auth)
 {
-	if(IsFakeClient(client))	return;
-
 	LoadedPlayerData[client]=new FF2PlayerData(client);
 	LoadedHudData[client]=new FF2HudData(client);
 }
@@ -4065,14 +4063,11 @@ public void OnClientDisconnect(int client)
 		delete MusicTimer[client];
 	}
 
-	if(!IsFakeClient(client))
-	{
-		LoadedPlayerData[client].Update();
-		LoadedHudData[client].Update();
+	LoadedPlayerData[client].Update();
+	LoadedHudData[client].Update();
 
-		delete LoadedPlayerData[client];
-		delete LoadedHudData[client];
-	}
+	delete LoadedPlayerData[client];
+	delete LoadedHudData[client];
 }
 
 public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
