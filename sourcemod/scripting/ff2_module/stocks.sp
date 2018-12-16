@@ -80,7 +80,8 @@ stock ArrayList CreateChancesArray(int client)
             }
 
             bossKv.Rewind();
-            if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
+            if(bossKv.GetNum("hidden", 0) > 0) continue;
+            else if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
             {
                 do
                 {
