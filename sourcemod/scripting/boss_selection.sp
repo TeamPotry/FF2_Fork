@@ -12,10 +12,8 @@
 
 #define PLUGIN_VERSION "2(1.0)"
 #define MAX_NAME 64
-// #define PORTY_GROUP_ID 7824949
 
 int g_iChatCommand;
-// bool IsPlayerInGroup[MAXPLAYERS+1];
 
 char g_strCurrentCharacter[64];
 char Incoming[MAXPLAYERS+1][64];
@@ -176,10 +174,6 @@ public void OnPluginStart()
 	AddCommandListener(Listener_Say, "say");
 	AddCommandListener(Listener_Say, "say_team");
 
-	// RegConsoleCmd("ff2_boss", Command_SetMyBoss, "Set my boss");
-	// RegConsoleCmd("ff2boss", Command_SetMyBoss, "Set my boss");
-	// RegConsoleCmd("boss", Command_SetMyBoss, "Set my boss");
-
 	LoadTranslations("common.phrases");
 	LoadTranslations("core.phrases");
 	LoadTranslations("ff2_boss_selection");
@@ -187,6 +181,7 @@ public void OnPluginStart()
 	ChangeChatCommand();
 }
 
+/*
 public void SA_OnLoadedAchievements()
 {
 	KeyValues BossKV;
@@ -205,6 +200,7 @@ public void SA_OnLoadedAchievements()
 		}
 	}
 }
+*/
 
 public Action Listener_Say(int client, const char[] command, int argc)
 {
@@ -273,7 +269,7 @@ public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[
 	int integerValue = StringToInt(value);
 	// CPrintToChatAll("%s: %s, %d", ruleName, value, integerValue);
 
-	if(StrEqual(ruleName, "admin"))
+	if(StrEqual(ruleName, "admin")) // FIXME: Not Working.
 	{
 		AdminId adminId = GetUserAdmin(client);
 
@@ -284,7 +280,7 @@ public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[
 		}
 		return Plugin_Handled;
 	}
-	if(StrEqual(ruleName, "test"))	return Plugin_Handled;
+	if(StrEqual(ruleName, "blocked"))	return Plugin_Handled;
 
 	return Plugin_Continue;
 }
@@ -312,13 +308,6 @@ public Action Command_SetMyBoss(int client, int args)
 		return Plugin_Handled;
 	}
 
-/*
-	if(Steam_RequestGroupStatus(client, PORTY_GROUP_ID) && !IsPlayerInGroup[client])
-	{
-		CPrintToChat(client, "{lightblue}[POTRY]{default} 본 기능은 {orange}본 서버의 그룹{default}에 가입하셔야 사용하실 수 있습니다.");
-		return Plugin_Handled;
-	}
-*/
 	char menutext[MAX_NAME*2], bossName[MAX_NAME];
 	KeyValues BossKV;
 	Handle dMenu = CreateMenu(Command_SetMyBossH);
@@ -347,7 +336,7 @@ public Action Command_SetMyBoss(int client, int args)
 	Format(menutext, sizeof(menutext), "%t", "FF2Boss Menu Random");
 	AddMenuItem(dMenu, "Random Boss", menutext);
 	Format(menutext, sizeof(menutext), "%t", "FF2Boss Menu None");
-	AddMenuItem(dMenu, "None", menutext); // FIXME: 대기열 포인트 저장 방식 변경
+	AddMenuItem(dMenu, "None", menutext);
 
 	char spcl[MAX_NAME], banMaps[500], map[100], ruleName[80], value[120];
 	GetCurrentMap(map, sizeof(map));
@@ -395,8 +384,6 @@ public Action Command_SetMyBoss(int client, int args)
 			if(!checked) continue;
 		}
 
-
-/*
 		if(banMaps[0] != '\0' && !StrContains(banMaps, map, false))
 		{
 			Format(menutext, sizeof(menutext), "%s (%t)", bossName, "FF2Boss Cant Chosse This Map");
@@ -404,7 +391,7 @@ public Action Command_SetMyBoss(int client, int args)
 		}
 		else
 			Format(menutext, sizeof(menutext), "%s", bossName);
-*/
+
 		Format(menutext, sizeof(menutext), "%s", bossName);
 		AddMenuItem(dMenu, spcl, menutext, itemflags);
 	}
@@ -567,20 +554,3 @@ stock Handle FindCookieEx(char[] cookieName)
 
     return cookieHandle;
 }
-
-/*
-public int Steam_GroupStatusResult(int client, int groupAccountID, bool groupMember, bool groupOfficer)
-{
-	if(groupAccountID == PORTY_GROUP_ID )
-	{
-		if(groupMember)
-		{
-			IsPlayerInGroup[client] = true;
-		}
-		else
-		{
-			IsPlayerInGroup[client] = false;
-		}
-	}
-}
-*/
