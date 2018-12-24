@@ -1,7 +1,7 @@
-#if defined _FF2_POTRY_included
+#if defined _ff2_potry_included
  #endinput
 #endif
-#define _FF2_POTRY_included
+#define _ff2_potry_included
 
 /**
  * Gets assist by this client
@@ -256,11 +256,7 @@ methodmap FF2HudQueue < ArrayList
     }
 */
     public native void KillSelf();
-/*
-    // NOTE: 서브 플러그인에서 직접 사용하지 마세요. DO NOT Use this function on any subplugin.
-    // TODO: 은닉
-    public native int PushHud(FF2HudDisplay hudDisplay);
-*/
+
     // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
     public native int AddHud(FF2HudDisplay hudDisplay, int other = 0);
 
@@ -290,7 +286,7 @@ public Action ResetTimer(Handle timer, ArrayList pack)
     delete pack;
 }
 
-public SharedPlugin __pl_FF2_POTRY=
+public SharedPlugin __pl_ff2_potry=
 {
 	name="ff2_potry",
 	file="freak_fortress_2.smx",
@@ -302,7 +298,7 @@ public SharedPlugin __pl_FF2_POTRY=
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_FF2_POTRY_SetNTVOptional()
+public __pl_ff2_potry_SetNTVOptional()
 {
     MarkNativeAsOptional("FF2_GetClientAssist");
     MarkNativeAsOptional("FF2_SetClientAssist");
