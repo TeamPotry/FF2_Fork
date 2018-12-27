@@ -314,7 +314,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
-	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_CellByRef, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
+	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_Cell, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
 
 	//ff2_module/global_var.sp
 	Data_Native_Init();
@@ -359,7 +359,7 @@ public void OnPluginStart()
 	cvarEnabled=CreateConVar("ff2_enabled", "1", "0-Disable FF2 (WHY?), 1-Enable FF2", FCVAR_DONTRECORD, true, 0.0, true, 1.0);
 	cvarCrits=CreateConVar("ff2_crits", "0", "Can the boss get random crits?", _, true, 0.0, true, 1.0);
 	cvarArenaRounds=CreateConVar("ff2_arena_rounds", "1", "Number of rounds to make arena before switching to FF2 (helps for slow-loading players)", _, true, 0.0);
-	cvarCircuitStun=CreateConVar("ff2_circuit_stun", "2", "Amount of seconds the Short Circuit stuns the boss for.  0 to disable", _, true, 0.0);
+	cvarCircuitStun=CreateConVar("ff2_circuit_stun", "0.3", "Amount of seconds the Short Circuit stuns the boss for.  0 to disable", _, true, 0.0);
 	cvarCountdownPlayers=CreateConVar("ff2_countdown_players", "1", "Amount of players until the countdown timer starts (0 to disable)", _, true, 0.0);
 	cvarCountdownTime=CreateConVar("ff2_countdown", "120", "Amount of seconds until the round ends in a stalemate");
 	cvarCountdownHealth=CreateConVar("ff2_countdown_health", "2000", "Amount of health the Boss has remaining until the countdown stops", _, true, 0.0);
@@ -1233,7 +1233,7 @@ public Action Timer_Announce(Handle timer)
 					if(!IsClientInGame(client)) continue;
 					SetGlobalTransTarget(client);
 
-					LoadedPlayerData[client].GetString("last_saved_time", targetTimeStr, sizeof(targetTimeStr));
+					LoadedPlayerData[client].GetString("changelog_last_view_time", targetTimeStr, sizeof(targetTimeStr));
 					if(GetDayChange(Check_Second, timeStr, targetTimeStr))
 					{
 						CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Changelog Notice", timeStr);
@@ -6698,7 +6698,7 @@ public bool PickCharacter(int boss, int companion)
 			return true;
 		}
 
-		character[boss]=GetRandomInt(0, GetArraySize(chancesArray)-1);
+		character[boss]=chancesArray.Get(GetRandomInt(0, chancesArray.Length-1));
 /*
 		for(int tries; tries<100; tries++)
 		{
@@ -6847,9 +6847,11 @@ void FindCompanion(int boss, int players, bool[] omit)
 }
 
 // NOTE:
-public Action FF2_OnCheckRules(int client, int &characterIndex, int &chance, const char[] ruleName, const char[] value)
+public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, const char[] ruleName, const char[] value)
 {
 	int integerValue = StringToInt(value);
+
+	CPrintToChatAll("%s: %s", ruleName, value);
 
 	if(StrEqual(ruleName, "admin"))
 	{

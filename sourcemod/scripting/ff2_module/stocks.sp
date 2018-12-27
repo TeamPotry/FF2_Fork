@@ -63,23 +63,31 @@ stock ArrayList CreateChancesArray(int client)
 
     if(kvCharacterConfig.GotoFirstSubKey(false))
     {
-        int index, tempIndex, tempChance;
+        int readIndex = 0, realIndex, tempChance;
         do
         {
             bool checked = true, changed = false;
             kvCharacterConfig.GetSectionName(config, sizeof(config));
             int chance = kvCharacterConfig.GetNum(NULL_STRING, -1);
-            bossKv = GetCharacterKV(index);
-            tempIndex = index;
-            tempChance = chance;
+            bossKv = GetCharacterKV(readIndex);
 
-            if(chance < 0 || bossKv == null)
+            tempChance = chance;
+            realIndex = readIndex;
+            readIndex++;
+
+            // LogMessage("%d - Readed %s's config. chance = %d", readIndex, config, chance);
+
+            if(kvCharacterConfig.GetDataType(NULL_STRING) == KvData_None || chance < 0 || bossKv == null)
             {
-                LogError("[FF2 Bosses] Character %s has an invalid chance - assuming 0", config);
+                LogError("[FF2 Bosses] Character %s has an invalid chance (%d) - assuming 0", config, chance);
                 continue;
             }
 
             bossKv.Rewind();
+
+            bossKv.GetString("name", ruleName, sizeof(ruleName));
+            // LogMessage("BossKv is %s", ruleName);
+
             if(bossKv.GetNum("hidden", 0) > 0) continue;
             else if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
             {
@@ -89,7 +97,7 @@ stock ArrayList CreateChancesArray(int client)
 
                     Call_StartForward(OnCheckRules);
                     Call_PushCell(client);
-                    Call_PushCellRef(tempIndex);
+                    Call_PushCell(realIndex);
                     Call_PushCellRef(tempChance);
                     Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
                     bossKv.GetString(NULL_STRING, value, 120);
@@ -114,10 +122,10 @@ stock ArrayList CreateChancesArray(int client)
                 int count = changed ? tempChance : chance;
                 for(int j; j < count; j++)
                 {
-                    chancesArray.Push(changed ? index : tempIndex);
+                    chancesArray.Push(realIndex);
+                    // LogMessage("added %s's index = %d", config, count);
                 }
             }
-            index++;
         }
         while(kvCharacterConfig.GotoNextKey(false));
     }
