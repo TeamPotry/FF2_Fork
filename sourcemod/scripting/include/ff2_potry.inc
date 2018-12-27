@@ -85,9 +85,6 @@ forward void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[]
 */
 forward Action FF2_OnCheckRules(int client, int characterIndex, int &chance, const char[] ruleName, const char[] value);
 
-// boss_selection.sp
-forward Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, const char[] value);
-
 /****
     THE HUD UPDATE
 ****/

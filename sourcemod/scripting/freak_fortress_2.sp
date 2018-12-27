@@ -6851,7 +6851,7 @@ public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, cons
 {
 	int integerValue = StringToInt(value);
 
-	CPrintToChatAll("%s: %s", ruleName, value);
+	// CPrintToChatAll("%s: %s", ruleName, value);
 
 	if(StrEqual(ruleName, "admin"))
 	{
