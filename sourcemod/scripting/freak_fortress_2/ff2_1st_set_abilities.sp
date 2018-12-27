@@ -211,8 +211,8 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 		SetEntityMoveType(GetClientOfUserId(FF2_GetBossUserId(boss)), MOVETYPE_NONE);
 		DataPack data;
 		CreateDataTimer(0.15, Timer_Prepare_Explosion_Rage, data);
-		data.WriteString(abilityName);
 		data.WriteCell(boss);
+		data.WriteString(abilityName);
 		data.Reset();
 	}
 	else if(StrEqual(abilityName, "slow mo", false))
