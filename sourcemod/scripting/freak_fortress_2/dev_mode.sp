@@ -2,6 +2,7 @@
 #include <morecolors>
 #include <freak_fortress_2>
 #include <ff2_potry>
+#include <ff2_boss_selection>
 
 public Plugin myinfo=
 {
@@ -62,8 +63,9 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 		int noticehudId = hudQueue.FindHud("Activate Rage");
 		if(noticehudId != -1)
 		{
-			hudQueue.SetHud(noticehudId, hudQueue.GetHud(noticehudId).KillSelf());
+			hudQueue.SetHud(noticehudId, (hudDisplay = hudQueue.GetHud(noticehudId)));
 		}
+		delete hudDisplay;
 		changed = true;
 	}
 	else if(StrEqual(text, "Observer"))
@@ -82,6 +84,22 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 	}
 
 	return;
+}
+
+public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, const char[] ruleName, const char[] value)
+{
+	if(StrEqual(ruleName, "need_dev_mode"))
+		return g_bDEVmode ? Plugin_Continue : Plugin_Handled;
+
+	return Plugin_Continue;
+}
+
+public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, const char[] value)
+{
+	if(StrEqual(ruleName, "need_dev_mode"))
+		return g_bDEVmode ? Plugin_Continue : Plugin_Handled;
+
+	return Plugin_Continue;
 }
 
 stock bool IsBoss(int client)
