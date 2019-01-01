@@ -5320,8 +5320,16 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		}
 		else if(client==attacker)
 		{
-			damage=0.0; // TODO: For now.
-			return Plugin_Changed;
+			KeyValues bossKv = GetCharacterKV(GetBossIndex(client));
+			bossKv.Rewind();
+
+			if(bossKv.GetNum("enable_rocket_jump", 0) > 0) {
+				return Plugin_Continue;
+			}
+			else {
+				damage=0.0;
+				return Plugin_Changed;
+			}
 		}
 	}
 
