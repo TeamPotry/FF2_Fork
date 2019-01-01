@@ -5323,7 +5323,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			KeyValues bossKv = GetCharacterKV(GetBossIndex(client));
 			bossKv.Rewind();
 
-			if(bossKv.GetNum("enable_rocket_jump", 0) > 0) {
+			if(bossKv.GetNum("enable rocket jump", 0) > 0) {
 				return Plugin_Continue;
 			}
 			else {
