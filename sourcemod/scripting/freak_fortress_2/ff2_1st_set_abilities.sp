@@ -200,7 +200,11 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 	else if(StrEqual(abilityName, "tradespam", false))
 	{
-		CreateTimer(0.0, Timer_Demopan_Rage, 1, TIMER_FLAG_NO_MAPCHANGE);
+		int client=GetClientOfUserId(FF2_GetBossUserId(boss));
+		if(TF2_GetClientTeam(client)==BossTeam)
+		{
+			CreateTimer(0.0, Timer_Demopan_Rage, 1, TIMER_FLAG_NO_MAPCHANGE);
+		}
 	}
 	else if(StrEqual(abilityName, "equip bow", false))
 	{
