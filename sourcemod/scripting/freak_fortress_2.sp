@@ -5514,7 +5514,7 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 					{
 						if(damagecustom==TF_CUSTOM_COMBO_PUNCH)
 						{
-							damage*=2.0;
+							damage*=4.0;
 							ScaleVector(damageForce, 4.0);
 							SpecialAttackToBoss(attacker, boss, "combo_punch", damage);
 
