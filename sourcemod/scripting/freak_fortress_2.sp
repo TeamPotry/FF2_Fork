@@ -5406,12 +5406,13 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 				return Plugin_Handled;
 			}
 
-			if(TF2_GetPlayerClass(client)==TFClass_Soldier
-			&& IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)))
-			&& GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==226  //Battalion's Backup
-			&& !(FF2Flags[client] & FF2FLAG_ISBUFFED))
+			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
 			{
-				SetEntPropFloat(client, Prop_Send, "m_flRageMeter", 100.0);
+				bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
+
+				if(valid && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==226  //Battalion's Backup
+				&& !(FF2Flags[client] & FF2FLAG_ISBUFFED))
+					SetEntPropFloat(client, Prop_Send, "m_flRageMeter", 100.0);
 			}
 		}
 	}
@@ -5910,6 +5911,16 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 						SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
 						SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
 					}
+				}
+			}
+
+			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
+			{
+				bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
+				if(damagetype & DMG_FALL)
+				{
+					damage /= valid ? 4.0 : 8.0;
+					return Plugin_Changed;
 				}
 			}
 		}
