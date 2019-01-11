@@ -71,6 +71,14 @@ public Action RoundStart(Handle timer)
 	return Plugin_Continue;
 }
 
+public Action OnReviveMarkerSpawn(int client, int reviveMarker)
+{
+	if(FF2_GetBossIndex(client) != -1)
+		return Plugin_Stop;
+
+	return Plugin_Continue;
+}
+
 stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 {
 	ArrayList array = new ArrayList();
