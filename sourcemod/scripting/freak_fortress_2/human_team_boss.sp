@@ -36,7 +36,7 @@ public Action RoundStart(Handle timer)
 		delete bossArray;
 
 		int random, index, bossindex;
-		int healthPoint = 500 + (300 * bossCount);
+		int healthPoint = 600 + (300 * bossCount);
 		char bossName[64];
 		for(int loop = 0; loop < bossCount; loop++)
 		{
