@@ -5356,6 +5356,11 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.08-Stabbed[boss]/90)) * 2.0;
 			damagetype|=DMG_CRIT;
 
+			if(SpecialAttackToBoss(attacker, boss, "boss_backstab", damage) == Plugin_Handled)
+				return Plugin_Handled;
+
+			damage /= 3.0;
+
 			bChanged=true;
 		}
 		if(IsValidClient(client) && !IsBoss(client) && !TF2_IsPlayerInCondition(client, TFCond_Bonked))
