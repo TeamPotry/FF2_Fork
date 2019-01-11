@@ -69,7 +69,11 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			return Plugin_Handled;
 		}
 		*/
-		if(FF2_GetBossIndex(victim) != -1)
+		if(FF2_GetBossTeam() == TF2_GetClientTeam(attacker) && FF2_GetBossIndex(attacker) == -1)
+		{
+			return Plugin_Handled;
+		}
+		else if(FF2_GetBossIndex(victim) != -1)
 		{
 			damageMultiplier=cvarGoombaDamage.FloatValue;
 			JumpPower=cvarGoombaRebound.FloatValue;
