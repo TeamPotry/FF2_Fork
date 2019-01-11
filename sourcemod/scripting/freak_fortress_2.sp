@@ -3998,7 +3998,7 @@ public void OnClientAuthorized(int client, const char[] auth)
 public void OnClientPostAdminCheck(int client)
 {
 	// TODO: Hook these inside of EnableFF2() or somewhere instead
-	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive);
+	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
 
 	FF2Flags[client]=0;
@@ -5307,7 +5307,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)  
 	return Plugin_Continue;
 }
 
-public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if(!Enabled || !IsValidEntity(attacker))
 	{
@@ -5630,12 +5630,13 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
 						{
-							damage=(Pow(float(BossHealthMax[boss]), 0.74074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
+							damage=((Pow(float(BossHealthMax[boss]), 0.74074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss]))));
 							damagetype|=DMG_CRIT;
 
 							if(SpecialAttackToBoss(attacker, boss, "market_garden", damage) == Plugin_Handled)
 								return Plugin_Handled;
 
+							damage /= 3.0;
 							if(Marketed[client]<5)
 							{
 								Marketed[client]++;
@@ -5727,13 +5728,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/90);
+					damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/90));
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
 
 					if(SpecialAttackToBoss(attacker, boss, "backstab", damage) == Plugin_Handled)
 						return Plugin_Handled;
 
+					damage /= 3.0;
 					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
@@ -5912,7 +5914,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			}
 		}
 	}
-	return bChanged ? Plugin_Continue : Plugin_Changed;
+	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
