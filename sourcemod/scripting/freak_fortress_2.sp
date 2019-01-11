@@ -5353,7 +5353,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		{
 			int boss=GetBossIndex(client);
 			damagecustom=0;
-			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/90)) * 2.0;
+			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.08-Stabbed[boss]/90)) * 2.0;
 			damagetype|=DMG_CRIT;
 
 			bChanged=true;
