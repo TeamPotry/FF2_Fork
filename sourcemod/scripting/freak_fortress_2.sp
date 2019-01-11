@@ -2597,7 +2597,9 @@ public Action MakeBoss(Handle timer, int boss)
 	EquipBoss(boss);
 	KSpreeCount[boss]=0;
 	BossCharge[boss][0]=0.0;
-	SetClientQueuePoints(client, 0);
+
+	if(Boss[0]==client)
+		SetClientQueuePoints(client, 0);
 
 	Call_StartForward(OnPlayBoss);
 	Call_PushCell(boss);
