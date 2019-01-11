@@ -6030,10 +6030,10 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 		}
 
 		BossHealth[boss]-=damage;
-		BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
 
-		if(IsValidClient(attacker))
+		if(IsValidClient(attacker) && attacker!=client)
 		{
+			BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
 			Damage[attacker]+=damage;
 		}
 
