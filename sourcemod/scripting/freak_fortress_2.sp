@@ -1234,7 +1234,7 @@ public Action Timer_Announce(Handle timer)
 					SetGlobalTransTarget(client);
 
 					LoadedPlayerData[client].GetString("changelog_last_view_time", targetTimeStr, sizeof(targetTimeStr));
-					if(GetDayChange(Check_Second, timeStr, targetTimeStr))
+					if(GetDayChange(Check_Second, targetTimeStr, timeStr)) // ???
 					{
 						CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Changelog Notice", timeStr);
 					}
