@@ -5342,7 +5342,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				return Plugin_Continue;
 			}
 
-			return Plugin_Handled;
+			damage=0.0;
+			return Plugin_Changed;
 		}
 	}
 
