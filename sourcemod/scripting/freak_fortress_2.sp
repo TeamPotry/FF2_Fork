@@ -5360,8 +5360,6 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			if(SpecialAttackToBoss(attacker, boss, "boss_backstab", damage) == Plugin_Handled)
 				return Plugin_Handled;
 
-			damage /= 3.0;
-
 			bChanged=true;
 		}
 		if(IsValidClient(client) && !IsBoss(client) && !TF2_IsPlayerInCondition(client, TFCond_Bonked))
@@ -5921,7 +5919,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			}
 		}
 	}
-	return bChanged ? Plugin_Continue : Plugin_Changed;
+	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
