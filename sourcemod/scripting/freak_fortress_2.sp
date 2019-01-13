@@ -5314,27 +5314,7 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 		return Plugin_Continue;
 	}
 
-	if(IsBoss(client))
-	{
-		if(attacker<=0)
-		{
-			damage=1.0;
-			return Plugin_Changed;
-		}
-		else if(client==attacker)
-		{
-			KeyValues bossKv = GetCharacterKV(GetBossIndex(client));
-			bossKv.Rewind();
-
-			if(bossKv.GetNum("enable rocket jump", 0) > 0) {
-				return Plugin_Continue;
-			}
-			else {
-				damage=0.0;
-				return Plugin_Changed;
-			}
-		}
-	}
+	bool bChanged=false;
 
 	if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
 	{
@@ -5347,7 +5327,25 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 		return Plugin_Changed;
 	}
 
-	bool bChanged=false;
+	if(attacker<=0 || client==attacker)
+	{
+		if(IsBoss(client))
+		{
+			int boss = GetBossIndex(client);
+			KeyValues bossKv = GetBossKV(boss);
+			bossKv.Rewind();
+
+			// Debug("%d, %d, %d, %.1f", client, attacker, inflictor, damage);
+			if(bossKv.GetNum("enable selfdamage", 0) > 0 && attacker > 0)
+			{
+				// Debug("selfdamage");
+				return Plugin_Continue;
+			}
+
+			return Plugin_Handled;
+		}
+	}
+
 	float position[3];
 	GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
 	if(IsBoss(attacker))
