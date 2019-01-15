@@ -3047,9 +3047,12 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
-		case 444:  //Mantreads
+		case 133, 444:  // Gunboats, Mantreads
 		{
-			TF2Attrib_SetByDefIndex(client, 58, 1.5);
+			if(iItemDefinitionIndex==444)
+				TF2Attrib_SetByDefIndex(client, 58, 1.5);
+
+			TF2Attrib_SetByDefIndex(client, 275, 1.0); // Wearer never takes falling damage
 		}
 		case 648:  //Wrap Assassin
 		{
@@ -5911,10 +5914,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
 			{
-				bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
+				// bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
 				if(damagetype & DMG_FALL)
 				{
-					damage /= valid ? 4.0 : 8.0;
+					// damage /= valid ? 4.0 : 8.0;
+					damage /= 4.0;
+
 					return Plugin_Changed;
 				}
 			}
