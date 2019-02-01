@@ -44,7 +44,7 @@ void Life_Model(const char[] abilityName, int boss)
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
     Format(model, PLATFORM_MAX_PATH, "life %i model", FF2_GetBossLives(boss));
-    FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, abilityName, "", model, PLATFORM_MAX_PATH);	//normal model
+    FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, abilityName, model, model, PLATFORM_MAX_PATH);	//normal model
 
 	ChangeBossModel(model, client);
 }
