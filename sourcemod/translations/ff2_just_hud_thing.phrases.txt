@@ -1,0 +1,7 @@
+"Phrases"
+{
+    "Rank"
+    {
+        "en"    "Rank"
+    }
+}
