@@ -3078,7 +3078,8 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 772:  //Baby Face's Blaster
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.15 ; 109 ; 0.5 ; 125 ; -25 ; 236 ; 1.0 ; 394 ; 0.85 ; 418 ; 1 ; 419 ; 100 ; 532 ; 0.5 ; 651 ; 0.5 ; 709 ; 1", false);
+			Handle itemOverride=PrepareItemHandle(item, _, _, "1 ; 0.8 ; 109 ; 0.5 ; 125 ; -25 ; 236 ; 1.0 ; 394 ; 0.85 ; 418 ; 1 ; 419 ; 100 ; 532 ; 0.5 ; 651 ; 0.5 ; 709 ; 1", false);
+				//1: -20% damage penalty
 				//2: +15% damage bonus
 				//109: -50% health from packs on wearer
 				//125: -25 max health
