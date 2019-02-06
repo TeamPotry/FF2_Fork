@@ -1086,7 +1086,7 @@ public void PrecacheCharacter(int characterIndex)
 		kv.GotoFirstSubKey();
 		do
 		{
-			if(kv.GetNum("precache"))
+			if(kv.GetNum("precache")>0)
 			{
 				kv.GetSectionName(file, sizeof(file));
 				Format(filePath, sizeof(filePath), "%s.mdl", file);  //Models specified in the config don't include an extension
