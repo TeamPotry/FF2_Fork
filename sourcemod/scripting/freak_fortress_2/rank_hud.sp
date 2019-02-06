@@ -48,7 +48,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 
 		Format(text, sizeof(text), "%t: %s ", "Rank", text);
 		if(ranking != -1)
-			Format(text, sizeof(text), "%s(↑ %d, ↓%d)", text, GetRankingGap(ranking, ranking+1), GetRankingGap(ranking, ranking-1));
+			Format(text, sizeof(text), "%s(↑ %d, ↓%d)", text, GetRankingGap(ranking, ranking-1),  GetRankingGap(ranking, ranking+1));
 
 		hudDisplay = new FF2HudDisplay("Your Rank", text);
 		hudQueue.AddHud(hudDisplay);
@@ -64,7 +64,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 
 			Format(text, sizeof(text), "%t: %s ", "Rank", text);
 			if(ranking != -1)
-				Format(text, sizeof(text), "%s(↑ %d, ↓%d)", text, GetRankingGap(ranking, ranking+1), GetRankingGap(ranking, ranking-1));
+				Format(text, sizeof(text), "%s(↑ %d, ↓%d)", text, GetRankingGap(ranking, ranking-1), GetRankingGap(ranking, ranking+1));
 
 			hudDisplay = new FF2HudDisplay("Observer Target Player Rank", text);
 			hudQueue.AddHud(hudDisplay, observer);
