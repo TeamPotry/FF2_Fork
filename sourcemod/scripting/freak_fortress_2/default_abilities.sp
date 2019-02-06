@@ -359,16 +359,16 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			{
 				if(enableSuperDuperJump[boss])
 				{
-					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*500*multiplier;
-					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*500*multiplier;
+					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*600*multiplier;
+					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*600*multiplier;
 					velocity[2]=(750.0+175.0*charge/70+2000)*multiplier;
 					enableSuperDuperJump[boss]=false;
 				}
 				else
 				{
-					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*100*multiplier;
-					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*100*multiplier;
-					velocity[2]=(750.0+175.0*charge/70)*multiplier;
+					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*300*multiplier;
+					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*300*multiplier;
+					velocity[2]=(750.0+175.0*charge/70+200)*multiplier;
 				}
 			}
 
