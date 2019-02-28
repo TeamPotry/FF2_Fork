@@ -89,7 +89,7 @@ bool emitRageSound[MAXPLAYERS+1];
 bool bossHasReloadAbility[MAXPLAYERS+1];
 bool bossHasRightMouseAbility[MAXPLAYERS+1];
 
-int timeleft;
+float timeleft;
 
 ConVar cvarVersion;
 ConVar cvarPointDelay;
@@ -103,8 +103,6 @@ ConVar cvarCircuitStun;
 ConVar cvarSpecForceBoss;
 ConVar cvarCountdownPlayers;
 ConVar cvarCountdownTime;
-ConVar cvarCountdownHealth;
-ConVar cvarCountdownResult;
 ConVar cvarEnableEurekaEffect;
 ConVar cvarForceBossTeam;
 ConVar cvarHealthBar;
@@ -362,8 +360,6 @@ public void OnPluginStart()
 	cvarCircuitStun=CreateConVar("ff2_circuit_stun", "0.3", "Amount of seconds the Short Circuit stuns the boss for.  0 to disable", _, true, 0.0);
 	cvarCountdownPlayers=CreateConVar("ff2_countdown_players", "1", "Amount of players until the countdown timer starts (0 to disable)", _, true, 0.0);
 	cvarCountdownTime=CreateConVar("ff2_countdown", "120", "Amount of seconds until the round ends in a stalemate");
-	cvarCountdownHealth=CreateConVar("ff2_countdown_health", "2000", "Amount of health the Boss has remaining until the countdown stops", _, true, 0.0);
-	cvarCountdownResult=CreateConVar("ff2_countdown_result", "0", "0-Kill players when the countdown ends, 1-End the round in a stalemate", _, true, 0.0, true, 1.0);
 	cvarSpecForceBoss=CreateConVar("ff2_spec_force_boss", "0", "0-Spectators are excluded from the queue system, 1-Spectators are counted in the queue system", _, true, 0.0, true, 1.0);
 	cvarEnableEurekaEffect=CreateConVar("ff2_enable_eureka", "0", "0-Disable the Eureka Effect, 1-Enable the Eureka Effect", _, true, 0.0, true, 1.0);
 	cvarForceBossTeam=CreateConVar("ff2_force_team", "0", "0-Boss is always on Blu, 1-Boss is on a random team each round, 2-Boss is always on Red", _, true, 0.0, true, 3.0);
@@ -409,8 +405,6 @@ public void OnPluginStart()
 	cvarCircuitStun.AddChangeHook(CvarChange);
 	cvarHealthBar.AddChangeHook(HealthbarEnableChanged);
 	cvarCountdownPlayers.AddChangeHook(CvarChange);
-	cvarCountdownTime.AddChangeHook(CvarChange);
-	cvarCountdownHealth.AddChangeHook(CvarChange);
 	cvarLastPlayerGlow.AddChangeHook(CvarChange);
 	cvarSpecForceBoss.AddChangeHook(CvarChange);
 	cvarBossTeleporter.AddChangeHook(CvarChange);
@@ -656,8 +650,6 @@ public void EnableFF2()
 	BossCrits=cvarCrits.BoolValue;
 	arenaRounds=cvarArenaRounds.IntValue;
 	circuitStun=cvarCircuitStun.FloatValue;
-	countdownHealth=cvarCountdownHealth.IntValue;
-	countdownPlayers=cvarCountdownPlayers.IntValue;
 	countdownTime=cvarCountdownTime.IntValue;
 	lastPlayerGlow=cvarLastPlayerGlow.BoolValue;
 	bossTeleportation=cvarBossTeleporter.BoolValue;
@@ -1137,14 +1129,6 @@ public void CvarChange(ConVar convar, const char[] oldValue, const char[] newVal
 	else if(convar==cvarCountdownPlayers)
 	{
 		countdownPlayers=StringToInt(newValue);
-	}
-	else if(convar==cvarCountdownTime)
-	{
-		countdownTime=StringToInt(newValue);
-	}
-	else if(convar==cvarCountdownHealth)
-	{
-		countdownHealth=StringToInt(newValue);
 	}
 	else if(convar==cvarLastPlayerGlow)
 	{
@@ -2306,7 +2290,29 @@ public Action StartRound(Handle timer)
 {
 	CreateTimer(10.0, Timer_NextBossPanel, _, TIMER_FLAG_NO_MAPCHANGE);
 	UpdateHealthBar();
+
+	CreateTimer(6.5, Timer_StartDrawGame, _, TIMER_FLAG_NO_MAPCHANGE);
+
 	return Plugin_Handled;
+}
+
+public Action Timer_StartDrawGame(Handle timer)
+{
+	int bosscount=0, playerCount=0;
+
+	for(int client=1; client<=MaxClients; client++)
+	{
+		if(IsValidClient(client) && IsPlayerAlive(client))
+		{
+			playerCount++;
+
+			if(IsBoss(client))
+				bosscount++;
+		}
+	}
+
+	timeleft=(bosscount*40.0)+(playerCount*20.0)+60.0;
+	DrawGameTimer=CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action Timer_NextBossPanel(Handle timer)
@@ -5172,7 +5178,7 @@ public Action CheckAlivePlayers(Handle timer)
 	{
 		ForceTeamWin(BossTeam);
 	}
-	else if(RedAlivePlayers==1 && BlueAlivePlayers && Boss[0] && !DrawGameTimer)
+	else if(RedAlivePlayers==1 && BlueAlivePlayers && Boss[0])
 	{
 		char sound[PLATFORM_MAX_PATH];
 		if(FindSound("lastman", sound, sizeof(sound)))
@@ -5201,6 +5207,7 @@ public Action CheckAlivePlayers(Handle timer)
 		executed=true;
 	}
 
+/*
 	if(RedAlivePlayers<=countdownPlayers && BossHealth[0]>countdownHealth && countdownTime>1 && !executed2)
 	{
 		if(FindEntityByClassname2(-1, "team_control_point")!=-1)
@@ -5210,94 +5217,153 @@ public Action CheckAlivePlayers(Handle timer)
 		}
 		executed2=true;
 	}
+*/
 	return Plugin_Continue;
 }
 
 public Action Timer_DrawGame(Handle timer)
 {
-	if(BossHealth[0]<countdownHealth || CheckRoundState()!=FF2RoundState_RoundRunning || RedAlivePlayers>countdownPlayers)
+	if(CheckRoundState()!=FF2RoundState_RoundRunning)
 	{
 		executed2=false;
 		return Plugin_Stop;
 	}
 
-	int time=timeleft;
-	timeleft--;
+	FF2HudQueue hudQueue;
+	FF2HudDisplay hudDisplay;
+
+	timeleft-=0.1; // TODO: Forward
+
 	char timeDisplay[6];
-	if(time/60>9)
+	int min=RoundToFloor(FloatDiv(timeleft, 60.0)), sec=RoundFloat(timeleft)-(min*60);
+
+	if(timeleft<60.0)
 	{
-		IntToString(time/60, timeDisplay, sizeof(timeDisplay));
+		Format(timeDisplay, sizeof(timeDisplay), "%.1f", timeleft);
 	}
 	else
 	{
-		Format(timeDisplay, sizeof(timeDisplay), "0%i", time/60);
+		if(min < 10)
+			Format(timeDisplay, sizeof(timeDisplay), "0%i", min);
+		else
+			IntToString(min, timeDisplay, sizeof(timeDisplay));
+
+		if(sec < 10)
+			Format(timeDisplay, sizeof(timeDisplay), "%s:0%i", timeDisplay, sec);
+		else
+			Format(timeDisplay, sizeof(timeDisplay), "%s:%i", timeDisplay, sec);
 	}
 
-	if(time%60>9)
-	{
-		Format(timeDisplay, sizeof(timeDisplay), "%s:%i", timeDisplay, time%60);
-	}
-	else
-	{
-		Format(timeDisplay, sizeof(timeDisplay), "%s:0%i", timeDisplay, time%60);
-	}
-
-	SetHudTextParams(-1.0, 0.17, 1.1, 255, 255, 255, 255);
+	SetHudTextParams(-1.0, 0.17, 0.11, 255, 255, 255, 255);
 	for(int client=1; client<=MaxClients; client++)
 	{
-		if(IsValidClient(client))
+		if(IsValidClient(client) && !IsFakeClient(client))
 		{
-			FF2_ShowSyncHudText(client, timeleftHUD, timeDisplay);
+			hudQueue = new FF2HudQueue(client, "Timer");
+			SetGlobalTransTarget(client);
+
+			hudDisplay=new FF2HudDisplay("Game Timer", timeDisplay);
+			hudQueue.AddHud(hudDisplay);
+			delete hudDisplay;
+
+			hudQueue.ShowSyncHudQueueText(timeleftHUD);
+			hudQueue.KillSelf();
 		}
 	}
 
-	switch(time)
+	int timeInteger = RoundFloat(timeleft);
+	static int lastNotice = -1;
+	if(lastNotice != timeInteger)
 	{
-		case 300:
+		lastNotice = timeInteger;
+
+		switch(timeInteger)
 		{
-			EmitSoundToAll("vo/announcer_ends_5min.mp3");
-		}
-		case 120:
-		{
-			EmitSoundToAll("vo/announcer_ends_2min.mp3");
-		}
-		case 60:
-		{
-			EmitSoundToAll("vo/announcer_ends_60sec.mp3");
-		}
-		case 30:
-		{
-			EmitSoundToAll("vo/announcer_ends_30sec.mp3");
-		}
-		case 10:
-		{
-			EmitSoundToAll("vo/announcer_ends_10sec.mp3");
-		}
-		case 1, 2, 3, 4, 5:
-		{
-			char sound[PLATFORM_MAX_PATH];
-			Format(sound, sizeof(sound), "vo/announcer_ends_%isec.mp3", time);
-			EmitSoundToAll(sound);
-		}
-		case 0:
-		{
-			if(!cvarCountdownResult.BoolValue)
+			case 300:
 			{
-				for(int client=1; client<=MaxClients; client++)  //Thx MasterOfTheXP
+				EmitSoundToAll("vo/announcer_ends_5min.mp3");
+			}
+			case 120:
+			{
+				EmitSoundToAll("vo/announcer_ends_2min.mp3");
+			}
+			case 60:
+			{
+				EmitSoundToAll("vo/announcer_ends_60sec.mp3");
+			}
+			case 30:
+			{
+				EmitSoundToAll("vo/announcer_ends_30sec.mp3");
+			}
+			case 10:
+			{
+				EmitSoundToAll("vo/announcer_ends_10sec.mp3");
+			}
+			case 1, 2, 3, 4, 5:
+			{
+				char sound[PLATFORM_MAX_PATH];
+				Format(sound, sizeof(sound), "vo/announcer_ends_%isec.mp3", timeInteger);
+				EmitSoundToAll(sound);
+			}
+			case 0:
+			{
+				ForceTeamWin(TFTeam_Unassigned);
+
+				/*
+				int humanCount=1, aliveCount, boss, bossTotalHealth, bossTotalHealthMax;
+				for(int client=1; client<=MaxClients; client++)
 				{
-					if(IsClientInGame(client) && IsPlayerAlive(client))
+					if(!IsClientInGame(client)) continue;
+
+					if(TF2_GetClientTeam(client) != BossTeam || !IsBoss(client))
 					{
-						ForcePlayerSuicide(client);
+						humanCount++;
+						if(IsPlayerAlive(client))
+							aliveCount++;
+					}
+					else if((boss = GetBossIndex(client)) != -1)
+					{
+						bossTotalHealthMax+=BossHealthMax[boss]*BossLivesMax[boss];
+						bossTotalHealth+=BossHealth[boss];
 					}
 				}
+
+				float ratio = FloatDiv(view_as<float>(aliveCount), view_as<float>(humanCount));
+				float damaged = bossTotalHealthMax * ratio;
+				TFTeam winTeam = TFTeam_Unassigned;
+				if(bossTotalHealth > damaged)
+				{
+					winTeam = BossTeam;
+				}
+				else if(bossTotalHealth < damaged)
+				{
+					winTeam = BossTeam == TFTeam_Blue ? TFTeam_Red : TFTeam_Blue;
+				}
+
+				ForceTeamWin(winTeam);  //Stalemate
+				*/
+				/*
+				if(!cvarCountdownResult.BoolValue)
+				{
+					for(int client=1; client<=MaxClients; client++)  //Thx MasterOfTheXP
+					{
+						if(IsClientInGame(client) && IsPlayerAlive(client))
+						{
+							ForcePlayerSuicide(client);
+						}
+					}
+				}
+				else
+				{
+					ForceTeamWin(TFTeam_Unassigned);  //Stalemate
+				}
+				*/
+
+				return Plugin_Stop;
 			}
-			else
-			{
-				ForceTeamWin(TFTeam_Unassigned);  //Stalemate
-			}
-			return Plugin_Stop;
 		}
 	}
+
 	return Plugin_Continue;
 }
 
