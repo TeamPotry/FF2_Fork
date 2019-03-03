@@ -55,7 +55,7 @@ public Action RestoreModel(Handle timer, int boss)
     if(client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client)) return Plugin_Continue;
 
     char normalModel[PLATFORM_MAX_PATH];
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "rage_model", "normal model", normalModel, PLATFORM_MAX_PATH);	//normal model
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "rage model", "normal model", normalModel, PLATFORM_MAX_PATH);	//normal model
 
     ChangeBossModel(normalModel, client);
 
