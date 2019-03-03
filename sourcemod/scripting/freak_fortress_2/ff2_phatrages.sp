@@ -38,7 +38,7 @@ public void OnPluginStart()
 	fov_offset = FindSendPropInfo("CBasePlayer", "m_iFOV");
 	zoom_offset = FindSendPropInfo("CBasePlayer", "m_iDefaultFOV");
 	HookEvent("teamplay_round_win", Event_RoundEnd, EventHookMode_PostNoCopy);
-	HookEvent("teamplay_round_start", Event_RoundStart, EventHookMode_PostNoCopy);
+	// HookEvent("teamplay_round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 
 	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
 }
@@ -63,9 +63,9 @@ public Action:Event_RoundEnd(Handle:event,const String:name[],bool:dontBroadcast
 	CreateTimer(0.1, EndSickness);
 	CreateTimer(0.2, ResetScale);
 	CreateTimer(0.3, EndDrowning);
-	CreateTimer(0.4, ResetCaber);
+	// CreateTimer(0.4, ResetCaber);
 }
-
+/*
 public Action:Event_RoundStart(Handle:event,const String:name[],bool:dontBroadcast)
 {
 	new Boss=GetClientOfUserId(FF2_GetBossUserId(0));
@@ -105,7 +105,7 @@ public Action:ResetCaber(Handle:timer)
 	}
 	return Plugin_Stop;
 }
-
+*/
 public PlayerSpawnEvent(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
