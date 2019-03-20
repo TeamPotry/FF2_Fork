@@ -43,19 +43,6 @@ int ChangeLogLastTime;
 
 int Boss[MAXPLAYERS+1];
 
-enum DateTimeCheck
-{
-    Check_None = -1,
-	Check_Year,
-	Check_Month,
-	Check_Day,
-	Check_Hour,
-	Check_Minute,
-	Check_Second,
-
-	Check_MaxCount
-};
-
 methodmap FF2PlayerData < KeyValues {
 	public FF2PlayerData(int client) {
 		char authId[25], queryStr[256], dataFile[PLATFORM_MAX_PATH];

@@ -26,6 +26,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2items>
 #include <tf2attributes>
 #include <tutorial_text>
+#include <unixtime_sourcemod>
 
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
@@ -1218,7 +1219,7 @@ public Action Timer_Announce(Handle timer)
 					SetGlobalTransTarget(client);
 
 					LoadedPlayerData[client].GetString("changelog_last_view_time", targetTimeStr, sizeof(targetTimeStr));
-					if(GetDayChange(Check_Second, targetTimeStr, timeStr)) // ???
+					if(DateToTimestamp(targetTimeStr) < ChangeLogLastTime) // ???
 					{
 						CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Changelog Notice", timeStr);
 					}
