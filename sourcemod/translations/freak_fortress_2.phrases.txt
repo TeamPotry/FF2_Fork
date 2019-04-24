@@ -8,6 +8,10 @@
 	{
 		"en"		"Type {olive}/ff2{default} in chat to open the menu"
 	}
+	"Type ff2_advance to Open Menu"
+	{
+		"en"		"Type {olive}/ff2_advance{default} in chat to open the advance menu"
+	}
 	"Wait for Health Value"
 	{
 		"#format"	"{1:i},{2:s}"
@@ -71,39 +75,39 @@
 	}
 	"Scout Advice"
 	{
-		"en"		"The Crit-a-Cola grants crits instead of minicrits.\nThe Fan O' War removes 5%% rage on hit.\nPistols gain minicrits.\nThe Candy Cane drops a health pack on hit."
+		"en"		""
 	}
 	"Soldier Advice"
 	{
-		"en"		"The Battalion's Backup fills its meter when hit.  Damage is heavily reduced to nearby players while active.\nThe Half-Zatoichi heals 35HP on hit, overheals to +25, and honorbound is removed on hit.\nBoots reduce fall damage and Mantreads create greater rocket jumps.\nAll guns minicrit Boss in midair (Direct Hit gets crits), and the Reserve Shooter has faster weapon switch and a small damage buff.\nAir Strike gains an extra shot every 200 damage."
+		"en"		"All guns minicrit Boss in midair (Direct Hit gets crits)"
 	}
 	"Pyro Advice"
 	{
-		"en"		"Postal Pummeler and skins uses stats of Fire Axe.\nThe Flare Gun is replaced by the Mega Detonator.\nAirblasting the boss builds rage and lengthens the Vagineer's uber."
+		"en"		"Airblasting the boss builds rage and lengthens the Vagineer's uber."
 	}
 	"Demo Advice"
 	{
-		"en"		"The shields block one hit from the Boss.\nEyelander gains heads on hit.\nThe Tide Turner recharges if you hit the boss.\nThe Half-Zatoichi heals 35HP on hit and can overheal to +25. Honorbound is removed on hit."
+		"en"		""
 	}
 	"Heavy Advice"
 	{
-		"en"		"Natascha and the KGB are replaced with the\nMinigun and Fists, respectively.\nThe Gloves of Running are quite quick but cause you to lose more health.\nThe Holiday Punch will remove any stun on you if you hit Boss while stunned."
+		"en"		""
 	}
 	"Engineer Advice"
 	{
-		"en"		"All maps only have small ammo packs.\nThe Frontier Justice gains crits only while your sentry is targeting the Boss."
+		"en"		""
 	}
 	"Medic Advice"
 	{
-		"en"		"Your medigun is a combination of the Medigun, Kritzkrieg, and Quick-Fix. Charge starts at 40 percent and lasts for 150 percent after activation.\nSyringe Gun: on hit: +5%% ubercharge, has Overdose's speed effect.\nCrossbow: Always crits, +150%% damage, +10%% uber on hit."
+		"en"		"Your medigun is a combination of the Medigun, Kritzkrieg, and Quick-Fix."
 	}
 	"Sniper Advice"
 	{
-		"en"		"All of your weapons have critical hits.\nJarate removes 8%% rage.\nBack-equipped weapons are replaced with SMG.\nDefault Sniper Rifle causes Boss to glow. Glow time scales with charge."
+		"en"		"All of your weapons have critical hits.\nBack-equipped weapons are replaced with SMG."
 	}
 	"Spy Advice"
 	{
-		"en"		"Backstab does about 10 percent of Boss's max health.\nThe Cloak and Dagger is replaced with the normal watch.\nAll revolvers minicrit.\nYour Eternal Reward/Wanga Prick backstabs will disguise you instantly.\nKunai backstabs will give you a health bonus."
+		"en"		"Backstab does about 10 percent of Boss's max health.\nThe Cloak and Dagger is replaced with the normal watch."
 	}
 	"Melee Advice"
 	{
@@ -132,6 +136,58 @@
 	"View Queue Points"
 	{
 		"en"		"Queue points"
+	}
+	"Advance Menu Title"
+	{
+		"en"		"Advance Setting Menu (/ff2_advance)"
+	}
+	"Boss Difficulty Setting"
+	{
+		"en"		"Set My Boss Difficulty (/ff2_diffculty)"
+	}
+	"Hud Setting"
+	{
+		"en"		"Set My HUD Setting (/ff2_hud)"
+	}
+	"HudMenu Title"
+	{
+		"en"		"HUD Setting"
+	}
+	"HudMenu Boss"
+	{
+		"en"		"Playing Boss"
+	}
+	"HudMenu Player"
+	{
+		"en"		"Playing Human"
+	}
+	"HudMenu Observer"
+	{
+		"en"		"Observer"
+	}
+	"HudMenu Other"
+	{
+		"en"		"Other HUD"
+	}
+	"Hud Setting NONE"
+	{
+		"en"		"You did nothing on this! (Same as VIEW)"
+	}
+	"Hud Setting VIEW"
+	{
+		"en"		"Can view = YOU, Other Players"
+	}
+	"Hud Setting PUBLIC"
+	{
+		"en"		"Can view = Other Players"
+	}
+	"Hud Setting PRIVATE"
+	{
+		"en"		"Can view = NO ONE."
+	}
+	"Hud Setting Not Found!"
+	{
+		"en"		"Hud Setting Not Found!"
 	}
 	"Exit Menu"
 	{
@@ -245,9 +301,17 @@
 	{
 		"en"		"Toggle music (/ff2_music)"
 	}
+	"Toggle Music Switch"
+	{
+		"en"		"Turn the Freak Fortress 2 music..."
+	}
 	"Toggle Monologue"
 	{
 		"en"		"Toggle monologues (/ff2_voice)"
+	}
+	"Toggle Monologue Switch"
+	{
+		"en"		"Turn the Freak Fortress 2 voices..."
 	}
 	"Toggle Class Changes"
 	{
@@ -262,6 +326,11 @@
 	{
 		"#format"	"{1:s}"
 		"en"		"Type {olive}/ff2_changelog{default} to view the {olive}{1}{default} changelog."
+	}
+	"FF2 Changelog Notice"
+	{
+		"#format"	"{1:s}"
+		"ko"		"Type {olive}/ff2_changelog{default}: There is new changes since you last seen. ({1})"
 	}
 	"Charge Status"
 	{
@@ -352,5 +421,14 @@
 	{
 		"#format"	"{1:i}"
 		"en"		"Damage: {1}"
+	}
+	"Dev Mode"
+	{
+		"en"	"Developer Mode(∞)"
+	}
+	"Human Hero"
+	{
+		"#format"	"{1:N},{2:s}"
+		"en"	"{1} has became Hero({orange}{2}{default})! "
 	}
 }

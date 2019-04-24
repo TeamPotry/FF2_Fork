@@ -19,4 +19,9 @@
     {
         "en"    "Ouch!  Watch your head!!"
     }
+    "Special Attack"
+    {
+        "#format"   "{1:N},{2:s},{3:s},{4:d}"
+        "en"    "{red}{1}{default}'s {orange}{3}{default}! ➔ {blue}{2}{default} (-{orange}{4}{default})"
+    }
 }

@@ -1,6 +1,8 @@
 #include <sourcemod>
 #include <morecolors>
 #include <freak_fortress_2>
+#include <ff2_potry>
+#include <ff2_boss_selection>
 
 public Plugin myinfo=
 {
@@ -14,9 +16,10 @@ bool g_bDEVmode = false;
 
 public void OnPluginStart()
 {
-    RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
+	RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
 
-    HookEvent("teamplay_round_start", OnRoundStart);
+	HookEvent("teamplay_round_start", OnRoundStart);
+	LoadTranslations("freak_fortress_2.phrases");
 }
 
 public Action Command_DevMode(int client, int args)
@@ -41,4 +44,65 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 	}
 
 	return Plugin_Continue;
+}
+
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
+{
+	if(!g_bDEVmode) return;
+
+	int client = hudQueue.ClientIndex;
+	SetGlobalTransTarget(client);
+	FF2HudDisplay hudDisplay = null;
+	char text[256];
+	hudQueue.GetName(text, sizeof(text));
+
+	bool changed = false;
+
+	if(StrEqual(text, "Boss"))
+	{
+		int noticehudId = hudQueue.FindHud("Activate Rage");
+		if(noticehudId != -1)
+		{
+			hudQueue.SetHud(noticehudId, (hudDisplay = hudQueue.GetHud(noticehudId)));
+		}
+		delete hudDisplay;
+		changed = true;
+	}
+	else if(StrEqual(text, "Observer"))
+	{
+		int observer = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+		changed = IsBoss(observer);
+	}
+
+	if(changed)
+	{
+		Format(text, sizeof(text), "%t", "Dev Mode");
+
+		hudDisplay = new FF2HudDisplay("Dev Mode", text);
+		hudQueue.AddHud(hudDisplay);
+		delete hudDisplay;
+	}
+
+	return;
+}
+
+public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, const char[] ruleName, const char[] value)
+{
+	if(StrEqual(ruleName, "need_dev_mode"))
+		return g_bDEVmode ? Plugin_Continue : Plugin_Handled;
+
+	return Plugin_Continue;
+}
+
+public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[] ruleName, const char[] value)
+{
+	if(StrEqual(ruleName, "need_dev_mode"))
+		return g_bDEVmode ? Plugin_Continue : Plugin_Handled;
+
+	return Plugin_Continue;
+}
+
+stock bool IsBoss(int client)
+{
+    return FF2_GetBossIndex(client) != -1;
 }

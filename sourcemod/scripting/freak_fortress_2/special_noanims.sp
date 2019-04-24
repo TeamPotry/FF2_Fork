@@ -94,8 +94,9 @@ void Rage_New_Weapon(int boss, const char[] abilityName)
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "classname", classname, sizeof(classname));
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "attributes", attributes, sizeof(attributes));
 
-	int slot=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "slot");
-	TF2_RemoveWeaponSlot(client, slot);
+	int slot=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "slot", -1);
+	if(slot >= 0)
+		TF2_RemoveWeaponSlot(client, slot);
 
 	int index=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "index");
 	int weapon=SpawnWeapon(client, classname, index, 101, 5, attributes);

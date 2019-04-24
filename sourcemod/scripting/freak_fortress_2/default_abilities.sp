@@ -6,6 +6,7 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <freak_fortress_2>
+#include <ff2_potry>
 
 #pragma newdecls required
 
@@ -24,13 +25,12 @@ Handle OnSuperJump;
 Handle OnRage;
 Handle OnWeighdown;
 
-Handle gravityDatapack[MAXPLAYERS+1];
+// Handle gravityDatapack[MAXPLAYERS+1];
 
 Handle jumpHUD;
 
 bool enableSuperDuperJump[MAXPLAYERS+1];
 float UberRageCount[MAXPLAYERS+1];
-TFTeam BossTeam=TFTeam_Blue;
 
 ConVar cvarOldJump;
 ConVar cvarBaseJumperStun;
@@ -95,7 +95,6 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			UberRageCount[client]=0.0;
 		}
 
-		CreateTimer(0.3, Timer_GetBossTeam, _, TIMER_FLAG_NO_MAPCHANGE);
 		CreateTimer(9.11, StartBossTimer, _, TIMER_FLAG_NO_MAPCHANGE);  //TODO: Investigate.
 	}
 	return Plugin_Continue;
@@ -111,12 +110,23 @@ public Action StartBossTimer(Handle timer)  //TODO: What.
 		}
 	}
 }
-
-public Action Timer_GetBossTeam(Handle timer)
+/*
+public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot);
 {
-	BossTeam=FF2_GetBossTeam();
-	return Plugin_Continue;
+	if(StrEqual(abilityName, "bravejump", false)
+	|| StrEqual(abilityName, "teleport", false))
+	{
+		float angles[3];
+		GetClientEyeAngles(client, angles);
+		if(angles[0]>-45.0)
+		{
+			return Plugin_Handled;
+		}
+	}
+
+	return Plugin_Handled;
 }
+*/
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 {
@@ -223,7 +233,7 @@ void Rage_Stun(const char[] abilityName, int boss)
 
 	for(int target=1; target<=MaxClients; target++)
 	{
-		if(IsClientInGame(target) && IsPlayerAlive(target) && TF2_GetClientTeam(target)!=BossTeam)
+		if(IsClientInGame(target) && IsPlayerAlive(target) && TF2_GetClientTeam(target)!=TF2_GetClientTeam(client))
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
 			if(!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) && (GetVectorDistance(bossPosition, targetPosition)<=distance))
@@ -303,6 +313,14 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 		}
 		case 3:
 		{
+			float angles[3];
+			GetClientEyeAngles(client, angles);
+			if(angles[0]>-45.0)
+			{
+				ResetBossCharge(boss, slot);
+				return;
+			}
+
 			bool superJump=enableSuperDuperJump[boss];
 			Action action;
 			Call_StartForward(OnSuperJump);
@@ -339,24 +357,23 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			}
 			else
 			{
-				float angles[3];
-				GetClientEyeAngles(client, angles);
 				if(enableSuperDuperJump[boss])
 				{
-					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*500*multiplier;
-					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*500*multiplier;
+					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*600*multiplier;
+					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*600*multiplier;
 					velocity[2]=(750.0+175.0*charge/70+2000)*multiplier;
 					enableSuperDuperJump[boss]=false;
 				}
 				else
 				{
-					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*100*multiplier;
-					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*100*multiplier;
-					velocity[2]=(750.0+175.0*charge/70)*multiplier;
+					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*300*multiplier;
+					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*300*multiplier;
+					velocity[2]=(750.0+175.0*charge/70+200)*multiplier;
 				}
 			}
 
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+
 			char sound[PLATFORM_MAX_PATH];
 			if(FF2_FindSound("ability", sound, sizeof(sound), boss, true, slot))
 			{
@@ -397,6 +414,14 @@ void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 		}
 		case 3:
 		{
+			float angles[3];
+			GetClientEyeAngles(client, angles);
+			if(angles[0]>-45.0)
+			{
+				ResetBossCharge(boss, slot);
+				return;
+			}
+
 			Action action;
 			bool superJump=enableSuperDuperJump[boss];
 			Call_StartForward(OnSuperJump);
@@ -527,53 +552,42 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 		return;
 	}
 
-	float charge=FF2_GetBossCharge(boss, slot)+0.2;
 	if(!(GetEntityFlags(client) & FL_ONGROUND))
 	{
-		if(charge>=4.0)
+		float angles[3];
+		GetClientEyeAngles(client, angles);
+		if(angles[0]>60.0)
 		{
-			float angles[3];
-			GetClientEyeAngles(client, angles);
-			if(angles[0]>60.0)
+			Action action;
+			Call_StartForward(OnWeighdown);
+			Call_PushCell(boss);
+			Call_Finish(action);
+			if(action==Plugin_Handled || action==Plugin_Stop)
 			{
-				Action action;
-				Call_StartForward(OnWeighdown);
-				Call_PushCell(boss);
-				Call_Finish(action);
-				if(action==Plugin_Handled || action==Plugin_Stop)
-				{
-					return;
-				}
-
-				DataPack data;
-				float velocity[3];
-				if(gravityDatapack[client]==null)
-				{
-					gravityDatapack[client]=CreateDataTimer(2.0, Timer_ResetGravity, data, TIMER_FLAG_NO_MAPCHANGE);
-					data.WriteCell(GetClientUserId(client));
-					data.WriteFloat(GetEntityGravity(client));
-					data.Reset();
-				}
-
-				GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-				velocity[2]=-1000.0;
-				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
-				SetEntityGravity(client, 6.0);
-
-				FF2_SetBossCharge(boss, slot, 0.0);
+				return;
 			}
+
+			// DataPack data;
+			float velocity[3];
+			/*
+			if(gravityDatapack[client]==null)
+			{
+				gravityDatapack[client]=CreateDataTimer(2.0, Timer_ResetGravity, data, TIMER_FLAG_NO_MAPCHANGE);
+				data.WriteCell(GetClientUserId(client));
+				data.WriteFloat(GetEntityGravity(client));
+				data.Reset();
+			}
+			*/
+
+			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+			velocity[2]=-1200.0;
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+
+			FF2_SetBossCharge(boss, slot, 0.0);
 		}
-		else
-		{
-			FF2_SetBossCharge(boss, slot, charge);
-		}
-	}
-	else if(charge>0.3 || charge<0)
-	{
-		FF2_SetBossCharge(boss, slot, 0.0);
 	}
 }
-
+/*
 public Action Timer_ResetGravity(Handle timer, DataPack data)
 {
 	int client=GetClientOfUserId(data.ReadCell());
@@ -584,6 +598,7 @@ public Action Timer_ResetGravity(Handle timer, DataPack data)
 	gravityDatapack[client]=null;
 	return Plugin_Continue;
 }
+*/
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {

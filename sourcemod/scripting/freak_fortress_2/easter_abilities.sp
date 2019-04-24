@@ -108,7 +108,7 @@ public void OnProjectileSpawned(int entity)
 			if(StrEqual(classname, projectile, false))
 			{
 				char model[PLATFORM_MAX_PATH];
-				FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, PROJECTILE, "model", model, sizeof(model));
+				FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, PROJECTILE, "projectile_model", model, sizeof(model));
 				if(IsModelPrecached(model))
 				{
 					SetEntityModel(entity, model);
@@ -118,6 +118,12 @@ public void OnProjectileSpawned(int entity)
 					char bossName[64];
 					FF2_GetBossName(boss, bossName, sizeof(bossName));
 					LogError("[FF2 Easter Abilities] Model %s (used by boss %s for ability %s) isn't precached!", model, bossName, PROJECTILE);
+				}
+
+				float scale = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, PROJECTILE, "scale", 1.0);
+				if(scale != 1.0)
+				{
+					SetEntPropFloat(entity, Prop_Send, "m_flModelScale", scale);
 				}
 			}
 		}
