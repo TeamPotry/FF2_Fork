@@ -1,7 +1,7 @@
 #define MAJOR_REVISION "2"
-#define MINOR_REVISION "1"
-#define STABLE_REVISION "8"
-#define DEV_REVISION "alpha"
+#define MINOR_REVISION "2"
+#define STABLE_REVISION "0"
+// #define DEV_REVISION "alpha"
 #if !defined DEV_REVISION
 	#define PLUGIN_VERSION MAJOR_REVISION..."."...MINOR_REVISION..."."...STABLE_REVISION  //2.0.0
 #else
