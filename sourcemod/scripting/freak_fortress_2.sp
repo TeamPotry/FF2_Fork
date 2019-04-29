@@ -5238,7 +5238,7 @@ public Action Timer_DrawGame(Handle timer)
 	timeleft-=0.1; // TODO: Forward
 
 	char timeDisplay[6];
-	int min=RoundToFloor(FloatDiv(timeleft, 60.0)), sec=RoundFloat(timeleft)-(min*60);
+	int min=RoundToFloor(FloatDiv(timeleft, 60.0)), sec=RoundFloat(timeleft)-(min*60)-1;
 
 	if(timeleft<60.0)
 	{
