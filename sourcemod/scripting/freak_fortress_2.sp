@@ -4487,6 +4487,8 @@ public Action BossTimer(Handle timer)
 		{
 			continue;
 		}
+		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
+
 		FF2HudQueue bossHudQueue = new FF2HudQueue(client, "Boss");
 		FF2HudDisplay bossHudDisplay;
 		validBoss=true;

@@ -164,6 +164,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 	else if(StrEqual(abilityName, "bravejump", false))
 	{
+		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
 		Charge_BraveJump(abilityName, boss, slot, status);
 	}
 	else if(StrEqual(abilityName, "teleport", false))
