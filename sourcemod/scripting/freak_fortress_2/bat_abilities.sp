@@ -34,7 +34,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
-    if(StrEqual(classname, "tf_projectile_ball_ornament"))
+    if(StrEqual(classname, "tf_projectile_stun_ball"))
     {
         // It is ball.
         SDKHook(entity, SDKHook_SpawnPost, OnBallSpawned);
@@ -50,34 +50,45 @@ public Action OnBallSpawned(int entity)
 		int boss = FF2_GetBossIndex(owner);
 
 		if(FF2_HasAbility(boss, PLUGIN_NAME, "ball explosion"))
-			SDKHook(entity, SDKHook_StartTouch, OnBallTouched_Explosion);
+		{
+			SDKHook(entity, SDKHook_Think, OnBallTouched_Explosion);
+		}
+
 	}
 
 	return Plugin_Continue;
 }
 
-public void OnBallTouched_Explosion(int entity, int other)
+public void OnBallTouched_Explosion(int entity)
 {
-	if(other <= 0) return;
-
 	int client = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"), boss = FF2_GetBossIndex(client);
 	if(boss == -1) return;
 
 	int magnitude = FF2_GetAbilityArgument(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "magnitude", 60);
-	float pos[3], damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "damage", 40.0);
+	float pos[3], targetPos[3], damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "damage", 40.0);
 	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
 
-	SpawnExplosion(client, pos, magnitude, damage);
-	AcceptEntityInput(client, "kill");
+	for(int target = 1; target <= MaxClients; target++)
+	{
+		if(IsClientInGame(target) && IsPlayerAlive(target))	{
+			GetClientEyePosition(target, targetPos);
+			if(RoundFloat(GetVectorDistance(pos, targetPos)) < (magnitude * 2)) {
+				SpawnExplosion(client, pos, magnitude, damage);
+
+				AcceptEntityInput(entity, "kill");
+				return;
+			}
+		}
+	}
 }
 
-stock void SpawnExplosion(int owner, float pos[3], int magnitude, float damage)
+stock int SpawnExplosion(int owner, float pos[3], int magnitude, float damage)
 {
 	int explosion=CreateEntityByName("env_explosion");
 	DispatchKeyValueFloat(explosion, "DamageForce", damage);
 
 	SetEntProp(explosion, Prop_Data, "m_iMagnitude", magnitude, 4);
-	SetEntProp(explosion, Prop_Data, "m_iRadiusOverride", 200, 4);
+	SetEntProp(explosion, Prop_Data, "m_iRadiusOverride", magnitude*2, 4);
 	SetEntPropEnt(explosion, Prop_Data, "m_hOwnerEntity", owner);
 
 	DispatchSpawn(explosion);
