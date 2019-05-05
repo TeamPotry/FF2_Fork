@@ -71,7 +71,7 @@ public void OnBallTouched_Explosion(int entity)
 	for(int target = 1; target <= MaxClients; target++)
 	{
 		if(IsClientInGame(target) && IsPlayerAlive(target) && team != GetClientTeam(target)) {
-			GetClientEyePosition(target, targetPos);
+			GetClientAbsOrigin(target, targetPos);
 			if(RoundFloat(GetVectorDistance(pos, targetPos)) < (magnitude * 2)) {
 				SpawnExplosion(client, pos, magnitude, damage);
 
