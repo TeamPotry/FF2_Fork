@@ -64,13 +64,13 @@ public void OnBallTouched_Explosion(int entity)
 	int client = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"), boss = FF2_GetBossIndex(client);
 	if(boss == -1) return;
 
-	int magnitude = FF2_GetAbilityArgument(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "magnitude", 60);
+	int magnitude = FF2_GetAbilityArgument(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "magnitude", 60), team = GetClientTeam(client);
 	float pos[3], targetPos[3], damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "damage", 40.0);
 	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
 
 	for(int target = 1; target <= MaxClients; target++)
 	{
-		if(IsClientInGame(target) && IsPlayerAlive(target))	{
+		if(IsClientInGame(target) && IsPlayerAlive(target) && team != GetClientTeam(target)) {
 			GetClientEyePosition(target, targetPos);
 			if(RoundFloat(GetVectorDistance(pos, targetPos)) < (magnitude * 2)) {
 				SpawnExplosion(client, pos, magnitude, damage);
