@@ -75,7 +75,7 @@ public void OnBallTouched_Explosion(int entity)
 			if(RoundFloat(GetVectorDistance(pos, targetPos)) < (magnitude * 2)) {
 				SpawnExplosion(client, pos, magnitude, damage);
 
-				AcceptEntityInput(entity, "kill");
+				AcceptEntityInput(entity, "Kill");
 				return;
 			}
 		}
