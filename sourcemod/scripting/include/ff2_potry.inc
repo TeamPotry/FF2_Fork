@@ -107,7 +107,6 @@ enum HudQueueValue
     HudQueueValue_Last
 };
 
-enum HudValue
 {
     Hud_Info = 0,
     Hud_Display,
@@ -137,34 +136,34 @@ methodmap FF2HudDisplay < ArrayList
         return null;
     }
 */
-    public any GetValue(HudValue valueType)
+    public any GetValue(int valueType)
     {
-        return this.Get(view_as<int>(valueType));
+        return this.Get(valueType);
     }
 
-    public void SetValue(HudValue valueType, any value)
+    public void SetValue(int valueType, any value)
     {
-        this.Set(view_as<int>(valueType), value);
+        this.Set(valueType, value);
     }
 
     public void GetInfo(char[] infoStr, int length)
     {
-        this.GetString(view_as<int>(Hud_Info), infoStr, length);
+        this.GetString(Hud_Info, infoStr, length);
     }
 
     public void SetInfo(const char[] infoStr)
     {
-        this.SetString(view_as<int>(Hud_Info), infoStr);
+        this.SetString(Hud_Info, infoStr);
     }
 
     public void GetDisplay(char[] displayStr, int length)
     {
-        this.GetString(view_as<int>(Hud_Display), displayStr, length);
+        this.GetString(Hud_Display, displayStr, length);
     }
 
     public void SetDisplay(const char[] displayStr)
     {
-        this.SetString(view_as<int>(Hud_Display), displayStr);
+        this.SetString(Hud_Display, displayStr);
     }
 /*
     property Handle ParentHud {
