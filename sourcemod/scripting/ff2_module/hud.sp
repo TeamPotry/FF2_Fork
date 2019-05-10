@@ -60,6 +60,7 @@ void HudInit()
 	// CreateNative("FF2HudConfig.GetConfigKeyValue", Native_FF2HudConfig_GetConfigKeyValue);
 	CreateNative("FF2HudConfig.GetDefaultSettiing", Native_FF2HudConfig_GetDefaultSettiing);
 
+	CreateNative("FF2HudDisplay.CreateDisplay", Native_FF2HudDisplay_CreateDisplay);
 	CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
 
 	CreateNative("FF2HudQueue.KillSelf", Native_FF2HudQueue_KillSelf);
@@ -116,13 +117,9 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 		}
 	}
 
-	FF2HudDisplay copiedHudDisplay = view_as<FF2HudDisplay>(hudDisplay.Clone());
-
 	int index = queue.FindValue(view_as<FF2HudDisplay>(null));
 	if(index != -1)
-		queue.SetHud(index, copiedHudDisplay);
-	else
-		delete copiedHudDisplay;
+		queue.SetHud(index, hudDisplay);
 
 	return index;
 }
@@ -163,6 +160,19 @@ public int Native_FF2HudConfig_GetDefaultSettiing(Handle plugin, int numParams)
 	kvHudConfigs.JumpToKey(name);
 
 	return kvHudConfigs.GetNum("default_setting", -1);
+}
+
+public int Native_FF2HudDisplay_CreateDisplay(Handle plugin, int numParams)
+{
+	char info[64], display[64];
+	GetNativeString(1, info, sizeof(info));
+	GetNativeString(2, display, sizeof(display));
+
+	FF2HudDisplay array = view_as<FF2HudDisplay>(new ArrayList(64, view_as<int>(HudValue_Last)));
+	array.SetString(Hud_Info, info);
+	array.SetString(Hud_Display, display);
+
+	return view_as<int>(array);
 }
 
 public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numParams)

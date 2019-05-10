@@ -107,6 +107,7 @@ enum HudQueueValue
     HudQueueValue_Last
 };
 
+enum
 {
     Hud_Info = 0,
     Hud_Display,
@@ -121,11 +122,7 @@ methodmap FF2HudConfig {
 
 methodmap FF2HudDisplay < ArrayList
 {
-    public FF2HudDisplay(char[] info, char[] display)
-    {
-        FF2HudDisplay array = view_as<FF2HudDisplay>(new ArrayList(64, view_as<int>(HudValue_Last)));
-        array.SetString(view_as<int>(Hud_Info), info);
-        array.SetString(view_as<int>(Hud_Display), display);
+    public static native FF2HudDisplay CreateDisplay(char[] info, char[] display);
 
     public any GetValue(int valueType)
     {
