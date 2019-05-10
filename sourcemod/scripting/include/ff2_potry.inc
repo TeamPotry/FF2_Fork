@@ -127,15 +127,6 @@ methodmap FF2HudDisplay < ArrayList
         array.SetString(view_as<int>(Hud_Info), info);
         array.SetString(view_as<int>(Hud_Display), display);
 
-        return array;
-    }
-/*
-    public FF2HudDisplay KillSelf()
-    {
-        delete this;
-        return null;
-    }
-*/
     public any GetValue(int valueType)
     {
         return this.Get(valueType);
@@ -165,19 +156,7 @@ methodmap FF2HudDisplay < ArrayList
     {
         this.SetString(Hud_Display, displayStr);
     }
-/*
-    property Handle ParentHud {
-        public Get()
-        {
-            return this.GetValue(Hud_ParentHud);
-        }
 
-        public Set(Handle sync)
-        {
-            this.SetValue(Hud_ParentHud, sync);
-        }
-    }
-*/
     public native void ShowSyncHudDisplayText(int client, Handle sync = null);
 }
 
