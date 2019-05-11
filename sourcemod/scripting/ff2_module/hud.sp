@@ -118,8 +118,10 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	}
 
 	int index = queue.FindValue(view_as<FF2HudDisplay>(null));
-	if(index != -1)
+	if(index != -1) {
 		queue.SetHud(index, hudDisplay);
+		// PrintToChatAll("%x", hudDisplay);
+	}
 
 	return index;
 }
