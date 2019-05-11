@@ -4507,7 +4507,6 @@ public Action BossTimer(Handle timer)
 
 		bossHudDisplay=FF2HudDisplay.CreateDisplay("Rage Meter", text);
 		bossHudQueue.AddHud(bossHudDisplay);
-		delete bossHudDisplay;
 
 		if(RoundFloat(BossCharge[boss][0])==100.0)
 		{
@@ -4523,7 +4522,6 @@ public Action BossTimer(Handle timer)
 
 				bossHudDisplay=FF2HudDisplay.CreateDisplay("Activate Rage", text);
 				bossHudQueue.AddHud(bossHudDisplay);
-				delete bossHudDisplay;
 
 				char sound[PLATFORM_MAX_PATH];
 				if(FindSound("full rage", sound, sizeof(sound), boss) && emitRageSound[boss])
@@ -4543,7 +4541,6 @@ public Action BossTimer(Handle timer)
 
 			bossHudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", text);
 			bossHudQueue.AddHud(bossHudDisplay);
-			delete bossHudDisplay;
 		}
 
 		bossHudQueue.ShowSyncHudQueueText(rageHUD);
