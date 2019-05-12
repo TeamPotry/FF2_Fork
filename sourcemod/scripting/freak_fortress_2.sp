@@ -7427,7 +7427,7 @@ public void HudSettingMenu(int client, const char[] name)
 
 	GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
 	Menu afterMenu=new Menu(HudSetting_Handler);
-	HudSettingValue value;
+	int value;
 	bool changedLanguage=false;
 
 	afterMenu.SetTitle(name);
@@ -7475,13 +7475,13 @@ void HudDataMenu(int client, char[] name)
 {
 	char text[256], tempText[80];
 
-	HudSettingValue value=GetHudSetting(client, name);
+	int value=GetHudSetting(client, name);
 	Menu menu=new Menu(HudData_Handler);
 	GetHudSettingString(value, text, 8);
 
 	menu.SetTitle("HUD SETTING > %s: %s", name, text);
 
-	for(HudSettingValue loop=HudSetting_None; loop < HudSettingValue_Last; view_as<int>(loop)++)
+	for(int loop=HudSetting_None; loop < HudSettingValue_Last; loop++)
 	{
 		GetHudSettingString(loop, text, 8);
 		Format(tempText, sizeof(tempText), "Hud Setting %s", text);
@@ -7502,7 +7502,7 @@ public int HudData_Handler(Menu menu, MenuAction action, int client, int selecti
 		char infoBuf[64], statusString[8];
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
-		HudSettingValue value = view_as<HudSettingValue>(selection-1);
+		int value = selection-1;
 		SetHudSetting(client, infoBuf, value);
 		GetHudSettingString(value, statusString, 8);
 

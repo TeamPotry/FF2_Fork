@@ -41,16 +41,16 @@ stock KeyValues LoadHudConfig()
 	return kv;
 }
 
-stock HudSettingValue GetHudSetting(int client, char[] hudId)
+stock int GetHudSetting(int client, char[] hudId)
 {
 	LoadedHudData[client].GoToHudData(hudId);
-	return view_as<HudSettingValue>(LoadedHudData[client].GetNum("setting_value", -1));
+	return LoadedHudData[client].GetNum("setting_value", -1);
 }
 
-stock void SetHudSetting(int client, char[] hudId, HudSettingValue value)
+stock void SetHudSetting(int client, char[] hudId, int value)
 {
 	LoadedHudData[client].GoToHudData(hudId, true);
-	LoadedHudData[client].SetNum("setting_value", view_as<int>(value));
+	LoadedHudData[client].SetNum("setting_value", value);
 }
 
 // Native things
@@ -78,7 +78,7 @@ public int Native_FF2HudQueue_KillSelf(Handle plugin, int numParams)
 	FF2HudQueue queue = GetNativeCell(1);
 	FF2HudDisplay willDeleted;
 
-	for(int loop = view_as<int>(HudQueueValue_Last); loop < queue.Length; loop++)
+	for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
 	{
 		willDeleted = queue.GetHud(loop);
 		if(willDeleted != null)
@@ -97,7 +97,7 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	char info[80], name[64];
 	queue.GetName(name, sizeof(name));
 	hudDisplay.GetInfo(info, sizeof(info));
-	HudSettingValue value = GetHudSetting(queue.ClientIndex, info);
+	int value = GetHudSetting(queue.ClientIndex, info);
 
 	if(value == HudSetting_None)
 	{
@@ -134,7 +134,7 @@ public int Native_FF2HudQueue_FindHud(Handle plugin, int numParams)
 	char info[80];
 	FF2HudDisplay hudDisplay;
 
-	for(int loop = view_as<int>(HudQueueValue_Last); queue.Length > loop; loop++)
+	for(int loop = HudQueueValue_Last; queue.Length > loop; loop++)
 	{
 		if((hudDisplay = queue.GetHud(loop)) != null)
 		{
@@ -206,7 +206,7 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
     int displayCount = 0;
     Forward_OnCalledQueue(queue);
 
-    for(int loop = view_as<int>(HudQueueValue_Last); loop < queue.Length; loop++)
+    for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
     {
         displayArray = queue.GetHud(loop);
         if(displayArray == null)
