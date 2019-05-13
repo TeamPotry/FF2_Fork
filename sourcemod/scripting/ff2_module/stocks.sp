@@ -1,4 +1,4 @@
-public void GetHudSettingString(HudSettingValue value, char[] statusString, int buffer)
+public void GetHudSettingString(int value, char[] statusString, int buffer)
 {
     switch(value)
     {

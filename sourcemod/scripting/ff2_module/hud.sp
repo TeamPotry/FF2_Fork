@@ -41,16 +41,16 @@ stock KeyValues LoadHudConfig()
 	return kv;
 }
 
-stock HudSettingValue GetHudSetting(int client, char[] hudId)
+stock int GetHudSetting(int client, char[] hudId)
 {
 	LoadedHudData[client].GoToHudData(hudId);
-	return view_as<HudSettingValue>(LoadedHudData[client].GetNum("setting_value", -1));
+	return LoadedHudData[client].GetNum("setting_value", -1);
 }
 
-stock void SetHudSetting(int client, char[] hudId, HudSettingValue value)
+stock void SetHudSetting(int client, char[] hudId, int value)
 {
 	LoadedHudData[client].GoToHudData(hudId, true);
-	LoadedHudData[client].SetNum("setting_value", view_as<int>(value));
+	LoadedHudData[client].SetNum("setting_value", value);
 }
 
 // Native things
@@ -60,6 +60,7 @@ void HudInit()
 	// CreateNative("FF2HudConfig.GetConfigKeyValue", Native_FF2HudConfig_GetConfigKeyValue);
 	CreateNative("FF2HudConfig.GetDefaultSettiing", Native_FF2HudConfig_GetDefaultSettiing);
 
+	CreateNative("FF2HudDisplay.CreateDisplay", Native_FF2HudDisplay_CreateDisplay);
 	CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
 
 	CreateNative("FF2HudQueue.KillSelf", Native_FF2HudQueue_KillSelf);
@@ -77,11 +78,13 @@ public int Native_FF2HudQueue_KillSelf(Handle plugin, int numParams)
 	FF2HudQueue queue = GetNativeCell(1);
 	FF2HudDisplay willDeleted;
 
-	for(int loop = view_as<int>(HudQueueValue_Last); loop < queue.Length; loop++)
+	for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
 	{
 		willDeleted = queue.GetHud(loop);
-		if(willDeleted != null)
+		if(willDeleted != null)	{
+			// Debug("deleted %x", willDeleted);
 			delete willDeleted;
+		}
 	}
 
 	delete queue;
@@ -96,7 +99,8 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	char info[80], name[64];
 	queue.GetName(name, sizeof(name));
 	hudDisplay.GetInfo(info, sizeof(info));
-	HudSettingValue value = GetHudSetting(queue.ClientIndex, info);
+	int value = GetHudSetting(queue.ClientIndex, info);
+	bool visible = true;
 
 	if(value == HudSetting_None)
 	{
@@ -106,23 +110,25 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	if(value > HudSetting_None) {
 		if(other > 0) { // 나도 안보고 타인에게도 안보여줌
 			if(GetHudSetting(other, info) == HudSetting_ViewDisable) {
-				return -1;
+				visible = false;
 			}
 		}
 		else {
-			if(value == HudSetting_ViewAble
-				|| value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
-				return -1;
+			if(value == HudSetting_ViewAble || value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
+				visible = false;
 		}
 	}
 
-	FF2HudDisplay copiedHudDisplay = view_as<FF2HudDisplay>(hudDisplay.Clone());
+	if(!visible) {
+		delete hudDisplay;
+		return -1;
+	}
 
 	int index = queue.FindValue(view_as<FF2HudDisplay>(null));
-	if(index != -1)
-		queue.SetHud(index, copiedHudDisplay);
-	else
-		delete copiedHudDisplay;
+	if(index != -1) {
+		queue.SetHud(index, hudDisplay);
+		// Debug("Added %x", hudDisplay);
+	}
 
 	return index;
 }
@@ -135,7 +141,7 @@ public int Native_FF2HudQueue_FindHud(Handle plugin, int numParams)
 	char info[80];
 	FF2HudDisplay hudDisplay;
 
-	for(int loop = view_as<int>(HudQueueValue_Last); queue.Length > loop; loop++)
+	for(int loop = HudQueueValue_Last; queue.Length > loop; loop++)
 	{
 		if((hudDisplay = queue.GetHud(loop)) != null)
 		{
@@ -163,6 +169,19 @@ public int Native_FF2HudConfig_GetDefaultSettiing(Handle plugin, int numParams)
 	kvHudConfigs.JumpToKey(name);
 
 	return kvHudConfigs.GetNum("default_setting", -1);
+}
+
+public int Native_FF2HudDisplay_CreateDisplay(Handle plugin, int numParams)
+{
+	char info[64], display[64];
+	GetNativeString(1, info, sizeof(info));
+	GetNativeString(2, display, sizeof(display));
+
+	FF2HudDisplay array = view_as<FF2HudDisplay>(new ArrayList(64, view_as<int>(HudValue_Last)));
+	array.SetString(Hud_Info, info);
+	array.SetString(Hud_Display, display);
+
+	return view_as<int>(array);
 }
 
 public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numParams)
@@ -194,7 +213,7 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
     int displayCount = 0;
     Forward_OnCalledQueue(queue);
 
-    for(int loop = view_as<int>(HudQueueValue_Last); loop < queue.Length; loop++)
+    for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
     {
         displayArray = queue.GetHud(loop);
         if(displayArray == null)

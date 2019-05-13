@@ -63,9 +63,11 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 		int noticehudId = hudQueue.FindHud("Activate Rage");
 		if(noticehudId != -1)
 		{
-			hudQueue.SetHud(noticehudId, (hudDisplay = hudQueue.GetHud(noticehudId)));
+			hudDisplay = hudQueue.GetHud(noticehudId);
+			hudQueue.SetHud(noticehudId, null);
+			delete hudDisplay;
 		}
-		delete hudDisplay;
+
 		changed = true;
 	}
 	else if(StrEqual(text, "Observer"))
@@ -78,9 +80,8 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 	{
 		Format(text, sizeof(text), "%t", "Dev Mode");
 
-		hudDisplay = new FF2HudDisplay("Dev Mode", text);
+		hudDisplay = FF2HudDisplay.CreateDisplay("Dev Mode", text);
 		hudQueue.AddHud(hudDisplay);
-		delete hudDisplay;
 	}
 
 	return;
