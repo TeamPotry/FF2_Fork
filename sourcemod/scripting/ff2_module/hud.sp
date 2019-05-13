@@ -81,8 +81,10 @@ public int Native_FF2HudQueue_KillSelf(Handle plugin, int numParams)
 	for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
 	{
 		willDeleted = queue.GetHud(loop);
-		if(willDeleted != null)
+		if(willDeleted != null)	{
+			// Debug("deleted %x", willDeleted);
 			delete willDeleted;
+		}
 	}
 
 	delete queue;
@@ -98,6 +100,7 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	queue.GetName(name, sizeof(name));
 	hudDisplay.GetInfo(info, sizeof(info));
 	int value = GetHudSetting(queue.ClientIndex, info);
+	bool visible = true;
 
 	if(value == HudSetting_None)
 	{
@@ -107,20 +110,24 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 	if(value > HudSetting_None) {
 		if(other > 0) { // 나도 안보고 타인에게도 안보여줌
 			if(GetHudSetting(other, info) == HudSetting_ViewDisable) {
-				return -1;
+				visible = false;
 			}
 		}
 		else {
-			if(value == HudSetting_ViewAble
-				|| value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
-				return -1;
+			if(value == HudSetting_ViewAble || value == HudSetting_ViewDisable) // 난 안보지만 타인은 볼 수 있음.
+				visible = false;
 		}
+	}
+
+	if(!visible) {
+		delete hudDisplay;
+		return -1;
 	}
 
 	int index = queue.FindValue(view_as<FF2HudDisplay>(null));
 	if(index != -1) {
 		queue.SetHud(index, hudDisplay);
-		// PrintToChatAll("%x", hudDisplay);
+		// Debug("Added %x", hudDisplay);
 	}
 
 	return index;
