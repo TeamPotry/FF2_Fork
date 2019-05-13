@@ -4194,18 +4194,15 @@ public Action ClientTimer(Handle timer)
 						if(Assist[client] > 0)
 							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 
-						hudDisplay=new FF2HudDisplay("Your Damage Dealt", hudText);
+						hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 						hudQueue.AddHud(hudDisplay);
-						delete hudDisplay;
-
 
 						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
 						if(Assist[observer] > 0)
 							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
 
-						hudDisplay=new FF2HudDisplay("Observer Target Player Damage", hudText);
+						hudDisplay=FF2HudDisplay.CreateDisplay("Observer Target Player Damage", hudText);
 						hudQueue.AddHud(hudDisplay, observer);
-						delete hudDisplay;
 					}
 					else if(IsBoss(observer))
 					{
@@ -4216,9 +4213,8 @@ public Action ClientTimer(Handle timer)
 							Format(lives, 8, "x%d", BossLives[boss]);
 						}
 						Format(hudText, sizeof(hudText), "HP: %d / %d%s", BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
-						hudDisplay=new FF2HudDisplay("Observer Target Boss HP", hudText);
+						hudDisplay=FF2HudDisplay.CreateDisplay("Observer Target Boss HP", hudText);
 						hudQueue.AddHud(hudDisplay);
-						delete hudDisplay;
 
 						if(BossTeam != TF2_GetClientTeam(observer))
 						{
@@ -4226,9 +4222,8 @@ public Action ClientTimer(Handle timer)
 							if(Assist[observer] > 0)
 								Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
 
-							hudDisplay = new FF2HudDisplay("Observer Target Player Damage", hudText);
+							hudDisplay = FF2HudDisplay.CreateDisplay("Observer Target Player Damage", hudText);
 							hudQueue.AddHud(hudDisplay, observer);
-							delete hudDisplay;
 						}
 					}
 				}
@@ -4238,9 +4233,8 @@ public Action ClientTimer(Handle timer)
 					if(Assist[client] > 0)
 						Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 
-					hudDisplay=new FF2HudDisplay("Your Damage Dealt", hudText);
+					hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 					hudQueue.AddHud(hudDisplay);
-					delete hudDisplay;
 				}
 			}
 			else
@@ -4249,10 +4243,9 @@ public Action ClientTimer(Handle timer)
 				if(Assist[client] > 0)
 					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 
-				hudDisplay=new FF2HudDisplay("Your Damage Dealt", hudText);
+				hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 				hudQueue.AddHud(hudDisplay);
-				delete hudDisplay;
-				// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Your Damage Dealt", hudText)));
+				// PrintToChat(client, "%d", hudQueue.AddHud(FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText)));
 			}
 			hudQueue.ShowSyncHudQueueText(rageHUD);
 			hudQueue.KillSelf();
@@ -4487,6 +4480,8 @@ public Action BossTimer(Handle timer)
 		{
 			continue;
 		}
+		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
+
 		FF2HudQueue bossHudQueue = new FF2HudQueue(client, "Boss");
 		FF2HudDisplay bossHudDisplay;
 		validBoss=true;
@@ -4510,9 +4505,8 @@ public Action BossTimer(Handle timer)
 		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
 		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
-		bossHudDisplay=new FF2HudDisplay("Rage Meter", text);
+		bossHudDisplay=FF2HudDisplay.CreateDisplay("Rage Meter", text);
 		bossHudQueue.AddHud(bossHudDisplay);
-		delete bossHudDisplay;
 
 		if(RoundFloat(BossCharge[boss][0])==100.0)
 		{
@@ -4526,9 +4520,8 @@ public Action BossTimer(Handle timer)
 				SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
 				Format(text, sizeof(text), "%t", "Activate Rage");
 
-				bossHudDisplay=new FF2HudDisplay("Activate Rage", text);
+				bossHudDisplay=FF2HudDisplay.CreateDisplay("Activate Rage", text);
 				bossHudQueue.AddHud(bossHudDisplay);
-				delete bossHudDisplay;
 
 				char sound[PLATFORM_MAX_PATH];
 				if(FindSound("full rage", sound, sizeof(sound), boss) && emitRageSound[boss])
@@ -4546,9 +4539,8 @@ public Action BossTimer(Handle timer)
 			if(Assist[client] > 0)
 				Format(text, sizeof(text), "%s + ASSIST: %d", text, Assist[client]);
 
-			bossHudDisplay=new FF2HudDisplay("Your Damage Dealt", text);
+			bossHudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", text);
 			bossHudQueue.AddHud(bossHudDisplay);
-			delete bossHudDisplay;
 		}
 
 		bossHudQueue.ShowSyncHudQueueText(rageHUD);
@@ -5236,7 +5228,7 @@ public Action Timer_DrawGame(Handle timer)
 	timeleft-=0.1; // TODO: Forward
 
 	char timeDisplay[6];
-	int min=RoundToFloor(FloatDiv(timeleft, 60.0)), sec=RoundFloat(timeleft)-(min*60);
+	int min=RoundToFloor(FloatDiv(timeleft, 60.0)), sec=RoundFloat(timeleft)-(min*60)-1;
 
 	if(timeleft<60.0)
 	{
@@ -5263,9 +5255,8 @@ public Action Timer_DrawGame(Handle timer)
 			hudQueue = new FF2HudQueue(client, "Timer");
 			SetGlobalTransTarget(client);
 
-			hudDisplay=new FF2HudDisplay("Game Timer", timeDisplay);
+			hudDisplay=FF2HudDisplay.CreateDisplay("Game Timer", timeDisplay);
 			hudQueue.AddHud(hudDisplay);
-			delete hudDisplay;
 
 			hudQueue.ShowSyncHudQueueText(timeleftHUD);
 			hudQueue.KillSelf();
@@ -7436,7 +7427,7 @@ public void HudSettingMenu(int client, const char[] name)
 
 	GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
 	Menu afterMenu=new Menu(HudSetting_Handler);
-	HudSettingValue value;
+	int value;
 	bool changedLanguage=false;
 
 	afterMenu.SetTitle(name);
@@ -7484,13 +7475,13 @@ void HudDataMenu(int client, char[] name)
 {
 	char text[256], tempText[80];
 
-	HudSettingValue value=GetHudSetting(client, name);
+	int value=GetHudSetting(client, name);
 	Menu menu=new Menu(HudData_Handler);
 	GetHudSettingString(value, text, 8);
 
 	menu.SetTitle("HUD SETTING > %s: %s", name, text);
 
-	for(HudSettingValue loop=HudSetting_None; loop < HudSettingValue_Last; view_as<int>(loop)++)
+	for(int loop=HudSetting_None; loop < HudSettingValue_Last; loop++)
 	{
 		GetHudSettingString(loop, text, 8);
 		Format(tempText, sizeof(tempText), "Hud Setting %s", text);
@@ -7511,7 +7502,7 @@ public int HudData_Handler(Menu menu, MenuAction action, int client, int selecti
 		char infoBuf[64], statusString[8];
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 
-		HudSettingValue value = view_as<HudSettingValue>(selection-1);
+		int value = selection-1;
 		SetHudSetting(client, infoBuf, value);
 		GetHudSettingString(value, statusString, 8);
 

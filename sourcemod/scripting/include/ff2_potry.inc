@@ -89,7 +89,7 @@ forward Action FF2_OnCheckRules(int client, int characterIndex, int &chance, con
     THE HUD UPDATE
 ****/
 
-enum HudSettingValue
+enum
 {
     HudSetting_None = -1, // Cookie is ""
     HudSetting_View = 0,
@@ -99,7 +99,7 @@ enum HudSettingValue
     HudSettingValue_Last
 };
 
-enum HudQueueValue
+enum
 {
     HudQueue_ClientIndex = 0,
     HudQueue_Name,
@@ -107,7 +107,7 @@ enum HudQueueValue
     HudQueueValue_Last
 };
 
-enum HudValue
+enum
 {
     Hud_Info = 0,
     Hud_Display,
@@ -117,68 +117,43 @@ enum HudValue
 
 methodmap FF2HudConfig {
     // public static native FF2HudConfig GetConfigKeyValue();
-    public static native HudSettingValue GetDefaultSettiing(const char[] name, const char[] info);
+    public static native int GetDefaultSettiing(const char[] name, const char[] info);
 }
 
 methodmap FF2HudDisplay < ArrayList
 {
-    public FF2HudDisplay(char[] info, char[] display)
-    {
-        FF2HudDisplay array = view_as<FF2HudDisplay>(new ArrayList(64, view_as<int>(HudValue_Last)));
-        array.SetString(view_as<int>(Hud_Info), info);
-        array.SetString(view_as<int>(Hud_Display), display);
+    public static native FF2HudDisplay CreateDisplay(char[] info, char[] display);
 
-        return array;
-    }
-/*
-    public FF2HudDisplay KillSelf()
+    public any GetValue(int valueType)
     {
-        delete this;
-        return null;
-    }
-*/
-    public any GetValue(HudValue valueType)
-    {
-        return this.Get(view_as<int>(valueType));
+        return this.Get(valueType);
     }
 
-    public void SetValue(HudValue valueType, any value)
+    public void SetValue(int valueType, any value)
     {
-        this.Set(view_as<int>(valueType), value);
+        this.Set(valueType, value);
     }
 
     public void GetInfo(char[] infoStr, int length)
     {
-        this.GetString(view_as<int>(Hud_Info), infoStr, length);
+        this.GetString(Hud_Info, infoStr, length);
     }
 
     public void SetInfo(const char[] infoStr)
     {
-        this.SetString(view_as<int>(Hud_Info), infoStr);
+        this.SetString(Hud_Info, infoStr);
     }
 
     public void GetDisplay(char[] displayStr, int length)
     {
-        this.GetString(view_as<int>(Hud_Display), displayStr, length);
+        this.GetString(Hud_Display, displayStr, length);
     }
 
     public void SetDisplay(const char[] displayStr)
     {
-        this.SetString(view_as<int>(Hud_Display), displayStr);
+        this.SetString(Hud_Display, displayStr);
     }
-/*
-    property Handle ParentHud {
-        public Get()
-        {
-            return this.GetValue(Hud_ParentHud);
-        }
 
-        public Set(Handle sync)
-        {
-            this.SetValue(Hud_ParentHud, sync);
-        }
-    }
-*/
     public native void ShowSyncHudDisplayText(int client, Handle sync = null);
 }
 
@@ -187,10 +162,10 @@ methodmap FF2HudQueue < ArrayList
     public FF2HudQueue(int client, const char[] name, int initialSize = 8)
     {
         FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList(64, initialSize + view_as<int>(HudQueueValue_Last)));
-        array.Set(view_as<int>(HudQueue_ClientIndex), client);
-        array.SetString(view_as<int>(HudQueue_Name), name);
+        array.Set(HudQueue_ClientIndex, client);
+        array.SetString(HudQueue_Name, name);
 
-        for(int loop = view_as<int>(HudQueueValue_Last); loop < initialSize + view_as<int>(HudQueueValue_Last); loop++)
+        for(int loop = HudQueueValue_Last; loop < initialSize + HudQueueValue_Last; loop++)
             array.Set(loop, view_as<FF2HudDisplay>(null));
 
         return array;
@@ -199,23 +174,23 @@ methodmap FF2HudQueue < ArrayList
     property int ClientIndex {
         public get()
         {
-            return this.Get(view_as<int>(HudQueue_ClientIndex));
+            return this.Get(HudQueue_ClientIndex);
         }
 
         public set(int client)
         {
-            this.Set(view_as<int>(HudQueue_ClientIndex), client);
+            this.Set(HudQueue_ClientIndex, client);
         }
     }
 
     public void GetName(char[] name, int length)
     {
-        this.GetString(view_as<int>(HudQueue_Name), name, length);
+        this.GetString(HudQueue_Name, name, length);
     }
 
     public void SetName(const char[] name)
     {
-        this.SetString(view_as<int>(HudQueue_Name), name);
+        this.SetString(HudQueue_Name, name);
     }
 
     public FF2HudDisplay GetHud(int index)
