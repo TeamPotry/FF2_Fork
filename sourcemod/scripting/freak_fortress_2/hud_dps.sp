@@ -67,10 +67,9 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 	if(StrEqual(text, "Player"))
 	{
 		Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(client));
-		hudDisplay = new FF2HudDisplay("Your DPS", text);
+		hudDisplay = FF2HudDisplay.CreateDisplay("Your DPS", text);
 		hudQueue.AddHud(hudDisplay);
-		delete hudDisplay;
-		// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Your DPS", text)));
+		// PrintToChat(client, "%d", hudQueue.AddHud(FF2HudDisplay.CreateDisplay("Your DPS", text)));
 	}
 	else if(StrEqual(text, "Observer"))
 	{
@@ -78,14 +77,11 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 		if(!IsBoss(observer))
 		{
 			Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(observer));
-			hudDisplay = new FF2HudDisplay("Observer Target Player DPS", text);
+			hudDisplay = FF2HudDisplay.CreateDisplay("Observer Target Player DPS", text);
 			hudQueue.AddHud(hudDisplay, observer);
-			// PrintToChat(client, "%d", hudQueue.AddHud(new FF2HudDisplay("Observer Target Player DPS", text), observer));
+			// PrintToChat(client, "%d", hudQueue.AddHud(FF2HudDisplay.CreateDisplay("Observer Target Player DPS", text), observer));
 		}
 	}
-
-	if(hudDisplay != null)
-		delete hudDisplay;
 }
 
 float GetPlayerDPS(int client)
