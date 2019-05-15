@@ -791,12 +791,13 @@ public void FindCharacters()
 
 	if(kvCharacterConfig.GotoFirstSubKey(false))
 	{
-		// int index;
+		int index;
 		do
 		{
 			kvCharacterConfig.GetSectionName(config, sizeof(config));
 			LoadCharacter(config);
-			// index++;
+			PrecacheCharacter(index);
+			index++;
 		}
 		while(kvCharacterConfig.GotoNextKey(false));
 	}
@@ -6790,14 +6791,14 @@ public bool PickCharacter(int boss, int companion)
 					{
 						return false;
 					}
-					PrecacheCharacter(character[boss]);
+					// PrecacheCharacter(character[boss]);
 					return true;
 				}
 				character[boss]=newCharacter;
-				PrecacheCharacter(character[boss]);
+				//  PrecacheCharacter(character[boss]);
 				return true;
 			}
-			PrecacheCharacter(character[boss]);
+			// PrecacheCharacter(character[boss]);
 			return true;
 		}
 
@@ -6912,14 +6913,14 @@ public bool PickCharacter(int boss, int companion)
 			{
 				return false;
 			}
-			PrecacheCharacter(character[companion]);
+			// PrecacheCharacter(character[companion]);
 			return true;
 		}
 		character[companion]=newCharacter;
-		PrecacheCharacter(character[companion]);
+		// PrecacheCharacter(character[companion]);
 		return true;
 	}
-	PrecacheCharacter(character[companion]);
+	// PrecacheCharacter(character[companion]);
 	return true;
 }
 
