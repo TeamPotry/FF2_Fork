@@ -1035,6 +1035,14 @@ public void LoadCharacter(const char[] characterName)
 public void PrecacheCharacter(int characterIndex)
 {
 	char file[PLATFORM_MAX_PATH], filePath[PLATFORM_MAX_PATH], bossName[64];
+	static const char checkName[2][16] = {
+		"model",
+		"material"
+	};
+	static const char precacheExtension[2][16] = {
+		"mdl",
+		"vtf"
+	};
 	KeyValues kv=GetCharacterKV(characterIndex);
 	kv.Rewind();
 	kv.GetString("filename", bossName, sizeof(bossName));
@@ -1082,14 +1090,21 @@ public void PrecacheCharacter(int characterIndex)
 			if(kv.GetNum("precache")>0)
 			{
 				kv.GetSectionName(file, sizeof(file));
-				Format(filePath, sizeof(filePath), "%s.mdl", file);  //Models specified in the config don't include an extension
-				if(FileExists(filePath, true))
+				for(int loop=0; loop<sizeof(checkName); loop++)
 				{
-					PrecacheModel(filePath);
-				}
-				else
-				{
-					LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
+					if(kv.GetNum(checkName[loop])>0)
+					{
+						Format(filePath, sizeof(filePath), "%s.%s", file, precacheExtension[loop]);  //Models specified in the config don't include an extension
+
+						if(FileExists(filePath, true))
+						{
+							PrecacheModel(filePath);
+						}
+						else
+						{
+							LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
+						}
+					}
 				}
 			}
 		}
