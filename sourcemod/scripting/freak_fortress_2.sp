@@ -28,6 +28,8 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tutorial_text>
 #include <unixtime_sourcemod>
 
+#include <stocksoup/tf/monster_resource>
+
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
 #include "ff2_module/stocks.sp"
@@ -172,7 +174,7 @@ char mp_humans_must_join_team[16];
 
 ConVar cvarNextmap;
 
-int healthBar=-1;
+TFMonsterResource healthBar;
 int g_Monoculus=-1;
 
 static bool executed;
@@ -8779,11 +8781,12 @@ public void OnEntityCreated(int entity, const char[] classname)
 {
 	if(cvarHealthBar.BoolValue)
 	{
+		/*
 		if(StrEqual(classname, HEALTHBAR_CLASS))
 		{
 			healthBar=entity;
 		}
-
+		*/
 		if(!IsValidEntity(g_Monoculus) && StrEqual(classname, MONOCULUS))
 		{
 			g_Monoculus=entity;
@@ -8869,33 +8872,30 @@ public FF2RoundState CheckRoundState()
 
 void FindHealthBar()
 {
-	healthBar=FindEntityByClassname(-1, HEALTHBAR_CLASS);
-	if(!IsValidEntity(healthBar))
-	{
-		healthBar=CreateEntityByName(HEALTHBAR_CLASS);
-	}
+	healthBar=TFMonsterResource.GetEntity(true);
 }
 
 public void HealthbarEnableChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if(Enabled && cvarHealthBar.BoolValue && IsValidEntity(healthBar))
+	if(Enabled && cvarHealthBar.BoolValue && IsValidEntity(healthBar.Index))
 	{
 		UpdateHealthBar();
 	}
-	else if(!IsValidEntity(g_Monoculus) && IsValidEntity(healthBar))
+	else if(!IsValidEntity(g_Monoculus) && IsValidEntity(healthBar.Index))
 	{
-		SetEntProp(healthBar, Prop_Send, HEALTHBAR_PROPERTY, 0);
+		healthBar.BossHealthPercentageByte=0;
 	}
 }
 
 void UpdateHealthBar()
 {
-	if(!Enabled || !cvarHealthBar.BoolValue || IsValidEntity(g_Monoculus) || !IsValidEntity(healthBar) || CheckRoundState()==FF2RoundState_Loading)
+	if(!Enabled || !cvarHealthBar.BoolValue || IsValidEntity(g_Monoculus) || !IsValidEntity(healthBar.Index) || CheckRoundState()==FF2RoundState_Loading)
 	{
 		return;
 	}
 
 	int healthAmount, maxHealthAmount, bosses, healthPercent;
+	static int recently;
 	for(int boss; boss<=MaxClients; boss++)
 	{
 		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss]))
@@ -8909,6 +8909,8 @@ void UpdateHealthBar()
 	if(bosses)
 	{
 		healthPercent=RoundToCeil(float(healthAmount)/float(maxHealthAmount)*float(HEALTHBAR_MAX));
+		healthBar.BossHealthState=recently < healthAmount ? HealthState_Healing : HealthState_Default;
+
 		if(healthPercent>HEALTHBAR_MAX)
 		{
 			healthPercent=HEALTHBAR_MAX;
@@ -8918,5 +8920,7 @@ void UpdateHealthBar()
 			healthPercent=1;
 		}
 	}
-	SetEntProp(healthBar, Prop_Send, HEALTHBAR_PROPERTY, healthPercent);
+
+	healthBar.BossHealthPercentageByte=healthPercent;
+	recently=healthAmount;
 }
