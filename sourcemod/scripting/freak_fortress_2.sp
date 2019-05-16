@@ -28,6 +28,8 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tutorial_text>
 #include <unixtime_sourcemod>
 
+#include <stocksoup/tf/monster_resource>
+
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
 #include "ff2_module/stocks.sp"
@@ -172,7 +174,7 @@ char mp_humans_must_join_team[16];
 
 ConVar cvarNextmap;
 
-int healthBar=-1;
+TFMonsterResource healthBar;
 int g_Monoculus=-1;
 
 static bool executed;
@@ -791,12 +793,13 @@ public void FindCharacters()
 
 	if(kvCharacterConfig.GotoFirstSubKey(false))
 	{
-		// int index;
+		int index;
 		do
 		{
 			kvCharacterConfig.GetSectionName(config, sizeof(config));
 			LoadCharacter(config);
-			// index++;
+			PrecacheCharacter(index);
+			index++;
 		}
 		while(kvCharacterConfig.GotoNextKey(false));
 	}
@@ -1035,6 +1038,14 @@ public void LoadCharacter(const char[] characterName)
 public void PrecacheCharacter(int characterIndex)
 {
 	char file[PLATFORM_MAX_PATH], filePath[PLATFORM_MAX_PATH], bossName[64];
+	static const char checkName[2][16] = {
+		"model",
+		"material"
+	};
+	static const char precacheExtension[2][16] = {
+		"mdl",
+		"vtf"
+	};
 	KeyValues kv=GetCharacterKV(characterIndex);
 	kv.Rewind();
 	kv.GetString("filename", bossName, sizeof(bossName));
@@ -1082,14 +1093,21 @@ public void PrecacheCharacter(int characterIndex)
 			if(kv.GetNum("precache")>0)
 			{
 				kv.GetSectionName(file, sizeof(file));
-				Format(filePath, sizeof(filePath), "%s.mdl", file);  //Models specified in the config don't include an extension
-				if(FileExists(filePath, true))
+				for(int loop=0; loop<sizeof(checkName); loop++)
 				{
-					PrecacheModel(filePath);
-				}
-				else
-				{
-					LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
+					if(kv.GetNum(checkName[loop])>0)
+					{
+						Format(filePath, sizeof(filePath), "%s.%s", file, precacheExtension[loop]);  //Models specified in the config don't include an extension
+
+						if(FileExists(filePath, true))
+						{
+							PrecacheModel(filePath);
+						}
+						else
+						{
+							LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
+						}
+					}
 				}
 			}
 		}
@@ -6775,14 +6793,14 @@ public bool PickCharacter(int boss, int companion)
 					{
 						return false;
 					}
-					PrecacheCharacter(character[boss]);
+					// PrecacheCharacter(character[boss]);
 					return true;
 				}
 				character[boss]=newCharacter;
-				PrecacheCharacter(character[boss]);
+				//  PrecacheCharacter(character[boss]);
 				return true;
 			}
-			PrecacheCharacter(character[boss]);
+			// PrecacheCharacter(character[boss]);
 			return true;
 		}
 
@@ -6897,14 +6915,14 @@ public bool PickCharacter(int boss, int companion)
 			{
 				return false;
 			}
-			PrecacheCharacter(character[companion]);
+			// PrecacheCharacter(character[companion]);
 			return true;
 		}
 		character[companion]=newCharacter;
-		PrecacheCharacter(character[companion]);
+		// PrecacheCharacter(character[companion]);
 		return true;
 	}
-	PrecacheCharacter(character[companion]);
+	// PrecacheCharacter(character[companion]);
 	return true;
 }
 
@@ -8763,11 +8781,12 @@ public void OnEntityCreated(int entity, const char[] classname)
 {
 	if(cvarHealthBar.BoolValue)
 	{
+		/*
 		if(StrEqual(classname, HEALTHBAR_CLASS))
 		{
 			healthBar=entity;
 		}
-
+		*/
 		if(!IsValidEntity(g_Monoculus) && StrEqual(classname, MONOCULUS))
 		{
 			g_Monoculus=entity;
@@ -8853,33 +8872,30 @@ public FF2RoundState CheckRoundState()
 
 void FindHealthBar()
 {
-	healthBar=FindEntityByClassname(-1, HEALTHBAR_CLASS);
-	if(!IsValidEntity(healthBar))
-	{
-		healthBar=CreateEntityByName(HEALTHBAR_CLASS);
-	}
+	healthBar=TFMonsterResource.GetEntity(true);
 }
 
 public void HealthbarEnableChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
-	if(Enabled && cvarHealthBar.BoolValue && IsValidEntity(healthBar))
+	if(Enabled && cvarHealthBar.BoolValue && IsValidEntity(healthBar.Index))
 	{
 		UpdateHealthBar();
 	}
-	else if(!IsValidEntity(g_Monoculus) && IsValidEntity(healthBar))
+	else if(!IsValidEntity(g_Monoculus) && IsValidEntity(healthBar.Index))
 	{
-		SetEntProp(healthBar, Prop_Send, HEALTHBAR_PROPERTY, 0);
+		healthBar.BossHealthPercentageByte=0;
 	}
 }
 
 void UpdateHealthBar()
 {
-	if(!Enabled || !cvarHealthBar.BoolValue || IsValidEntity(g_Monoculus) || !IsValidEntity(healthBar) || CheckRoundState()==FF2RoundState_Loading)
+	if(!Enabled || !cvarHealthBar.BoolValue || IsValidEntity(g_Monoculus) || !IsValidEntity(healthBar.Index) || CheckRoundState()==FF2RoundState_Loading)
 	{
 		return;
 	}
 
 	int healthAmount, maxHealthAmount, bosses, healthPercent;
+	static int recently;
 	for(int boss; boss<=MaxClients; boss++)
 	{
 		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss]))
@@ -8893,6 +8909,8 @@ void UpdateHealthBar()
 	if(bosses)
 	{
 		healthPercent=RoundToCeil(float(healthAmount)/float(maxHealthAmount)*float(HEALTHBAR_MAX));
+		healthBar.BossHealthState=recently < healthAmount ? HealthState_Healing : HealthState_Default;
+
 		if(healthPercent>HEALTHBAR_MAX)
 		{
 			healthPercent=HEALTHBAR_MAX;
@@ -8902,5 +8920,7 @@ void UpdateHealthBar()
 			healthPercent=1;
 		}
 	}
-	SetEntProp(healthBar, Prop_Send, HEALTHBAR_PROPERTY, healthPercent);
+
+	healthBar.BossHealthPercentageByte=healthPercent;
+	recently=healthAmount;
 }
