@@ -5574,6 +5574,29 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 				}
 
+				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
+				{
+					int sentry=-1, targettingCount=0, closestSentry;
+					float distance, closestdistanse=800.0, sentryPos[3];
+
+					while((sentry = FindEntityByClassname2(sentry, "obj_sentrygun")) != -1)
+					{
+						if(GetEntPropEnt(sentry, Prop_Send, "m_hEnemy") == client) {
+							targettingCount++;
+							GetEntPropVector(sentry, Prop_Send, "m_vecOrigin", sentryPos);
+							if((distance = GetVectorDistance(sentryPos, victimPosition)) < closestdistanse) {
+								closestSentry = sentry;
+								closestdistanse = distance;
+							}
+						}
+					}
+
+					if(targettingCount > 1 && closestSentry != inflictor)
+						damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+
+					return Plugin_Changed;
+				}
+
 				switch(index)
 				{
 					case 61, 1006:  //Ambassador, Festive Ambassador
