@@ -1721,8 +1721,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
-	int boss;
-	if(isBossAlive)
+	if(isBossAlive && bossWin)
 	{
 		char bossName[64], lives[8], text[128];
 		int bossindexs[MAXPLAYERS+1], bosscount=0;
@@ -1755,13 +1754,13 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 				FF2_ShowHudText(client, -1, "%s", text);
 			}
 		}
-
-		if(!bossWin && FindSound("lose", sound, sizeof(sound), boss))
-		{
-			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
-			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
-		}
 	}
+	else if(!bossWin && FindSound("lose", sound, sizeof(sound), 0))
+	{
+		EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+		EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+	}
+
 
 	int top[3];
 	Damage[0]=0;
