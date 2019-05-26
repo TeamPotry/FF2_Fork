@@ -6818,7 +6818,7 @@ public bool PickCharacter(int boss, int companion)
 	}
 	else
 	{
-		char bossName[64], companionName[64];
+		char companionName[64];
 		KvRewind(GetArrayCell(bossesArray, character[boss]));
 		KvGetString(GetArrayCell(bossesArray, character[boss]), "companion", companionName, sizeof(companionName), "=Failed companion name=");
 
