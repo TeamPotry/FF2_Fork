@@ -104,8 +104,6 @@ ConVar cvarCrits;
 ConVar cvarArenaRounds;
 ConVar cvarCircuitStun;
 ConVar cvarSpecForceBoss;
-ConVar cvarCountdownPlayers;
-ConVar cvarCountdownTime;
 ConVar cvarEnableEurekaEffect;
 ConVar cvarForceBossTeam;
 ConVar cvarHealthBar;
@@ -140,9 +138,6 @@ int PointType;
 bool BossCrits=true;
 int arenaRounds;
 float circuitStun;
-int countdownPlayers=1;
-int countdownTime=120;
-int countdownHealth=2000;
 bool SpecForceBoss;
 bool lastPlayerGlow=true;
 bool bossTeleportation=true;
@@ -151,7 +146,6 @@ int allowedDetonations;
 
 Handle MusicTimer[MAXPLAYERS+1];
 Handle BossInfoTimer[MAXPLAYERS+1][2];
-Handle DrawGameTimer;
 Handle doorCheckTimer;
 
 int botqueuepoints;
@@ -176,7 +170,6 @@ TFMonsterResource healthBar;
 int g_Monoculus=-1;
 
 static bool executed;
-static bool executed2;
 
 int changeGamemode;
 
@@ -359,8 +352,6 @@ public void OnPluginStart()
 	cvarCrits=CreateConVar("ff2_crits", "0", "Can the boss get random crits?", _, true, 0.0, true, 1.0);
 	cvarArenaRounds=CreateConVar("ff2_arena_rounds", "1", "Number of rounds to make arena before switching to FF2 (helps for slow-loading players)", _, true, 0.0);
 	cvarCircuitStun=CreateConVar("ff2_circuit_stun", "0.3", "Amount of seconds the Short Circuit stuns the boss for.  0 to disable", _, true, 0.0);
-	cvarCountdownPlayers=CreateConVar("ff2_countdown_players", "1", "Amount of players until the countdown timer starts (0 to disable)", _, true, 0.0);
-	cvarCountdownTime=CreateConVar("ff2_countdown", "120", "Amount of seconds until the round ends in a stalemate");
 	cvarSpecForceBoss=CreateConVar("ff2_spec_force_boss", "0", "0-Spectators are excluded from the queue system, 1-Spectators are counted in the queue system", _, true, 0.0, true, 1.0);
 	cvarEnableEurekaEffect=CreateConVar("ff2_enable_eureka", "0", "0-Disable the Eureka Effect, 1-Enable the Eureka Effect", _, true, 0.0, true, 1.0);
 	cvarForceBossTeam=CreateConVar("ff2_force_team", "0", "0-Boss is always on Blu, 1-Boss is on a random team each round, 2-Boss is always on Red", _, true, 0.0, true, 3.0);
@@ -405,7 +396,6 @@ public void OnPluginStart()
 	cvarCrits.AddChangeHook(CvarChange);
 	cvarCircuitStun.AddChangeHook(CvarChange);
 	cvarHealthBar.AddChangeHook(HealthbarEnableChanged);
-	cvarCountdownPlayers.AddChangeHook(CvarChange);
 	cvarLastPlayerGlow.AddChangeHook(CvarChange);
 	cvarSpecForceBoss.AddChangeHook(CvarChange);
 	cvarBossTeleporter.AddChangeHook(CvarChange);
@@ -651,7 +641,6 @@ public void EnableFF2()
 	BossCrits=cvarCrits.BoolValue;
 	arenaRounds=cvarArenaRounds.IntValue;
 	circuitStun=cvarCircuitStun.FloatValue;
-	countdownTime=cvarCountdownTime.IntValue;
 	lastPlayerGlow=cvarLastPlayerGlow.BoolValue;
 	bossTeleportation=cvarBossTeleporter.BoolValue;
 	shieldCrits=cvarShieldCrits.IntValue;
@@ -1142,10 +1131,6 @@ public void CvarChange(ConVar convar, const char[] oldValue, const char[] newVal
 	else if(convar==cvarCircuitStun)
 	{
 		circuitStun=StringToFloat(newValue);
-	}
-	else if(convar==cvarCountdownPlayers)
-	{
-		countdownPlayers=StringToInt(newValue);
 	}
 	else if(convar==cvarLastPlayerGlow)
 	{
@@ -1702,7 +1687,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	executed=false;
-	executed2=false;
 	bool bossWin;
 	char sound[PLATFORM_MAX_PATH];
 	if((view_as<TFTeam>(event.GetInt("team"))==BossTeam))
@@ -1716,7 +1700,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	StopMusic();
-	DrawGameTimer=null;
 
 	bool isBossAlive;
 	for(int boss; boss<=MaxClients; boss++)
@@ -1754,8 +1737,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
-	int boss;
-	if(isBossAlive)
+	if(isBossAlive && bossWin)
 	{
 		char bossName[64], lives[8], text[128];
 		int bossindexs[MAXPLAYERS+1], bosscount=0;
@@ -1788,13 +1770,13 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 				FF2_ShowHudText(client, -1, "%s", text);
 			}
 		}
-
-		if(!bossWin && FindSound("lose", sound, sizeof(sound), boss))
-		{
-			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
-			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
-		}
 	}
+	else if(!bossWin && FindSound("lose", sound, sizeof(sound), 0))
+	{
+		EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+		EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+	}
+
 
 	int top[3];
 	Damage[0]=0;
@@ -2329,7 +2311,6 @@ public Action Timer_StartDrawGame(Handle timer)
 	}
 
 	timeleft=(bosscount*40.0)+(playerCount*20.0)+60.0;
-	DrawGameTimer=CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action Timer_NextBossPanel(Handle timer)
@@ -5216,17 +5197,6 @@ public Action CheckAlivePlayers(Handle timer)
 		executed=true;
 	}
 
-/*
-	if(RedAlivePlayers<=countdownPlayers && BossHealth[0]>countdownHealth && countdownTime>1 && !executed2)
-	{
-		if(FindEntityByClassname2(-1, "team_control_point")!=-1)
-		{
-			timeleft=countdownTime;
-			DrawGameTimer=CreateTimer(1.0, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-		}
-		executed2=true;
-	}
-*/
 	return Plugin_Continue;
 }
 
@@ -5234,7 +5204,6 @@ public Action Timer_DrawGame(Handle timer)
 {
 	if(CheckRoundState()!=FF2RoundState_RoundRunning)
 	{
-		executed2=false;
 		return Plugin_Stop;
 	}
 
