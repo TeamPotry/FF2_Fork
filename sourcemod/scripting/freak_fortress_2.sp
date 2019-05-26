@@ -118,8 +118,6 @@ ConVar cvarUpdater;
 ConVar cvarDebug;
 ConVar cvarPreroundBossDisconnect;
 
-ArrayList bossesArray;
-ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
 ArrayList subpluginArray;
 
 Handle FF2Cookie_QueuePoints;
@@ -6855,27 +6853,8 @@ public bool PickCharacter(int boss, int companion)
 		KvRewind(GetArrayCell(bossesArray, character[boss]));
 		KvGetString(GetArrayCell(bossesArray, character[boss]), "companion", companionName, sizeof(companionName), "=Failed companion name=");
 
-		int characterIndex;
-		while(characterIndex<GetArraySize(bossesArray))  //Loop through all the bosses to find the companion we're looking for
-		{
-			KvRewind(GetArrayCell(bossesArray, characterIndex));
-			KvGetString(GetArrayCell(bossesArray, characterIndex), "name", bossName, sizeof(bossName), "=Failed name=");
-			if(StrEqual(bossName, companionName, false))
-			{
-				character[companion]=characterIndex;
-				break;
-			}
-
-			KvGetString(GetArrayCell(bossesArray, characterIndex), "filename", bossName, sizeof(bossName), "=Failed name=");
-			if(StrEqual(bossName, companionName, false))
-			{
-				character[companion]=characterIndex;
-				break;
-			}
-			characterIndex++;
-		}
-
-		if(characterIndex==GetArraySize(bossesArray))  //Companion not found
+		int characterIndex = FindCharacterIndexByName(companionName);
+		if(characterIndex <= -1)  //Companion not found
 		{
 			return false;
 		}

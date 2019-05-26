@@ -21,11 +21,38 @@ public void GetHudSettingString(int value, char[] statusString, int buffer)
     }
 }
 
+int FindCharacterIndexByName(char[] bossName)
+{
+	char name[64];
+	int characterIndex=0;
+	// TODO: 1.7 문법
+
+	while(characterIndex<GetArraySize(bossesArray))  //Loop through all the bosses to find the companion we're looking for
+	{
+		KvRewind(GetArrayCell(bossesArray, characterIndex));
+		KvGetString(GetArrayCell(bossesArray, characterIndex), "name", name, sizeof(name), "=Failed name=");
+		if(StrEqual(bossName, name, false))
+		{
+			return characterIndex;
+		}
+
+		KvGetString(GetArrayCell(bossesArray, characterIndex), "filename", name, sizeof(name), "=Failed name=");
+		if(StrEqual(bossName, name, false))
+		{
+			return characterIndex;
+		}
+		characterIndex++;
+	}
+
+	return -1;
+}
+
 stock ArrayList CreateChancesArray(int client)
 {
-    char config[64], ruleName[80], value[120];
+    char config[64], ruleName[80], value[120], companionName[64];
+    int readIndex = 0, realIndex, tempChance, needPlayer = 1;
     ArrayList chancesArray = new ArrayList();
-    KeyValues bossKv;
+    KeyValues bossKv, companionKv;
     Action action;
 
     kvCharacterConfig.Rewind();
@@ -33,7 +60,6 @@ stock ArrayList CreateChancesArray(int client)
 
     if(kvCharacterConfig.GotoFirstSubKey(false))
     {
-        int readIndex = 0, realIndex, tempChance;
         do
         {
             bool checked = true, changed = false;
@@ -56,7 +82,28 @@ stock ArrayList CreateChancesArray(int client)
             bossKv.Rewind();
 
             bossKv.GetString("name", ruleName, sizeof(ruleName));
-            // LogMessage("BossKv is %s", ruleName);
+            bossKv.GetString("companion", companionName, sizeof(companionName));
+
+            if(strlen(companionName))
+            {
+                companionKv = bossKv;
+                while((companionKv = GetCharacterKV(FindCharacterIndexByName(companionName))) != null) {
+                    companionKv.GetString("companion", companionName, sizeof(companionName));
+                    needPlayer++;
+                }
+
+                int totalPlayer=0;
+            	for(int target=1; target<=MaxClients; target++)
+            	{
+            		if(IsValidClient(target) && TF2_GetClientTeam(target)>TFTeam_Spectator)
+            		{
+            			totalPlayer++;
+            		}
+            	}
+
+                if(totalPlayer <= needPlayer)
+                    continue;
+            }
 
             if(bossKv.GetNum("hidden", 0) > 0) continue;
             else if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))

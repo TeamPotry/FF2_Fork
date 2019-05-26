@@ -43,6 +43,9 @@ int ChangeLogLastTime;
 
 int Boss[MAXPLAYERS+1];
 
+ArrayList bossesArray;
+ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
+
 methodmap FF2PlayerData < KeyValues {
 	public FF2PlayerData(int client) {
 		char authId[25], queryStr[256], dataFile[PLATFORM_MAX_PATH];
