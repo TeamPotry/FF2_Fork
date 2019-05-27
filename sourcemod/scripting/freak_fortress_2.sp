@@ -5402,7 +5402,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		{
 			int boss=GetBossIndex(client);
 			damagecustom=0;
-			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.08-Stabbed[boss]/90)) * 2.0;
+			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.08-Stabbed[boss]/180));
 			damagetype|=DMG_CRIT;
 
 			if(SpecialAttackToBoss(attacker, boss, "boss_backstab", damage) == Plugin_Handled)
@@ -5698,7 +5698,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
 						{
-							damage=(Pow(float(BossHealthMax[boss]), 0.74074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
+							damage=(Pow(float(BossHealthMax[boss]), 0.34074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
 							damagetype|=DMG_CRIT;
 
 							if(SpecialAttackToBoss(attacker, boss, "market_garden", damage) == Plugin_Handled)
@@ -5795,7 +5795,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/90);
+					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/160);
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
 
