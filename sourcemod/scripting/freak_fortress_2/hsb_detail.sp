@@ -27,10 +27,11 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
         if(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 307)
         {
 			char classname[32];
+			GetEntityClassname(weapon, classname, 32);
 			if(StrEqual(classname, "tf_weapon_stickbomb"))
 			{
 				SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
-	            SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
+				SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
 			}
         }
     }
