@@ -228,8 +228,8 @@ void Rage_Stun(const char[] abilityName, int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float bossPosition[3], targetPosition[3];
-	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0);
-	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName);
+	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0), slowdown=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "slowdown", 0.0);
+	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName), stunflags=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "custom flags", TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT);
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 
 	for(int target=1; target<=MaxClients; target++)
@@ -243,7 +243,7 @@ void Rage_Stun(const char[] abilityName, int boss)
 				{
 					TF2_RemoveCondition(target, TFCond_Parachute);
 				}
-				TF2_StunPlayer(target, duration, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
+				TF2_StunPlayer(target, duration, slowdown, stunflags, client);
 				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
