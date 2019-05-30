@@ -23,28 +23,26 @@ public void GetHudSettingString(int value, char[] statusString, int buffer)
 
 int FindCharacterIndexByName(char[] bossName)
 {
-    char name[64];
-    int characterIndex=0;
-    Handle characterKv;
-    // TODO: 1.7 문법
+	char name[64];
+	int characterIndex=0;
+	// TODO: 1.7 문법
 
-    while(characterIndex<GetArraySize(bossesArray))  //Loop through all the bosses to find the companion we're looking for
-    {
-        characterKv = GetCharacterKV(characterIndex);
-        KvRewind(characterKv);
-        KvGetString(characterKv, "name", name, sizeof(name), "");
-        if(StrEqual(bossName, name, false))
-        {
-            return characterIndex;
-        }
+	while(characterIndex<GetArraySize(bossesArray))  //Loop through all the bosses to find the companion we're looking for
+	{
+		KvRewind(GetArrayCell(bossesArray, characterIndex));
+		KvGetString(GetArrayCell(bossesArray, characterIndex), "name", name, sizeof(name), "=Failed name=");
+		if(StrEqual(bossName, name, false))
+		{
+			return characterIndex;
+		}
 
-        KvGetString(characterKv, "filename", name, sizeof(name), "");
-        if(StrEqual(bossName, name, false))
-        {
-            return characterIndex;
-        }
-        characterIndex++;
-    }
+		KvGetString(GetArrayCell(bossesArray, characterIndex), "filename", name, sizeof(name), "=Failed name=");
+		if(StrEqual(bossName, name, false))
+		{
+			return characterIndex;
+		}
+		characterIndex++;
+	}
 
 	return -1;
 }
