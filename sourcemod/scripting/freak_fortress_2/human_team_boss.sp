@@ -45,7 +45,10 @@ public Action RoundStart(Handle timer)
 			index = GetRandomInt(0, clientArray.Length-1);
 			random = clientArray.Get(index);
 			bossindex = GetRandomBoss();
-			// TODO: 중복 보스 방지
+
+			if(bossindex == -1)
+				break;
+				
 			FF2_MakePlayerToBoss(random, bossindex);
 
 			bossindex = FF2_GetBossIndex(random);
@@ -101,7 +104,7 @@ stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 
 		for (int loop = 0; loop < bossArray.Length; loop++)
 		{
-			index = array.FindValue(bossArray.Get(loop));
+			index = array.FindValue(FF2_GetBossIndex(bossArray.Get(loop)));
 			if(index != -1)
 			{
 				array.ShiftUp(index);
@@ -123,7 +126,7 @@ public ArrayList GetBossPlayers()
 	ArrayList array = new ArrayList();
 	for(int client = 1; client <= MaxClients; client++)
 	{
-	    if(IsClientInGame(client) && IsPlayerAlive(client) && FF2_GetBossIndex(client) == -1)
+	    if(IsClientInGame(client) && IsPlayerAlive(client) && FF2_GetBossIndex(client) != -1)
 	    {
 	        array.Push(client);
 	    }
