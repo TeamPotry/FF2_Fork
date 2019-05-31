@@ -129,6 +129,9 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 		queue.SetHud(index, hudDisplay);
 		// Debug("Added %x", hudDisplay);
 	}
+	else {
+		delete hudDisplay;
+	}
 
 	return index;
 }
