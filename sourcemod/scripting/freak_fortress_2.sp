@@ -4180,7 +4180,7 @@ public Action ClientTimer(Handle timer)
 		{
 			SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
 			SetGlobalTransTarget(client);
-			hudQueue = new FF2HudQueue(client, "Player");
+			hudQueue = FF2HudQueue.CreateHudQueue(client, "Player");
 
 			if(!IsPlayerAlive(client))
 			{
@@ -4248,7 +4248,9 @@ public Action ClientTimer(Handle timer)
 				// PrintToChat(client, "%d", hudQueue.AddHud(FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText)));
 			}
 			hudQueue.ShowSyncHudQueueText(rageHUD);
-			hudQueue.KillSelf();
+			hudQueue.DeleteAllDisplay();
+
+			delete hudQueue;
 
 			TFClassType playerclass=TF2_GetPlayerClass(client);
 			int weapon=GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -4482,7 +4484,7 @@ public Action BossTimer(Handle timer)
 		}
 		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
 
-		FF2HudQueue bossHudQueue = new FF2HudQueue(client, "Boss");
+		FF2HudQueue bossHudQueue = FF2HudQueue.CreateHudQueue(client, "Boss");
 		FF2HudDisplay bossHudDisplay;
 		validBoss=true;
 		SetGlobalTransTarget(client);
@@ -4544,7 +4546,10 @@ public Action BossTimer(Handle timer)
 		}
 
 		bossHudQueue.ShowSyncHudQueueText(rageHUD);
-		bossHudQueue.KillSelf();
+		bossHudQueue.DeleteAllDisplay();
+
+		delete bossHudQueue;
+
 		SetHudTextParams(-1.0, 0.88, 0.06, 255, 255, 255, 255);
 
 		SetClientGlow(client, -0.05);
@@ -5240,14 +5245,16 @@ public Action Timer_DrawGame(Handle timer)
 	{
 		if(IsValidClient(client) && !IsFakeClient(client))
 		{
-			hudQueue = new FF2HudQueue(client, "Timer");
+			hudQueue = FF2HudQueue.CreateHudQueue(client, "Timer");
 			SetGlobalTransTarget(client);
 
 			hudDisplay=FF2HudDisplay.CreateDisplay("Game Timer", timeDisplay);
 			hudQueue.AddHud(hudDisplay);
 
 			hudQueue.ShowSyncHudQueueText(timeleftHUD);
-			hudQueue.KillSelf();
+			hudQueue.DeleteAllDisplay();
+
+			delete hudQueue;
 		}
 	}
 

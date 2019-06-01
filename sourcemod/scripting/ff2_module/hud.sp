@@ -63,7 +63,8 @@ void HudInit()
 	CreateNative("FF2HudDisplay.CreateDisplay", Native_FF2HudDisplay_CreateDisplay);
 	CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
 
-	CreateNative("FF2HudQueue.KillSelf", Native_FF2HudQueue_KillSelf);
+	CreateNative("FF2HudQueue.CreateHudQueue", Native_FF2HudQueue_CreateHudQueue);
+	CreateNative("FF2HudQueue.DeleteAllDisplay", Native_FF2HudQueue_DeleteAllDisplay);
 	CreateNative("FF2HudQueue.AddHud", Native_FF2HudQueue_AddHud);
 	CreateNative("FF2HudQueue.FindHud", Native_FF2HudQueue_FindHud);
 	CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
@@ -73,7 +74,23 @@ void HudInit()
 	OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
 }
 
-public int Native_FF2HudQueue_KillSelf(Handle plugin, int numParams)
+public int Native_FF2HudQueue_CreateHudQueue(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1), initialSize = GetNativeCell(3);
+	char name[64];
+	GetNativeString(2, name, sizeof(name));
+
+	FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList(64, initialSize + HudQueueValue_Last));
+	array.Set(HudQueue_ClientIndex, client);
+	array.SetString(HudQueue_Name, name);
+
+	for(int loop = HudQueueValue_Last; loop < initialSize + HudQueueValue_Last; loop++)
+		array.Set(loop, view_as<FF2HudDisplay>(null));
+
+	return view_as<int>(array);
+}
+
+public int Native_FF2HudQueue_DeleteAllDisplay(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
 	FF2HudDisplay willDeleted;
@@ -86,8 +103,6 @@ public int Native_FF2HudQueue_KillSelf(Handle plugin, int numParams)
 			delete willDeleted;
 		}
 	}
-
-	delete queue;
 }
 
 public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)

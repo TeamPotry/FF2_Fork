@@ -159,17 +159,7 @@ methodmap FF2HudDisplay < ArrayList
 
 methodmap FF2HudQueue < ArrayList
 {
-    public FF2HudQueue(int client, const char[] name, int initialSize = 8)
-    {
-        FF2HudQueue array = view_as<FF2HudQueue>(new ArrayList(64, initialSize + view_as<int>(HudQueueValue_Last)));
-        array.Set(HudQueue_ClientIndex, client);
-        array.SetString(HudQueue_Name, name);
-
-        for(int loop = HudQueueValue_Last; loop < initialSize + HudQueueValue_Last; loop++)
-            array.Set(loop, view_as<FF2HudDisplay>(null));
-
-        return array;
-    }
+    public static native FF2HudQueue CreateHudQueue(int client, const char[] name, int initialSize = 8);
 
     property int ClientIndex {
         public get()
@@ -227,7 +217,7 @@ methodmap FF2HudQueue < ArrayList
         }
     }
 */
-    public native void KillSelf();
+    public native void DeleteAllDisplay();
 
     // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
     public native int AddHud(FF2HudDisplay hudDisplay, int other = 0);
