@@ -2312,7 +2312,7 @@ public Action Timer_StartDrawGame(Handle timer)
 		}
 	}
 
-	timeleft=(bosscount*40.0)+(playerCount*20.0)+60.0;
+	timeleft=(bosscount*40.0)+(playerCount*30.0)+60.0;
 	CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
