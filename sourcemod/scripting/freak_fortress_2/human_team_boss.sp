@@ -31,10 +31,8 @@ public Action RoundStart(Handle timer)
 	ArrayList clientArray = GetAlivePlayers(false);
 	ArrayList bossArray = GetBossPlayers();
 
-	if((bossCount = (clientArray.Length + bossArray.Length) / 12) > 0)
+	if((bossCount = (clientArray.Length + bossArray.Length) / 6) > 0)
 	{
-		delete bossArray;
-
 		int random, index, bossindex;
 		int healthPoint = 600 + (300 * bossCount);
 		char bossName[64];
@@ -48,7 +46,7 @@ public Action RoundStart(Handle timer)
 
 			if(bossindex == -1)
 				break;
-				
+
 			FF2_MakePlayerToBoss(random, bossindex);
 
 			bossindex = FF2_GetBossIndex(random);
