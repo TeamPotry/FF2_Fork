@@ -15,7 +15,6 @@
 #define MAX_PLAYERS 33
 new Float:g_DrugAngles[56] = {0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0, 27.0, 30.0, 33.0, 36.0, 39.0, 42.0, 39.0, 36.0, 33.0, 30.0, 27.0, 24.0, 21.0, 18.0, 15.0, 12.0, 9.0, 6.0, 3.0, 0.0, -3.0, -6.0, -9.0, -12.0, -15.0, -18.0, -21.0, -24.0, -27.0, -30.0, -33.0, -36.0, -39.0, -42.0, -39.0, -36.0, -33.0, -30.0, -27.0, -24.0, -21.0, -18.0, -15.0, -12.0, -9.0, -6.0, -3.0 };
 new Handle:specialDrugTimers[ MAX_PLAYERS+1 ];
-new BossTeam=_:TFTeam_Blue;
 new gSmoke1;
 new gGlow1;
 new gHalo1;
@@ -141,6 +140,7 @@ Rage_VisualEffect(const String:ability_name[],index)
 	new effect=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "effect");	        	//effect
 	new duration=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "duration");	        	//duration
 	new Float:range=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name, "range");	        //range
+	new bossTeam = GetClientTeam(Boss);
 
 	decl Float:pos[3];
 	decl Float:pos2[3];
@@ -148,7 +148,7 @@ Rage_VisualEffect(const String:ability_name[],index)
 	GetEntPropVector(Boss, Prop_Send, "m_vecOrigin", pos);
 	for(new i=1;i<=MaxClients;i++)
 	{
-		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=BossTeam)
+		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=bossTeam)
 		{
 			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
 			if ((GetVectorDistance(pos,pos2)<range)) {
@@ -221,6 +221,7 @@ Rage_Drown(const String:ability_name[],index)
 	new Boss=GetClientOfUserId(FF2_GetBossUserId(index));
 	new duration=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "duration");	        	//duration
 	new Float:range=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name, "range");	        //range
+	new bossTeam = GetClientTeam(Boss);
 
 	decl Float:pos[3];
 	decl Float:pos2[3];
@@ -230,7 +231,7 @@ Rage_Drown(const String:ability_name[],index)
 	GetEntPropVector(Boss, Prop_Send, "m_vecOrigin", pos);
 	for(new i=1;i<=MaxClients;i++)
 	{
-		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=BossTeam)
+		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=bossTeam)
 		{
 			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
 			if ((GetVectorDistance(pos,pos2)<range)) {
@@ -354,6 +355,7 @@ Rage_ScalePlayers(const String:ability_name[],index)
 	new Float:scale=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name, "scale");	//scale
 	new duration=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "duration");	        //duration
 	new Float:range=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name, "range");	        //range
+	new bossTeam = GetClientTeam(Boss);
 
 	decl Float:pos[3];
 	decl Float:pos2[3];
@@ -361,7 +363,7 @@ Rage_ScalePlayers(const String:ability_name[],index)
 	GetEntPropVector(Boss, Prop_Send, "m_vecOrigin", pos);
 	for(new i=1;i<=MaxClients;i++)
 	{
-		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=BossTeam)
+		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=bossTeam)
 		{
 			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
 			if ((GetVectorDistance(pos,pos2)<range)) {
@@ -395,6 +397,7 @@ Rage_Hellfire(const String:ability_name[],index)
 	new rageDistance=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "distance");	//distance (range)
 	new afterBurnDamage=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "afterburn damage");     //afterburn damage
 	new afterBurnDuration=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "afterburn duration");	//afterburn duration (seconds)
+	new bossTeam = GetClientTeam(Boss);
 
 	new Float:vel[3];
 	vel[2] = 20.0;
@@ -408,7 +411,7 @@ Rage_Hellfire(const String:ability_name[],index)
 
 	GetEntPropVector(Boss, Prop_Send, "m_vecOrigin", pos);
 	for ( i = 1; i <= MaxClients; i++ ) {
-		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=BossTeam)
+		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=bossTeam)
 		{
 			GetEntPropVector( i, Prop_Send, "m_vecOrigin", pos2 );
 			distance = GetVectorDistance( pos,pos2 );
@@ -491,10 +494,11 @@ SetDamageRadial( attacker, dmg,  Float:pos[3], radius, dmgtype )
 {
 	new i;
 	new Float:dist;
+	new bossTeam = GetClientTeam(attacker);
 
 	for  ( i = 1; i <= MaxClients; i++ )
 	{
-		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=BossTeam)
+		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=bossTeam)
 		{
 			decl Float:pos2[3];
 			GetEntPropVector( i, Prop_Send, "m_vecOrigin", pos2 );
@@ -1000,6 +1004,7 @@ Rage_Delirium(const String:ability_name[],index)
 	new Boss=GetClientOfUserId(FF2_GetBossUserId(index));
 	new rageDistance=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "rage distance");	//rage distance
 	new rageDuration=FF2_GetAbilityArgument(index,THIS_PLUGIN_NAME,ability_name, "rage duration");	//rage duration
+	new bossTeam = GetClientTeam(Boss);
 
 	decl Float:pos[3];
 	decl Float:pos2[3];
@@ -1016,11 +1021,11 @@ Rage_Delirium(const String:ability_name[],index)
 
 	for( i = 1; i <= MaxClients; i++ )
 	{
-		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=BossTeam)
+		if(IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i)!=bossTeam)
 		{
 			GetEntPropVector(i, Prop_Send, "m_vecOrigin", pos2);
 			distance = GetVectorDistance( pos, pos2 );
-			if ( distance < rageDistance && GetClientTeam(i)!=BossTeam )
+			if ( distance < rageDistance && GetClientTeam(i)!=bossTeam )
 			{
 				SetVariantInt(0);
 				AcceptEntityInput(i, "SetForcedTauntCam");
