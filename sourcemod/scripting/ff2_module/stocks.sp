@@ -219,6 +219,21 @@ stock void SetControlPoint(bool enable)
 	}
 }
 
+stock void SetArenaCapTime(int time)
+{
+    int controlPoint=MaxClients+1;
+    char temp[8];
+    IntToString(time, temp, 8);
+
+    while((controlPoint=FindEntityByClassname2(controlPoint, "trigger_capture_area"))!=-1)
+    {
+        if(controlPoint>MaxClients && IsValidEntity(controlPoint))
+        {
+            DispatchKeyValue(controlPoint, "area_time_to_cap", temp);
+        }
+    }
+}
+
 stock void SetArenaCapEnableTime(float time)
 {
 	int entity=-1;

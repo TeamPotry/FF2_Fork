@@ -5084,6 +5084,9 @@ public Action OnObjectDeflected(Event event, const char[] name, bool dontBroadca
 		{
 			BossCharge[boss][0]=100.0;
 		}
+
+		if(executed)
+			timeleft += 5.0;
 	}
 	return Plugin_Continue;
 }
@@ -5167,25 +5170,29 @@ public Action CheckAlivePlayers(Handle timer)
 		}
 	}
 
-	Call_StartForward(OnAlivePlayersChanged);  //Let subplugins know that the number of alive players just changed
-	Call_PushCell(RedAlivePlayers);
-	Call_PushCell(BlueAlivePlayers);
-	Call_Finish();
+	if(timer != INVALID_HANDLE)
+	{
+		Call_StartForward(OnAlivePlayersChanged);  //Let subplugins know that the number of alive players just changed
+		Call_PushCell(RedAlivePlayers);
+		Call_PushCell(BlueAlivePlayers);
+		Call_Finish();
 
-	if(!RedAlivePlayers)
-	{
-		ForceTeamWin(BossTeam);
-	}
-	else if(RedAlivePlayers==1 && BlueAlivePlayers && Boss[0])
-	{
-		char sound[PLATFORM_MAX_PATH];
-		if(FindSound("lastman", sound, sizeof(sound)))
+		if(!RedAlivePlayers)
 		{
-			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
-			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+			ForceTeamWin(BossTeam);
+		}
+		else if(RedAlivePlayers==1 && BlueAlivePlayers && Boss[0])
+		{
+			char sound[PLATFORM_MAX_PATH];
+			if(FindSound("lastman", sound, sizeof(sound)))
+			{
+				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, Boss[0]);
+			}
 		}
 	}
-	else if(!PointType && RedAlivePlayers<=AliveToEnable && !executed)
+
+	if(!PointType && RedAlivePlayers<=AliveToEnable && !executed && timeleft <= 180.0)
 	{
 		PrintHintTextToAll("%t", "Point Unlocked", AliveToEnable);
 		if(RedAlivePlayers==AliveToEnable)
@@ -5202,7 +5209,13 @@ public Action CheckAlivePlayers(Handle timer)
 			EmitSoundToAll(sound);
 		}
 		SetControlPoint(true);
+		// SetArenaCapTime(20);
 		executed=true;
+	}
+	else if(executed && timeleft > 180.0)
+	{
+		SetControlPoint(false);
+		executed=false;
 	}
 
 	return Plugin_Continue;
@@ -5214,6 +5227,8 @@ public Action Timer_DrawGame(Handle timer)
 	{
 		return Plugin_Stop;
 	}
+
+	CheckAlivePlayers(INVALID_HANDLE);
 
 	FF2HudQueue hudQueue;
 	FF2HudDisplay hudDisplay;
