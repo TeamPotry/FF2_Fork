@@ -58,12 +58,13 @@ public Action RoundStart(Handle timer)
 
 			for(int cloop=0; cloop < clientArray.Length; cloop++)
 			{
+				// FIXME: 대기열 포인트가 0 미만일 경우, 아군이여도 누그 보스인지 메세지 출력이 안됨.
 				int client = clientArray.Get(cloop);
 				SetGlobalTransTarget(client);
 				FF2_GetBossName(bossindex, bossName, sizeof(bossName), client);
 				CPrintToChat(client, "{olive}[FF2]{default} %t", "Human Hero", random, bossName);
 			}
-			clientArray.ShiftUp(index);
+			clientArray.Erase(index);
 		}
 	}
 
@@ -105,7 +106,7 @@ stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 			index = array.FindValue(FF2_GetBossIndex(bossArray.Get(loop)));
 			if(index != -1)
 			{
-				array.ShiftUp(index);
+				array.Erase(index);
 				count--;
 			}
 		}
