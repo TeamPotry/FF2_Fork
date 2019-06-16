@@ -88,15 +88,17 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 		SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", 0.0);
 	}
 	if(FF2_HasAbility(boss, PLUGIN_NAME, STUN_NAME)) 	{
-		float multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "multiplier", 5.0);
-		g_flHealStun[target] += multiplier;
+		float slowdown, multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "multiplier", 5.0);
 
-		if(g_flHealStun[target] >= 100.0) {
+		g_flHealStun[target] += multiplier;
+		slowdown = FloatDiv(g_flHealStun[target], 100.0);
+
+		if(g_flHealStun[target] >= 100.0 && FF2_GetBossIndex(target) == -1) {
 			g_flHealStun[target] = 0.0;
 			TF2_StunPlayer(target, 8.0, 0.0, TF_STUNFLAGS_SMALLBONK|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
 		}
 		else if(!TF2_IsPlayerInCondition(target, TFCond_Dazed)){
-			TF2_StunPlayer(target, 0.1, FloatDiv(g_flHealStun[target], 100.0), TF_STUNFLAG_SLOWDOWN|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
+			TF2_StunPlayer(target, 0.1, slowdown > 1.0 ? 1.0 : slowdown, TF_STUNFLAG_SLOWDOWN|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
 		}
 	}
 
