@@ -1897,7 +1897,7 @@ public Action Timer_CalcQueuePoints(Handle timer)
 			event.SetInt("points", points);
 			event.Fire();
 
-			if(IsBoss(client))
+			if(Boss[0]==client)
 			{
 				if(IsFakeClient(client))
 				{
