@@ -218,8 +218,12 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 		}
 		while(!IsValidEntity(target) || target==client || (FF2_GetFF2Flags(target) & FF2FLAG_ALLOWSPAWNINBOSSTEAM) || !IsPlayerAlive(target));
 
+		SetEntProp(client, Prop_Send, "m_bDucked", 1);
+		SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
+
 		GetEntPropVector(target, Prop_Data, "m_vecOrigin", position);
 		TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
+
 		TF2_StunPlayer(client, 2.0, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 	}
 }
