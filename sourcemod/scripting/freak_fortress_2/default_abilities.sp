@@ -248,7 +248,9 @@ void Rage_Stun(const char[] abilityName, int boss)
 					TF2_RemoveCondition(target, TFCond_Parachute);
 				}
 				TF2_StunPlayer(target, duration, slowdown, stunflags, client);
-				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+
+				if(FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "particle", 1) > 0)
+					CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
