@@ -100,6 +100,9 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 		else if(!TF2_IsPlayerInCondition(target, TFCond_Dazed)){
 			TF2_StunPlayer(target, 0.1, slowdown > 1.0 ? 1.0 : slowdown, TF_STUNFLAG_SLOWDOWN|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
 		}
+
+		result = true;
+		change = true;
 	}
 
 	return change ? Plugin_Changed : Plugin_Continue;
