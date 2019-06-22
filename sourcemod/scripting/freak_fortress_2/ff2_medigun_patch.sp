@@ -95,7 +95,7 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 
 		if(g_flHealStun[target] >= 100.0 && FF2_GetBossIndex(target) == -1) {
 			g_flHealStun[target] = 0.0;
-			TF2_StunPlayer(target, 8.0, 0.0, TF_STUNFLAGS_SMALLBONK|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
+			TF2_StunPlayer(target, FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "time", 3.0), 0.0, TF_STUNFLAGS_SMALLBONK|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
 		}
 		else if(!TF2_IsPlayerInCondition(target, TFCond_Dazed)){
 			TF2_StunPlayer(target, 0.1, slowdown > 1.0 ? 1.0 : slowdown, TF_STUNFLAG_SLOWDOWN|TF_STUNFLAG_NOSOUNDOREFFECT, healer);
