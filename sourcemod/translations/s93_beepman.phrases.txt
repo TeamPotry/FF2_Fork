@@ -1,0 +1,12 @@
+"Phrases"
+{
+    "Hijack Timeleft"
+    {
+        "#format"   "{1:d}"
+        "en"        "Hijack Cooldown: {1} sec"
+    }
+    "Hijack Enable"
+    {
+        "en"        "USE HIJACK TO EMENY SENTRY!"
+    }
+}

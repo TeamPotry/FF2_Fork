@@ -1,0 +1,12 @@
+"Phrases"
+{
+    "Hijack Timeleft"
+    {
+        "#format"   "{1:d}"
+        "ko"        "센트리 납치 재사용 대기시간: {1}초"
+    }
+    "Hijack Enable"
+    {
+        "ko"        "센트리 납치 사용 가능!"
+    }
+}
