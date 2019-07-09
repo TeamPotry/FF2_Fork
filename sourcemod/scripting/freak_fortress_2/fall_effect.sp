@@ -147,11 +147,6 @@ methodmap FallEffectManagement < ArrayList {
 		TE_SetupBeamRingPoint(startpos, this.StartRadius, this.EndRadius, g_BeamSprite, g_HaloSprite, 0, 30, this.LifeTime, this.Width, this.Amplitude, colors, 10, 0);
 		TE_SendToAll();
 
-		/*
-		TE_SetupBeamRingPoint(startpos, this.EndRadius - 50.0, this.EndRadius, g_BeamSprite, g_HaloSprite, 0, 30, 10.0, this.Width, this.Amplitude, colors, 10, 0);
-		TE_SendToAll();
-		*/
-
 		this.Set(Manage_StartTime, GetGameTime());
 		this.SetStartPos(startpos);
 
@@ -174,9 +169,9 @@ public void FEM_Update(FallEffectManagement manage)
 	float distance, beamAngle = 15.0 + manage.Amplitude;
 
 	manage.GetStartPos(startPos);
-	// PrintToChatAll("%.1f %.1f", totalRadius, currentRadius);
 
-	for(int client = 1; client <= MaxClients; client++) {
+	for(int client = 1; client <= MaxClients; client++)
+	{
 		if(IsClientInGame(client) && ownerTeam != GetClientTeam(client)) {
 			GetClientAbsOrigin(client, targetPos);
 			distance = GetVectorDistance(startPos, targetPos);
@@ -184,20 +179,10 @@ public void FEM_Update(FallEffectManagement manage)
 			// 우선 거리가 유효한지 확인 (넓이 체크를 같이 함)
 			if(distance <= currentRadius + (manage.Width * 0.5)
 			&& distance >= currentRadius - (manage.Width * 0.5)) {
-				// 플레이어 좌표와 시작지점 좌표와의 각도 백터를 구하기
-				MakeVectorFromPoints(startPos, targetPos, finalPos); // ?
+				MakeVectorFromPoints(startPos, targetPos, finalPos);
 				GetVectorAngles(finalPos, toPlayerAngle);
 
-				// PrintToChatAll("%.1f %.1f %.1f", toPlayerAngle[0], toPlayerAngle[1], toPlayerAngle[2]);
 				if(toPlayerAngle[0] < beamAngle || toPlayerAngle[0] > 360.0 - beamAngle)	{ // TODO: 빔 넓이 커스터마이징
-					/*
-					PrintToChatAll("HIT");
-
-					int colors[4] = {255, 255, 255, 255};
-					TE_SetupBeamPoints(startPos, targetPos, g_BeamSprite, g_HaloSprite, 0, 15, 5.0, 20.0, 20.0, 10, 3.0, colors, 10);
-					TE_SendToAll();
-					*/
-
 					SDKHooks_TakeDamage(client, manage.Owner, manage.Owner, 20.0, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
 				}
 			}
