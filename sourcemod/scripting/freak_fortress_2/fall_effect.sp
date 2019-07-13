@@ -13,7 +13,6 @@
 #define FALL_BEAM_EFFECT	"circle beam"
 
 int g_BeamSprite, g_HaloSprite;
-float g_flLastBeamDamageTime[MAXPLAYERS+1];
 
 public Plugin myinfo=
 {
@@ -41,17 +40,21 @@ enum
 	Manage_StartPosX,
 	Manage_StartPosY,
 	Manage_StartPosZ,
+
+	Manage_ModelIndex,
+	Manage_HaloIndex,
+
+	Manage_StartFrame,
+	Manage_FrameRate,
+
+	Manage_BeamDamage,
+	Manage_BeamDamageCooldown,
 	Management_Max
 };
 
-/*
-TE_SetupBeamRingPoint(vec, 10.0, g_Cvar_BeaconRadius.FloatValue, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
-TE_SendToAll();
-*/
-
 methodmap FallEffectManagement < ArrayList {
     //TODO: 스피드를 커스터마이징 할 수 있게 할 것
-    public static native FallEffectManagement Create(int owner);
+    public static native FallEffectManagement Create(int owner, const char[] beamModelPath = "", const char[] haloModelPath = "");
 
     property int Owner {
         public get() {
@@ -125,6 +128,70 @@ methodmap FallEffectManagement < ArrayList {
         }
     }
 
+	property int ModelIndex {
+        public get() {
+            return this.Get(Manage_ModelIndex);
+        }
+        public set(int modelIndex) {
+            this.Set(Manage_ModelIndex, modelIndex);
+        }
+    }
+
+	property int HaloIndex {
+        public get() {
+            return this.Get(Manage_HaloIndex);
+        }
+        public set(int haloIndex) {
+            this.Set(Manage_HaloIndex, haloIndex);
+        }
+    }
+
+	property int StartFrame {
+        public get() {
+            return this.Get(Manage_StartFrame);
+        }
+        public set(int startFrame) {
+            this.Set(Manage_StartFrame, startFrame);
+        }
+    }
+
+	property int FrameRate {
+        public get() {
+            return this.Get(Manage_FrameRate);
+        }
+        public set(int frameRate) {
+            this.Set(Manage_FrameRate, frameRate);
+        }
+    }
+
+	property float BeamDamage {
+        public get() {
+            return this.Get(Manage_BeamDamage);
+        }
+        public set(float damage) {
+            this.Set(Manage_BeamDamage, damage);
+        }
+    }
+
+	property float BeamDamageCooldown {
+        public get() {
+            return this.Get(Manage_BeamDamageCooldown);
+        }
+        public set(float time) {
+            this.Set(Manage_BeamDamageCooldown, time);
+        }
+    }
+
+	public float GetDamageCooldown(int client)
+	{
+		return this.Get(Management_Max + client);
+	}
+
+	public float SetDamageCooldown(int client, float time)
+	{
+		this.Set(Management_Max + client, time);
+	}
+
 	public void GetStartPos(float startpos[3])
 	{
 		startpos[0] = this.Get(Manage_StartPosX);
@@ -141,10 +208,10 @@ methodmap FallEffectManagement < ArrayList {
 
     public void Send(float startpos[3])
     {
-		int colors[4] = {255, 255, 255, 255};
-		// RGBToIntArray(this.RGBColors, this.Alpha, colors);
+		int colors[4] = {0, 0, 0, 255};
+		RGBToIntArray(this.RGBColors, this.Alpha, colors);
 
-		TE_SetupBeamRingPoint(startpos, this.StartRadius, this.EndRadius, g_BeamSprite, g_HaloSprite, 0, 30, this.LifeTime, this.Width, this.Amplitude, colors, 10, 0);
+		TE_SetupBeamRingPoint(startpos, this.StartRadius, this.EndRadius, this.ModelIndex, this.HaloIndex, this.StartFrame, this.FrameRate, this.LifeTime, this.Width, this.Amplitude, colors, 10, 0);
 		TE_SendToAll();
 
 		this.Set(Manage_StartTime, GetGameTime());
@@ -172,7 +239,7 @@ public void FEM_Update(FallEffectManagement manage)
 
 	for(int client = 1; client <= MaxClients; client++)
 	{
-		if(IsClientInGame(client) && ownerTeam != GetClientTeam(client)) {
+		if(IsClientInGame(client) && ownerTeam != GetClientTeam(client) && manage.GetDamageCooldown(client) <= GetGameTime()) {
 			GetClientAbsOrigin(client, targetPos);
 			distance = GetVectorDistance(startPos, targetPos);
 
@@ -182,8 +249,9 @@ public void FEM_Update(FallEffectManagement manage)
 				MakeVectorFromPoints(startPos, targetPos, finalPos);
 				GetVectorAngles(finalPos, toPlayerAngle);
 
-				if(toPlayerAngle[0] < beamAngle || toPlayerAngle[0] > 360.0 - beamAngle)	{ // TODO: 빔 넓이 커스터마이징
-					SDKHooks_TakeDamage(client, manage.Owner, manage.Owner, 20.0, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
+				if(toPlayerAngle[0] < beamAngle || toPlayerAngle[0] > 360.0 - beamAngle)	{
+					SDKHooks_TakeDamage(client, manage.Owner, manage.Owner, manage.BeamDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
+					manage.SetDamageCooldown(client, GetGameTime() + manage.BeamDamageCooldown);
 				}
 			}
 		}
@@ -237,6 +305,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 }
 
+/* just for debug
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool& result)
 {
 	int boss = FF2_GetBossIndex(client);
@@ -246,17 +315,47 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 
 	return Plugin_Continue;
 }
+*/
 
 void Ability_CircleBeam(int boss)
 {
 	float pos[3];
+	char beamModelPath[PLATFORM_MAX_PATH], haloModelPath[PLATFORM_MAX_PATH];
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+
+	// TODO: FF2 2.0과 1.15 동시 호환
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam model path", beamModelPath, PLATFORM_MAX_PATH, "");
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "halo model path", haloModelPath, PLATFORM_MAX_PATH, "");
 
 	GetClientAbsOrigin(client, pos);
 	pos[2] += 10.0;
 
-	FallEffectManagement beam = FallEffectManagement.Create(client);
+	FallEffectManagement beam = FallEffectManagement.Create(client, beamModelPath, haloModelPath);
+	GetBeamArgument(boss, beam);
 	beam.Send(pos);
+}
+
+public void GetBeamArgument(const int boss, FallEffectManagement beam)
+{
+	// TODO: FF2 2.0과 1.15 동시 호환
+	beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "start radius", 10.0);
+	beam.EndRadius = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "end radius", 600.0);
+
+	beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "life time", 5.0);
+	beam.Width = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "width", 10.0);
+	beam.Amplitude = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "Amplitude", 0.0);
+
+	beam.RGBColors = RGBColor(
+		FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color red", 255),
+		FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color green", 255),
+		FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color blue", 255));
+	beam.Alpha = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color alpha", 255);
+
+	beam.StartFrame = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam startframe", 0);
+	beam.FrameRate = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam framerate", 10);
+
+	beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "damage", 20.0);
+	beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "damage cooldown", 0.0);
 }
 
 public void RGBToIntArray(RGBColor rgb, int alpha, int output[4])
@@ -271,6 +370,10 @@ public void RGBToIntArray(RGBColor rgb, int alpha, int output[4])
 public int Native_FallEffectManagement_Create(Handle plugin, int numParams)
 {
 	int clientMaxPosAt = Management_Max + MAXPLAYERS;
+	char beamModelPath[PLATFORM_MAX_PATH], haloModelPath[PLATFORM_MAX_PATH];
+
+	GetNativeString(2, beamModelPath, PLATFORM_MAX_PATH);
+	GetNativeString(3, haloModelPath, PLATFORM_MAX_PATH);
 	FallEffectManagement array = view_as<FallEffectManagement>(new ArrayList(8, clientMaxPosAt));
 
 	array.Owner = GetNativeCell(1);
@@ -281,6 +384,22 @@ public int Native_FallEffectManagement_Create(Handle plugin, int numParams)
 	array.Amplitude = 0.0;
 	array.RGBColors = GetRandomColor();
 	array.Alpha = 255;
+
+	if(strlen(beamModelPath) > 0)
+		array.ModelIndex = PrecacheModel(beamModelPath); // TODO:프리캐싱 횟수를 줄일 필요가 있을지도
+	else
+		array.ModelIndex = g_BeamSprite;
+
+	if(strlen(haloModelPath) > 0)
+		array.HaloIndex = PrecacheModel(haloModelPath); // TODO:프리캐싱 횟수를 줄일 필요가 있을지도
+	else
+		array.HaloIndex = g_HaloSprite;
+
+	array.StartFrame = 0;
+	array.FrameRate = 10;
+
+	array.BeamDamage = 20.0;
+	array.BeamDamageCooldown = 0.0;
 
 	for(int client = Management_Max; client < clientMaxPosAt; client++) {
 		array.Set(client, 0.0);
