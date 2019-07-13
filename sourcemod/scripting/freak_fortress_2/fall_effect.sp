@@ -4,9 +4,15 @@
 #include <morecolors>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
 
 #include <stocksoup/colors>
+
+#tryinclude <ff2_potry>
+#if !defined _ff2_potry_included
+	#include <freak_fortress_2_subplugin>
+#endif
+
+#pragma newdecls required
 
 #define THIS_PLUGIN_NAME    "fall effect"
 
@@ -21,6 +27,24 @@ public Plugin myinfo=
 	description="",
 	version="20190707",
 };
+
+/*
+	"beam model path" // 1
+	"halo model path"
+	"start radius"
+	"end radius"
+	"life time"
+	"width"
+	"Amplitude"
+	"color red"
+	"color green"
+	"color blue"
+	"color alpha"
+	"beam startframe"
+	"beam framerate"
+	"damage"
+	"damage cooldown"
+*/
 
 enum
 {
@@ -265,10 +289,18 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     CreateNative("FallEffectManagement.Create", Native_FallEffectManagement_Create);
 }
 
-public void OnPluginStart()
-{
-    FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
-}
+#if defined _ff2_potry_included
+	public void OnPluginStart()
+	{
+	    FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+	}
+#else
+	public void OnPluginStart2()
+	{
+		return;
+	}
+#endif
+
 
 public void OnMapStart()
 {
@@ -297,8 +329,11 @@ void PrecacheBeamPoint()
 
     delete gameConfig;
 }
-
+#if defined _ff2_potry_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
+#else
+public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
+#endif
 {
 	if(StrEqual(abilityName, FALL_BEAM_EFFECT)) {
 		Ability_CircleBeam(boss);
@@ -323,9 +358,13 @@ void Ability_CircleBeam(int boss)
 	char beamModelPath[PLATFORM_MAX_PATH], haloModelPath[PLATFORM_MAX_PATH];
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
-	// TODO: FF2 2.0과 1.15 동시 호환
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam model path", beamModelPath, PLATFORM_MAX_PATH, "");
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "halo model path", haloModelPath, PLATFORM_MAX_PATH, "");
+	#if defined _ff2_potry_included
+		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam model path", beamModelPath, PLATFORM_MAX_PATH, "");
+		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "halo model path", haloModelPath, PLATFORM_MAX_PATH, "");
+	#else
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, FALL_BEAM_EFFECT, 1, beamModelPath, PLATFORM_MAX_PATH);
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, FALL_BEAM_EFFECT, 2, haloModelPath, PLATFORM_MAX_PATH);
+	#endif
 
 	GetClientAbsOrigin(client, pos);
 	pos[2] += 10.0;
@@ -338,24 +377,46 @@ void Ability_CircleBeam(int boss)
 public void GetBeamArgument(const int boss, FallEffectManagement beam)
 {
 	// TODO: FF2 2.0과 1.15 동시 호환
-	beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "start radius", 10.0);
-	beam.EndRadius = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "end radius", 600.0);
 
-	beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "life time", 5.0);
-	beam.Width = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "width", 10.0);
-	beam.Amplitude = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "Amplitude", 0.0);
+	#if defined _ff2_potry_included
+		beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "start radius", 10.0);
+		beam.EndRadius = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "end radius", 600.0);
 
-	beam.RGBColors = RGBColor(
-		FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color red", 255),
-		FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color green", 255),
-		FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color blue", 255));
-	beam.Alpha = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color alpha", 255);
+		beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "life time", 5.0);
+		beam.Width = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "width", 10.0);
+		beam.Amplitude = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "Amplitude", 0.0);
 
-	beam.StartFrame = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam startframe", 0);
-	beam.FrameRate = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam framerate", 10);
+		beam.RGBColors = RGBColor(
+			FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color red", 255),
+			FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color green", 255),
+			FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color blue", 255));
+		beam.Alpha = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "color alpha", 255);
 
-	beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "damage", 20.0);
-	beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "damage cooldown", 0.0);
+		beam.StartFrame = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam startframe", 0);
+		beam.FrameRate = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "beam framerate", 10);
+
+		beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "damage", 20.0);
+		beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, FALL_BEAM_EFFECT, "damage cooldown", 0.0);
+	#else
+		beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 3, 10.0);
+		beam.EndRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 4, 600.0);
+
+		beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 5, 5.0);
+		beam.Width = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 6, 10.0);
+		beam.Amplitude = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 7, 0.0);
+
+		beam.RGBColors = RGBColor(
+			FF2_GetAbilityArgument(boss, this_plugin_name, FALL_BEAM_EFFECT, 8, 255),
+			FF2_GetAbilityArgument(boss, this_plugin_name, FALL_BEAM_EFFECT, 9, 255),
+			FF2_GetAbilityArgument(boss, this_plugin_name, FALL_BEAM_EFFECT, 10, 255));
+		beam.Alpha = FF2_GetAbilityArgument(boss, this_plugin_name, FALL_BEAM_EFFECT, 11, 255);
+
+		beam.StartFrame = FF2_GetAbilityArgument(boss, this_plugin_name, FALL_BEAM_EFFECT, 12, 0);
+		beam.FrameRate = FF2_GetAbilityArgument(boss, this_plugin_name, FALL_BEAM_EFFECT, 13, 10);
+
+		beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 14, 20.0);
+		beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, FALL_BEAM_EFFECT, 15, 0.0);
+	#endif
 }
 
 public void RGBToIntArray(RGBColor rgb, int alpha, int output[4])
