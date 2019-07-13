@@ -48,19 +48,19 @@ public Plugin myinfo=
 
 enum
 {
-    Manage_Owner,
+	Manage_Owner,
 
-    Manage_StartRadius,
-    Manage_EndRadius,
+	Manage_StartRadius,
+	Manage_EndRadius,
 
-    Manage_Width, //
-    Manage_Amplitude,
+	Manage_Width, //
+	Manage_Amplitude,
 
-    Manage_RGBColors,
-    Manage_Alpha,
-    Manage_LifeTime,
+	Manage_RGBColors,
+	Manage_Alpha,
+	Manage_LifeTime,
 
-    Manage_StartTime,
+	Manage_StartTime,
 	Manage_StartPosX,
 	Manage_StartPosY,
 	Manage_StartPosZ,
@@ -80,131 +80,131 @@ methodmap FallEffectManagement < ArrayList {
     //TODO: 스피드를 커스터마이징 할 수 있게 할 것
     public static native FallEffectManagement Create(int owner, const char[] beamModelPath = "", const char[] haloModelPath = "");
 
-    property int Owner {
-        public get() {
-            return this.Get(Manage_Owner);
-        }
-        public set(int owner) {
-            this.Set(Manage_Owner, owner);
-        }
-    }
+	property int Owner {
+		public get() {
+			return this.Get(Manage_Owner);
+		}
+		public set(int owner) {
+			this.Set(Manage_Owner, owner);
+		}
+	}
 
-    property float StartRadius {
-        public get() {
-            return this.Get(Manage_StartRadius);
-        }
-        public set(float radius) {
-            this.Set(Manage_StartRadius, radius);
-        }
-    }
+	property float StartRadius {
+		public get() {
+			return this.Get(Manage_StartRadius);
+		}
+		public set(float radius) {
+			this.Set(Manage_StartRadius, radius);
+		}
+	}
 
-    property float EndRadius {
-        public get() {
-            return this.Get(Manage_EndRadius);
-        }
-        public set(float radius) {
-            this.Set(Manage_EndRadius, radius);
-        }
-    }
+	property float EndRadius {
+		public get() {
+			return this.Get(Manage_EndRadius);
+		}
+		public set(float radius) {
+			this.Set(Manage_EndRadius, radius);
+		}
+	}
 
-    property float Width {
-        public get() {
-            return this.Get(Manage_Width);
-        }
-        public set(float width) {
-            this.Set(Manage_Width, width);
-        }
-    }
+	property float Width {
+		public get() {
+			return this.Get(Manage_Width);
+		}
+		public set(float width) {
+			this.Set(Manage_Width, width);
+		}
+	}
 
-    property float Amplitude {
-        public get() {
-            return this.Get(Manage_Amplitude);
-        }
-        public set(float amplitude) {
-            this.Set(Manage_Amplitude, amplitude);
-        }
-    }
+	property float Amplitude {
+		public get() {
+			return this.Get(Manage_Amplitude);
+		}
+		public set(float amplitude) {
+			this.Set(Manage_Amplitude, amplitude);
+		}
+	}
 
-    property RGBColor RGBColors {
-        public get() {
-            return this.Get(Manage_RGBColors);
-        }
-        public set(RGBColor RGBColors) {
-            this.Set(Manage_RGBColors, RGBColors);
-        }
-    }
+	property RGBColor RGBColors {
+		public get() {
+			return this.Get(Manage_RGBColors);
+		}
+		public set(RGBColor RGBColors) {
+			this.Set(Manage_RGBColors, RGBColors);
+		}
+	}
 
-    property int Alpha {
-        public get() {
-            return this.Get(Manage_Alpha);
-        }
-        public set(int alpha) {
-            this.Set(Manage_Alpha, alpha);
-        }
-    }
+	property int Alpha {
+		public get() {
+			return this.Get(Manage_Alpha);
+		}
+		public set(int alpha) {
+			this.Set(Manage_Alpha, alpha);
+		}
+	}
 
-    property float LifeTime {
-        public get() {
-            return this.Get(Manage_LifeTime);
-        }
-        public set(float lifetime) {
-            this.Set(Manage_LifeTime, lifetime);
-        }
-    }
+	property float LifeTime {
+		public get() {
+			return this.Get(Manage_LifeTime);
+		}
+		public set(float lifetime) {
+			this.Set(Manage_LifeTime, lifetime);
+		}
+	}
 
 	property int ModelIndex {
-        public get() {
-            return this.Get(Manage_ModelIndex);
-        }
-        public set(int modelIndex) {
-            this.Set(Manage_ModelIndex, modelIndex);
-        }
-    }
+		public get() {
+			return this.Get(Manage_ModelIndex);
+		}
+		public set(int modelIndex) {
+			this.Set(Manage_ModelIndex, modelIndex);
+		}
+	}
 
 	property int HaloIndex {
-        public get() {
-            return this.Get(Manage_HaloIndex);
-        }
-        public set(int haloIndex) {
-            this.Set(Manage_HaloIndex, haloIndex);
-        }
-    }
+		public get() {
+			return this.Get(Manage_HaloIndex);
+		}
+		public set(int haloIndex) {
+			this.Set(Manage_HaloIndex, haloIndex);
+		}
+	}
 
 	property int StartFrame {
-        public get() {
-            return this.Get(Manage_StartFrame);
-        }
-        public set(int startFrame) {
-            this.Set(Manage_StartFrame, startFrame);
-        }
-    }
+		public get() {
+			return this.Get(Manage_StartFrame);
+		}
+		public set(int startFrame) {
+			this.Set(Manage_StartFrame, startFrame);
+		}
+	}
 
 	property int FrameRate {
-        public get() {
-            return this.Get(Manage_FrameRate);
-        }
-        public set(int frameRate) {
-            this.Set(Manage_FrameRate, frameRate);
-        }
-    }
+		public get() {
+			return this.Get(Manage_FrameRate);
+		}
+		public set(int frameRate) {
+			this.Set(Manage_FrameRate, frameRate);
+		}
+	}
 
 	property float BeamDamage {
-        public get() {
-            return this.Get(Manage_BeamDamage);
-        }
-        public set(float damage) {
-            this.Set(Manage_BeamDamage, damage);
-        }
-    }
+		public get() {
+			return this.Get(Manage_BeamDamage);
+		}
+		public set(float damage) {
+			this.Set(Manage_BeamDamage, damage);
+		}
+	}
 
 	property float BeamDamageCooldown {
-        public get() {
-            return this.Get(Manage_BeamDamageCooldown);
-        }
-        public set(float time) {
-            this.Set(Manage_BeamDamageCooldown, time);
-        }
-    }
+		public get() {
+			return this.Get(Manage_BeamDamageCooldown);
+		}
+		public set(float time) {
+			this.Set(Manage_BeamDamageCooldown, time);
+		}
+	}
 
 	public float GetDamageCooldown(int client)
 	{
