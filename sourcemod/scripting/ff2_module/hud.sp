@@ -100,6 +100,7 @@ public int Native_FF2HudQueue_DeleteAllDisplay(Handle plugin, int numParams)
 		willDeleted = queue.GetHud(loop);
 		if(willDeleted != null)	{
 			// Debug("deleted %x", willDeleted);
+			queue.SetHud(loop, null);
 			delete willDeleted;
 		}
 	}
