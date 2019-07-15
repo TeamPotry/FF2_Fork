@@ -43,6 +43,8 @@ int ChangeLogLastTime;
 
 int Boss[MAXPLAYERS+1];
 
+FF2HudQueue PlayerHudQueue[MAXPLAYERS+1] = null;
+
 methodmap FF2PlayerData < KeyValues {
 	public FF2PlayerData(int client) {
 		char authId[25], queryStr[256], dataFile[PLATFORM_MAX_PATH];
