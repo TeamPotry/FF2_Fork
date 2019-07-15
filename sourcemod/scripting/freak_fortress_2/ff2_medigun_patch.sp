@@ -70,10 +70,10 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 	bool change = false;
 	if(boss == -1 && !IsValidClient(target) && g_flHealCooldown[healer] <= GetGameTime()) return Plugin_Continue;
 
-	g_flHealCooldown[healer] = GetGameTime() + 2.0;
+	g_flHealCooldown[healer] = GetGameTime() + 0.1;
 
 	if(FF2_HasAbility(boss, PLUGIN_NAME, GHOSTHEAL_NAME))   {
-		float damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "amount", 10.0);
+		float damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "amount", 2.0);
 
 		if(g_bGhost[target])
 			damage *= 2.0;
@@ -88,7 +88,7 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 		SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", 0.0);
 	}
 	if(FF2_HasAbility(boss, PLUGIN_NAME, STUN_NAME)) 	{
-		float slowdown, multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "multiplier", 5.0);
+		float slowdown, multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "multiplier", 3.0);
 
 		g_flHealStun[target] += multiplier;
 		slowdown = FloatDiv(g_flHealStun[target], 100.0);
