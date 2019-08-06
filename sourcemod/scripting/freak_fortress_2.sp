@@ -19,6 +19,16 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <clientprefs>
 #include <freak_fortress_2>
 #include <ff2_potry>
+
+#undef REQUIRE_EXTENSIONS
+#tryinclude <steamtools>
+#define REQUIRE_EXTENSIONS
+#undef REQUIRE_PLUGIN
+#include <db_simple>
+#tryinclude <smac>
+#tryinclude <updater>
+#define REQUIRE_PLUGIN
+
 #include <adt_array>
 #include <morecolors>
 #include <sdkhooks>
@@ -36,13 +46,6 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 
 #include "ff2_module/hud.sp"
 
-#undef REQUIRE_EXTENSIONS
-#tryinclude <steamtools>
-#define REQUIRE_EXTENSIONS
-#undef REQUIRE_PLUGIN
-#tryinclude <smac>
-#tryinclude <updater>
-#define REQUIRE_PLUGIN
 
 #pragma newdecls required
 
@@ -310,12 +313,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_Cell, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
 
-	//ff2_module/global_var.sp
-	Data_Native_Init();
-
-	//ff2_module/database.sp
-	DB_Native_Init();
-
 	//ff2_module/hud.sp
 	HudInit();
 
@@ -423,7 +420,6 @@ public void OnPluginStart()
 	RegConsoleCmd("say_team", Command_Say);
 
 	RegAdminCmd("ff2_change_boss", ChangeBossCmd, ADMFLAG_CHEATS);
-	RegAdminCmd("ff2_datadump", DataDumpCmd, ADMFLAG_CHEATS);
 	RegAdminCmd("ff2_special", Command_SetNextBoss, ADMFLAG_CHEATS, "Usage:  ff2_special <boss>.  Forces next round to use that boss");
 	RegAdminCmd("ff2_addpoints", Command_Points, ADMFLAG_CHEATS, "Usage:  ff2_addpoints <target> <points>.  Adds queue points to any player");
 	RegAdminCmd("ff2_point_enable", Command_Point_Enable, ADMFLAG_CHEATS, "Enable the control point if ff2_point_type is 0");
@@ -558,11 +554,6 @@ public void OnConfigsExecuted()
 
 public void OnMapStart()
 {
-	if(ff2Database != null)
-		delete ff2Database;
-	ff2Database = new FF2DBSettingData();
-	// ff2Database.InitializeTable();
-
 	HPTime=0.0;
 	doorCheckTimer=null;
 	RoundCount=0;
@@ -1221,7 +1212,7 @@ public Action Timer_Announce(Handle timer)
 					if(!IsClientInGame(client)) continue;
 					SetGlobalTransTarget(client);
 
-					LoadedPlayerData[client].GetString("changelog_last_view_time", targetTimeStr, sizeof(targetTimeStr));
+					GetSettingStringData(client, "changelog_last_view_time", targetTimeStr, sizeof(targetTimeStr));
 					if(DateToTimestamp(targetTimeStr) < ChangeLogLastTime) // ???
 					{
 						CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Changelog Notice", timeStr);
@@ -2259,9 +2250,8 @@ public void SetSoundFlags(int client, int soundFlags)
 		return;
 	}
 
-	// int tempflags=LoadedPlayerData[client].GetNum("sound_mute_flag", 0);
 	muteSound[client] |= soundFlags;
-	LoadedPlayerData[client].SetNum("sound_mute_flag", muteSound[client]);
+	SetSettingData(client, "sound_mute_flag", muteSound[client]);
 }
 
 public void ClearSoundFlags(int client, int soundFlags)
@@ -2271,9 +2261,28 @@ public void ClearSoundFlags(int client, int soundFlags)
 		return;
 	}
 
-	// int tempflags=LoadedPlayerData[client].GetNum("sound_mute_flag", 0);
 	muteSound[client]&=~soundFlags;
-	LoadedPlayerData[client].SetNum("sound_mute_flag", muteSound[client]);
+	SetSettingData(client, "sound_mute_flag", muteSound[client]);
+}
+
+public any GetSettingData(int client, const char[] key)
+{
+	return (DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key);
+}
+
+public void GetSettingStringData(int client, const char[] key, char[] value, int buffer)
+{
+	(DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key, value, buffer);
+}
+
+public void SetSettingData(int client, const char[] key, any value)
+{
+	(DBSPlayerData.GetClientData(client)).SetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key, value);
+}
+
+public void SetSettingStringData(int client, const char[] key, char[] value)
+{
+	(DBSPlayerData.GetClientData(client)).SetStringData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key, value);
 }
 
 public Action Timer_Move(Handle timer)
@@ -4000,12 +4009,6 @@ public Action Command_Point_Enable(int client, int args)
 	return Plugin_Handled;
 }
 
-public void OnClientAuthorized(int client, const char[] auth)
-{
-	LoadedPlayerData[client]=new FF2PlayerData(client);
-	LoadedHudData[client]=new FF2HudData(client);
-}
-
 public void OnClientPostAdminCheck(int client)
 {
 	// TODO: Hook these inside of EnableFF2() or somewhere instead
@@ -4021,7 +4024,7 @@ public void OnClientPostAdminCheck(int client)
 
 	if(!IsFakeClient(client))
 	{
-		muteSound[client]=LoadedPlayerData[client].GetNum("sound_mute_flag", 0);
+		muteSound[client]=GetSettingData(client, "sound_mute_flag");
 	}
 
 	if(playBGM[0])
@@ -4078,12 +4081,6 @@ public void OnClientDisconnect(int client)
 	{
 		delete MusicTimer[client];
 	}
-
-	LoadedPlayerData[client].Update();
-	LoadedHudData[client].Update();
-
-	delete LoadedPlayerData[client];
-	delete LoadedHudData[client];
 
 	delete PlayerHudQueue[client];
 }
@@ -7195,28 +7192,6 @@ public Action ChangeBossCmd(int client, int args)
 	return Plugin_Continue;
 }
 
-public Action DataDumpCmd(int client, int args)
-{
-	if(!Enabled2 || !IsValidClient(client))
-	{
-		return Plugin_Continue;
-	}
-
-	char authId[25], dataFile[PLATFORM_MAX_PATH];
-	LoadedPlayerData[client].Rewind();
-	LoadedHudData[client].Rewind();
-
-	LoadedPlayerData[client].GetString("authid", authId, sizeof(authId));
-
-	BuildPath(Path_SM, dataFile, sizeof(dataFile), "data/ff2_player_data/%s.txt", authId);
-	LoadedPlayerData[client].ExportToFile(dataFile);
-
-	BuildPath(Path_SM, dataFile, sizeof(dataFile), "data/ff2_hud_data/%s.txt", authId);
-	LoadedHudData[client].ExportToFile(dataFile);
-
-	return Plugin_Continue;
-}
-
 public int ChangeBossMenuHandler(Handle menu, MenuAction action, int client, int item)
 {
 	switch(action)
@@ -7239,7 +7214,7 @@ public int ChangeBossMenuHandler(Handle menu, MenuAction action, int client, int
 
 bool GetClientClassInfoCookie(int client)
 {
-	return LoadedPlayerData[client].GetNum("class_info_view", 0) > 0;
+	return GetSettingData(client, "class_info_view") > 0;
 }
 
 int GetClientQueuePoints(int client)
@@ -7594,7 +7569,7 @@ public Action ShowChangelog(int client)
 		char timeStr[64];
 		FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S");
 
-		LoadedPlayerData[client].SetString("changelog_last_view_time", timeStr);
+		SetSettingStringData(client, "changelog_last_view_time", timeStr);
 	}
 	return Plugin_Continue;
 }
@@ -7633,7 +7608,7 @@ public int ClassInfoTogglePanelH(Menu menu, MenuAction action, int client, int s
 	{
 		if(action==MenuAction_Select)
 		{
-			LoadedPlayerData[client].SetNum("class_info_view", selection==2 ? 0 : 1);
+			SetSettingData(client, "class_info_view", selection==2 ? 0 : 1);
 			CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Class Info", selection==2 ? "off" : "on");
 		}
 	}
