@@ -3122,6 +3122,17 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+		case 588: // The Pomson 6000
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "6 ; 0.6 ; 97 ; 0.5");
+			// 6: fire speed
+			// 97: reload speed
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
 	}
 
 	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
@@ -6129,7 +6140,18 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 		if(IsValidClient(attacker) && attacker!=client)
 		{
-			BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+			switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+			{
+				case 588:
+				{
+					// Nope.
+				}
+				default:
+				{
+					BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+				}
+			}
+
 			Damage[attacker]+=damage;
 		}
 
