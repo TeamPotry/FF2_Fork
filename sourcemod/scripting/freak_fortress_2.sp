@@ -6140,15 +6140,18 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 		if(IsValidClient(attacker) && attacker!=client)
 		{
-			switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+			if(IsValidEntity(weapon))
 			{
-				case 588:
+				switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 				{
-					// Nope.
-				}
-				default:
-				{
-					BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+					case 588:
+					{
+						// Nope.
+					}
+					default:
+					{
+						BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+					}
 				}
 			}
 
