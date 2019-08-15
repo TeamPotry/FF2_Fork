@@ -4273,6 +4273,7 @@ public Action ClientTimer(Handle timer)
 			int index=(validwep ? GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") : -1);
 			if(playerclass==TFClass_Medic)
 			{
+				PlayerHudQueue[client].SetName("Player Medic");
 				if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Primary))
 				{
 					int medigun=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
@@ -4280,8 +4281,9 @@ public Action ClientTimer(Handle timer)
 					if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 					{
 						int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
-						SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
-						FF2_ShowSyncHudText(client, jumpHUD, "%T: %i", "Ubercharge", client, charge);
+						Format(hudText, sizeof(hudText), "%T: %i", "Ubercharge", client, charge);
+						hudDisplay=FF2HudDisplay.CreateDisplay("Ubercharge", hudText);
+						PlayerHudQueue[client].AddHud(hudDisplay);
 
 						if(charge==100 && !(FF2Flags[client] & FF2FLAG_UBERREADY))
 						{
@@ -4289,6 +4291,7 @@ public Action ClientTimer(Handle timer)
 							FF2Flags[client]|=FF2FLAG_UBERREADY;
 						}
 					}
+
 				}
 				else if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary))
 				{
@@ -4298,6 +4301,28 @@ public Action ClientTimer(Handle timer)
 						TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.3);
 					}
 				}
+
+				int melee=GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
+				if(IsValidEntity(melee) && GetEntProp(melee, Prop_Send, "m_iItemDefinitionIndex") == 413)
+				{
+					int allRageDamage, bossIndex;
+					float allCharge;
+
+					for(int target=1; target<=MaxClients; target++)
+					{
+						if((bossIndex = GetBossIndex(target)) != -1) {
+							allRageDamage += BossRageDamage[bossIndex];
+							allCharge += BossCharge[bossIndex][0];
+						}
+					}
+					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allCharge/100.0)), allRageDamage);
+					hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
+					PlayerHudQueue[client].AddHud(hudDisplay);
+				}
+
+				SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
+				PlayerHudQueue[client].ShowSyncHudQueueText(jumpHUD);
+				PlayerHudQueue[client].DeleteAllDisplay();
 			}
 			else if(playerclass==TFClass_Soldier)
 			{
