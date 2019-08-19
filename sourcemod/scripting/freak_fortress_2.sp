@@ -4284,6 +4284,8 @@ public Action ClientTimer(Handle timer)
 			PlayerHudQueue[client].ShowSyncHudQueueText(rageHUD);
 			PlayerHudQueue[client].DeleteAllDisplay();
 
+			if(!IsPlayerAlive(client)) continue;
+
 			TFClassType playerclass=TF2_GetPlayerClass(client);
 			int weapon=GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 			if(weapon<=MaxClients || !IsValidEntity(weapon) || !GetEntityClassname(weapon, classname, sizeof(classname)))
