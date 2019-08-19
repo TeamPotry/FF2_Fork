@@ -3144,6 +3144,17 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+		case 527: // The Widowmaker
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "6 ; 0.8 ; 106 ; 0.6");
+			// 6: fire speed
+			// 106: accurate
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
 	}
 
 	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
