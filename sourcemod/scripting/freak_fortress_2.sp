@@ -3133,6 +3133,17 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+		case 142: // The Gunslinger
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "6 ; 0.8 ; 140 ; 125.0");
+			// 6: fire speed
+			// 140: max health
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
 	}
 
 	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
@@ -5636,8 +5647,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(damagecustom==TF_CUSTOM_COMBO_PUNCH)
 						{
-							damage*=4.0;
-							ScaleVector(damageForce, 4.0);
+							damage*=6.0;
+							ScaleVector(damageForce, 6.0);
 							SpecialAttackToBoss(attacker, boss, "combo_punch", damage);
 
 							return Plugin_Changed;
