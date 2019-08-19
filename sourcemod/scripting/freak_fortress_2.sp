@@ -5619,8 +5619,11 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
 				{
-					int sentry=-1, targettingCount=0, closestSentry;
+					int sentry=-1, targettingCount=0, closestSentry, currentWeapon = GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon");
 					float distance, closestdistanse=800.0, sentryPos[3];
+
+					if(IsValidEntity(currentWeapon) && GetEntProp(currentWeapon, Prop_Send, "m_iItemDefinitionIndex") == 141)
+						return Plugin_Continue;
 
 					while((sentry = FindEntityByClassname2(sentry, "obj_sentrygun")) != -1)
 					{
