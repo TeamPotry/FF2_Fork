@@ -172,6 +172,26 @@ public void RageTimer(int client)
 		SDKUnhook(client, SDKHook_PreThinkPost, RageTimer);
 	}
 
+	int glowIndex;
+	for(int target = 1; target <= MaxClients; target++)
+	{
+		if(!IsClientInGame(target) || !IsPlayerAlive(target)) continue;
+
+		// int currentHP = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, target);
+		int currentHP = GetEntProp(target, Prop_Send, "m_iHealth");
+		int color[4] = {255, 255, 0, 255}, totalColor, temp;
+
+		float ratio = g_flTimeStopDamage[target] * 100.0 / float(currentHP);
+		totalColor = (temp = 510 - RoundFloat(5.1 * ratio)) > 0 ? temp : 0;
+		color[0] = totalColor <= 255 ? ((temp = (totalColor - 255) * -1) > 255 ? 0 : temp) : 0;
+		color[1] = totalColor < 255 ? 0 : totalColor - 255;
+
+
+		if((glowIndex = TF2_HasGlow(target)) != -1 && IsValidEntity(glowIndex)) {
+			TF2_SetGlowColor(glowIndex, color);
+		}
+	}
+
 	if(g_flTimeStopCooling <= GetGameTime() && g_flTimeStopCooling != -1.0)
 	{
 		EnableTimeStop(client);
@@ -203,19 +223,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 		{
 			g_flTimeStopDamage[client] += damage * 0.5;
 			// Debug("%N, g_flTimeStopDamage = %.1f", client, g_flTimeStopDamage[client]);
-/*
-			int glowIndex = -1, currentHP = GetEntProp(client, Prop_Send, "m_iHealth");
-			int color[4] = {255, 255, 0, 255}, totalColor;
 
-			float ratio = g_flTimeStopDamage[client] * 100.0 / view_as<float>(currentHP);
-			totalColor = 510 - RoundFloat(5.1 * ratio);
-			if((glowIndex = TF2_HasGlow(client, client)) == -1 || !IsValidEntity(glowIndex))
-				glowIndex = TF2_CreateGlow(client);
-
-			color[1] = totalColor < 255 ? 0 : totalColor - 255;
-			color[0] = totalColor <= 255 ? (totalColor - 255) * -1 : 0;
-			TF2_SetGlowColor(glowIndex, color);
-*/
 			return Plugin_Handled;
 		}
 	}
@@ -251,6 +259,11 @@ void EnableTimeStop(int client)
 
 				SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
 				SDKHook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
+
+				int glowIndex;
+				if((glowIndex = TF2_HasGlow(entity)) == -1 || !IsValidEntity(glowIndex)) {
+					glowIndex = TF2_CreateGlow(entity);
+				}
 			}
 		}
 
@@ -316,8 +329,10 @@ void DisableTimeStop()
 				TF2_RemoveCondition(entity, TFCond_MarkedForDeath);
 
 				int glowIndex = -1;
-				if((glowIndex = TF2_HasGlow(entity, entity)) != -1 && IsValidEntity(glowIndex))
+				if((glowIndex = TF2_HasGlow(entity)) != -1 && IsValidEntity(glowIndex)) {
+					AcceptEntityInput(glowIndex, "Disable");
 					RemoveEntity(glowIndex);
+				}
 			}
 
 			g_flTimeStopDamage[entity] = 0.0;
@@ -362,7 +377,7 @@ void DisableTimeStop()
 	g_hTimeStopParent = -1;
 }
 
-stock int TF2_CreateGlow(int iEnt)
+stock int TF2_CreateGlow(int iEnt, int colors[4] = {255, 255, 255, 255})
 {
 	char strName[126], strClass[64];
 	GetEntityClassname(iEnt, strClass, sizeof(strClass));
@@ -370,7 +385,7 @@ stock int TF2_CreateGlow(int iEnt)
 	DispatchKeyValue(iEnt, "targetname", strName);
 
 	char strGlowColor[18];
-	Format(strGlowColor, sizeof(strGlowColor), "%i %i %i %i", GetRandomInt(0, 255), GetRandomInt(0, 255), GetRandomInt(0, 255), GetRandomInt(180, 255));
+	Format(strGlowColor, sizeof(strGlowColor), "%i %i %i %i", colors[0], colors[1], colors[2], colors[3]);
 
 	int ent = CreateEntityByName("tf_glow");
 	DispatchKeyValue(ent, "targetname", "RainbowGlow");
@@ -384,13 +399,12 @@ stock int TF2_CreateGlow(int iEnt)
 	return ent;
 }
 
-stock int TF2_HasGlow(int owner, int iEnt)
+stock int TF2_HasGlow(int iEnt)
 {
 	int index = -1;
 	while ((index = FindEntityByClassname(index, "tf_glow")) != -1)
 	{
-		if (GetEntPropEnt(index, Prop_Send, "m_hTarget") == iEnt
-        && GetEntPropEnt(index, Prop_Send, "m_hOwnerEntity") == owner)
+		if (GetEntPropEnt(index, Prop_Send, "m_hTarget") == iEnt)
 		{
 			return index;
 		}
@@ -399,15 +413,10 @@ stock int TF2_HasGlow(int owner, int iEnt)
 	return -1;
 }
 
-stock void TF2_SetGlowColor(int ent, const int colors[4])
+stock void TF2_SetGlowColor(int ent, int colors[4])
 {
-    AcceptEntityInput(ent, "Disable");
-
-    char strGlowColor[18];
-    Format(strGlowColor, sizeof(strGlowColor), "%i %i %i %i", colors[0], colors[1], colors[2], colors[3]);
-
-    DispatchKeyValue(ent, "GlowColor", strGlowColor);
-    AcceptEntityInput(ent, "Enable");
+	SetVariantColor(colors);
+	AcceptEntityInput(ent, "SetGlowColor");
 }
 
 void EnableAnimation(int entity)
