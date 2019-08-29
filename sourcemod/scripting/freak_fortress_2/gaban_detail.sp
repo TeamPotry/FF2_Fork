@@ -52,9 +52,8 @@ public void OnClientPostAdminCheck(int client)
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 }
 
-public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	int client = hudQueue.ClientIndex;
 	int boss = FF2_GetBossIndex(0);
 	FF2HudDisplay hudDisplay = null;
 	SetGlobalTransTarget(client);
@@ -70,7 +69,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 		Format(text, sizeof(text), "STEAM SALE: %s", discountText);
 
 		hudDisplay = FF2HudDisplay.CreateDisplay("steam sale notice", text);
-		hudQueue.AddHud(hudDisplay);
+		hudQueue.AddHud(hudDisplay, client);
 	}
 }
 

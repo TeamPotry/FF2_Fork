@@ -237,10 +237,9 @@ public void FF2_OnAbility(int boss, const char[] plugin_name, const char[] abili
 	}
 }
 
-public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	char text[256];
-	int client = hudQueue.ClientIndex;
 	FF2HudDisplay hudDisplay = null;
 
 	SetGlobalTransTarget(client);
@@ -254,7 +253,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 			Format(text, sizeof(text), "%t", "Hijack Enable");
 
 		hudDisplay = FF2HudDisplay.CreateDisplay("Hijack Notice", text);
-		hudQueue.AddHud(hudDisplay);
+		hudQueue.AddHud(hudDisplay, client);
 	}
 }
 

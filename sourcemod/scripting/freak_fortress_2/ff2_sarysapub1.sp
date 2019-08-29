@@ -687,8 +687,8 @@ void Ability_Init(int clientIdx)
 
 	if (RW_CanUse[clientIdx] || RP_CanUse[clientIdx])
 	{
-		ROTT_UpdateHUD(clientIdx);
 		ROTT_HudRefreshAt[clientIdx] = GetEngineTime();
+		ROTT_UpdateHUD(clientIdx);
 	}
 }
 

@@ -4053,7 +4053,7 @@ public void OnClientPostAdminCheck(int client)
 	Assist[client]=0;
 	uberTarget[client]=-1;
 
-	PlayerHudQueue[client] = FF2HudQueue.CreateHudQueue(client, "Player");
+	PlayerHudQueue[client] = FF2HudQueue.CreateHudQueue("Player");
 
 	if(!IsFakeClient(client))
 	{
@@ -4229,14 +4229,14 @@ public Action ClientTimer(Handle timer)
 							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 
 						hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
-						PlayerHudQueue[client].AddHud(hudDisplay);
+						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
 						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
 						if(Assist[observer] > 0)
 							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
 
 						hudDisplay=FF2HudDisplay.CreateDisplay("Observer Target Player Damage", hudText);
-						PlayerHudQueue[client].AddHud(hudDisplay, observer);
+						PlayerHudQueue[client].AddHud(hudDisplay, client, observer);
 					}
 					else if(IsBoss(observer))
 					{
@@ -4248,7 +4248,7 @@ public Action ClientTimer(Handle timer)
 						}
 						Format(hudText, sizeof(hudText), "HP: %d / %d%s", BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1), BossHealthMax[boss], lives);
 						hudDisplay=FF2HudDisplay.CreateDisplay("Observer Target Boss HP", hudText);
-						PlayerHudQueue[client].AddHud(hudDisplay);
+						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
 						if(BossTeam != TF2_GetClientTeam(observer))
 						{
@@ -4257,7 +4257,7 @@ public Action ClientTimer(Handle timer)
 								Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
 
 							hudDisplay = FF2HudDisplay.CreateDisplay("Observer Target Player Damage", hudText);
-							PlayerHudQueue[client].AddHud(hudDisplay, observer);
+							PlayerHudQueue[client].AddHud(hudDisplay, client, observer);
 						}
 					}
 				}
@@ -4268,7 +4268,7 @@ public Action ClientTimer(Handle timer)
 						Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 
 					hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
-					PlayerHudQueue[client].AddHud(hudDisplay);
+					PlayerHudQueue[client].AddHud(hudDisplay, client);
 				}
 			}
 			else
@@ -4278,10 +4278,9 @@ public Action ClientTimer(Handle timer)
 					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
 
 				hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
-				PlayerHudQueue[client].AddHud(hudDisplay);
-				// PrintToChat(client, "%d", PlayerHudQueue[client].AddHud(FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText)));
+				PlayerHudQueue[client].AddHud(hudDisplay, client);
 			}
-			PlayerHudQueue[client].ShowSyncHudQueueText(rageHUD);
+			PlayerHudQueue[client].ShowSyncHudQueueText(client, rageHUD);
 			PlayerHudQueue[client].DeleteAllDisplay();
 
 			if(!IsPlayerAlive(client)) continue;
@@ -4307,7 +4306,7 @@ public Action ClientTimer(Handle timer)
 						int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
 						Format(hudText, sizeof(hudText), "%T: %i", "Ubercharge", client, charge);
 						hudDisplay=FF2HudDisplay.CreateDisplay("Ubercharge", hudText);
-						PlayerHudQueue[client].AddHud(hudDisplay);
+						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
 						if(charge==100 && !(FF2Flags[client] & FF2FLAG_UBERREADY))
 						{
@@ -4341,11 +4340,11 @@ public Action ClientTimer(Handle timer)
 					}
 					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allCharge/100.0)), allRageDamage);
 					hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
-					PlayerHudQueue[client].AddHud(hudDisplay);
+					PlayerHudQueue[client].AddHud(hudDisplay, client);
 				}
 
 				SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
-				PlayerHudQueue[client].ShowSyncHudQueueText(jumpHUD);
+				PlayerHudQueue[client].ShowSyncHudQueueText(client, jumpHUD);
 				PlayerHudQueue[client].DeleteAllDisplay();
 			}
 			else if(playerclass==TFClass_Soldier)
@@ -4567,7 +4566,7 @@ public Action BossTimer(Handle timer)
 		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
 		bossHudDisplay=FF2HudDisplay.CreateDisplay("Rage Meter", text);
-		PlayerHudQueue[client].AddHud(bossHudDisplay);
+		PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 
 		if(RoundFloat(BossCharge[boss][0])==100.0)
 		{
@@ -4582,7 +4581,7 @@ public Action BossTimer(Handle timer)
 				Format(text, sizeof(text), "%t", "Activate Rage");
 
 				bossHudDisplay=FF2HudDisplay.CreateDisplay("Activate Rage", text);
-				PlayerHudQueue[client].AddHud(bossHudDisplay);
+				PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 
 				char sound[PLATFORM_MAX_PATH];
 				if(FindSound("full rage", sound, sizeof(sound), boss) && emitRageSound[boss])
@@ -4601,10 +4600,10 @@ public Action BossTimer(Handle timer)
 				Format(text, sizeof(text), "%s + ASSIST: %d", text, Assist[client]);
 
 			bossHudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", text);
-			PlayerHudQueue[client].AddHud(bossHudDisplay);
+			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 		}
 
-		PlayerHudQueue[client].ShowSyncHudQueueText(rageHUD);
+		PlayerHudQueue[client].ShowSyncHudQueueText(client, rageHUD);
 		PlayerHudQueue[client].DeleteAllDisplay();
 
 		SetHudTextParams(-1.0, 0.88, 0.06, 255, 255, 255, 255);
@@ -5319,9 +5318,9 @@ public Action Timer_DrawGame(Handle timer)
 			SetGlobalTransTarget(client);
 
 			hudDisplay=FF2HudDisplay.CreateDisplay("Game Timer", timeDisplay);
-			PlayerHudQueue[client].AddHud(hudDisplay);
+			PlayerHudQueue[client].AddHud(hudDisplay, client);
 
-			PlayerHudQueue[client].ShowSyncHudQueueText(timeleftHUD);
+			PlayerHudQueue[client].ShowSyncHudQueueText(client, timeleftHUD);
 			PlayerHudQueue[client].DeleteAllDisplay();
 		}
 	}

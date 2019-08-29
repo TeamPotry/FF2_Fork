@@ -56,10 +56,8 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
     g_flPlayerDPS[attacker][g_Count] += damageFloat;
 }
 
-public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	int client = hudQueue.ClientIndex;
-
 	char text[256];
 	FF2HudDisplay hudDisplay = null;
 	hudQueue.GetName(text, sizeof(text));
@@ -68,7 +66,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 	{
 		Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(client));
 		hudDisplay = FF2HudDisplay.CreateDisplay("Your DPS", text);
-		hudQueue.AddHud(hudDisplay);
+		hudQueue.AddHud(hudDisplay, client);
 		// PrintToChat(client, "%d", hudQueue.AddHud(FF2HudDisplay.CreateDisplay("Your DPS", text)));
 	}
 	else if(StrEqual(text, "Observer"))
@@ -78,7 +76,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 		{
 			Format(text, sizeof(text), "DPS: %.1f", GetPlayerDPS(observer));
 			hudDisplay = FF2HudDisplay.CreateDisplay("Observer Target Player DPS", text);
-			hudQueue.AddHud(hudDisplay, observer);
+			hudQueue.AddHud(hudDisplay, client, observer);
 			// PrintToChat(client, "%d", hudQueue.AddHud(FF2HudDisplay.CreateDisplay("Observer Target Player DPS", text), observer));
 		}
 	}

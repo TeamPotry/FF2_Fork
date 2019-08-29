@@ -46,28 +46,24 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 	return Plugin_Continue;
 }
 
-public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	if(!g_bDEVmode) return;
 
-	int client = hudQueue.ClientIndex;
-	SetGlobalTransTarget(client);
-	FF2HudDisplay hudDisplay = null;
 	char text[256];
-	hudQueue.GetName(text, sizeof(text));
-
 	bool changed = false;
+	FF2HudDisplay hudDisplay = null;
+
+	SetGlobalTransTarget(client);
+	hudQueue.GetName(text, sizeof(text));
 
 	if(StrEqual(text, "Boss"))
 	{
 		int noticehudId = hudQueue.FindHud("Activate Rage");
 		if(noticehudId != -1)
 		{
-			hudDisplay = hudQueue.GetHud(noticehudId);
-			hudQueue.SetHud(noticehudId, null);
-			delete hudDisplay;
+			hudQueue.DeleteDisplay(noticehudId);
 		}
-
 		changed = true;
 	}
 	else if(StrEqual(text, "Observer"))
@@ -81,7 +77,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 		Format(text, sizeof(text), "%t", "Dev Mode");
 
 		hudDisplay = FF2HudDisplay.CreateDisplay("Dev Mode", text);
-		hudQueue.AddHud(hudDisplay);
+		hudQueue.AddHud(hudDisplay, client);
 	}
 
 	return;

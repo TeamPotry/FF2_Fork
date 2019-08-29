@@ -116,118 +116,40 @@ enum
 };
 
 methodmap FF2HudConfig {
-    // public static native FF2HudConfig GetConfigKeyValue();
     public static native int GetDefaultSettiing(const char[] name, const char[] info);
 }
 
-methodmap FF2HudDisplay < ArrayList
+methodmap FF2HudDisplay < KeyValues
 {
     public static native FF2HudDisplay CreateDisplay(char[] info, char[] display);
-
-    public any GetValue(int valueType)
-    {
-        return this.Get(valueType);
-    }
-
-    public void SetValue(int valueType, any value)
-    {
-        this.Set(valueType, value);
-    }
-
-    public void GetInfo(char[] infoStr, int length)
-    {
-        this.GetString(Hud_Info, infoStr, length);
-    }
-
-    public void SetInfo(const char[] infoStr)
-    {
-        this.SetString(Hud_Info, infoStr);
-    }
-
-    public void GetDisplay(char[] displayStr, int length)
-    {
-        this.GetString(Hud_Display, displayStr, length);
-    }
-
-    public void SetDisplay(const char[] displayStr)
-    {
-        this.SetString(Hud_Display, displayStr);
-    }
 
     public native void ShowSyncHudDisplayText(int client, Handle sync = null);
 }
 
-methodmap FF2HudQueue < ArrayList
+methodmap FF2HudQueue < KeyValues
 {
-    public static native FF2HudQueue CreateHudQueue(int client, const char[] name, int initialSize = 8);
+    // TODO: Add Replace
+    public static native FF2HudQueue CreateHudQueue(const char[] name);
 
-    property int ClientIndex {
-        public get()
-        {
-            return this.Get(HudQueue_ClientIndex);
-        }
+    public native int PushDisplay(FF2HudDisplay display);
 
-        public set(int client)
-        {
-            this.Set(HudQueue_ClientIndex, client);
-        }
-    }
+    public native void GetName(char[] name, int length);
 
-    public void GetName(char[] name, int length)
-    {
-        this.GetString(HudQueue_Name, name, length);
-    }
+    public native void SetName(const char[] name);
 
-    public void SetName(const char[] name)
-    {
-        this.SetString(HudQueue_Name, name);
-    }
+    public native void DeleteDisplay(int posId);
 
-    public FF2HudDisplay GetHud(int index)
-    {
-        return this.Get(index);
-    }
-
-    public void SetHud(int index, FF2HudDisplay hudDisplay)
-    {
-        this.Set(index, hudDisplay);
-    }
-/*
-    public void ResizeQueue(int size)
-    {
-        int beforeSize = this.Length;
-        if(beforeSize > size)
-        {
-            int between = beforeSize - size;
-            FF2HudDisplay willDeleted;
-            for(int loop = 0; between > loop; loop++) {
-                willDeleted = this.GetHud(size + loop);
-                if(willDeleted != null)
-                    willDeleted.KillSelf();
-            }
-        }
-        this.Resize(size + view_as<int>(HudQueueValue_Last));
-
-        if(size > beforeSize)
-        {
-            for(int loop = beforeSize; this.Length > loop; loop++)
-            {
-                this.SetHud(loop, view_as<FF2HudDisplay>(null));
-            }
-        }
-    }
-*/
     public native void DeleteAllDisplay();
 
     // NOTE: other = 타인 정보를 볼 경우, 그 클라이언트의 index
-    public native int AddHud(FF2HudDisplay hudDisplay, int other = 0);
+    public native int AddHud(FF2HudDisplay hudDisplay, int client, int other = 0);
 
     public native int FindHud(const char[] hudId);
 
-    public native void ShowSyncHudQueueText(Handle sync = null);
+    public native void ShowSyncHudQueueText(int client, Handle sync = null);
 }
 
-forward void FF2_OnCalledQueue(FF2HudQueue hudQueue);
+forward void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client);
 forward Action FF2_OnDisplayHud(const int client, const char[] info, char[] display);
 forward void FF2_OnDisplayHud_Post(const int client, const char[] info, const char[] display);
 
