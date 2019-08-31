@@ -252,7 +252,7 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 		#if defined _ff2_potry_included
 			float multiplier = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "damage multiplier", 1.0);
 		#else
-			float multiplier = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", "5", 1.0);
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", 5, 1.0);
 		#endif
 
 		if(g_flTimeStop != -1.0 && client != attacker)
