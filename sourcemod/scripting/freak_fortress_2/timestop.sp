@@ -5,6 +5,11 @@
 #include <tf2_stocks>
 #include <freak_fortress_2>
 
+#tryinclude <ff2_potry>
+#if !defined _ff2_potry_included
+	#include <freak_fortress_2_subplugin>
+#endif
+
 #define MAXENTITIES 2048
 
 /*
@@ -37,12 +42,18 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, err_max)
 	return APLRes_Success;
 }
 
-public void OnPluginStart()
+#if defined _ff2_potry_included
+	public void OnPluginStart()
+#else
+	public void OnPluginStart2()
+#endif
 {
 	HookEvent("player_spawn", OnPlayerSpawn);
 	HookEvent("teamplay_round_win", OnRoundEnd);
 
-	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+	#if defined _ff2_potry_included
+		FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+	#endif
 }
 
 public Action OnRoundEnd(Handle event, const char[] name, bool dont)
@@ -109,18 +120,36 @@ public TF2_OnConditionAdded(client, TFCond:condition)
 	}
 }
 
+#if defined _ff2_potry_included
 public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot)
+#else
+public FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, bool &enabled)
+#endif
 {
 	if(!strcmp(abilityName, "timestop"))
 	{
-		if(g_flTimeStopCooling != -1.0 || g_flTimeStop != -1.0)
-			return Plugin_Handled;
+		if(g_flTimeStopCooling != -1.0 || g_flTimeStop != -1.0) {
+
+			#if defined _ff2_potry_included
+				return Plugin_Handled;
+			#else
+				enabled = false;
+			#endif
+		}
 	}
 
-	return Plugin_Continue;
+	#if defined _ff2_potry_included
+		return Plugin_Continue;
+	#else
+		return;
+	#endif
 }
 
+#if defined _ff2_potry_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
+#else
+public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
+#endif
 {
     if(!strcmp(abilityName, "timestop"))
 	{
@@ -138,15 +167,22 @@ void Rage_TimeStop(int boss)
 			g_flTimeStopDamage[client] = 0.0;
 		}
 	}
-	g_flTimeStopCooling = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "cooldown", 5.0);
-	g_flTimeStop = GetGameTime()+FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "duration", 10.0);
+
+	char sound[PLATFORM_MAX_PATH];
+
+	#if defined _ff2_potry_included
+		g_flTimeStopCooling = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "cooldown", 5.0);
+		g_flTimeStop = GetGameTime()+FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "duration", 10.0);
+		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "warning sound path", sound, sizeof(sound));
+	#else
+		g_flTimeStopCooling = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", 1, 5.0);
+		g_flTimeStop = GetGameTime()+FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", 2, 10.0);
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, "timestop", 3, sound, sizeof(sound));
+	#endif
 
 	SDKHook(GetClientOfUserId(FF2_GetBossUserId(boss)), SDKHook_PreThinkPost, RageTimer);
 	SDKUnhook(GetClientOfUserId(FF2_GetBossUserId(boss)), SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(GetClientOfUserId(FF2_GetBossUserId(boss)), SDKHook_OnTakeDamage, OnTakeDamage);
-
-	char sound[PLATFORM_MAX_PATH];
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "warning sound path", sound, sizeof(sound));
 
 	if(sound[0] != '\0')
 	{
@@ -185,7 +221,6 @@ public void RageTimer(int client)
 		totalColor = (temp = 510 - RoundFloat(5.1 * ratio)) > 0 ? temp : 0;
 		color[0] = totalColor <= 255 ? ((temp = (totalColor - 255) * -1) > 255 ? 0 : temp) : 0;
 		color[1] = totalColor < 255 ? 0 : totalColor - 255;
-
 
 		if((glowIndex = TF2_HasGlow(target)) != -1 && IsValidEntity(glowIndex)) {
 			TF2_SetGlowColor(glowIndex, color);
@@ -289,7 +324,11 @@ void EnableTimeStop(int client)
 	if(boss != -1)
 	{
 		char sound[PLATFORM_MAX_PATH];
-		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "on sound", sound, sizeof(sound));
+		#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "on sound", sound, sizeof(sound));
+		#else
+			FF2_GetAbilityArgumentString(boss, this_plugin_name, "timestop", 4, sound, sizeof(sound));
+		#endif
 
 		if(sound[0] != '\0')
 		{
