@@ -248,12 +248,16 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 		if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
 			return Plugin_Continue;
 
+		int boss = IsBoss(attacker);
+		#if defined _ff2_potry_included
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "damage multiplier", 1.0);
+		#else
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", "5", 1.0);
+		#endif
 
-		else if(g_flTimeStop != -1.0 && client != attacker)
+		if(g_flTimeStop != -1.0 && client != attacker)
 		{
-			g_flTimeStopDamage[client] += damage * 0.5;
-			// Debug("%N, g_flTimeStopDamage = %.1f", client, g_flTimeStopDamage[client]);
-
+			g_flTimeStopDamage[client] += damage * multiplier;
 			return Plugin_Handled;
 		}
 	}
