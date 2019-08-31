@@ -248,11 +248,6 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 		if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
 			return Plugin_Continue;
 
-		if(g_flTimeStopCooling != -1.0 && IsBoss(client) && client != attacker)
-		{
-				TF2_AddCondition(attacker, TFCond_MarkedForDeath, -1.0);
-				// Debug("%N Marked", client)
-		}
 
 		else if(g_flTimeStop != -1.0 && client != attacker)
 		{
