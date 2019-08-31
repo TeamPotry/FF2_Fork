@@ -289,7 +289,8 @@ void EnableTimeStop(int client)
 				SetEntPropFloat(entity, Prop_Send, "m_flNextAttack", GetGameTime() + 10000.0);
 
 				int weapon = GetEntPropEnt(entity, Prop_Send, "m_hActiveWeapon");
-				DisableAnimation(weapon);
+				if(IsValidEntity(weapon))
+					DisableAnimation(weapon);
 
 				SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
 				SDKHook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
@@ -361,7 +362,8 @@ void DisableTimeStop()
 			if(IsPlayerAlive(entity))
 			{
 				int weapon = GetEntPropEnt(entity, Prop_Send, "m_hActiveWeapon");
-				EnableAnimation(weapon);
+				if(IsValidEntity(weapon))
+					EnableAnimation(weapon);
 
 				SDKHooks_TakeDamage(entity, g_hTimeStopParent, g_hTimeStopParent, g_flTimeStopDamage[entity], DMG_GENERIC, -1);
 				TF2_RemoveCondition(entity, TFCond_MarkedForDeath);
