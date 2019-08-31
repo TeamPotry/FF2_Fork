@@ -2133,6 +2133,9 @@ void PlayBGM(int client)
 			kv.GetString("name", bossName, sizeof(bossName));
 			PrintToServer("[FF2 Bosses] Character %s is missing BGM file '%s'!", bossName, music);
 		}
+
+		delete musicArray;
+		delete timeArray;
 	}
 }
 
@@ -4651,6 +4654,7 @@ public Action BossTimer(Handle timer)
 								break;
 							}
 						}
+						delete livesArray;
 					}
 				}
 				while(kv.GotoNextKey());
@@ -4858,6 +4862,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 								break;
 							}
 						}
+						delete livesArray;
 					}
 				}
 				while(kv.GotoNextKey());
@@ -6147,6 +6152,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 										break;
 									}
 								}
+								delete livesArray;
 							}
 						}
 						while(kv.GotoNextKey());
@@ -6792,10 +6798,12 @@ stock bool FindSound(const char[] sound, char[] file, int length, int boss=0, bo
 
 	if(!soundsArray.Length)
 	{
+		delete soundsArray;
 		return false;  //No sounds matching what we want
 	}
 
 	soundsArray.GetString(GetRandomInt(0, GetArraySize(soundsArray)-1), file, length);
+	delete soundsArray;
 	return true;
 }
 
