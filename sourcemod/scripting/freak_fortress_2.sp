@@ -6197,22 +6197,24 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 		if(IsValidClient(attacker) && attacker!=client)
 		{
+			Damage[attacker]+=damage;
+			bool rage = true;
+
 			if(IsValidEntity(weapon))
 			{
 				switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 				{
 					case 588:
 					{
-						// Nope.
-					}
-					default:
-					{
-						BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+						rage = false;
 					}
 				}
 			}
 
-			Damage[attacker]+=damage;
+			if(rage)
+			{
+				BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+			}
 		}
 
 		int[] healers=new int[MaxClients+1];
