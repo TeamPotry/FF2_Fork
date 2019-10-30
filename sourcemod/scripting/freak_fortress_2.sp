@@ -4341,7 +4341,7 @@ public Action ClientTimer(Handle timer)
 							allCharge += BossCharge[bossIndex][0];
 						}
 					}
-					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allCharge/100.0)), allRageDamage);
+					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allRageDamage/100.0)), allRageDamage);
 					hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
 					PlayerHudQueue[client].AddHud(hudDisplay, client);
 				}
