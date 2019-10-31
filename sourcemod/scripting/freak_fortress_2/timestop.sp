@@ -84,7 +84,8 @@ public Action OnPlayerSpawn(Handle event, const char[] name, bool dont)
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 10000.0);
 
 		int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-		DisableAnimation(weapon);
+		if(IsValidEntity(weapon))
+			DisableAnimation(weapon);
 
 		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 		SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
