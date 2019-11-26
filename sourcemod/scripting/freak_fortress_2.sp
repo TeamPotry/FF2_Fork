@@ -5649,6 +5649,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					return Plugin_Changed;
 				}
 
+				if(damagecustom==TF_CUSTOM_BURNING_ARROW)
+				{
+					bChanged = true;
+					damage *= 1.4;
+				}
+
 				switch(index)
 				{
 					case 61, 1006:  //Ambassador, Festive Ambassador
