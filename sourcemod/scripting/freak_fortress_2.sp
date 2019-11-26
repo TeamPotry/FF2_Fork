@@ -1488,7 +1488,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	Boss[0]=GetClientWithMostQueuePoints(omit);
 	omit[Boss[0]]=true;
 
-	bool teamHasPlayers[TFTeam];
+	bool teamHasPlayers[4]; // TODO: 컴파일러 버전 변경으로 인한 Enum 크기 구하는 방법 변경
 	for(int client=1; client<=MaxClients; client++)  //Find out if each team has at least one player on it
 	{
 		if(IsValidClient(client))
