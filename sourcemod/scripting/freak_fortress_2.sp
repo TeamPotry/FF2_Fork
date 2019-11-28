@@ -5484,7 +5484,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		{
 			int boss=GetBossIndex(client);
 			damagecustom=0;
-			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.08-Stabbed[boss]/180));
+			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.05-Stabbed[boss]/180));
 			damagetype|=DMG_CRIT;
 
 			if(SpecialAttackToBoss(attacker, boss, "boss_backstab", damage) == Plugin_Handled)
