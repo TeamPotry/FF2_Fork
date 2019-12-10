@@ -23,10 +23,11 @@ public void GetHudSettingString(int value, char[] statusString, int buffer)
 
 stock ArrayList CreateChancesArray(int client)
 {
-    char config[64], ruleName[80], value[120];
+    char config[64], ruleName[80], tempRuleName[80], value[120];
     ArrayList chancesArray = new ArrayList();
     KeyValues bossKv;
     Action action;
+    bool multipleCheck;
 
     kvCharacterConfig.Rewind();
     kvCharacterConfig.JumpToKey(FF2CharSetString); // This *should* always return true
@@ -54,10 +55,6 @@ stock ArrayList CreateChancesArray(int client)
             }
 
             bossKv.Rewind();
-
-            bossKv.GetString("name", ruleName, sizeof(ruleName));
-            // LogMessage("BossKv is %s", ruleName);
-
             if(bossKv.GetNum("hidden", 0) > 0) continue;
             else if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
             {
@@ -65,24 +62,54 @@ stock ArrayList CreateChancesArray(int client)
                 {
                     bossKv.GetSectionName(ruleName, sizeof(ruleName));
 
-                    Call_StartForward(OnCheckRules);
-                    Call_PushCell(client);
-                    Call_PushCell(realIndex);
-                    Call_PushCellRef(tempChance);
-                    Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-                    bossKv.GetString(NULL_STRING, value, 120);
-                    Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-                    Call_Finish(action);
+                    if(StrEqual(ruleName, "multiple") && bossKv.GotoFirstSubKey())
+                    {
+                        do
+                        {
+                            multipleCheck = false;
+                            if(bossKv.GotoFirstSubKey(false))
+                            {
+                                do
+                                {
+                                    bossKv.GetSectionName(tempRuleName, sizeof(tempRuleName));
 
-                    if(action == Plugin_Stop || action == Plugin_Handled)
-                    {
-                        checked = false;
-                        break;
+                                    Call_StartForward(OnCheckRules);
+                                    Call_PushCell(client);
+                                    Call_PushCell(realIndex);
+                                    Call_PushCellRef(tempChance);
+                                    Call_PushStringEx(tempRuleName, sizeof(tempRuleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                                    bossKv.GetString(NULL_STRING, value, 120);
+                                    Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                                    Call_Finish(action);
+
+                                    multipleCheck = action == Plugin_Stop || action == Plugin_Handled ? false : true;
+                                    if(!multipleCheck) break;
+
+                                    changed = action == Plugin_Changed;
+                                }
+                                while(bossKv.GotoNextKey(false));
+                                bossKv.GoBack();
+                            }
+                        }
+                        while(bossKv.GotoNextKey());
+                        bossKv.GoBack();
                     }
-                    else if(action == Plugin_Changed)
+                    else
                     {
-                        changed = true;
+                        Call_StartForward(OnCheckRules);
+                        Call_PushCell(client);
+                        Call_PushCell(realIndex);
+                        Call_PushCellRef(tempChance);
+                        Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                        bossKv.GetString(NULL_STRING, value, 120);
+                        Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                        Call_Finish(action);
                     }
+
+                    checked = action == Plugin_Stop || action == Plugin_Handled ? false : true;
+                    if(!checked && !multipleCheck) continue;
+
+                    changed = action == Plugin_Changed;
                 }
                 while(bossKv.GotoNextKey(false));
             }
