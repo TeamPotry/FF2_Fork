@@ -307,6 +307,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_SpecialAttackToBoss", Native_SpecialAttackToBoss);
 	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
 	CreateNative("FF2_MakePlayerToBoss", Native_MakePlayerToBoss);
+	CreateNative("FF2_GetBossCreatorFlags", Native_GetBossCreatorFlags);
+	CreateNative("FF2_GetBossCreators", Native_GetBossCreators);
 
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
@@ -6855,6 +6857,8 @@ void FindCompanion(int boss, int players, bool[] omit)
 public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, const char[] ruleName, const char[] value)
 {
 	int integerValue = StringToInt(value);
+	char authId[32];
+	GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
 
 	// CPrintToChatAll("%s: %s", ruleName, value);
 
@@ -6872,6 +6876,11 @@ public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, cons
 	if(StrEqual(ruleName, "blocked"))
 	{
 		return Plugin_Handled;
+	}
+	if(StrEqual(ruleName, "creator"))
+	{
+		int flags = GetBossCreatorFlags(authId, characterIndex, true);
+		return flags > 0 ? Plugin_Continue : Plugin_Handled;
 	}
 
 	return Plugin_Continue;
@@ -8053,6 +8062,77 @@ public int Native_GetBossName(Handle plugin, int numParams)
 	bool bossExists=GetBossName(GetNativeCell(1), bossName, length, GetNativeCell(4));
 	SetNativeString(2, bossName, length);
 	return bossExists;
+}
+
+static const char g_strCreatorType[][] = {
+    "other",
+    "model",
+    "plugin",
+    "sound"
+};
+
+int GetBossCreatorFlags(char[] steamId, int boss, bool pushCharacterIndex=false)
+{
+    int totalFlags = 0;
+    char targetId[32];
+    KeyValues bossKv = view_as<KeyValues>(CloneHandle(!pushCharacterIndex ? GetBossKV(boss) : GetCharacterKV(boss)));
+
+    for(int loop = 0; loop < sizeof(g_strCreatorType); loop++)
+    {
+        bossKv.Rewind();
+        bossKv.JumpToKey("creator", true);
+        bossKv.JumpToKey(g_strCreatorType[loop], true);
+
+        if(bossKv.GotoFirstSubKey(false))
+        {
+            do
+            {
+                bossKv.GetSectionName(targetId, sizeof(targetId));
+                if(StrEqual(steamId, targetId)) {
+                    totalFlags += (1 << loop);
+                    break;
+                }
+            }
+            while(bossKv.GotoNextKey(false));
+        }
+    }
+
+    return totalFlags;
+}
+
+public int Native_GetBossCreatorFlags(Handle plugin, int numParams)
+{
+	char steamId[32];
+	GetNativeString(1, steamId, sizeof(steamId));
+	return view_as<int>(GetBossCreatorFlags(steamId, GetNativeCell(2), GetNativeCell(3)));
+}
+
+ArrayList GetBossCreators(int boss, int creatorType, bool pushCharacterIndex=false)
+{
+	ArrayList array = new ArrayList(32);
+	KeyValues bossKv = view_as<KeyValues>(CloneHandle(!pushCharacterIndex ? GetBossKV(boss) : GetCharacterKV(boss)));
+	char targetId[32];
+
+	bossKv.Rewind();
+	bossKv.JumpToKey("creator", true);
+	bossKv.JumpToKey(g_strCreatorType[creatorType], true);
+
+	if(bossKv.GotoFirstSubKey(false))
+	{
+		do
+		{
+		    bossKv.GetSectionName(targetId, sizeof(targetId));
+		    array.PushString(targetId);
+		}
+		while(bossKv.GotoNextKey(false));
+	}
+
+	return array;
+}
+
+public int Native_GetBossCreators(Handle plugin, int numParams)
+{
+	return view_as<int>(GetBossCreators(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3)));
 }
 
 public KeyValues GetBossKV(int boss)

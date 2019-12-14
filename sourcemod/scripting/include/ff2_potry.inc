@@ -3,6 +3,18 @@
 #endif
 #define _ff2_potry_included
 
+#define FF2BOSSCREATOR_MODEL                (1<<1)
+#define FF2BOSSCREATOR_PLUGIN               (1<<2)
+#define FF2BOSSCREATOR_SOUND                (1<<3)
+
+enum
+{
+    FF2BossCreator_Other = 0,
+    FF2BossCreator_Model,
+    FF2BossCreator_Plugin,
+    FF2BossCreator_Sound
+};
+
 /**
  * Gets assist by this client
  *
@@ -42,6 +54,26 @@ native void FF2_SpecialAttackToBoss(int attacker, int victimBoss, const char[] n
  * @return                  Character's KV handle or null if character index is invalid
  */
 native KeyValues FF2_GetCharacterKV(int characterIndex);
+
+/**
+ * Get client's boss creator flags.
+ *
+ * @param steamId               client's STEAMID (64 Bits)
+ * @param boss                  boss index
+ * @param pushCharacterIndex    if true, @boss is character index.
+ * @return                      client's boss creator flags.
+ */
+native int FF2_GetBossCreatorFlags(char[] steamId, int boss, bool pushCharacterIndex=false);
+
+/**
+ * Gets a Character's KV handle
+ *
+ * @param boss              boss index
+ * @param creatorType       Type of FF2BossCreator
+ * @param pushCharacterIndex    if true, @boss is character index.
+ * @return                  return ArrayList that has STEAMID of boss creators.
+ */
+native ArrayList FF2_GetBossCreators(int boss, int creatorType, bool pushCharacterIndex=false);
 
 /**
  * Called when boss uses minion spawn ability.
