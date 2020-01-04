@@ -68,7 +68,7 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 {
 	int boss = FF2_GetBossIndex(healer), medigun = GetPlayerWeaponSlot(healer, TFWeaponSlot_Secondary);
 	bool change = false;
-	if(boss == -1 && !IsValidClient(target) && g_flHealCooldown[healer] <= GetGameTime()) return Plugin_Continue;
+	if(boss == -1 || !IsValidClient(target) || g_flHealCooldown[healer] <= GetGameTime()) return Plugin_Continue;
 
 	float clientPos[3], targetPos[3];
 
