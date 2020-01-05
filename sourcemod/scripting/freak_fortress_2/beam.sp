@@ -442,7 +442,6 @@ public void BM_Update(BeamManagement manage)
 			do
 			{
 				trace = TR_TraceHullFilterEx(startPos, finalPos, vecHullMin, vecHullMax, MASK_ALL, StraightBeamPlayerFilter, list);
-				g_hStraightBeamFilter = trace;
 			}
 			while(TR_DidHit());
 
@@ -469,6 +468,7 @@ public void BM_Update(BeamManagement manage)
 public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList list)
 {
 	int length = list.Length, target;
+	float pos[3];
 	FilterEntityInfo info;
 
 	if(IsValidClient(entity) && !IsPlayerAlive(entity))
@@ -485,7 +485,8 @@ public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList lis
 		}
 	}
 
-	list.Push(FilterEntityInfo.Create(owner, pos));
+	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+	list.Push(FilterEntityInfo.Create(entity, pos));
 	return true;
 }
 
