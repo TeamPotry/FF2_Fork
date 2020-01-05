@@ -371,6 +371,13 @@ enum
 
 methodmap FilterEntityInfo < ArrayList {
 	public static native FilterEntityInfo Create(int owner, float pos[3]);
+
+	public void GetPos(float pos[3])
+	{
+		pos[0] = this.Get(Filter_PosX);
+		pos[1] = this.Get(Filter_PosY);
+		pos[2] = this.Get(Filter_PosZ);
+	}
 }
 
 // TODO: float 연산자 조정
@@ -434,7 +441,8 @@ public void BM_Update(BeamManagement manage)
 			list.Push(manage.Owner);
 			do
 			{
-				trace = TR_TraceHullFilterEx(startPos, finalPos, vecHullMin, vecHullMax, CONTENTS_PLAYERCLIP, StraightBeamFilter, list);
+				trace = TR_TraceHullFilterEx(startPos, finalPos, vecHullMin, vecHullMax, MASK_ALL, StraightBeamPlayerFilter, list);
+				g_hStraightBeamFilter = trace;
 			}
 			while(TR_DidHit());
 
@@ -445,6 +453,8 @@ public void BM_Update(BeamManagement manage)
 
 				SDKHooks_TakeDamage(target, manage.Owner, manage.Owner, manage.BeamDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
 				manage.SetDamageCooldown(target, GetGameTime() + manage.BeamDamageCooldown);
+
+				delete view_as<Handle>(target);
 			}
 
 			delete trace;
@@ -453,47 +463,29 @@ public void BM_Update(BeamManagement manage)
 
 	}
 
-/*
-	for(int client = 1; client <= MaxClients; client++)
-	{
-		if(IsClientInGame(client) && ownerTeam != GetClientTeam(client) && manage.GetDamageCooldown(client) <= GetGameTime()) {
-			GetClientEyePosition(client, targetPos);
-			distance = GetVectorDistance(startPos, targetPos);
-
-			switch(type)
-			{
-				case BeamType_Straight:
-				{
-
-
-					TR_TraceHullEx(startPos, finalPos, );
-
-					if(GetVectorDistance(targetPos, finalPos) <= distance && !TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
-					{
-						SDKHooks_TakeDamage(client, manage.Owner, manage.Owner, manage.BeamDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
-						manage.SetDamageCooldown(client, GetGameTime() + manage.BeamDamageCooldown);
-					}
-				}
-			}
-		}
-	}
-*/
 	RequestFrame(BM_Update, manage);
 }
 
-public bool StraightBeamFilter(int entity, int contentsMask, ArrayList list)
+public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList list)
 {
-	if(!IsValidClient(entity) || !IsPlayerAlive(entity))
+	int length = list.Length, target;
+	FilterEntityInfo info;
+
+	if(IsValidClient(entity) && !IsPlayerAlive(entity))
 		return false;
 
-	int length = list.Length;
 	for(int loop = 0; loop < length; loop++)
 	{
-		if(list.Get(loop) == entity)
+		info = view_as<FilterEntityInfo>(list.Get(loop));
+		target = info.Get(Filter_Owner);
+
+		if(target == entity)
+		{
 			return false;
+		}
 	}
 
-	list.Push(entity);
+	list.Push(FilterEntityInfo.Create(owner, pos));
 	return true;
 }
 
