@@ -94,8 +94,8 @@ public Action TF2_OnHealTarget(int healer, int target, bool &result)
 	if(FF2_HasAbility(boss, PLUGIN_NAME, STUN_NAME)) 	{
 		float slowdown, multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, GHOSTHEAL_NAME, "multiplier", 4.0);
 
-		g_flHealStun[target] += multiplier * FloatDiv((GetVectorDistance(clientPos, targetPos) - 600.0) * -1.0, 600.0);
-		slowdown = FloatDiv(g_flHealStun[target], 100.0);
+		g_flHealStun[target] += multiplier * ((GetVectorDistance(clientPos, targetPos) - 600.0) * -1.0) / 600.0;
+		slowdown = g_flHealStun[target] / 100.0;
 
 		if(g_flHealStun[target] >= 100.0 && FF2_GetBossIndex(target) == -1) {
 			g_flHealStun[target] = 0.0;
