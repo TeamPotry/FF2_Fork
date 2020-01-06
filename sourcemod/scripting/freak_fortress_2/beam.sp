@@ -394,6 +394,7 @@ public void BM_Update(BeamManagement manage)
 	float startPos[3], targetPos[3], finalPos[3], startAngles[3], angles[3];
 	float vecHullMin[3], vecHullMax[3];
 	float distance;
+	FilterEntityInfo info;
 	// float totalRadius = manage.EndRadius, manage.StartRadius * 0.5, currentRadius = ((totalRadius + manage.StartRadius) - FloatMul(totalRadius, FloatDiv((endTime - currentTime), manage.LifeTime))); // TODO: 스피드값 고려
 
 	for(int loop = 0; loop < 3; loop++)
@@ -436,27 +437,27 @@ public void BM_Update(BeamManagement manage)
 		case BeamType_Straight:
 		{
 			ArrayList list = new ArrayList();
-			Handle trace;
 
-			list.Push(manage.Owner);
+			list.Push(FilterEntityInfo.Create(manage.Owner, startPos));
 			do
 			{
-				trace = TR_TraceHullFilterEx(startPos, finalPos, vecHullMin, vecHullMax, MASK_ALL, StraightBeamPlayerFilter, list);
+				// BUG: SETTING TRACE FLAGS CONTENTS_SOLID IS CAUSE OF CRASH.
+				TR_TraceHullFilter(startPos, finalPos, vecHullMin, vecHullMax, CONTENTS_PLAYERCLIP, StraightBeamPlayerFilter, list); //
 			}
 			while(TR_DidHit());
 
 			int length = list.Length, target;
 			for(int loop = 0; loop < length; loop++)
 			{
-				target = list.Get(loop);
+				info = view_as<FilterEntityInfo>(list.Get(loop));
+				target = info.Get(Filter_Owner);
 
 				SDKHooks_TakeDamage(target, manage.Owner, manage.Owner, manage.BeamDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
 				manage.SetDamageCooldown(target, GetGameTime() + manage.BeamDamageCooldown);
 
-				delete view_as<Handle>(target);
+				delete info;
 			}
 
-			delete trace;
 			delete list;
 		}
 
