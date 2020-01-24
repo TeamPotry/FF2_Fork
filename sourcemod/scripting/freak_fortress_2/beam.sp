@@ -64,6 +64,7 @@ enum
 
 	Manage_BeamDamage,
 	Manage_BeamDamageCooldown,
+	Manage_PenetratePower,
 	Management_Max
 };
 
@@ -258,6 +259,15 @@ methodmap BeamManagement < ArrayList {
 		}
 		public set(float time) {
 			this.Set(Manage_BeamDamageCooldown, time);
+		}
+	}
+
+	property float PenetratePower {
+		public get() {
+			return this.Get(Manage_PenetratePower);
+		}
+		public set(float penetratePower) {
+			this.Set(Manage_PenetratePower, penetratePower);
 		}
 	}
 
@@ -493,7 +503,7 @@ public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList lis
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    CreateNative("BeamManagement.Create", Native_BeamManagement_Create);
+	CreateNative("BeamManagement.Create", Native_BeamManagement_Create);
 	CreateNative("FilterEntityInfo.Create", Native_FilterEntityInfo_Create);
 }
 
@@ -591,6 +601,7 @@ public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 
 				beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "damage", 20.0);
 				beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "damage cooldown", 0.0);
+				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "penetrate power", 500.0);
 			}
 
 		}
@@ -638,6 +649,7 @@ public int Native_BeamManagement_Create(Handle plugin, int numParams)
 	array.Alpha = 255;
 	array.PosTracking = true;
 	array.AngleTracking = true;
+	array.PenetratePower = 500.0;
 
 	if(strlen(beamModelPath) > 0)
 		array.ModelIndex = PrecacheModel(beamModelPath); // TODO:프리캐싱 횟수를 줄일 필요가 있을지도
