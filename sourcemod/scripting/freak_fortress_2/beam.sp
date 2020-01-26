@@ -382,6 +382,12 @@ enum
 methodmap FilterEntityInfo < ArrayList {
 	public static native FilterEntityInfo Create(int owner, float pos[3]);
 
+	property int Owner {
+		public get() {
+			return this.Get(Filter_Owner);
+		}
+	}
+
 	public void GetPos(float pos[3])
 	{
 		pos[0] = this.Get(Filter_PosX);
@@ -403,9 +409,7 @@ public void BM_Update(BeamManagement manage)
 	int ownerTeam = GetClientTeam(manage.Owner), type = manage.BeamType, traceIndex = -1;
 	float startPos[3], targetPos[3], finalPos[3], startAngles[3], angles[3];
 	float vecHullMin[3], vecHullMax[3];
-	float distance;
-	FilterEntityInfo info;
-	// float totalRadius = manage.EndRadius, manage.StartRadius * 0.5, currentRadius = ((totalRadius + manage.StartRadius) - FloatMul(totalRadius, FloatDiv((endTime - currentTime), manage.LifeTime))); // TODO: 스피드값 고려
+	FilterEntityInfo info, reverseInfo;
 
 	for(int loop = 0; loop < 3; loop++)
 	{
@@ -446,16 +450,127 @@ public void BM_Update(BeamManagement manage)
 	{
 		case BeamType_Straight:
 		{
-			ArrayList list = new ArrayList();
+			ArrayList list = new ArrayList(), reverseList = new ArrayList();
+			bool firstHit = false;
+			int hit = -1;
+			float endPos[3], tempStartPos[3], tempFinalPos[3], tempAngles[3], tempEndPos[3];
 
-			list.Push(FilterEntityInfo.Create(manage.Owner, startPos));
+			// list.Push(FilterEntityInfo.Create(manage.Owner, startPos));
+			for(int loop = 0; loop < 3; loop++)
+			{
+				tempStartPos[loop] = startPos[loop];
+				tempFinalPos[loop] = finalPos[loop];
+			}
+
 			do
 			{
-				// BUG: SETTING TRACE FLAGS CONTENTS_SOLID IS CAUSE OF CRASH.
-				TR_TraceHullFilter(startPos, finalPos, vecHullMin, vecHullMax, CONTENTS_PLAYERCLIP, StraightBeamPlayerFilter, list); //
-			}
-			while(TR_DidHit());
+				GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+				TR_TraceHull(tempStartPos, finalPos, vecHullMin, vecHullMax, MASK_ALL);
 
+				if(TR_DidHit())
+				{
+					hit = TR_GetEntityIndex();
+					TR_GetEndPosition(endPos);
+
+					// PrintToChatAll("%.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
+
+					if(hit != 0 && IsValidEntity(hit))
+					{
+						// TODO: min, max 구한 뒤 엔티티상의 실체 타격 위치 파악, 해당 위치에서 실제 빠져나가는 위치
+						list.Push(FilterEntityInfo.Create(hit, endPos));
+
+						ScaleVector(angles, 50.0);
+						AddVectors(endPos, angles, tempStartPos);
+					}
+					else
+					{
+						list.Push(FilterEntityInfo.Create(0, endPos));
+
+						for(int loop = 0; loop < 3; loop++)
+						{
+							tempAngles[loop] = angles[loop] * -1.0;
+							tempEndPos[loop] = endPos[loop];
+						}
+
+						ScaleVector(angles, -2.0);
+						AddVectors(tempEndPos, angles, tempEndPos);
+
+						TE_SetupArmorRicochet(tempEndPos, tempAngles);
+				        TE_SendToAll();
+
+						// 새로운 시작 좌표는 해당 지점에서 2.0 뒤
+						GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+						ScaleVector(angles, 2.0);
+						AddVectors(endPos, angles, tempStartPos);
+					}
+				}
+				else
+				{
+					for(int loop = 0; loop < 3; loop++)
+					{
+						tempStartPos[loop] = endPos[loop];
+					}
+				}
+			}
+			while(TR_DidHit() && list.Length < 100); // Do you know how to insert variable that doesn't declared in while function?
+
+			for(int loop = 0; loop < 3; loop++)
+			{
+				tempFinalPos[loop] = startPos[loop];
+			}
+
+			do
+			{
+				GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+				TR_TraceHull(tempStartPos, tempFinalPos, vecHullMax, vecHullMin, MASK_ALL);
+
+				if(TR_DidHit())
+				{
+					hit = TR_GetEntityIndex();
+					TR_GetEndPosition(endPos);
+
+					for(int loop = 0; loop < 3; loop++)
+					{
+						tempAngles[loop] = angles[loop] * -1.0;
+					}
+					// PrintToChatAll("reverse: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
+
+					if(hit != 0 && IsValidEntity(hit))
+					{
+						// TODO: min, max 구한 뒤 엔티티상의 실체 타격 위치 파악, 해당 위치에서 실제 빠져나가는 위치
+
+						ScaleVector(tempAngles, 50.0);
+						AddVectors(tempFinalPos, tempAngles, tempFinalPos);
+					}
+					else
+					{
+						reverseList.Push(FilterEntityInfo.Create(0, endPos));
+
+						for(int loop = 0; loop < 3; loop++)
+						{
+							tempEndPos[loop] = endPos[loop];
+						}
+
+						ScaleVector(tempAngles, 2.0);
+						AddVectors(tempEndPos, tempAngles, tempEndPos);
+
+						TE_SetupArmorRicochet(tempEndPos, angles);
+				        TE_SendToAll();
+
+						// 새로운 시작 좌표는 해당 지점에서 2.0 뒤
+						GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+						for(int loop = 0; loop < 3; loop++)
+						{
+							tempAngles[loop] = angles[loop] * -1.0;
+						}
+
+						ScaleVector(tempAngles, 2.0);
+						AddVectors(endPos, tempAngles, tempStartPos);
+					}
+				}
+			}
+			while(TR_DidHit() && reverseList.Length < 100); // Do you know how to insert variable that doesn't declared in while function?
+/*
 			int length = list.Length, target;
 			for(int loop = 0; loop < length; loop++)
 			{
@@ -467,15 +582,46 @@ public void BM_Update(BeamManagement manage)
 
 				delete info;
 			}
+*/
 
+			int length = list.Length, reverseLength = reverseList.Length, wallCount = 0;
+			float totalWallWidth = 0.0, wallStartPos[3], wallEndPos[3];
+			for(int loop = 0; loop < length; loop++)
+			{
+				info = view_as<FilterEntityInfo>(list.Get(loop));
+
+				if(info.Owner == 0 && reverseLength - (wallCount + 2) >= 0)
+				{
+					reverseInfo = view_as<FilterEntityInfo>(reverseList.Get(reverseLength - (wallCount + 2)));
+
+					info.GetPos(wallStartPos);
+					reverseInfo.GetPos(wallEndPos);
+
+					totalWallWidth += GetVectorDistance(wallStartPos, wallEndPos);
+					PrintToChatAll("%d: %.1f", wallCount, GetVectorDistance(wallStartPos, wallEndPos));
+					wallCount++;
+				}
+			}
+
+			for(int loop = 0; loop < length; loop++)
+			{
+				info = view_as<FilterEntityInfo>(list.Get(loop));
+				delete info;
+			}
 			delete list;
-		}
 
+			for(int loop = 0; loop < reverseLength; loop++)
+			{
+				info = view_as<FilterEntityInfo>(reverseList.Get(loop));
+				delete info;
+			}
+			delete reverseList;
+		}
 	}
 
 	RequestFrame(BM_Update, manage);
 }
-
+/*
 public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList list)
 {
 	int length = list.Length, target;
@@ -500,7 +646,7 @@ public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList lis
 	list.Push(FilterEntityInfo.Create(entity, pos));
 	return true;
 }
-
+*/
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("BeamManagement.Create", Native_BeamManagement_Create);
