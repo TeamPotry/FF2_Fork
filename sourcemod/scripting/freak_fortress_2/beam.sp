@@ -44,6 +44,8 @@ enum
 	Manage_RGBColors,
 	Manage_Alpha,
 	Manage_LifeTime,
+	Manage_RefrashTime,
+	Manage_LastRefrashTime,
 
 	Manage_StartTime,
 	Manage_PosTracking,
@@ -78,6 +80,10 @@ enum
 enum
 {
     BeamType_Straight = 0
+};
+
+static const bool g_bNeedRefrash[] = {
+	true
 };
 
 /*
@@ -185,6 +191,24 @@ methodmap BeamManagement < ArrayList {
 		}
 		public set(float lifetime) {
 			this.Set(Manage_LifeTime, lifetime);
+		}
+	}
+
+	property float RefrashTime {
+		public get() {
+			return this.Get(Manage_RefrashTime);
+		}
+		public set(float refrashTime) {
+			this.Set(Manage_RefrashTime, refrashTime);
+		}
+	}
+
+	property float LastRefrashTime {
+		public get() {
+			return this.Get(Manage_LastRefrashTime);
+		}
+		public set(float refrashTime) {
+			this.Set(Manage_LastRefrashTime, refrashTime);
 		}
 	}
 
@@ -396,49 +420,79 @@ methodmap FilterEntityInfo < ArrayList {
 	}
 }
 
-// TODO: float 연산자 조정
 public void BM_Update(BeamManagement manage)
 {
 	float currentTime = GetGameTime(), endTime = view_as<float>(manage.Get(Manage_StartTime)) + manage.LifeTime;
+	float refrashTime = manage.RefrashTime, lastRefrashTime = manage.LastRefrashTime;
+	int type = manage.BeamType;
 
 	if(FF2_GetRoundState() != 1 || currentTime > endTime) {
 		delete manage;
 		return;
 	}
-
-	int ownerTeam = GetClientTeam(manage.Owner), type = manage.BeamType, traceIndex = -1;
-	float startPos[3], targetPos[3], finalPos[3], startAngles[3], angles[3];
-	float vecHullMin[3], vecHullMax[3];
-	FilterEntityInfo info, reverseInfo;
-
-	for(int loop = 0; loop < 3; loop++)
+	else if(g_bNeedRefrash[type] && (refrashTime + lastRefrashTime) > currentTime)
 	{
-		vecHullMin[loop] = manage.Width;
-		vecHullMax[loop] = manage.EndWidth;
+		RequestFrame(BM_Update, manage);
+		return;
 	}
-	manage.GetStartPos(startPos);
+
+	switch(type)
+	{
+		case BeamType_Straight:
+		{
+			BM_Straight_Update(manage);
+		}
+	}
+
+	RequestFrame(BM_Update, manage);
+}
+
+public bool BM_Straight_Filter(int entity, int contentsMask, any data)
+{
+	return (entity == 0 || (entity != data));
+}
+
+public bool BM_Straight_PlayerFilter(int entity, int contentsMask, any data)
+{
+	return entity != 0 && entity != data;
+}
+
+public bool BM_Straight_HitSelf(int entity, int contentsMask, any data)
+{
+	return entity > 0 && (data == INVALID_ENT_REFERENCE || data != entity);
+}
+
+public void BM_Straight_Update(BeamManagement manage)
+{
+	float startPos[3], finalPos[3], startAngles[3], angles[3];
+	float endPos[3], tempStartPos[3], tempFinalPos[3], tempEndPos[3];
+	float vecHullMin[3], vecHullMax[3];
+	float penetratePower = manage.PenetratePower, totalWallWidth = 0.0;
+	int hit = -1, owner = manage.Owner;
+	bool firstHit = false;
+
+	FilterEntityInfo info, reverseInfo, nextInfo;
+	ArrayList list = new ArrayList(), reverseList = new ArrayList();
+
+	manage.GetCurrentVector(Tracking_Pos, startPos);
+	manage.GetCurrentVector(Tracking_Angles, startAngles);
+
+	vecHullMin[0] = manage.Width;
+	vecHullMax[0] = manage.EndWidth;
+	vecHullMin[2] = manage.Width;
+	vecHullMax[2] = manage.EndWidth;
 
 	if(manage.PosTracking || manage.AngleTracking)
 	{
 		int colors[4] = {0, 0, 0, 255};
-
-		manage.GetCurrentVector(Tracking_Pos, startPos);
-		manage.GetCurrentVector(Tracking_Angles, startAngles);
 		RGBToIntArray(manage.RGBColors, manage.Alpha, colors);
 
-		switch(type)
-		{
-			case BeamType_Straight:
-			{
-				// 빔의 종료지점 구하기
-				GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
-				ScaleVector(angles, 10000.0);
-				AddVectors(startPos, angles, finalPos);
+		// 빔의 종료지점 구하기
+		GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+		ScaleVector(angles, 10000.0);
+		AddVectors(startPos, angles, finalPos);
 
-				TE_SetupBeamPoints(startPos, finalPos, manage.ModelIndex, manage.HaloIndex, manage.StartFrame, manage.FrameRate, (manage.PosTracking || manage.AngleTracking) ? 0.1 : manage.LifeTime, manage.Width, manage.EndWidth, manage.FadeLength, manage.Amplitude, colors, 10);
-			}
-		}
-
+		TE_SetupBeamPoints(startPos, finalPos, manage.ModelIndex, manage.HaloIndex, manage.StartFrame, manage.FrameRate, (manage.PosTracking || manage.AngleTracking) ? manage.RefrashTime : manage.LifeTime, manage.Width, manage.EndWidth, manage.FadeLength, manage.Amplitude, colors, 10);
 		TE_SendToAll();
 	}
 
@@ -446,207 +500,141 @@ public void BM_Update(BeamManagement manage)
 	ScaleVector(angles, 10000.0);
 	AddVectors(startPos, angles, finalPos);
 
-	switch(type)
+	for(int loop = 0; loop < 3; loop++)
 	{
-		case BeamType_Straight:
-		{
-			ArrayList list = new ArrayList(), reverseList = new ArrayList();
-			bool firstHit = false;
-			int hit = -1;
-			float endPos[3], tempStartPos[3], tempFinalPos[3], tempAngles[3], tempEndPos[3];
-
-			// list.Push(FilterEntityInfo.Create(manage.Owner, startPos));
-			for(int loop = 0; loop < 3; loop++)
-			{
-				tempStartPos[loop] = startPos[loop];
-				tempFinalPos[loop] = finalPos[loop];
-			}
-
-			do
-			{
-				GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
-				TR_TraceHull(tempStartPos, finalPos, vecHullMin, vecHullMax, MASK_ALL);
-
-				if(TR_DidHit())
-				{
-					hit = TR_GetEntityIndex();
-					TR_GetEndPosition(endPos);
-
-					// PrintToChatAll("%.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
-
-					if(hit != 0 && IsValidEntity(hit))
-					{
-						// TODO: min, max 구한 뒤 엔티티상의 실체 타격 위치 파악, 해당 위치에서 실제 빠져나가는 위치
-						list.Push(FilterEntityInfo.Create(hit, endPos));
-
-						ScaleVector(angles, 50.0);
-						AddVectors(endPos, angles, tempStartPos);
-					}
-					else
-					{
-						list.Push(FilterEntityInfo.Create(0, endPos));
-
-						for(int loop = 0; loop < 3; loop++)
-						{
-							tempAngles[loop] = angles[loop] * -1.0;
-							tempEndPos[loop] = endPos[loop];
-						}
-
-						ScaleVector(angles, -2.0);
-						AddVectors(tempEndPos, angles, tempEndPos);
-
-						TE_SetupArmorRicochet(tempEndPos, tempAngles);
-				        TE_SendToAll();
-
-						// 새로운 시작 좌표는 해당 지점에서 2.0 뒤
-						GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
-						ScaleVector(angles, 2.0);
-						AddVectors(endPos, angles, tempStartPos);
-					}
-				}
-				else
-				{
-					for(int loop = 0; loop < 3; loop++)
-					{
-						tempStartPos[loop] = endPos[loop];
-					}
-				}
-			}
-			while(TR_DidHit() && list.Length < 100); // Do you know how to insert variable that doesn't declared in while function?
-
-			for(int loop = 0; loop < 3; loop++)
-			{
-				tempFinalPos[loop] = startPos[loop];
-			}
-
-			do
-			{
-				GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
-				TR_TraceHull(tempStartPos, tempFinalPos, vecHullMax, vecHullMin, MASK_ALL);
-
-				if(TR_DidHit())
-				{
-					hit = TR_GetEntityIndex();
-					TR_GetEndPosition(endPos);
-
-					for(int loop = 0; loop < 3; loop++)
-					{
-						tempAngles[loop] = angles[loop] * -1.0;
-					}
-					// PrintToChatAll("reverse: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
-
-					if(hit != 0 && IsValidEntity(hit))
-					{
-						// TODO: min, max 구한 뒤 엔티티상의 실체 타격 위치 파악, 해당 위치에서 실제 빠져나가는 위치
-
-						ScaleVector(tempAngles, 50.0);
-						AddVectors(tempFinalPos, tempAngles, tempFinalPos);
-					}
-					else
-					{
-						reverseList.Push(FilterEntityInfo.Create(0, endPos));
-
-						for(int loop = 0; loop < 3; loop++)
-						{
-							tempEndPos[loop] = endPos[loop];
-						}
-
-						ScaleVector(tempAngles, 2.0);
-						AddVectors(tempEndPos, tempAngles, tempEndPos);
-
-						TE_SetupArmorRicochet(tempEndPos, angles);
-				        TE_SendToAll();
-
-						// 새로운 시작 좌표는 해당 지점에서 2.0 뒤
-						GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
-						for(int loop = 0; loop < 3; loop++)
-						{
-							tempAngles[loop] = angles[loop] * -1.0;
-						}
-
-						ScaleVector(tempAngles, 2.0);
-						AddVectors(endPos, tempAngles, tempStartPos);
-					}
-				}
-			}
-			while(TR_DidHit() && reverseList.Length < 100); // Do you know how to insert variable that doesn't declared in while function?
-/*
-			int length = list.Length, target;
-			for(int loop = 0; loop < length; loop++)
-			{
-				info = view_as<FilterEntityInfo>(list.Get(loop));
-				target = info.Get(Filter_Owner);
-
-				SDKHooks_TakeDamage(target, manage.Owner, manage.Owner, manage.BeamDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
-				manage.SetDamageCooldown(target, GetGameTime() + manage.BeamDamageCooldown);
-
-				delete info;
-			}
-*/
-
-			int length = list.Length, reverseLength = reverseList.Length, wallCount = 0;
-			float totalWallWidth = 0.0, wallStartPos[3], wallEndPos[3];
-			for(int loop = 0; loop < length; loop++)
-			{
-				info = view_as<FilterEntityInfo>(list.Get(loop));
-
-				if(info.Owner == 0 && reverseLength - (wallCount + 2) >= 0)
-				{
-					reverseInfo = view_as<FilterEntityInfo>(reverseList.Get(reverseLength - (wallCount + 2)));
-
-					info.GetPos(wallStartPos);
-					reverseInfo.GetPos(wallEndPos);
-
-					totalWallWidth += GetVectorDistance(wallStartPos, wallEndPos);
-					PrintToChatAll("%d: %.1f", wallCount, GetVectorDistance(wallStartPos, wallEndPos));
-					wallCount++;
-				}
-			}
-
-			for(int loop = 0; loop < length; loop++)
-			{
-				info = view_as<FilterEntityInfo>(list.Get(loop));
-				delete info;
-			}
-			delete list;
-
-			for(int loop = 0; loop < reverseLength; loop++)
-			{
-				info = view_as<FilterEntityInfo>(reverseList.Get(loop));
-				delete info;
-			}
-			delete reverseList;
-		}
+		tempStartPos[loop] = startPos[loop];
+		tempFinalPos[loop] = finalPos[loop];
 	}
 
-	RequestFrame(BM_Update, manage);
-}
-/*
-public bool StraightBeamPlayerFilter(int entity, int contentsMask, ArrayList list)
-{
-	int length = list.Length, target;
-	float pos[3];
-	FilterEntityInfo info;
+	do
+	{
+		// 시작 지점에서 목표 지점까지의 벽 충돌 여부 파악
+		TR_TraceHullFilter(tempStartPos, finalPos, vecHullMin, vecHullMax, MASK_ALL, BM_Straight_Filter, owner); // BM_Straight_Filter is doesn't filtering owner.
+		if(TR_DidHit())
+		{
+			hit = TR_GetEntityIndex();
+			TR_GetEndPosition(endPos);
 
-	if(IsValidClient(entity) && !IsPlayerAlive(entity))
-		return false;
+			if(hit <= 0)
+				list.Push(FilterEntityInfo.Create(hit, endPos));
+			else if(!firstHit && hit != owner
+			&& (HasEntProp(hit, Prop_Data, "m_takedamage") && GetEntProp(hit, Prop_Data, "m_takedamage") > 0))
+			{
+				BM_TakeDamage(manage, owner, hit, 0.0, 0.0);
+
+				firstHit = true;
+				totalWallWidth += 50.0;
+			}
+
+			GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(angles, hit > 0 ? 50.0 : 2.0); //TODO: 임시
+			AddVectors(endPos, angles, tempStartPos);
+		}
+		else
+		{
+			for(int loop = 0; loop < 3; loop++)
+				tempStartPos[loop] = endPos[loop];
+		}
+	}
+	while(TR_DidHit() && list.Length < 20); // Do you know how to insert variable that doesn't declared in while function?
+
+	for(int loop = 0; loop < 3; loop++)
+	{
+		tempFinalPos[loop] = startPos[loop];
+	}
+
+	do
+	{
+		TR_TraceHullFilter(tempStartPos, tempFinalPos, vecHullMax, vecHullMin, MASK_ALL, BM_Straight_Filter, owner);
+		if(TR_DidHit())
+		{
+			TR_GetEndPosition(endPos);
+			hit = TR_GetEntityIndex();
+
+			if(hit <= 0)
+				reverseList.Push(FilterEntityInfo.Create(hit, endPos));
+
+			// 새로운 시작 좌표는 해당 지점에서 2.0 뒤
+			GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(angles, hit > 0 ? -50.0 : -2.0); //TODO: 임시
+			AddVectors(endPos, angles, tempStartPos);
+		}
+	}
+	while(TR_DidHit() && reverseList.Length < 20); // Do you know how to insert variable that doesn't declared in while function?
+
+	int length = list.Length, reverseLength = reverseList.Length, wallCount = 2, target;
+	float wallStartPos[3], wallEndPos[3], wallNextPos[3];
+	for(int loop = 0; loop < length - 1; loop++)
+	{
+		if(penetratePower <= totalWallWidth)
+			break;
+
+		info = view_as<FilterEntityInfo>(list.Get(loop));
+		nextInfo = view_as<FilterEntityInfo>(list.Get(loop + 1));
+
+		if(reverseLength - wallCount >= 0) // 플레이어 본인과 맵 밖의 벽 제외?
+		{
+			reverseInfo = view_as<FilterEntityInfo>(reverseList.Get(reverseLength - wallCount));
+
+			info.GetPos(wallStartPos);
+			reverseInfo.GetPos(wallEndPos);
+			nextInfo.GetPos(wallNextPos);
+
+			totalWallWidth += GetVectorDistance(wallStartPos, wallEndPos);
+
+			GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(angles, 2.0);
+			AddVectors(wallEndPos, angles, tempEndPos);
+
+			// 해당 벽 끝에서 다음 벽 충돌 지점까지의
+			TR_TraceHullFilter(tempEndPos, wallNextPos, vecHullMin, vecHullMax, MASK_ALL, BM_Straight_HitSelf, owner);
+			if(TR_DidHit())
+			{
+				target = TR_GetEntityIndex();
+				TR_GetEndPosition(tempEndPos);
+
+				// TODO: 현재는 한명만 감지하고 그 뒷 엔티티를 감지하지 못함
+				// vec을 계산하여서 엔티티의 최후방 좌표값을 알아내고 다음 벽까지 트레이스를 반복할 것
+
+				if(target != 0 && IsValidEntity(target))
+				{
+					BM_TakeDamage(manage, owner, target, totalWallWidth, penetratePower);
+
+					totalWallWidth += 50.0;
+				}
+			}
+			wallCount++;
+		}
+	}
 
 	for(int loop = 0; loop < length; loop++)
 	{
 		info = view_as<FilterEntityInfo>(list.Get(loop));
-		target = info.Get(Filter_Owner);
+		delete info;
+	}
+	delete list;
 
-		if(target == entity)
-		{
-			return false;
-		}
+	for(int loop = 0; loop < reverseLength; loop++)
+	{
+		info = view_as<FilterEntityInfo>(reverseList.Get(loop));
+		delete info;
+	}
+	delete reverseList;
+}
+
+public void BM_TakeDamage(BeamManagement manage, int owner, int target, float totalWallWidth, float penetratePower)
+{
+	float realDamage;
+	if(penetratePower == 0.0)
+		realDamage = manage.BeamDamage;
+	else
+	{
+		realDamage = manage.BeamDamage * (1.0 - (totalWallWidth / penetratePower));
 	}
 
-	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
-	list.Push(FilterEntityInfo.Create(entity, pos));
-	return true;
+	SDKHooks_TakeDamage(target, owner, owner, realDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
 }
-*/
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("BeamManagement.Create", Native_BeamManagement_Create);
@@ -724,11 +712,12 @@ void Ability_StraightBeam(int boss)
 
 public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 {
-	#if defined _ff2_potry_included
-		switch(beamType)
+	switch(beamType)
+	{
+		case BeamType_Straight:
 		{
-			case BeamType_Straight:
-			{
+			#if defined _ff2_potry_included
+
 				beam.BeamType = BeamType_Straight;
 				beam.Width = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "width", 10.0);
 				beam.EndWidth = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "end width", 10.0);
@@ -741,6 +730,10 @@ public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 					FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "color blue", 255));
 				beam.Alpha = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "color alpha", 255);
 				beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "life time", 5.0);
+				beam.RefrashTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "refrash time", 0.1);
+
+				beam.PosTracking = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "pos tracking", 0) > 0;
+				beam.AngleTracking = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "angle tracking", 0) > 0;
 
 				beam.StartFrame = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "beam startframe", 0);
 				beam.FrameRate = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "beam framerate", 10);
@@ -748,33 +741,40 @@ public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 				beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "damage", 20.0);
 				beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "damage cooldown", 0.0);
 				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "penetrate power", 500.0);
-			}
 
+			#else
+				beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 3, 10.0);
+				beam.EndRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 4, 600.0);
+
+				beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 5, 5.0);
+				beam.Width = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 6, 10.0);
+				beam.Amplitude = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 7, 0.0);
+
+				beam.RGBColors = RGBColor(
+				FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 8, 255),
+				FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 9, 255),
+				FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 10, 255));
+				beam.Alpha = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 11, 255);
+
+				beam.StartFrame = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 12, 0);
+				beam.FrameRate = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 13, 10);
+
+				beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 14, 20.0);
+				beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 15, 0.0);
+				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 16, 500.0);
+
+				beam.RefrashTime = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 17, 0.1);
+
+				beam.PosTracking = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 18, 0) > 0;
+				beam.AngleTracking = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 19, 0) > 0;
+			#endif
 		}
-	#else
-		beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 3, 10.0);
-		beam.EndRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 4, 600.0);
-
-		beam.LifeTime = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 5, 5.0);
-		beam.Width = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 6, 10.0);
-		beam.Amplitude = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 7, 0.0);
-
-		beam.RGBColors = RGBColor(
-			FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 8, 255),
-			FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 9, 255),
-			FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 10, 255));
-		beam.Alpha = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 11, 255);
-
-		beam.StartFrame = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 12, 0);
-		beam.FrameRate = FF2_GetAbilityArgument(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 13, 10);
-
-		beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 14, 20.0);
-		beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 15, 0.0);
-	#endif
+	}
 }
 
 public int Native_BeamManagement_Create(Handle plugin, int numParams)
 {
+	float pos[3], angles[3];
 	int clientMaxPosAt = Management_Max + MAXPLAYERS;
 	char beamModelPath[PLATFORM_MAX_PATH], haloModelPath[PLATFORM_MAX_PATH];
 
@@ -787,6 +787,8 @@ public int Native_BeamManagement_Create(Handle plugin, int numParams)
 	array.StartRadius = 10.0;
 	array.EndRadius = 1800.0;
 	array.LifeTime = 5.0;
+	array.RefrashTime = 0.1;
+	array.LastRefrashTime = 0.0;
 	array.Width = 10.0;
 	array.EndWidth = 20.0;
 	array.FadeLength = 0;
@@ -816,6 +818,12 @@ public int Native_BeamManagement_Create(Handle plugin, int numParams)
 	for(int client = Management_Max; client < clientMaxPosAt; client++) {
 		array.Set(client, 0.0);
 	}
+
+	GetClientEyePosition(array.Owner, pos);
+	GetClientEyeAngles(array.Owner, angles);
+
+	array.SetStartPos(pos);
+	array.SetStartAngles(angles);
 
 	return view_as<int>(array);
 }
