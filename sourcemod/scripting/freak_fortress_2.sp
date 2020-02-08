@@ -1818,7 +1818,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	CreateTimer(3.0, Timer_CalcQueuePoints, _, TIMER_FLAG_NO_MAPCHANGE);
-	UpdateHealthBar();
+	UpdateHealthBar(true);
 	return Plugin_Continue;
 }
 
@@ -2277,7 +2277,7 @@ public Action Timer_Move(Handle timer)
 public Action StartRound(Handle timer)
 {
 	CreateTimer(10.0, Timer_NextBossPanel, _, TIMER_FLAG_NO_MAPCHANGE);
-	UpdateHealthBar();
+	UpdateHealthBar(true);
 
 	CreateTimer(6.5, Timer_StartDrawGame, _, TIMER_FLAG_NO_MAPCHANGE);
 
@@ -5095,7 +5095,7 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 	if(IsBoss(healer)) // TODO: 자가치유 가능 여부 설정
 	{
 		// BossHealth[GetBossIndex(healer)] += healed;
-		UpdateHealthBar();
+		// UpdateHealthBar();
 	}
 	else if(client != healer)
 	{
@@ -6088,8 +6088,6 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability, client);
 					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability, client);
 				}
-
-				UpdateHealthBar();
 
 				FireBossTTextEvent(GetBossKV(boss), "on_lose_life", client);
 				FireBossTTextEvent(GetBossKV(boss), "on_lose_life_alert");
@@ -8818,7 +8816,7 @@ public void HealthbarEnableChanged(ConVar convar, const char[] oldValue, const c
 	}
 }
 
-void UpdateHealthBar()
+void UpdateHealthBar(bool noHealState = false)
 {
 	if(!Enabled || !cvarHealthBar.BoolValue || IsValidEntity(g_Monoculus) || !IsValidEntity(healthBar.Index) || CheckRoundState()==FF2RoundState_Loading)
 	{
@@ -8829,7 +8827,7 @@ void UpdateHealthBar()
 	static int recently;
 	for(int boss; boss<=MaxClients; boss++)
 	{
-		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss]))
+		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss]) && TF2_GetClientTeam(Boss[boss]) == BossTeam)
 		{
 			bosses++;
 			healthAmount+=BossHealth[boss]-BossHealthMax[boss]*(BossLives[boss]-1);
@@ -8840,7 +8838,7 @@ void UpdateHealthBar()
 	if(bosses)
 	{
 		healthPercent=RoundToCeil(float(healthAmount)/float(maxHealthAmount)*float(HEALTHBAR_MAX));
-		healthBar.BossHealthState=recently < healthAmount ? HealthState_Healing : HealthState_Default;
+		healthBar.BossHealthState=(!noHealState && recently <= healthAmount) ? HealthState_Healing : HealthState_Default;
 
 		if(healthPercent>HEALTHBAR_MAX)
 		{
