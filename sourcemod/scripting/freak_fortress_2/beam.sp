@@ -25,7 +25,7 @@ public Plugin myinfo=
 	name="Freak Fortress 2: Beam Abilities",
 	author="Nopied",
 	description="",
-	version="20200103",
+	version="20200209",
 };
 
 enum
@@ -482,20 +482,6 @@ public void BM_Straight_Update(BeamManagement manage)
 	vecHullMin[2] = manage.Width;
 	vecHullMax[2] = manage.EndWidth;
 
-	if(manage.PosTracking || manage.AngleTracking)
-	{
-		int colors[4] = {0, 0, 0, 255};
-		RGBToIntArray(manage.RGBColors, manage.Alpha, colors);
-
-		// 빔의 종료지점 구하기
-		GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
-		ScaleVector(angles, 10000.0);
-		AddVectors(startPos, angles, finalPos);
-
-		TE_SetupBeamPoints(startPos, finalPos, manage.ModelIndex, manage.HaloIndex, manage.StartFrame, manage.FrameRate, (manage.PosTracking || manage.AngleTracking) ? manage.RefrashTime : manage.LifeTime, manage.Width, manage.EndWidth, manage.FadeLength, manage.Amplitude, colors, 10);
-		TE_SendToAll();
-	}
-
 	GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
 	ScaleVector(angles, 10000.0);
 	AddVectors(startPos, angles, finalPos);
@@ -587,24 +573,44 @@ public void BM_Straight_Update(BeamManagement manage)
 			AddVectors(wallEndPos, angles, tempEndPos);
 
 			// 해당 벽 끝에서 다음 벽 충돌 지점까지의
-			TR_TraceHullFilter(tempEndPos, wallNextPos, vecHullMin, vecHullMax, MASK_ALL, BM_Straight_HitSelf, owner);
-			if(TR_DidHit())
+			do
 			{
-				target = TR_GetEntityIndex();
-				TR_GetEndPosition(tempEndPos);
-
-				// TODO: 현재는 한명만 감지하고 그 뒷 엔티티를 감지하지 못함
-				// vec을 계산하여서 엔티티의 최후방 좌표값을 알아내고 다음 벽까지 트레이스를 반복할 것
-
-				if(target != 0 && IsValidEntity(target))
+				TR_TraceHullFilter(tempEndPos, wallNextPos, vecHullMin, vecHullMax, MASK_ALL, BM_Straight_HitSelf, owner);
+				if(TR_DidHit())
 				{
-					BM_TakeDamage(manage, owner, target, totalWallWidth, penetratePower);
+					target = TR_GetEntityIndex();
+					TR_GetEndPosition(tempEndPos);
 
-					totalWallWidth += 50.0;
+					if(target != 0 && IsValidEntity(target))
+					{
+						BM_TakeDamage(manage, owner, target, totalWallWidth, penetratePower);
+
+						totalWallWidth += 50.0;
+						if(penetratePower <= totalWallWidth)
+						{
+							// TODO: 현재는 한명만 감지하고 그 뒷 엔티티를 감지하지 못함
+							// Hull을 계산하여서 엔티티의 최후방 좌표값을 알아내고 다음 벽까지 트레이스를 반복할 것
+							GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
+							ScaleVector(angles, 50.0);
+							AddVectors(tempEndPos, angles, tempEndPos);
+						}
+					}
+					else break;
 				}
 			}
+			while(TR_DidHit());
+
 			wallCount++;
 		}
+	}
+
+	if(manage.PosTracking || manage.AngleTracking)
+	{
+		int colors[4] = {0, 0, 0, 255};
+		RGBToIntArray(manage.RGBColors, manage.Alpha, colors);
+
+		TE_SetupBeamPoints(startPos, tempEndPos, manage.ModelIndex, manage.HaloIndex, manage.StartFrame, manage.FrameRate, (manage.PosTracking || manage.AngleTracking) ? manage.RefrashTime : manage.LifeTime, manage.Width, manage.EndWidth, manage.FadeLength, manage.Amplitude, colors, 10);
+		TE_SendToAll();
 	}
 
 	for(int loop = 0; loop < length; loop++)
