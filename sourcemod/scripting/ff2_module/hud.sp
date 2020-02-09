@@ -43,14 +43,16 @@ stock KeyValues LoadHudConfig()
 
 stock int GetHudSetting(int client, char[] hudId)
 {
-	LoadedHudData[client].GoToHudData(hudId);
-	return LoadedHudData[client].GetNum("setting_value", -1);
+	return (DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYER_HUDDATA_TABLENAME, hudId, "setting_value");
 }
 
 stock void SetHudSetting(int client, char[] hudId, int value)
 {
-	LoadedHudData[client].GoToHudData(hudId, true);
-	LoadedHudData[client].SetNum("setting_value", value);
+	char timeStr[32];
+	FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", GetTime());
+
+	(DBSPlayerData.GetClientData(client)).SetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYER_HUDDATA_TABLENAME, hudId, "setting_value", value);
+	(DBSPlayerData.GetClientData(client)).SetStringData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYER_HUDDATA_TABLENAME, hudId, "last_saved_time", timeStr);
 }
 
 // Native things
@@ -63,43 +65,121 @@ void HudInit()
 	CreateNative("FF2HudDisplay.CreateDisplay", Native_FF2HudDisplay_CreateDisplay);
 	CreateNative("FF2HudDisplay.ShowSyncHudDisplayText", Native_FF2HudDisplay_ShowSyncHudDisplayText);
 
-	CreateNative("FF2HudQueue.KillSelf", Native_FF2HudQueue_KillSelf);
+	CreateNative("FF2HudQueue.CreateHudQueue", Native_FF2HudQueue_CreateHudQueue);
+	CreateNative("FF2HudQueue.PushDisplay", Native_FF2HudQueue_PushDisplay);
+	CreateNative("FF2HudQueue.GetName", Native_FF2HudQueue_GetName);
+	CreateNative("FF2HudQueue.SetName", Native_FF2HudQueue_SetName);
+	CreateNative("FF2HudQueue.DeleteDisplay", Native_FF2HudQueue_DeleteDisplay);
+	CreateNative("FF2HudQueue.DeleteAllDisplay", Native_FF2HudQueue_DeleteAllDisplay);
 	CreateNative("FF2HudQueue.AddHud", Native_FF2HudQueue_AddHud);
 	CreateNative("FF2HudQueue.FindHud", Native_FF2HudQueue_FindHud);
 	CreateNative("FF2HudQueue.ShowSyncHudQueueText", Native_FF2HudQueue_ShowSyncHudQueueText);
 
-	OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell);
+	OnCalledQueue = CreateGlobalForward("FF2_OnCalledQueue", ET_Hook, Param_Cell, Param_Cell);
 	OnDisplayHud = CreateGlobalForward("FF2_OnDisplayHud", ET_Hook, Param_Cell, Param_String, Param_String);
 	OnDisplayHudPost = CreateGlobalForward("FF2_OnDisplayHud_Post", ET_Hook, Param_Cell, Param_String, Param_String);
 }
 
-public int Native_FF2HudQueue_KillSelf(Handle plugin, int numParams)
+public int Native_FF2HudQueue_CreateHudQueue(Handle plugin, int numParams)
+{
+	char name[64];
+	GetNativeString(1, name, sizeof(name));
+
+	FF2HudQueue queueKv = view_as<FF2HudQueue>(new KeyValues("hud_queue", "queue name", name));
+	return view_as<int>(queueKv);
+}
+
+public int Native_FF2HudQueue_PushDisplay(Handle plugin, int numParams)
+{
+	char hudId[128];
+	int posId;
+	FF2HudQueue queue = GetNativeCell(1);
+	FF2HudDisplay display = GetNativeCell(2);
+
+	queue.Rewind();
+	display.Rewind();
+
+	display.GetSectionName(hudId, sizeof(hudId));
+	queue.JumpToKey(hudId, true);
+
+	queue.Import(display);
+	delete display;
+	return queue.GetSectionSymbol(posId) ? posId : -1;
+}
+
+public int Native_FF2HudQueue_GetName(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
-	FF2HudDisplay willDeleted;
+	char name[64];
 
-	for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
+	queue.Rewind();
+	queue.GetString("queue name", name, sizeof(name));
+
+	SetNativeString(2, name, GetNativeCell(3));
+}
+
+public int Native_FF2HudQueue_SetName(Handle plugin, int numParams)
+{
+	FF2HudQueue queue = GetNativeCell(1);
+	char name[64];
+	GetNativeString(2, name, sizeof(name));
+
+	queue.Rewind();
+	queue.SetString("queue name", name);
+}
+
+public int Native_FF2HudQueue_DeleteDisplay(Handle plugin, int numParams)
+{
+	FF2HudQueue queue = GetNativeCell(1);
+	int posId = GetNativeCell(2);
+
+	if(queue.JumpToKeySymbol(posId))
+		queue.DeleteThis();
+}
+
+public int Native_FF2HudQueue_DeleteAllDisplay(Handle plugin, int numParams)
+{
+	ArrayList array = new ArrayList();
+	FF2HudQueue queue = GetNativeCell(1);
+	int posId;
+
+	queue.Rewind();
+	if(queue.GotoFirstSubKey())
 	{
-		willDeleted = queue.GetHud(loop);
-		if(willDeleted != null)	{
-			// Debug("deleted %x", willDeleted);
-			delete willDeleted;
+		do
+		{
+			queue.GetSectionSymbol(posId);
+			array.Push(posId);
 		}
+		while(queue.GotoNextKey());
 	}
 
-	delete queue;
+	for(int loop = 0; loop < array.Length; loop++)
+	{
+		queue.Rewind();
+		posId = array.Get(loop);
+		queue.JumpToKeySymbol(posId);
+
+		// CPrintToChatAll("%d", posId);
+		queue.DeleteThis();
+	}
+
+	delete array;
 }
 
 public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 {
+	char info[80], name[64];
 	FF2HudQueue queue = GetNativeCell(1);
 	FF2HudDisplay hudDisplay = GetNativeCell(2);
-	int other = GetNativeCell(3);
 
-	char info[80], name[64];
+	hudDisplay.Rewind();
+
+	int client = GetNativeCell(3), other = GetNativeCell(4);
 	queue.GetName(name, sizeof(name));
-	hudDisplay.GetInfo(info, sizeof(info));
-	int value = GetHudSetting(queue.ClientIndex, info);
+	hudDisplay.GetSectionName(info, sizeof(info));
+
+	int value = GetHudSetting(client, info);
 	bool visible = true;
 
 	if(value == HudSetting_None)
@@ -124,34 +204,17 @@ public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
 		return -1;
 	}
 
-	int index = queue.FindValue(view_as<FF2HudDisplay>(null));
-	if(index != -1) {
-		queue.SetHud(index, hudDisplay);
-		// Debug("Added %x", hudDisplay);
-	}
-
-	return index;
+	return queue.PushDisplay(hudDisplay);
 }
 public int Native_FF2HudQueue_FindHud(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
 	char hudId[80];
+	int posId;
 	GetNativeString(2, hudId, sizeof(hudId));
 
-	char info[80];
-	FF2HudDisplay hudDisplay;
-
-	for(int loop = HudQueueValue_Last; queue.Length > loop; loop++)
-	{
-		if((hudDisplay = queue.GetHud(loop)) != null)
-		{
-			hudDisplay.GetInfo(info, sizeof(info));
-			if(StrEqual(info, hudId))
-				return loop;
-		}
-	}
-
-	return -1;
+	queue.Rewind();
+	return queue.GetNameSymbol(hudId, posId) ? posId : -1;
 }
 
 public int Native_FF2HudConfig_GetConfigKeyValue(Handle plugin, int numParams)
@@ -177,89 +240,88 @@ public int Native_FF2HudDisplay_CreateDisplay(Handle plugin, int numParams)
 	GetNativeString(1, info, sizeof(info));
 	GetNativeString(2, display, sizeof(display));
 
-	FF2HudDisplay array = view_as<FF2HudDisplay>(new ArrayList(64, view_as<int>(HudValue_Last)));
-	array.SetString(Hud_Info, info);
-	array.SetString(Hud_Display, display);
-
-	return view_as<int>(array);
+	FF2HudDisplay displayKv = view_as<FF2HudDisplay>(new KeyValues(info, "display", display));
+	return view_as<int>(displayKv);
 }
 
 public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numParams)
 {
-    FF2HudDisplay displayArray = GetNativeCell(1);
-    int client = GetNativeCell(2);
-    Handle sync = GetNativeCell(3);
-    char info[64], display[64];
+	FF2HudDisplay displayKv = GetNativeCell(1);
+	int client = GetNativeCell(2);
+	Handle sync = GetNativeCell(3);
+	char info[64], display[64];
 
-    displayArray.GetInfo(info, 64);
-    displayArray.GetDisplay(display, 64);
-    Action action = Forward_OnDisplayHud(client, info, display);
-    if(action != Plugin_Handled && action != Plugin_Stop)
-    {
-        if(sync != null)
-            FF2_ShowSyncHudText(client, sync, display);
-        else
-            FF2_ShowHudText(client, -1, display);
-    }
+	displayKv.Rewind();
+	displayKv.GetSectionName(info, sizeof(info));
+	displayKv.GetString("display", display, sizeof(display));
+
+	Action action = Forward_OnDisplayHud(client, info, display);
+	if(action != Plugin_Handled && action != Plugin_Stop)
+	{
+	    if(sync != null)
+	        FF2_ShowSyncHudText(client, sync, display);
+	    else
+	        FF2_ShowHudText(client, -1, display);
+	}
 }
 
 public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 {
-    FF2HudQueue queue = GetNativeCell(1);
-    Handle sync = GetNativeCell(2);
-    FF2HudDisplay displayArray;
+	FF2HudQueue queue = GetNativeCell(1);
+	int displayCount = 0, client = GetNativeCell(2);
+	Handle sync = GetNativeCell(3);
+	char text[300], info[80], display[128];
 
-    char text[300], info[64], display[64];
-    int displayCount = 0;
-    Forward_OnCalledQueue(queue);
+	Forward_OnCalledQueue(queue, client);
+	queue.Rewind();
+	if(queue.GotoFirstSubKey())
+	{
+		do
+		{
+			displayCount++;
 
-    for(int loop = HudQueueValue_Last; loop < queue.Length; loop++)
-    {
-        displayArray = queue.GetHud(loop);
-        if(displayArray == null)
-            continue;
+			queue.GetSectionName(info, sizeof(info));
+			queue.GetString("display", display, sizeof(display));
 
-        displayCount++;
-        displayArray.GetInfo(info, 64);
-        displayArray.GetDisplay(display, 64);
-        Action action = Forward_OnDisplayHud(queue.ClientIndex, info, display);
+			// TODO: 밑의 함수 고치기
+			Forward_OnDisplayHud(client, info, display);
 
-        if(action != Plugin_Handled && action != Plugin_Stop)
-        {
-            if(displayCount > 1)
-                Format(text, sizeof(text), "%s | ", text);
-            Format(text, sizeof(text), "%s%s", text, display);
-        }
-    }
+			if(displayCount > 1)
+				Format(text, sizeof(text), "%s | ", text);
+			Format(text, sizeof(text), "%s%s", text, display);
+		}
+		while(queue.GotoNextKey());
+	}
 
-    if(sync != null)
-        FF2_ShowSyncHudText(queue.ClientIndex, sync, text);
-    else
-        FF2_ShowHudText(queue.ClientIndex, -1, text);
+	if(sync != null)
+		FF2_ShowSyncHudText(client, sync, text);
+	else
+		FF2_ShowHudText(client, -1, text);
 }
 
-public void Forward_OnCalledQueue(FF2HudQueue hudQueue)
+public void Forward_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-    Call_StartForward(OnCalledQueue);
-    Call_PushCell(hudQueue);
-    Call_Finish();
+	Call_StartForward(OnCalledQueue);
+	Call_PushCell(hudQueue);
+	Call_PushCell(client);
+	Call_Finish();
 }
 
 public Action Forward_OnDisplayHud(int client, const char[] info, char[] display)
 {
-    Action action;
+    Action action = Plugin_Continue;
     char[] tempDisplay = new char[strlen(display)+1];
-    Format(tempDisplay, strlen(tempDisplay)*2, "%s", display);
+    Format(tempDisplay, strlen(tempDisplay), "%s", display);
 
     Call_StartForward(OnDisplayHud);
     Call_PushCell(client);
     Call_PushString(info);
-    Call_PushStringEx(tempDisplay, strlen(tempDisplay)*2, SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+    Call_PushStringEx(tempDisplay, strlen(tempDisplay), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
     Call_Finish(action);
 
     if(action == Plugin_Changed)
     {
-        strcopy(display, strlen(display)*2, tempDisplay);
+        strcopy(display, strlen(display), tempDisplay);
     }
 
     Forward_OnDisplayHudPost(client, info, display);

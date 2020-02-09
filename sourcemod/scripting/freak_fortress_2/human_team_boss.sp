@@ -31,10 +31,8 @@ public Action RoundStart(Handle timer)
 	ArrayList clientArray = GetAlivePlayers(false);
 	ArrayList bossArray = GetBossPlayers();
 
-	if((bossCount = (clientArray.Length + bossArray.Length) / 12) > 0)
+	if((bossCount = (clientArray.Length + bossArray.Length) / 6) > 0)
 	{
-		delete bossArray;
-
 		int random, index, bossindex;
 		int healthPoint = 600 + (300 * bossCount);
 		char bossName[64];
@@ -45,7 +43,10 @@ public Action RoundStart(Handle timer)
 			index = GetRandomInt(0, clientArray.Length-1);
 			random = clientArray.Get(index);
 			bossindex = GetRandomBoss();
-			// TODO: 중복 보스 방지
+
+			if(bossindex == -1)
+				break;
+
 			FF2_MakePlayerToBoss(random, bossindex);
 
 			bossindex = FF2_GetBossIndex(random);
@@ -57,12 +58,13 @@ public Action RoundStart(Handle timer)
 
 			for(int cloop=0; cloop < clientArray.Length; cloop++)
 			{
+				// FIXME: 대기열 포인트가 0 미만일 경우, 아군이여도 누그 보스인지 메세지 출력이 안됨.
 				int client = clientArray.Get(cloop);
 				SetGlobalTransTarget(client);
 				FF2_GetBossName(bossindex, bossName, sizeof(bossName), client);
 				CPrintToChat(client, "{olive}[FF2]{default} %t", "Human Hero", random, bossName);
 			}
-			clientArray.ShiftUp(index);
+			clientArray.Erase(index);
 		}
 	}
 
@@ -101,10 +103,10 @@ stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 
 		for (int loop = 0; loop < bossArray.Length; loop++)
 		{
-			index = array.FindValue(bossArray.Get(loop));
+			index = array.FindValue(FF2_GetBossIndex(bossArray.Get(loop)));
 			if(index != -1)
 			{
-				array.ShiftUp(index);
+				array.Erase(index);
 				count--;
 			}
 		}
@@ -123,7 +125,7 @@ public ArrayList GetBossPlayers()
 	ArrayList array = new ArrayList();
 	for(int client = 1; client <= MaxClients; client++)
 	{
-	    if(IsClientInGame(client) && IsPlayerAlive(client) && FF2_GetBossIndex(client) == -1)
+	    if(IsClientInGame(client) && IsPlayerAlive(client) && FF2_GetBossIndex(client) != -1)
 	    {
 	        array.Push(client);
 	    }

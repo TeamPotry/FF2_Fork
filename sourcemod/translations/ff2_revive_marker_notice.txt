@@ -1,0 +1,8 @@
+"Phrases"
+{
+    "Revive Marker Healing"
+    {
+        "#format" "{1:N},{2:d}"
+        "en"      "{1} is reviving you! Remaining: {2}"
+    }
+}

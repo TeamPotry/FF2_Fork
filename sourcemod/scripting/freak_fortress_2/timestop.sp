@@ -5,6 +5,11 @@
 #include <tf2_stocks>
 #include <freak_fortress_2>
 
+#tryinclude <ff2_potry>
+#if !defined _ff2_potry_included
+	#include <freak_fortress_2_subplugin>
+#endif
+
 #define MAXENTITIES 2048
 
 /*
@@ -37,12 +42,18 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, err_max)
 	return APLRes_Success;
 }
 
-public void OnPluginStart()
+#if defined _ff2_potry_included
+	public void OnPluginStart()
+#else
+	public void OnPluginStart2()
+#endif
 {
 	HookEvent("player_spawn", OnPlayerSpawn);
 	HookEvent("teamplay_round_win", OnRoundEnd);
 
-	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+	#if defined _ff2_potry_included
+		FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+	#endif
 }
 
 public Action OnRoundEnd(Handle event, const char[] name, bool dont)
@@ -73,7 +84,8 @@ public Action OnPlayerSpawn(Handle event, const char[] name, bool dont)
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 10000.0);
 
 		int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-		DisableAnimation(weapon);
+		if(IsValidEntity(weapon))
+			DisableAnimation(weapon);
 
 		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 		SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
@@ -109,18 +121,36 @@ public TF2_OnConditionAdded(client, TFCond:condition)
 	}
 }
 
+#if defined _ff2_potry_included
 public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot)
+#else
+public FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, bool &enabled)
+#endif
 {
 	if(!strcmp(abilityName, "timestop"))
 	{
-		if(g_flTimeStopCooling != -1.0 || g_flTimeStop != -1.0)
-			return Plugin_Handled;
+		if(g_flTimeStopCooling != -1.0 || g_flTimeStop != -1.0) {
+
+			#if defined _ff2_potry_included
+				return Plugin_Handled;
+			#else
+				enabled = false;
+			#endif
+		}
 	}
 
-	return Plugin_Continue;
+	#if defined _ff2_potry_included
+		return Plugin_Continue;
+	#else
+		return;
+	#endif
 }
 
+#if defined _ff2_potry_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
+#else
+public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
+#endif
 {
     if(!strcmp(abilityName, "timestop"))
 	{
@@ -138,15 +168,22 @@ void Rage_TimeStop(int boss)
 			g_flTimeStopDamage[client] = 0.0;
 		}
 	}
-	g_flTimeStopCooling = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "cooldown", 5.0);
-	g_flTimeStop = GetGameTime()+FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "duration", 10.0);
+
+	char sound[PLATFORM_MAX_PATH];
+
+	#if defined _ff2_potry_included
+		g_flTimeStopCooling = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "cooldown", 5.0);
+		g_flTimeStop = GetGameTime()+FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "duration", 10.0);
+		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "warning sound path", sound, sizeof(sound));
+	#else
+		g_flTimeStopCooling = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", 1, 5.0);
+		g_flTimeStop = GetGameTime()+FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", 2, 10.0);
+		FF2_GetAbilityArgumentString(boss, this_plugin_name, "timestop", 3, sound, sizeof(sound));
+	#endif
 
 	SDKHook(GetClientOfUserId(FF2_GetBossUserId(boss)), SDKHook_PreThinkPost, RageTimer);
 	SDKUnhook(GetClientOfUserId(FF2_GetBossUserId(boss)), SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(GetClientOfUserId(FF2_GetBossUserId(boss)), SDKHook_OnTakeDamage, OnTakeDamage);
-
-	char sound[PLATFORM_MAX_PATH];
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "warning sound path", sound, sizeof(sound));
 
 	if(sound[0] != '\0')
 	{
@@ -172,6 +209,25 @@ public void RageTimer(int client)
 		SDKUnhook(client, SDKHook_PreThinkPost, RageTimer);
 	}
 
+	int glowIndex;
+	for(int target = 1; target <= MaxClients; target++)
+	{
+		if(!IsClientInGame(target) || !IsPlayerAlive(target)) continue;
+
+		// int currentHP = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, target);
+		int currentHP = GetEntProp(target, Prop_Send, "m_iHealth");
+		int color[4] = {255, 255, 0, 255}, totalColor, temp;
+
+		float ratio = g_flTimeStopDamage[target] * 100.0 / float(currentHP);
+		totalColor = (temp = 510 - RoundFloat(5.1 * ratio)) > 0 ? temp : 0;
+		color[0] = totalColor <= 255 ? ((temp = (totalColor - 255) * -1) > 255 ? 0 : temp) : 0;
+		color[1] = totalColor < 255 ? 0 : totalColor - 255;
+
+		if((glowIndex = TF2_HasGlow(target)) != -1 && IsValidEntity(glowIndex)) {
+			TF2_SetGlowColor(glowIndex, color);
+		}
+	}
+
 	if(g_flTimeStopCooling <= GetGameTime() && g_flTimeStopCooling != -1.0)
 	{
 		EnableTimeStop(client);
@@ -193,29 +249,16 @@ public Action OnTakeDamage(int client, int &attacker, int &inflictor, float &dam
 		if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
 			return Plugin_Continue;
 
-		if(g_flTimeStopCooling != -1.0 && IsBoss(client) && client != attacker)
+		int boss = IsBoss(attacker);
+		#if defined _ff2_potry_included
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, "timestop", "damage multiplier", 1.0);
+		#else
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, "timestop", 5, 1.0);
+		#endif
+
+		if(g_flTimeStop != -1.0 && client != attacker)
 		{
-				TF2_AddCondition(attacker, TFCond_MarkedForDeath, -1.0);
-				// Debug("%N Marked", client)
-		}
-
-		else if(g_flTimeStop != -1.0 && client != attacker)
-		{
-			g_flTimeStopDamage[client] += damage * 0.5;
-			// Debug("%N, g_flTimeStopDamage = %.1f", client, g_flTimeStopDamage[client]);
-/*
-			int glowIndex = -1, currentHP = GetEntProp(client, Prop_Send, "m_iHealth");
-			int color[4] = {255, 255, 0, 255}, totalColor;
-
-			float ratio = g_flTimeStopDamage[client] * 100.0 / view_as<float>(currentHP);
-			totalColor = 510 - RoundFloat(5.1 * ratio);
-			if((glowIndex = TF2_HasGlow(client, client)) == -1 || !IsValidEntity(glowIndex))
-				glowIndex = TF2_CreateGlow(client);
-
-			color[1] = totalColor < 255 ? 0 : totalColor - 255;
-			color[0] = totalColor <= 255 ? (totalColor - 255) * -1 : 0;
-			TF2_SetGlowColor(glowIndex, color);
-*/
+			g_flTimeStopDamage[client] += damage * multiplier;
 			return Plugin_Handled;
 		}
 	}
@@ -247,10 +290,16 @@ void EnableTimeStop(int client)
 				SetEntPropFloat(entity, Prop_Send, "m_flNextAttack", GetGameTime() + 10000.0);
 
 				int weapon = GetEntPropEnt(entity, Prop_Send, "m_hActiveWeapon");
-				DisableAnimation(weapon);
+				if(IsValidEntity(weapon))
+					DisableAnimation(weapon);
 
 				SDKUnhook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
 				SDKHook(entity, SDKHook_OnTakeDamage, OnTakeDamage);
+
+				int glowIndex;
+				if((glowIndex = TF2_HasGlow(entity)) == -1 || !IsValidEntity(glowIndex)) {
+					glowIndex = TF2_CreateGlow(entity);
+				}
 			}
 		}
 
@@ -276,7 +325,11 @@ void EnableTimeStop(int client)
 	if(boss != -1)
 	{
 		char sound[PLATFORM_MAX_PATH];
-		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "on sound", sound, sizeof(sound));
+		#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, "timestop", "on sound", sound, sizeof(sound));
+		#else
+			FF2_GetAbilityArgumentString(boss, this_plugin_name, "timestop", 4, sound, sizeof(sound));
+		#endif
 
 		if(sound[0] != '\0')
 		{
@@ -310,14 +363,17 @@ void DisableTimeStop()
 			if(IsPlayerAlive(entity))
 			{
 				int weapon = GetEntPropEnt(entity, Prop_Send, "m_hActiveWeapon");
-				EnableAnimation(weapon);
+				if(IsValidEntity(weapon))
+					EnableAnimation(weapon);
 
 				SDKHooks_TakeDamage(entity, g_hTimeStopParent, g_hTimeStopParent, g_flTimeStopDamage[entity], DMG_GENERIC, -1);
 				TF2_RemoveCondition(entity, TFCond_MarkedForDeath);
 
 				int glowIndex = -1;
-				if((glowIndex = TF2_HasGlow(entity, entity)) != -1 && IsValidEntity(glowIndex))
+				if((glowIndex = TF2_HasGlow(entity)) != -1 && IsValidEntity(glowIndex)) {
+					AcceptEntityInput(glowIndex, "Disable");
 					RemoveEntity(glowIndex);
+				}
 			}
 
 			g_flTimeStopDamage[entity] = 0.0;
@@ -362,7 +418,7 @@ void DisableTimeStop()
 	g_hTimeStopParent = -1;
 }
 
-stock int TF2_CreateGlow(int iEnt)
+stock int TF2_CreateGlow(int iEnt, int colors[4] = {255, 255, 255, 255})
 {
 	char strName[126], strClass[64];
 	GetEntityClassname(iEnt, strClass, sizeof(strClass));
@@ -370,7 +426,7 @@ stock int TF2_CreateGlow(int iEnt)
 	DispatchKeyValue(iEnt, "targetname", strName);
 
 	char strGlowColor[18];
-	Format(strGlowColor, sizeof(strGlowColor), "%i %i %i %i", GetRandomInt(0, 255), GetRandomInt(0, 255), GetRandomInt(0, 255), GetRandomInt(180, 255));
+	Format(strGlowColor, sizeof(strGlowColor), "%i %i %i %i", colors[0], colors[1], colors[2], colors[3]);
 
 	int ent = CreateEntityByName("tf_glow");
 	DispatchKeyValue(ent, "targetname", "RainbowGlow");
@@ -384,13 +440,12 @@ stock int TF2_CreateGlow(int iEnt)
 	return ent;
 }
 
-stock int TF2_HasGlow(int owner, int iEnt)
+stock int TF2_HasGlow(int iEnt)
 {
 	int index = -1;
 	while ((index = FindEntityByClassname(index, "tf_glow")) != -1)
 	{
-		if (GetEntPropEnt(index, Prop_Send, "m_hTarget") == iEnt
-        && GetEntPropEnt(index, Prop_Send, "m_hOwnerEntity") == owner)
+		if (GetEntPropEnt(index, Prop_Send, "m_hTarget") == iEnt)
 		{
 			return index;
 		}
@@ -399,15 +454,10 @@ stock int TF2_HasGlow(int owner, int iEnt)
 	return -1;
 }
 
-stock void TF2_SetGlowColor(int ent, const int colors[4])
+stock void TF2_SetGlowColor(int ent, int colors[4])
 {
-    AcceptEntityInput(ent, "Disable");
-
-    char strGlowColor[18];
-    Format(strGlowColor, sizeof(strGlowColor), "%i %i %i %i", colors[0], colors[1], colors[2], colors[3]);
-
-    DispatchKeyValue(ent, "GlowColor", strGlowColor);
-    AcceptEntityInput(ent, "Enable");
+	SetVariantColor(colors);
+	AcceptEntityInput(ent, "SetGlowColor");
 }
 
 void EnableAnimation(int entity)
