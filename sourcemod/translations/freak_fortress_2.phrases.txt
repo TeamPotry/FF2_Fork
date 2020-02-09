@@ -49,6 +49,11 @@
 		"#format"	"{1:i}"
 		"en"		"Rage is {1} percent ready"
 	}
+	"Current Boss Rage"
+	{
+		"#format"	"{1:i}"
+		"en"		"Enemy's rage is {1}"
+	}
 	"Super Duper Jump"
 	{
 		"en"		"Super Duper Jump is ready!"

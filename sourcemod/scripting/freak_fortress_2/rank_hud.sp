@@ -29,9 +29,8 @@ public Action UpdateTimer(Handle timer)
 	return Plugin_Continue;
 }
 
-public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	int client = hudQueue.ClientIndex;
 	SetGlobalTransTarget(client);
 
 	int ranking;
@@ -51,7 +50,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 			Format(text, sizeof(text), "%s(↑ %d, ↓%d)", text, GetRankingGap(ranking, ranking-1),  GetRankingGap(ranking, ranking+1));
 
 		hudDisplay = FF2HudDisplay.CreateDisplay("Your Rank", text);
-		hudQueue.AddHud(hudDisplay);
+		hudQueue.AddHud(hudDisplay, client);
 	}
 	else if(StrEqual(text, "Observer"))
 	{
@@ -66,7 +65,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue)
 				Format(text, sizeof(text), "%s(↑ %d, ↓%d)", text, GetRankingGap(ranking, ranking-1), GetRankingGap(ranking, ranking+1));
 
 			hudDisplay = FF2HudDisplay.CreateDisplay("Observer Target Player Rank", text);
-			hudQueue.AddHud(hudDisplay, observer);
+			hudQueue.AddHud(hudDisplay, client, observer);
 		}
 	}
 }

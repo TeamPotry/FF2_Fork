@@ -23,10 +23,11 @@ public void GetHudSettingString(int value, char[] statusString, int buffer)
 
 stock ArrayList CreateChancesArray(int client)
 {
-    char config[64], ruleName[80], value[120];
+    char config[64], ruleName[80], tempRuleName[80], value[120];
     ArrayList chancesArray = new ArrayList();
     KeyValues bossKv;
     Action action;
+    bool multipleCheck;
 
     kvCharacterConfig.Rewind();
     kvCharacterConfig.JumpToKey(FF2CharSetString); // This *should* always return true
@@ -54,10 +55,6 @@ stock ArrayList CreateChancesArray(int client)
             }
 
             bossKv.Rewind();
-
-            bossKv.GetString("name", ruleName, sizeof(ruleName));
-            // LogMessage("BossKv is %s", ruleName);
-
             if(bossKv.GetNum("hidden", 0) > 0) continue;
             else if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
             {
@@ -65,24 +62,54 @@ stock ArrayList CreateChancesArray(int client)
                 {
                     bossKv.GetSectionName(ruleName, sizeof(ruleName));
 
-                    Call_StartForward(OnCheckRules);
-                    Call_PushCell(client);
-                    Call_PushCell(realIndex);
-                    Call_PushCellRef(tempChance);
-                    Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-                    bossKv.GetString(NULL_STRING, value, 120);
-                    Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-                    Call_Finish(action);
+                    if(StrEqual(ruleName, "multiple") && bossKv.GotoFirstSubKey())
+                    {
+                        do
+                        {
+                            multipleCheck = false;
+                            if(bossKv.GotoFirstSubKey(false))
+                            {
+                                do
+                                {
+                                    bossKv.GetSectionName(tempRuleName, sizeof(tempRuleName));
 
-                    if(action == Plugin_Stop || action == Plugin_Handled)
-                    {
-                        checked = false;
-                        break;
+                                    Call_StartForward(OnCheckRules);
+                                    Call_PushCell(client);
+                                    Call_PushCell(realIndex);
+                                    Call_PushCellRef(tempChance);
+                                    Call_PushStringEx(tempRuleName, sizeof(tempRuleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                                    bossKv.GetString(NULL_STRING, value, 120);
+                                    Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                                    Call_Finish(action);
+
+                                    multipleCheck = action == Plugin_Stop || action == Plugin_Handled ? false : true;
+                                    if(!multipleCheck) break;
+
+                                    changed = action == Plugin_Changed;
+                                }
+                                while(bossKv.GotoNextKey(false));
+                                bossKv.GoBack();
+                            }
+                        }
+                        while(bossKv.GotoNextKey());
+                        bossKv.GoBack();
                     }
-                    else if(action == Plugin_Changed)
+                    else
                     {
-                        changed = true;
+                        Call_StartForward(OnCheckRules);
+                        Call_PushCell(client);
+                        Call_PushCell(realIndex);
+                        Call_PushCellRef(tempChance);
+                        Call_PushStringEx(ruleName, sizeof(ruleName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                        bossKv.GetString(NULL_STRING, value, 120);
+                        Call_PushStringEx(value, sizeof(value), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+                        Call_Finish(action);
                     }
+
+                    checked = action == Plugin_Stop || action == Plugin_Handled ? false : true;
+                    if(!checked && !multipleCheck) continue;
+
+                    changed = action == Plugin_Changed;
                 }
                 while(bossKv.GotoNextKey(false));
             }
@@ -205,6 +232,232 @@ stock Handle FindCookieEx(char[] cookieName)
     return cookieHandle;
 }
 
+stock int FindEntityByClassname2(int startEnt, const char[] classname)
+{
+	while(startEnt>-1 && !IsValidEntity(startEnt))
+	{
+		startEnt--;
+	}
+	return FindEntityByClassname(startEnt, classname);
+}
+
+stock void PlayShieldBreakSound(int client, int attacker, float position[3])
+{
+	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+}
+
+stock void DoOverlay(int client, const char[] overlay)
+{
+	int flags=GetCommandFlags("r_screenoverlay");
+	SetCommandFlags("r_screenoverlay", flags & ~FCVAR_CHEAT);
+	ClientCommand(client, "r_screenoverlay \"%s\"", overlay);
+	SetCommandFlags("r_screenoverlay", flags);
+}
+
+void ForceTeamWin(TFTeam team)
+{
+	int entity=FindEntityByClassname2(-1, "team_control_point_master");
+	if(!IsValidEntity(entity))
+	{
+		entity=CreateEntityByName("team_control_point_master");
+		DispatchSpawn(entity);
+		AcceptEntityInput(entity, "Enable");
+	}
+	SetVariantInt(view_as<int>(team));
+	AcceptEntityInput(entity, "SetWinner");
+}
+
+stock void GetClientCloakIndex(int client)
+{
+	if(!IsValidClient(client, false))
+	{
+		return -1;
+	}
+
+	int weapon=GetPlayerWeaponSlot(client, 4);
+	if(!IsValidEntity(weapon))
+	{
+		return -1;
+	}
+
+	char classname[64];
+	GetEntityClassname(weapon, classname, sizeof(classname));
+	if(strncmp(classname, "tf_wea", 6, false))
+	{
+		return -1;
+	}
+	return GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+}
+
+stock void SpawnSmallHealthPackAt(int client, TFTeam team)
+{
+	if(!IsValidClient(client, false) || !IsPlayerAlive(client))
+	{
+		return;
+	}
+
+	int healthpack=CreateEntityByName("item_healthkit_small");
+	float position[3];
+	GetClientAbsOrigin(client, position);
+	position[2]+=20.0;
+	if(IsValidEntity(healthpack))
+	{
+		DispatchKeyValue(healthpack, "OnPlayerTouch", "!self,Kill,,0,-1");
+		DispatchSpawn(healthpack);
+		SetEntProp(healthpack, Prop_Send, "m_iTeamNum", view_as<int>(team), 4);
+		SetEntityMoveType(healthpack, MOVETYPE_VPHYSICS);
+		float velocity[3];//={float(GetRandomInt(-10, 10)), float(GetRandomInt(-10, 10)), 50.0};  //Q_Q
+		velocity[0]=float(GetRandomInt(-10, 10)), velocity[1]=float(GetRandomInt(-10, 10)), velocity[2]=50.0;  //I did this because setting it on the creation of the vel variable was creating a compiler error for me.
+		TeleportEntity(healthpack, position, NULL_VECTOR, velocity);
+	}
+}
+
+stock void IncrementHeadCount(int client)
+{
+	if(!TF2_IsPlayerInCondition(client, TFCond_DemoBuff))
+	{
+		TF2_AddCondition(client, TFCond_DemoBuff, -1.0);
+	}
+
+	int decapitations=GetEntProp(client, Prop_Send, "m_iDecapitations");
+	int health=GetClientHealth(client);
+	SetEntProp(client, Prop_Send, "m_iDecapitations", decapitations+1);
+	SetEntityHealth(client, health+15);
+	TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);
+}
+
+stock int FindTeleOwner(int client)
+{
+	if(!IsValidClient(client) || !IsPlayerAlive(client))
+	{
+		return -1;
+	}
+
+	int teleporter=GetEntPropEnt(client, Prop_Send, "m_hGroundEntity");
+	char classname[32];
+	if(IsValidEntity(teleporter) && GetEntityClassname(teleporter, classname, sizeof(classname)) && StrEqual(classname, "obj_teleporter", false))
+	{
+		int owner=GetEntPropEnt(teleporter, Prop_Send, "m_hBuilder");
+		if(IsValidClient(owner, false))
+		{
+			return owner;
+		}
+	}
+	return -1;
+}
+
+stock int GetIndexOfWeaponSlot(int client, int slot)
+{
+	int weapon=GetPlayerWeaponSlot(client, slot);
+	return (weapon>MaxClients && IsValidEntity(weapon) ? GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") : -1);
+}
+
+stock bool TF2_IsPlayerCritBuffed(int client)
+{
+	return (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) || TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy) || TF2_IsPlayerInCondition(client, view_as<TFCond>(34)) || TF2_IsPlayerInCondition(client, view_as<TFCond>(35)) || TF2_IsPlayerInCondition(client, TFCond_CritOnFirstBlood) || TF2_IsPlayerInCondition(client, TFCond_CritOnWin) || TF2_IsPlayerInCondition(client, TFCond_CritOnFlagCapture) || TF2_IsPlayerInCondition(client, TFCond_CritOnKill) || TF2_IsPlayerInCondition(client, TFCond_CritMmmph));
+}
+
+stock int FindSentry(int client)
+{
+	int entity=-1;
+	while((entity=FindEntityByClassname2(entity, "obj_sentrygun"))!=-1)
+	{
+		if(GetEntPropEnt(entity, Prop_Send, "m_hBuilder")==client)
+		{
+			return entity;
+		}
+	}
+	return -1;
+}
+
+stock int FindPlayerBack(int client, int index)
+{
+	int entity=MaxClients+1;
+	while((entity=FindEntityByClassname2(entity, "tf_wearable*"))!=-1)
+	{
+		char netclass[32];
+		if(GetEntityNetClass(entity, netclass, sizeof(netclass)) && StrContains(netclass, "CTFWearable")!=-1 && GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex")==index && GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
+		{
+			return entity;
+		}
+	}
+	return -1;
+}
+
+stock void RemovePlayerBack(int client, int[] indices, int length)
+{
+	if(length<=0)
+	{
+		return;
+	}
+
+	int entity=MaxClients+1;
+	while((entity=FindEntityByClassname2(entity, "tf_wearable"))!=-1)
+	{
+		char netclass[32];
+		if(GetEntityNetClass(entity, netclass, sizeof(netclass)) && StrEqual(netclass, "CTFWearable"))
+		{
+			int index=GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex");
+			if(GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
+			{
+				for(int i; i<length; i++)
+				{
+					if(index==indices[i])
+					{
+						TF2_RemoveWearable(client, entity);
+					}
+				}
+			}
+		}
+	}
+}
+
+stock void RemovePlayerTarge(int client)
+{
+	int entity=MaxClients+1;
+	while((entity=FindEntityByClassname2(entity, "tf_wearable_demoshield"))!=-1)
+	{
+		int index=GetEntProp(entity, Prop_Send, "m_iItemDefinitionIndex");
+		if(GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity")==client && !GetEntProp(entity, Prop_Send, "m_bDisguiseWearable"))
+		{
+			if(index==131 || index==406 || index==1099 || index==1144)  //Chargin' Targe, Splendid Screen, Tide Turner, Festive Chargin' Targe
+			{
+				TF2_RemoveWearable(client, entity);
+			}
+		}
+	}
+}
+
+stock bool MapHasMusic(bool forceRecalc=false)  //SAAAAAARGE
+{
+	static bool hasMusic;
+	static bool found;
+	if(forceRecalc)
+	{
+		found=false;
+		hasMusic=false;
+	}
+
+	if(!found)
+	{
+		int entity=-1;
+		char name[64];
+		while((entity=FindEntityByClassname2(entity, "info_target"))!=-1)
+		{
+			GetEntPropString(entity, Prop_Data, "m_iName", name, sizeof(name));
+			if(StrEqual(name, "hale_no_music", false))
+			{
+				hasMusic=true;
+			}
+		}
+		found=true;
+	}
+	return hasMusic;
+}
+
 stock void SetControlPoint(bool enable)
 {
 	int controlPoint=MaxClients+1;
@@ -217,6 +470,21 @@ stock void SetControlPoint(bool enable)
 			AcceptEntityInput(controlPoint, "SetLocked");
 		}
 	}
+}
+
+stock void SetArenaCapTime(int time)
+{
+    int controlPoint=MaxClients+1;
+    char temp[8];
+    IntToString(time, temp, 8);
+
+    while((controlPoint=FindEntityByClassname2(controlPoint, "trigger_capture_area"))!=-1)
+    {
+        if(controlPoint>MaxClients && IsValidEntity(controlPoint))
+        {
+            DispatchKeyValue(controlPoint, "area_time_to_cap", temp);
+        }
+    }
 }
 
 stock void SetArenaCapEnableTime(float time)

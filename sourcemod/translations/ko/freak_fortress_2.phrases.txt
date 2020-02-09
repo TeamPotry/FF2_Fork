@@ -49,6 +49,11 @@
 		"#format"	"{1:i}"
 		"ko"		"분노: {1}%%"
 	}
+	"Current Boss Rage"
+	{
+		"#format"	"{1:i}"
+		"ko"		"보스들의 분노: {1}%%"
+	}
 	"Super Duper Jump"
 	{
 		"ko"		"긴급 슈퍼점프가 준비되었습니다!"

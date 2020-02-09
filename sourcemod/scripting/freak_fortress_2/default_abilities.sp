@@ -218,8 +218,12 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 		}
 		while(!IsValidEntity(target) || target==client || (FF2_GetFF2Flags(target) & FF2FLAG_ALLOWSPAWNINBOSSTEAM) || !IsPlayerAlive(target));
 
+		SetEntProp(client, Prop_Send, "m_bDucked", 1);
+		SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
+
 		GetEntPropVector(target, Prop_Data, "m_vecOrigin", position);
 		TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
+
 		TF2_StunPlayer(client, 2.0, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 	}
 }
@@ -228,8 +232,8 @@ void Rage_Stun(const char[] abilityName, int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float bossPosition[3], targetPosition[3];
-	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0);
-	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName);
+	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0), slowdown=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "slowdown", 0.0);
+	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName), stunflags=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "custom flags", TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT);
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 
 	for(int target=1; target<=MaxClients; target++)
@@ -243,8 +247,10 @@ void Rage_Stun(const char[] abilityName, int boss)
 				{
 					TF2_RemoveCondition(target, TFCond_Parachute);
 				}
-				TF2_StunPlayer(target, duration, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
-				CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
+				TF2_StunPlayer(target, duration, slowdown, stunflags, client);
+
+				if(FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "particle", 1) > 0)
+					CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(target, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 	}
