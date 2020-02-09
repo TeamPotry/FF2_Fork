@@ -28,6 +28,11 @@ public Plugin myinfo=
 	version="20200209",
 };
 
+/*
+	TODO:
+		- 레이저 피격 시, 넉백 여부 커스터마이징
+*/
+
 enum
 {
 	Manage_Owner,
