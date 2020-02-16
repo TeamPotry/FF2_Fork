@@ -335,7 +335,7 @@
 	"FF2 Changelog Notice"
 	{
 		"#format"	"{1:s}"
-		"ko"		"명령어 {olive}/ff2_changelog{default}: 마지막으로 변경사항을 확인한 이후 새로운 변경사항이 추가되었습니다. ({1})"
+		"ko"		"명령어 {olive}/ff2_changelog{default}: 마지막으로 변경사항을 확인한 이후 새로운 변경사항이 추가되었습니다. (변경날짜: {1})"
 	}
 	"Charge Status"
 	{
