@@ -482,10 +482,11 @@ public void BM_Straight_Update(BeamManagement manage)
 	manage.GetCurrentVector(Tracking_Pos, startPos);
 	manage.GetCurrentVector(Tracking_Angles, startAngles);
 
-	vecHullMin[0] = manage.Width;
-	vecHullMax[0] = manage.EndWidth;
-	vecHullMin[2] = manage.Width;
-	vecHullMax[2] = manage.EndWidth;
+	for(int loop = 0; loop > 3; loop++)
+	{
+		vecHullMin[loop] = manage.Width;
+		vecHullMax[loop] = manage.EndWidth;
+	}
 
 	GetAngleVectors(startAngles, angles, NULL_VECTOR, NULL_VECTOR);
 	ScaleVector(angles, 10000.0);
