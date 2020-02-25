@@ -26,7 +26,7 @@ jobs:
           wget "https://raw.githubusercontent.com/asherkin/TF2Items/master/pawn/tf2items.inc" -P include
           wget "https://forums.alliedmods.net/attachment.php?attachmentid=116849&d=1377667508" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/tutorial_text/master/addons/sourcemod/scripting/include/tutorial_text.inc" -P include
-          
+          wget "https://raw.githubusercontent.com/TeamPotry/SourceMod-DBSimple/master/include/db_simple.inc" -P include
           
       - name: Compile
         working-directory: addons/sourcemod/scripting
