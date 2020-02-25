@@ -53,3 +53,38 @@ stock void CopyEntPropVector(int src, int dest, PropType type, const char[] prop
 	GetEntPropVector(src, type, prop, vec, element);
 	SetEntPropVector(dest, type, prop, vec, element);
 }
+
+/**
+ * Marks an entity for deletion, deferred until the next frame.
+ */
+stock void RemoveEntityNextFrame(int entity) {
+	RequestFrame(OnRemoveEntityFrame, EntIndexToEntRef(entity));
+}
+
+/**
+ * Internal `RequestFrameCallback` function that marks a given entity for deletion.
+ */
+static stock void OnRemoveEntityFrame(int entref) {
+	int entity = EntRefToEntIndex(entref);
+	if (IsValidEntity(entity)) {
+		RemoveEntity(entity);
+	}
+}
+
+/**
+ * Marks an entity for deletion after a given delay.
+ */
+stock void RemoveEntityDelayed(int entity, float delay) {
+	CreateTimer(delay, OnRemoveEntityTimer, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+}
+
+/**
+ * Internal `Timer` callback function that marks a given entity for deletion.
+ */
+static stock Action OnRemoveEntityTimer(Handle timer, int entref) {
+	int entity = EntRefToEntIndex(entref);
+	if (IsValidEntity(entity)) {
+		RemoveEntity(entity);
+	}
+	return Plugin_Handled;
+}
