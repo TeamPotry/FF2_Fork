@@ -1,0 +1,44 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sm-version: [ '1.10.x' ]
+
+    name: SM version ${{ matrix.sm-version }}
+    steps:        
+      - name: Setup SourceMod
+        uses: rumblefrog/setup-sp@master
+        with:
+          version: ${{ matrix.sm-version }}
+
+      - name: Setup Source
+        uses: actions/checkout@master
+      
+      - name: Setup Include
+        working-directory: addons/sourcemod/scripting
+        run: |             
+          wget "http://www.doctormckay.com/download/scripting/include/morecolors.inc" -P include
+          wget "https://raw.githubusercontent.com/asherkin/TF2Items/master/pawn/tf2items.inc" -P include
+          wget "https://raw.githubusercontent.com/asherkin/SteamTools/master/plugin/steamtools.inc" -P include
+          wget "https://forums.alliedmods.net/attachment.php?attachmentid=116849&d=1377667508" -P include
+          wget "https://raw.githubusercontent.com/TeamPotry/tutorial_text/master/addons/sourcemod/scripting/include/tutorial_text.inc" -P include
+          
+          
+      - name: Compile
+        working-directory: addons/sourcemod/scripting
+        run: |
+          mkdir -p build/freak_fortress_2
+          
+          spcomp -iinclude freak_fortress_2.sp -o build/freak_fortress_2.smx
+          spcomp -iinclude -Dfreak_fortress_2 -o build
+          
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: Plugin
+          path: addons/sourcemod/scripting/build
