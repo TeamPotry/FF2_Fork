@@ -24,7 +24,6 @@ jobs:
         run: |             
           wget "http://www.doctormckay.com/download/scripting/include/morecolors.inc" -P include
           wget "https://raw.githubusercontent.com/asherkin/TF2Items/master/pawn/tf2items.inc" -P include
-          wget "https://raw.githubusercontent.com/asherkin/SteamTools/master/plugin/steamtools.inc" -P include
           wget "https://forums.alliedmods.net/attachment.php?attachmentid=116849&d=1377667508" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/tutorial_text/master/addons/sourcemod/scripting/include/tutorial_text.inc" -P include
           
