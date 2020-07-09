@@ -335,7 +335,7 @@
 	"FF2 Changelog Notice"
 	{
 		"#format"	"{1:s}"
-		"ko"		"Type {olive}/ff2_changelog{default}: There is new changes! (Last modified: {1})"
+		"en"		"Type {olive}/ff2_changelog{default}: There is new changes! (Last modified: {1})"
 	}
 	"Charge Status"
 	{
