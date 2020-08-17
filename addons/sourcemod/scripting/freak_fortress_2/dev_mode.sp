@@ -17,6 +17,7 @@ bool g_bDEVmode = false;
 public void OnPluginStart()
 {
 	RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
+	RegAdminCmd("ff2_disable_timer", Command_DisableTimer, ADMFLAG_CHEATS, "WOW! NO TIMER!");
 
 	HookEvent("teamplay_round_start", OnRoundStart);
 	LoadTranslations("freak_fortress_2.phrases");
@@ -28,6 +29,12 @@ public Action Command_DevMode(int client, int args)
     g_bDEVmode = !g_bDEVmode;
 
     return Plugin_Continue;
+}
+
+public Action Command_DisableTimer(int client, int args)
+{
+	FF2_SetRoundTime(-1.0); // 라운드 타이머 끄기
+	return Plugin_Continue;
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
