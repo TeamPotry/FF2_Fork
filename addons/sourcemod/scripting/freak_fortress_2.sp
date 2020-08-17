@@ -302,6 +302,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_CheckSoundFlags", Native_CheckSoundFlags);
 
 	// ff2_potry.inc
+	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
+	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
 	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
 	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
 	CreateNative("FF2_SpecialAttackToBoss", Native_SpecialAttackToBoss);
@@ -8355,6 +8357,26 @@ public int SetClientDamage(int client, int damage)
 public int Native_SetClientDamage(Handle plugin, int numParams)
 {
 	SetClientDamage(GetNativeCell(1), GetNativeCell(2));
+}
+
+public int GetRoundTime()
+{
+	return view_as<int>(timeleft);
+}
+
+public int Native_GetRoundTime(Handle plugin, int numParams)
+{
+	return GetRoundTime();
+}
+
+public void SetRoundTime(float time)
+{
+	timeleft = time;
+}
+
+public int Native_SetRoundTime(Handle plugin, int numParams)
+{
+	SetRoundTime(GetNativeCell(1));
 }
 
 public int GetClientAssist(int client)

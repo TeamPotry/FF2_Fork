@@ -16,12 +16,19 @@ enum
 };
 
 /**
- * Gets assist by this client
+ * Get remaining round time.
  *
- * @param client    Client's index
- * @return          Damage dealt
+ * @return          Remaining round time
  */
-native int FF2_GetClientAssist(int client);
+native int FF2_GetRoundTime();
+
+/**
+ * Set remaining round time.
+ *
+ * @param time      New round time
+ * @noreturn
+ */
+native void FF2_SetRoundTime(float time);
 
 /**
  * Sets assist by this client
