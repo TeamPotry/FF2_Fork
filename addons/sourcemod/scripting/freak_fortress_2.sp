@@ -5182,7 +5182,7 @@ public Action CheckAlivePlayers(Handle timer)
 
 public Action Timer_DrawGame(Handle timer)
 {
-	if(CheckRoundState()!=FF2RoundState_RoundRunning)
+	if(CheckRoundState()!=FF2RoundState_RoundRunning || timeleft <= -1.0)
 	{
 		return Plugin_Stop;
 	}
@@ -5193,7 +5193,11 @@ public Action Timer_DrawGame(Handle timer)
 	timeleft-=0.1; // TODO: Forward
 
 	char timeDisplay[6];
-	int min=RoundToFloor(timeleft / 60.0), sec=RoundFloat(timeleft)-(min*60)-1;
+	int min=RoundToFloor(timeleft / 60.0), sec=RoundToCeil(timeleft)-(min*60)-1;
+	int timeInteger = RoundFloat(timeleft);
+	float fraction = FloatFraction(timeleft);
+
+	static int lastNotice = -1;
 
 	if(timeleft<60.0)
 	{
@@ -5228,9 +5232,7 @@ public Action Timer_DrawGame(Handle timer)
 		}
 	}
 
-	int timeInteger = RoundFloat(timeleft);
-	static int lastNotice = -1;
-	if(lastNotice != timeInteger)
+	if(lastNotice != timeInteger && fraction < 0.1)
 	{
 		lastNotice = timeInteger;
 
