@@ -25,7 +25,7 @@ native int FF2_GetRoundTime();
 /**
  * Set remaining round time.
  *
- * @param time      New round time
+ * @param time      New round time (set -1.0 to disable timer)
  * @noreturn
  */
 native void FF2_SetRoundTime(float time);
