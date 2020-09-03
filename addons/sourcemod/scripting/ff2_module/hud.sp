@@ -268,7 +268,7 @@ public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numPar
 public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
-	int displayCount = 0, client = GetNativeCell(2);
+	int displayCount = 0, client = GetNativeCell(2), len = 0;
 	Handle sync = GetNativeCell(3);
 	char text[300], info[80], display[128];
 
@@ -287,7 +287,19 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 			Forward_OnDisplayHud(client, info, display);
 
 			if(displayCount > 1)
-				Format(text, sizeof(text), "%s | ", text);
+			{
+				if(len > 40)
+				{
+					Format(text, sizeof(text), "\n%s", text);
+					len = 0;
+				}
+				else
+				{
+					Format(text, sizeof(text), "%s | ", text);
+					len += strlen(display);
+				}
+			}
+
 			Format(text, sizeof(text), "%s%s", text, display);
 		}
 		while(queue.GotoNextKey());
