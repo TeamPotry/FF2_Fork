@@ -10,7 +10,7 @@
 
 #pragma newdecls required
 
-#define CBS_MAX_ARROWS 9
+#define CBS_MAX_ARROWS 14
 
 #define SOUND_SLOW_MO_START "replay/enterperformancemode.wav"  //Used when Ninja Spy enters slow mo
 #define SOUND_SLOW_MO_END "replay/exitperformancemode.wav"  //Used when Ninja Spy exits slow mo
@@ -539,7 +539,7 @@ void Rage_Bow(int boss)
 	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 	TFTeam team=(TF2_GetClientTeam(client)==TFTeam_Blue ? TFTeam_Red : TFTeam_Blue);
 
-	int otherTeamAlivePlayers;
+	int otherTeamAlivePlayers = 3; // 부여할 화살 갯수
 	for(int target=1; target<=MaxClients; target++)
 	{
 		if(IsClientInGame(target) && TF2_GetClientTeam(target)==team && IsPlayerAlive(target))
