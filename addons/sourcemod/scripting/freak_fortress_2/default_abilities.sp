@@ -563,7 +563,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 	{
 		float angles[3];
 		GetClientEyeAngles(client, angles);
-		if(angles[0]>60.0)
+		if(angles[0]>40.0)
 		{
 			Action action;
 			Call_StartForward(OnWeighdown);
@@ -587,7 +587,13 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 			*/
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+
+			/*
 			velocity[2]=-1200.0;
+			*/
+
+			GetAngleVectors(angles, velocity, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(velocity, 700.0);
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 
 			FF2_SetBossCharge(boss, slot, 0.0);
