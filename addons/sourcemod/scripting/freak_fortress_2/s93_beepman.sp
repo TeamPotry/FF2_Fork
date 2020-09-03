@@ -96,7 +96,7 @@ int trailOwner[MAX_EDICTS];
 
 public void OnPluginStart() // No bugs pls
 {
-	HookEvent("teamplay_round_start", Event_RoundStart);
+	// HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("teamplay_round_win", Event_WinPanel);
 
 	LoadTranslations("s93_beepman.phrases");
@@ -120,76 +120,73 @@ public void Event_WinPanel(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
-public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+// public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+public void FF2_OnPlayBoss(int boss)
 {
-	for(int clientIdx=MaxClients; clientIdx; clientIdx--)
+	//for(int clientIdx=MaxClients; clientIdx; clientIdx--)
+	int clientIdx = GetClientOfUserId(FF2_GetBossUserId(boss));
+
+	autobHop[clientIdx] = false;
+	simplebHop[clientIdx] = false;
+	FloorFrames[clientIdx] = MaxBhopFrames[clientIdx] + 1;
+	AirSpeed[clientIdx][0] = 0.0;
+	AirSpeed[clientIdx][1] = 0.0;
+	AfterJumpFrame[clientIdx] = false;
+	PlayerInTriggerPush[clientIdx] = false;
+	bHopEnabled[clientIdx]=false;
+	MaxBhopFrames[clientIdx]=0;
+	FramePenalty[clientIdx]=0.0;
+	HasTrails[clientIdx]=false;
+	LoopHudNotificationAt[clientIdx]=INACTIVE;
+	CooldownEndsIn[clientIdx]=INACTIVE;
+	UnscrambleAt[clientIdx]=INACTIVE;
+	HasHijackAbility[clientIdx]=false;
+	scrambleKeys[clientIdx]=false;
+	IsOnCoolDown[clientIdx]=false;
+
+	Trail_Remove(clientIdx);
+
+	int bossIdx=FF2_GetBossIndex(clientIdx); // Well this seems to be the solution to make it multi-boss friendly
+	if(bossIdx>=0)
 	{
-		if(!IsValidClient(clientIdx))
+		bHopEnabled[clientIdx]=FF2_HasAbility(bossIdx, THIS_PLUGIN_NAME, BHOP);
+		if(bHopEnabled[clientIdx])
 		{
-			continue;
+			HookedTriggerPushes=true;
+			simplebHop[clientIdx]=view_as<bool>(FF2_GetAbilityArgument(bossIdx,THIS_PLUGIN_NAME, BHOP, "simple bhop"));
+			MaxBhopFrames[clientIdx]=FF2_GetAbilityArgument(bossIdx, THIS_PLUGIN_NAME, BHOP, "max bhop frame", 12);
+			FramePenalty[clientIdx]=FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, BHOP, "frame penalty", 0.975);
+			autobHop[clientIdx]=view_as<bool>(FF2_GetAbilityArgument(bossIdx,THIS_PLUGIN_NAME, BHOP, "auto bhop"));
 		}
-		autobHop[clientIdx] = false;
-		simplebHop[clientIdx] = false;
-		FloorFrames[clientIdx] = MaxBhopFrames[clientIdx] + 1;
-		AirSpeed[clientIdx][0] = 0.0;
-		AirSpeed[clientIdx][1] = 0.0;
-		AfterJumpFrame[clientIdx] = false;
-		PlayerInTriggerPush[clientIdx] = false;
-		bHopEnabled[clientIdx]=false;
-		MaxBhopFrames[clientIdx]=0;
-		FramePenalty[clientIdx]=0.0;
-		HasTrails[clientIdx]=false;
-		LoopHudNotificationAt[clientIdx]=INACTIVE;
-		CooldownEndsIn[clientIdx]=INACTIVE;
-		UnscrambleAt[clientIdx]=INACTIVE;
-		HasHijackAbility[clientIdx]=false;
-		scrambleKeys[clientIdx]=false;
-		IsOnCoolDown[clientIdx]=false;
 
-		Trail_Remove(clientIdx);
-
-		int bossIdx=FF2_GetBossIndex(clientIdx); // Well this seems to be the solution to make it multi-boss friendly
-		if(bossIdx>=0)
+		if(FF2_HasAbility(bossIdx, THIS_PLUGIN_NAME, HIJACK))
 		{
-			bHopEnabled[clientIdx]=FF2_HasAbility(bossIdx, THIS_PLUGIN_NAME, BHOP);
-			if(bHopEnabled[clientIdx])
+			ragecost[clientIdx]=FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, HIJACK, "cost");
+			LoopHudNotificationAt[clientIdx]=GetEngineTime()+1.0;
+			HasHijackAbility[clientIdx]=true;
+			int entity = SpawnWeapon(clientIdx, "tf_weapon_builder", 28, 101, 5, "391 ; 2"); // Builder
+			SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 1, _, 0);
+			SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 1, _, 1);
+			SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 1, _, 2);
+			SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 0, _, 3);
+	/*
+			for(int arg=7;arg<=15;arg++)
 			{
-				HookedTriggerPushes=true;
-				simplebHop[clientIdx]=view_as<bool>(FF2_GetAbilityArgument(bossIdx,THIS_PLUGIN_NAME, BHOP, "simple bhop"));
-				MaxBhopFrames[clientIdx]=FF2_GetAbilityArgument(bossIdx, THIS_PLUGIN_NAME, BHOP, "max bhop frame", 12);
-				FramePenalty[clientIdx]=FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, BHOP, "frame penalty", 0.975);
-				autobHop[clientIdx]=view_as<bool>(FF2_GetAbilityArgument(bossIdx,THIS_PLUGIN_NAME, BHOP, "auto bhop"));
+				ReadCenterText(bossIdx, HIJACK, arg, HUDText[clientIdx][arg-7]);
 			}
+	*/
+		}
 
-			if(FF2_HasAbility(bossIdx, THIS_PLUGIN_NAME, HIJACK))
-			{
-				ragecost[clientIdx]=FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, HIJACK, "cost");
-				LoopHudNotificationAt[clientIdx]=GetEngineTime()+1.0;
-				HasHijackAbility[clientIdx]=true;
-				int entity = SpawnWeapon(clientIdx, "tf_weapon_builder", 28, 101, 5, "391 ; 2"); // Builder
-				SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 1, _, 0);
-				SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 1, _, 1);
-				SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 1, _, 2);
-				SetEntProp(entity, Prop_Send, "m_aBuildableObjectTypes", 0, _, 3);
-/*
-				for(int arg=7;arg<=15;arg++)
-				{
-					ReadCenterText(bossIdx, HIJACK, arg, HUDText[clientIdx][arg-7]);
-				}
-*/
-			}
+		HasTrails[clientIdx]=FF2_HasAbility(bossIdx, THIS_PLUGIN_NAME, TRAILS);
+		if(HasTrails[clientIdx])
+		{
+			char trailPath[PLATFORM_MAX_PATH];
+			FF2_GetAbilityArgumentString(bossIdx, THIS_PLUGIN_NAME, TRAILS, "path", trailPath, sizeof(trailPath));
+			int alpha=FF2_GetAbilityArgument(bossIdx, THIS_PLUGIN_NAME, TRAILS, "alpha");
 
-			HasTrails[clientIdx]=FF2_HasAbility(bossIdx, THIS_PLUGIN_NAME, TRAILS);
-			if(HasTrails[clientIdx])
-			{
-				char trailPath[PLATFORM_MAX_PATH];
-				FF2_GetAbilityArgumentString(bossIdx, THIS_PLUGIN_NAME, TRAILS, "path", trailPath, sizeof(trailPath));
-				int alpha=FF2_GetAbilityArgument(bossIdx, THIS_PLUGIN_NAME, TRAILS, "alpha");
-
-				PrecacheModel(trailPath);
-				PrecacheDecal(trailPath, true);
-				Trail_Attach(clientIdx, trailPath, alpha, FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, TRAILS, "life time", 1.0), FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, TRAILS, "start width", 22.0), FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, TRAILS, "end width", 0.0), FF2_GetAbilityArgument(bossIdx, THIS_PLUGIN_NAME, TRAILS, "render mode", 5));
-			}
+			PrecacheModel(trailPath);
+			PrecacheDecal(trailPath, true);
+			Trail_Attach(clientIdx, trailPath, alpha, FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, TRAILS, "life time", 1.0), FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, TRAILS, "start width", 22.0), FF2_GetAbilityArgumentFloat(bossIdx, THIS_PLUGIN_NAME, TRAILS, "end width", 0.0), FF2_GetAbilityArgument(bossIdx, THIS_PLUGIN_NAME, TRAILS, "render mode", 5));
 		}
 	}
 
@@ -388,6 +385,8 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	 * TO-DO: i really gotta start organizing this crap.
 	 */
 
+	if(FF2_GetRoundState() != 1) return Plugin_Continue;
+
 	int bossIdx=FF2_GetBossIndex(client);
 	if(bossIdx>=0 && bHopEnabled[client] && simplebHop[client] && GetEntityFlags(client) & FL_ONGROUND && buttons & IN_JUMP)
 	{
@@ -527,7 +526,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 		switch(GetRandomInt(1,4)) // More fake lag rage
 		{
 			case 1: return Plugin_Handled;
-			case 2: return Plugin_Continue;
+			case 2: return Plugin_Handled;
 			case 3: return Plugin_Handled;
 			case 4: return Plugin_Continue;
 		}
