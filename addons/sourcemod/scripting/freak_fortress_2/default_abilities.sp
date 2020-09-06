@@ -593,7 +593,10 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 			*/
 
 			GetAngleVectors(angles, velocity, NULL_VECTOR, NULL_VECTOR);
-			ScaleVector(velocity, 700.0);
+
+			ScaleVector(velocity, 950.0);
+			velocity[0] *= 0.5;
+
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 
 			FF2_SetBossCharge(boss, slot, 0.0);
