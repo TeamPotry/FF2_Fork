@@ -295,7 +295,7 @@ void Rage_Clone(const char[] abilityName, int boss)
 		players.Erase(temp);
 
 		action = Forward_OnMinionSpawn(i, tempBossIndex);
-		if(action != Plugin_Stop && action != Plugin_Handled)
+		if(action == Plugin_Stop || action == Plugin_Handled)
 			continue;
 
 		FF2_SetFF2Flags(clone, FF2_GetFF2Flags(clone)|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_CLASSTIMERDISABLED);
