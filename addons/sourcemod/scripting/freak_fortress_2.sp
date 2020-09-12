@@ -306,6 +306,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
 	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
 	CreateNative("FF2_SetClientAssist", Native_SetClientAssist);
+	CreateNative("FF2_EquipBoss", Native_EquipBoss);
 	CreateNative("FF2_SpecialAttackToBoss", Native_SpecialAttackToBoss);
 	CreateNative("FF2_GetCharacterKV", Native_GetCharacterKV);
 	CreateNative("FF2_MakePlayerToBoss", Native_MakePlayerToBoss);
@@ -8397,6 +8398,11 @@ public void SetClientAssist(int client, int assist)
 public int Native_SetClientAssist(Handle plugin, int numParams)
 {
 	SetClientAssist(GetNativeCell(1), GetNativeCell(2));
+}
+
+public int Native_EquipBoss(Handle plugin, int numParams)
+{
+	EquipBoss(GetNativeCell(1));
 }
 
 public Action SpecialAttackToBoss(int attacker, int victimBoss, char[] name, float damage)

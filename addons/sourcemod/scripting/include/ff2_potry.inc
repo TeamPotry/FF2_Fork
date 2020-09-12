@@ -39,6 +39,14 @@ native void FF2_SetRoundTime(float time);
  */
 native void FF2_SetClientAssist(int client, int assist);
 
+/**
+ * Regenerate Boss weapons.
+ *
+ * @param boss 	boss's index
+ * @noreturn
+ */
+native void FF2_EquipBoss(int boss);
+
 /*
 * @param client 	     attacker's index
 * @param characterIndex	 boss index
