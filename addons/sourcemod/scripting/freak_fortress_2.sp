@@ -5513,13 +5513,13 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							}
 						}
 
-						if(GetVectorDistance(position, victimPosition)>600.0)
+						if(GetVectorDistance(position, victimPosition)>1800.0)
 							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 
 						if(!(damagetype & DMG_CRIT))
 						{
 							if(damagecustom != TF_CUSTOM_HEADSHOT)
-								damage*=1.6;
+								damage*=2.4;
 						}
 
 						return Plugin_Changed;
@@ -5555,7 +5555,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				if(damagecustom==TF_CUSTOM_BURNING_ARROW)
 				{
 					bChanged = true;
-					damage *= 1.4;
+					damage *= 2.0;
 				}
 
 				switch(index)
