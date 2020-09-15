@@ -288,9 +288,9 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 
 			if(displayCount > 1)
 			{
-				if(len > 40)
+				if(len > 60)
 				{
-					Format(text, sizeof(text), "\n%s", text);
+					Format(display, sizeof(display), "\n%s", display);
 					len = 0;
 				}
 				else
