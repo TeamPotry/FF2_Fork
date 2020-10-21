@@ -647,7 +647,8 @@ public void BM_TakeDamage(BeamManagement manage, int owner, int target, float to
 		realDamage = manage.BeamDamage * (totalWallWidth <= penetratePower ? (1.0 - (totalWallWidth / penetratePower)) : 1.0);
 	}
 
-	SDKHooks_TakeDamage(target, owner, owner, realDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
+	if(!TF2_IsPlayerInCondition(target, TFCond_Ubercharged))
+		SDKHooks_TakeDamage(target, owner, owner, realDamage, DMG_SHOCK|DMG_PREVENT_PHYSICS_FORCE);
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
