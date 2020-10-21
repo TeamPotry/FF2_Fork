@@ -756,7 +756,7 @@ public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 
 				beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "damage", 20.0);
 				beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "damage cooldown", 0.0);
-				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "penetrate power", 500.0);
+				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "penetrate power", 50.0);
 
 			#else
 				beam.StartRadius = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 3, 10.0);
@@ -777,7 +777,7 @@ public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 
 				beam.BeamDamage = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 14, 20.0);
 				beam.BeamDamageCooldown = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 15, 0.0);
-				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 16, 500.0);
+				beam.PenetratePower = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 16, 50.0);
 
 				beam.RefrashTime = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, STRAIGHT_BEAM_NAME, 17, 0.1);
 
