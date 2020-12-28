@@ -2410,12 +2410,17 @@ public Action MakeModelTimer(Handle timer, int boss)
 
 void EquipBoss(int boss)
 {
+	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+	char classname[64], attributes[256], bossName[64];
 	int client=Boss[boss];
+
+	bool initCaptureAttribute = false;
+	char captureAttributeStr[12] = "68 ; %i ; "; // 68: +2 cap rate
+
 	DoOverlay(client, "");
 	TF2_RemoveAllWeapons(client);
-	char classname[64], attributes[256], bossName[64];
+	Format(captureAttributeStr, 12, captureAttributeStr, TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
 
-	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
 	kv.Rewind();
 	kv.GetString("name", bossName, sizeof(bossName), "=Failed Name=");
 	if(kv.JumpToKey("weapons"))
@@ -2426,9 +2431,11 @@ void EquipBoss(int boss)
 			char sectionName[32];
 			kv.GetSectionName(sectionName, sizeof(sectionName));
 			int index=StringToInt(sectionName);
+
 			//NOTE: StringToInt returns 0 on failure which corresponds to tf_weapon_bat,
 			//so there's no way to distinguish between an invalid string and 0.
 			//Blocked on bug 6438: https://bugs.alliedmods.net/show_bug.cgi?id=6438
+
 			if(index>=0)
 			{
 				kv.JumpToKey(sectionName);
@@ -2442,17 +2449,13 @@ void EquipBoss(int boss)
 				kv.GetString("attributes", attributes, sizeof(attributes));
 				if(attributes[0]!='\0')
 				{
-					Format(attributes, sizeof(attributes), "68 ; %i ; 2 ; 3.1 ; %s", TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2 , attributes);
-						//68: +2 cap rate
+					Format(attributes, sizeof(attributes), "%s2 ; 3.1 ; %s", !initCaptureAttribute ? captureAttributeStr : "", attributes);
 						//2: x3.1 damage
-						//259: Deals 3x falling damage to the player you land on
 				}
 				else
 				{
-					Format(attributes, sizeof(attributes), "68 ; %i ; 2 ; 3.1", TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
-						//68: +2 cap rate
+					Format(attributes, sizeof(attributes), "%s2 ; 3.1", !initCaptureAttribute ? captureAttributeStr : "");
 						//2: x3.1 damage
-						//259: Deals 3x falling damage to the player you land on
 				}
 
 				int weapon=SpawnWeapon(client, classname, index, 101, 5, attributes);
@@ -2478,6 +2481,8 @@ void EquipBoss(int boss)
 					SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", 0.001);
 				}
 				SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
+
+				initCaptureAttribute = true;
 			}
 			else
 			{
