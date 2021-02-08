@@ -35,7 +35,6 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2_stocks>
 #include <tf2items>
 #include <tf2attributes>
-#include <tutorial_text>
 #include <unixtime_sourcemod>
 
 #include <stocksoup/tf/monster_resource>
@@ -2607,9 +2606,6 @@ public Action MakeBoss(Handle timer, int boss)
 	Call_PushCell(boss);
 	Call_Finish();
 
-	// 튜토리얼 텍스트
- 	FireBossTTextEvent(GetBossKV(boss), "on_play", client);
-
 	return Plugin_Continue;
 }
 
@@ -4785,8 +4781,6 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		}
 		emitRageSound[boss]=true;
 
-		FireBossTTextEvent(GetBossKV(boss), "on_rage", client);
-		FireBossTTextEvent(GetBossKV(boss), "on_rage_alert");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -6099,8 +6093,6 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability, client);
 				}
 
-				FireBossTTextEvent(GetBossKV(boss), "on_lose_life", client);
-				FireBossTTextEvent(GetBossKV(boss), "on_lose_life_alert");
 				break;
 			}
 		}
