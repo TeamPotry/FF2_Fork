@@ -67,7 +67,7 @@ public void OnPluginStart()
 	cvarCheats=FindConVar("sv_cheats");
 	cvarKAC=FindConVar("kac_enable");
 
-	LoadTranslations("ff2_1st_set.phrases");
+	// LoadTranslations("ff2_1st_set.phrases");
 
 	FF2_RegisterSubplugin(PLUGIN_NAME);
 }

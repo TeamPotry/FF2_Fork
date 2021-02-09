@@ -18,7 +18,7 @@ public Plugin myinfo=
 
 public void OnPluginStart()
 {
-    #if defined _FF2_POTRY_included
+    #if defined _ff2_potry_included
         FF2_RegisterSubplugin(PLUGIN_NAME);
     #endif
 }

@@ -16,8 +16,7 @@ public Plugin myinfo=
 
 public Action FF2_OnTriggerHurt(int boss, int triggerHurt, float& damage)
 {
-    int client = GetClientOfUserId(FF2_GetBossUserId(boss));
-
+    // int client = GetClientOfUserId(FF2_GetBossUserId(boss));
     // triggerHurtdamaged[client] += damage;
     if(damage > 100.0)
     {

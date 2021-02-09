@@ -58,7 +58,7 @@ public void OnClientDisconnect(int client)
 public Action FF2_OnMinionSpawn(int client, int &ownerBossIndex)
 {
     if(FF2_HasAbility(ownerBossIndex, PLUGIN_NAME, GHOSTHEAL_NAME)) {
-        g_bGhost = true;
+        g_bGhost[client] = true;
     }
 
     return Plugin_Continue;

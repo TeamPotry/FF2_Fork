@@ -788,7 +788,7 @@ public Action:DrawIon(Handle:Timer, any:data)
 
 public bool:TraceEntityFilterPlayer(entity, contentsMask)
 {
-	return (entity > GetMaxClients() || !entity);
+	return (entity > MaxClients || !entity);
 }
 
 stock bool:makeexplosion(attacker = 0, inflictor = -1, const Float:attackposition[3], const String:weaponname[] = "", magnitude = 100, radiusoverride = 0, Float:damageforce = 0.0, flags = 0){
