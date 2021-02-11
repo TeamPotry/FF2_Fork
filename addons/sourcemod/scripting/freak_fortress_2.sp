@@ -408,7 +408,6 @@ public void OnPluginStart()
 	cvarNextmap=FindConVar("sm_nextmap");
 	cvarNextmap.AddChangeHook(CvarChangeNextmap);
 
-
 	RegConsoleCmd("ff2", FF2Panel);
 	RegConsoleCmd("ff2_advance", AdvanceMenu);
 	RegConsoleCmd("ff2_hp", Command_GetHPCmd);
@@ -782,7 +781,6 @@ public void FindCharacters()
 		{
 			kvCharacterConfig.GetSectionName(config, sizeof(config));
 			LoadCharacter(config);
-			PrecacheCharacter(index);
 			index++;
 		}
 		while(kvCharacterConfig.GotoNextKey(false));
@@ -918,6 +916,7 @@ public void LoadCharacter(const char[] characterName)
 
 			if(FileExists(filePath, true))
 			{
+				// LogMessage("Precache ''%s''\n = %s", filePath, PrecacheSound(file) ? "YES" : "NO");
 				PrecacheSound(file); // PrecacheSound is relative to the sounds/ folder
 			}
 			else
@@ -929,7 +928,7 @@ public void LoadCharacter(const char[] characterName)
 			{
 				if(FileExists(filePath, true))
 				{
-					LogMessage("Add to Download ''%s''", filePath);
+					// LogMessage("Add to Download ''%s''", filePath);
 					AddFileToDownloadsTable(filePath); // ...but AddLateDownload isn't
 				}
 				else
@@ -957,6 +956,12 @@ public void LoadCharacter(const char[] characterName)
 
 					if(FileExists(file, true))
 					{
+						if(extension == 0) // .mdl
+						{
+							// LogMessage("Precache ''%s''\n = %s", file, PrecacheModel(file) != 0 ? "YES" : "NO");
+							PrecacheModel(file);
+						}
+
 						AddFileToDownloadsTable(file);
 					}
 					else
@@ -996,6 +1001,12 @@ public void LoadCharacter(const char[] characterName)
 				Format(file, sizeof(file), "%s.vtf", file);
 				if(FileExists(file, true))
 				{
+					if(kv.GetNum("precache") > 0)
+					{
+						// LogMessage("Precache ''%s''\n = %s", file, PrecacheModel(file) != 0 ? "YES" : "NO");
+						PrecacheModel(file);
+					}
+
 					AddFileToDownloadsTable(file);
 				}
 				else
@@ -1012,87 +1023,6 @@ public void LoadCharacter(const char[] characterName)
 			{
 				if(file[0] == '\0')	continue;
 				LogError("[FF2 Bosses] Character %s is missing file '%s'!", character, file);
-			}
-		}
-		while(kv.GotoNextKey());
-	}
-}
-
-
-public void PrecacheCharacter(int characterIndex)
-{
-	char file[PLATFORM_MAX_PATH], filePath[PLATFORM_MAX_PATH], bossName[64];
-	static const char checkName[2][16] = {
-		"model",
-		"material"
-	};
-	static const char precacheExtension[2][16] = {
-		"mdl",
-		"vtf"
-	};
-	KeyValues kv=GetCharacterKV(characterIndex);
-	kv.Rewind();
-	kv.GetString("filename", bossName, sizeof(bossName));
-
-/*
-	if(kv.JumpToKey("sounds"))
-	{
-		kv.GotoFirstSubKey();
-		do
-		{
-			kv.GetSectionName(file, sizeof(file));
-			Format(filePath, sizeof(filePath), "sound/%s", file);  //Sounds doesn't include the sound/ prefix, so add that
-			if(FileExists(filePath, true))
-			{
-				PrecacheSound(file); // PrecacheSound is relative to the sounds/ folder
-			}
-			else
-			{
-				LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
-			}
-
-			if(kv.GetNum("download", 0)>0)
-			{
-				if(FileExists(filePath, true))
-				{
-					LogMessage("Add to Download ''%s''", filePath);
-					AddFileToDownloadsTable(filePath); // ...but AddFileToDownloadsTable isn't
-				}
-				else
-				{
-					LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
-				}
-			}
-		}
-		while(kv.GotoNextKey());
-	}
-*/
-
-	kv.Rewind();
-	if(kv.JumpToKey("downloads"))
-	{
-		kv.GotoFirstSubKey();
-		do
-		{
-			if(kv.GetNum("precache")>0)
-			{
-				kv.GetSectionName(file, sizeof(file));
-				for(int loop=0; loop<sizeof(checkName); loop++)
-				{
-					if(kv.GetNum(checkName[loop])>0)
-					{
-						Format(filePath, sizeof(filePath), "%s.%s", file, precacheExtension[loop]);  //Models specified in the config don't include an extension
-
-						if(FileExists(filePath, true))
-						{
-							PrecacheModel(filePath);
-						}
-						else
-						{
-							LogError("[FF2 Bosses] Character %s is missing file '%s'!", bossName, filePath);
-						}
-					}
-				}
 			}
 		}
 		while(kv.GotoNextKey());
@@ -6694,14 +6624,11 @@ public bool PickCharacter(int boss, int companion)
 					{
 						return false;
 					}
-					// PrecacheCharacter(character[boss]);
 					return true;
 				}
 				character[boss]=newCharacter;
-				//  PrecacheCharacter(character[boss]);
 				return true;
 			}
-			// PrecacheCharacter(character[boss]);
 			return true;
 		}
 
@@ -6816,14 +6743,11 @@ public bool PickCharacter(int boss, int companion)
 			{
 				return false;
 			}
-			// PrecacheCharacter(character[companion]);
 			return true;
 		}
 		character[companion]=newCharacter;
-		// PrecacheCharacter(character[companion]);
 		return true;
 	}
-	// PrecacheCharacter(character[companion]);
 	return true;
 }
 
