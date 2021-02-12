@@ -8789,7 +8789,7 @@ void UpdateHealthBar(bool noHealState = false)
 	if(bosses)
 	{
 		healthPercent=RoundToCeil(float(healthAmount)/float(maxHealthAmount)*float(HEALTHBAR_MAX));
-		healthBar.BossHealthState=(!noHealState && recently <= healthAmount) ? HealthState_Healing : HealthState_Default;
+		healthBar.BossHealthState=(!noHealState && recently < healthAmount) ? HealthState_Healing : HealthState_Default;
 
 		if(healthPercent>HEALTHBAR_MAX)
 		{
