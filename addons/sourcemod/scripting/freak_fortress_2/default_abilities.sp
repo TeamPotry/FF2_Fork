@@ -563,7 +563,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 	{
 		float angles[3];
 		GetClientEyeAngles(client, angles);
-		if(angles[0]>40.0)
+		if(angles[0]>45.0)
 		{
 			Action action;
 			Call_StartForward(OnWeighdown);
@@ -574,28 +574,13 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 				return;
 			}
 
-			// DataPack data;
 			float velocity[3];
-			/*
-			if(gravityDatapack[client]==null)
-			{
-				gravityDatapack[client]=CreateDataTimer(2.0, Timer_ResetGravity, data, TIMER_FLAG_NO_MAPCHANGE);
-				data.WriteCell(GetClientUserId(client));
-				data.WriteFloat(GetEntityGravity(client));
-				data.Reset();
-			}
-			*/
+			float multiplier = 900.0 * (Cosine(DegToRad((90.0 - angles[0]) * 2.0)) + Cosine(DegToRad((90.0 - angles[0]))));
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-
-			/*
-			velocity[2]=-1200.0;
-			*/
-
 			GetAngleVectors(angles, velocity, NULL_VECTOR, NULL_VECTOR);
 
-			ScaleVector(velocity, 950.0);
-			velocity[0] *= 0.5;
+			ScaleVector(velocity, multiplier);
 
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 
@@ -603,18 +588,6 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 		}
 	}
 }
-/*
-public Action Timer_ResetGravity(Handle timer, DataPack data)
-{
-	int client=GetClientOfUserId(data.ReadCell());
-	if(client && IsValidEntity(client) && IsClientInGame(client))
-	{
-		SetEntityGravity(client, data.ReadFloat());
-	}
-	gravityDatapack[client]=null;
-	return Plugin_Continue;
-}
-*/
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
