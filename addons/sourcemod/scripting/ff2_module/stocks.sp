@@ -175,6 +175,15 @@ public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, c
 	characterKv.JumpToKeySymbol(currentSpot);
 }
 
+public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCount)
+{
+    char implode[32];
+    for(int loop = 0; loop < percentImplodeCount; loop++)
+        implode[loop] = '%';
+
+    ReplaceString(str, buffer, "%", implode);
+}
+
 stock Handle FindCookieEx(char[] cookieName)
 {
     Handle cookieHandle = FindClientCookie(cookieName);

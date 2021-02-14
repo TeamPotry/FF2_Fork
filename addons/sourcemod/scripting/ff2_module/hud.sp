@@ -282,6 +282,7 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 
 			queue.GetSectionName(info, sizeof(info));
 			queue.GetString("display", display, sizeof(display));
+			ReAddPercentCharacter(display, sizeof(display), 6);
 
 			// TODO: 밑의 함수 고치기
 			Forward_OnDisplayHud(client, info, display);

@@ -294,10 +294,12 @@ public Action Timer_EnableSentry(Handle timer, int sentryid)
 
 void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 {
+	char message[128];
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge=FF2_GetBossCharge(boss, slot);
 	float multiplier=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "multiplier", 1.0);
 
+	SetGlobalTransTarget(client);
 	switch(status)
 	{
 		case 1:
@@ -315,7 +317,9 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			}
 			else
 			{
-				FF2_ShowSyncHudText(client, jumpHUD, "%t", "Super Jump Charge", RoundFloat(charge));
+				Format(message, sizeof(message), "%t", "Super Jump Charge", RoundFloat(charge));
+				ReAddPercentCharacter(message, sizeof(message), 2);
+				FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
 			}
 		}
 		case 3:
@@ -405,8 +409,11 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 
 void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 {
+	char message[128];
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge=FF2_GetBossCharge(boss, slot);
+
+	SetGlobalTransTarget(client);
 	switch(status)
 	{
 		case 1:
@@ -417,7 +424,9 @@ void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 		case 2:
 		{
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
-			FF2_ShowSyncHudText(client, jumpHUD, "%t", "Teleportation Charge", RoundFloat(charge));
+			Format(message, sizeof(message), "%t", "Teleportation Charge", RoundFloat(charge));
+			ReAddPercentCharacter(message, sizeof(message), 2);
+			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
 		}
 		case 3:
 		{
@@ -637,6 +646,15 @@ public Action Timer_RemoveEntity(Handle timer, int entid)
 	{
 		AcceptEntityInput(entity, "Kill");
 	}
+}
+
+public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCount)
+{
+    char implode[32];
+    for(int loop = 0; loop < percentImplodeCount; loop++)
+        implode[loop] = '%';
+
+    ReplaceString(str, buffer, "%", implode);
 }
 
 stock int AttachParticle(int entity, char[] particleType, float offset=0.0, bool attach=true)
