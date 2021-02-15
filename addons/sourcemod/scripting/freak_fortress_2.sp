@@ -5315,9 +5315,16 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		if(damagecustom == TF_CUSTOM_BACKSTAB && IsBoss(client))
 		{
 			int boss=GetBossIndex(client);
-			damagecustom=0;
-			damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.05-Stabbed[boss]/180));
+
+			// 보스가 메인 보스를 백스탭 할 경우, 약화된 데미지 공식 사용
+			// TODO: 동등한 보스의 위치(메인, 인간팀)의 경우를 고려해야 함
+			if(GetBossIndex(attacker) != 0)
+				damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.05-Stabbed[boss]/180));
+			else
+				damage=BossHealth[boss]*1.1; // 즉사 처리
+
 			damagetype|=DMG_CRIT;
+			damagecustom=0;
 
 			if(SpecialAttackToBoss(attacker, boss, "boss_backstab", damage) == Plugin_Handled)
 				return Plugin_Handled;
