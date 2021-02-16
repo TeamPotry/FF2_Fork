@@ -115,7 +115,7 @@ new Float:OFF_THE_MAP[3] = { 16383.0, 16383.0, -16383.0 };
 #define MAX_PLAYERS (MAX_PLAYERS_ARRAY < (MaxClients + 1) ? MAX_PLAYERS_ARRAY : (MaxClients + 1))
 
 //new MercTeam = _:TFTeam_Red;
-new BossTeam = _:TFTeam_Blue;
+//new BossTeam = _:TFTeam_Blue;
 
 new RoundInProgress = false;
 new bool:PluginActiveThisRound = false;
@@ -986,7 +986,7 @@ public DuplicateRocket(clientIdx, baseRocket, Float:speed, Float:spawnAngles[3],
 	// create our rocket. no matter what, it's going to spawn, even if it ends up being out of map
 	new String:classname[MAX_ENTITY_CLASSNAME_LENGTH] = "CTFProjectile_Rocket";
 	new String:entname[MAX_ENTITY_CLASSNAME_LENGTH] = "tf_projectile_rocket";
-	new rocket = CreateEntityByName(entname);
+	new rocket = CreateEntityByName(entname), team = GetClientTeam(clientIdx);
 	if (!IsValidEntity(rocket))
 	{
 		PrintToServer("[sarysapub1] Error: Invalid entity %s. Won't spawn rocket.", entname);
@@ -1011,9 +1011,9 @@ public DuplicateRocket(clientIdx, baseRocket, Float:speed, Float:spawnAngles[3],
 	SetEntDataFloat(rocket, damageOffset, GetEntDataFloat(baseRocket, damageOffset), true);
 	SetEntProp(rocket, Prop_Send, "m_nSkin", 1); // set skin to blue team's
 	SetEntPropEnt(rocket, Prop_Send, "m_hOwnerEntity", clientIdx);
-	SetVariantInt(BossTeam);
+	SetVariantInt(team);
 	AcceptEntityInput(rocket, "TeamNum", -1, -1, 0);
-	SetVariantInt(BossTeam);
+	SetVariantInt(team);
 	AcceptEntityInput(rocket, "SetTeam", -1, -1, 0);
 
 	// I found this offset while trying to fix the sudden-explode issue with these rockets. it's another instance
@@ -1250,11 +1250,9 @@ public bool:RW_IsValidHomingTarget(target)
 {
 	if (!IsLivingPlayer(target))
 		return false;
-	else if (GetClientTeam(target) == BossTeam)
-		return false;
 	else if (TF2_IsPlayerInCondition(target, TFCond_Cloaked) || TF2_IsPlayerInCondition(target, TFCond_Stealthed))
 		return false;
-	else if (TF2_IsPlayerInCondition(target, TFCond_Disguised) && GetEntProp(target, Prop_Send, "m_nDisguiseTeam") == BossTeam)
+	else if (TF2_IsPlayerInCondition(target, TFCond_Disguised))
 		return false;
 
 	return true;
@@ -1299,16 +1297,13 @@ public Action:ROTTDamageMonitor(victim, &attacker, &inflictor, &Float:damage, &d
 
 	if (RW_ActiveThisRound)
 	{
-		if (GetClientTeam(victim) == BossTeam)
+		if (RW_ArmorActive[victim])
 		{
-			if (RW_ArmorActive[victim])
+			if ((damagetype & DMG_BLAST) != 0 || (damagetype & DMG_BURN) != 0 || (damagetype & DMG_BULLET) != 0)
 			{
-				if ((damagetype & DMG_BLAST) != 0 || (damagetype & DMG_BURN) != 0 || (damagetype & DMG_BULLET) != 0)
-				{
-					damage = 0.0;
-					damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-					return Plugin_Changed; // seems that crits are getting through, and nothing I can do about mini-crits.
-				}
+				damage = 0.0;
+				damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+				return Plugin_Changed; // seems that crits are getting through, and nothing I can do about mini-crits.
 			}
 		}
 	}
@@ -1323,7 +1318,7 @@ public Action:OnPropDamaged(prop, &attacker, &inflictor, &Float:damage, &damaget
 	else if (!IsValidEntity(prop))
 		return Plugin_Continue;
 
-	if ((damagetype & DMG_CLUB) && GetClientTeam(attacker) == BossTeam)
+	if ((damagetype & DMG_CLUB) && FF2_GetBossIndex(attacker) != -1)
 	{
 		// allow bosses to 3-shot the props with melee
 		damage = float(GetEntProp(prop, Prop_Data, "m_iMaxHealth") / 3);
@@ -1941,8 +1936,9 @@ public OnGameFrame()
 			}
 
 			// if this rocket has been airblasted, it becomes an ordinary RED rocket (...I know...)
+			// TODO: 파이로가 에어블라스트로 로켓을 반사한 경우
 			new owner = GetEntPropEnt(rocket, Prop_Send, "m_hOwnerEntity");
-			if (!IsLivingPlayer(owner) || GetClientTeam(owner) != BossTeam)
+			if (!IsLivingPlayer(owner))
 			{
 				RemoveRocketAt(rocketIdx, true);
 				if (PRINT_DEBUG_SPAM)
@@ -2132,7 +2128,7 @@ public OnGameFrame()
 
 	for (new clientIdx = 1; clientIdx < MAX_PLAYERS; clientIdx++)
 	{
-		if (!IsLivingPlayer(clientIdx) || GetClientTeam(clientIdx) != BossTeam)
+		if (!IsLivingPlayer(clientIdx))
 			continue;
 
 		// ROTT Infinity Pistol
@@ -2348,7 +2344,7 @@ stock bool:IsValidBoss(clientIdx)
 	if (!IsLivingPlayer(clientIdx))
 		return false;
 
-	return GetClientTeam(clientIdx) == BossTeam;
+	return FF2_GetBossIndex(clientIdx) != -1;
 }
 
 stock FindRandomLivingMerc(team = 2, exclude = -1)
