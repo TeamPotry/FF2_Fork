@@ -407,21 +407,7 @@ public Action:Timer_PostRoundStartInits(Handle:timer)
 		RIP_IsUsing[clientIdx] = FF2_HasAbility(bossIdx, PLUGIN_NAME, RIP_STRING);
 		if (RIP_IsUsing[clientIdx])
 		{
-			PluginActiveThisRound = true;
-			RIP_ActiveThisRound = true;
-
-			new String:weaponName[MAX_WEAPON_NAME_LENGTH];
-			FF2_GetAbilityArgumentString(bossIdx, PLUGIN_NAME, RIP_STRING, "classname", weaponName, sizeof(weaponName));
-			new weaponIdx = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "index");
-			new String:weaponArgs[MAX_WEAPON_ARG_LENGTH];
-			FF2_GetAbilityArgumentString(bossIdx, PLUGIN_NAME, RIP_STRING, "attributes", weaponArgs, sizeof(weaponArgs));
-			new weaponVisibility = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "visibility");
-
-			SpawnWeapon(clientIdx, weaponName, weaponIdx, 101, 5, weaponArgs, weaponVisibility);
-
-			RIP_NextAwardTime[clientIdx] = GetEngineTime() + RIP_AWARD_INTERVAL;
-			RIP_AwardAmmoCount[clientIdx] = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "award ammo");
-			RIP_IsPrimary[clientIdx] = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "is primary") == 1;
+			ROTT_GivePistol(clientIdx);
 		}
 
 		// replace the user's melee weapon
@@ -476,12 +462,49 @@ public Action:Timer_PostRoundStartInits(Handle:timer)
 	return Plugin_Continue;
 }
 
+public void ROTT_GivePistol(int clientIdx)
+{
+	PluginActiveThisRound = true;
+	RIP_ActiveThisRound = true;
+
+	new bossIdx = FF2_GetBossIndex(clientIdx);
+	new String:weaponName[MAX_WEAPON_NAME_LENGTH];
+	FF2_GetAbilityArgumentString(bossIdx, PLUGIN_NAME, RIP_STRING, "classname", weaponName, sizeof(weaponName));
+	new weaponIdx = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "index");
+	new String:weaponArgs[MAX_WEAPON_ARG_LENGTH];
+	FF2_GetAbilityArgumentString(bossIdx, PLUGIN_NAME, RIP_STRING, "attributes", weaponArgs, sizeof(weaponArgs));
+	new weaponVisibility = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "visibility");
+
+	SpawnWeapon(clientIdx, weaponName, weaponIdx, 101, 5, weaponArgs, weaponVisibility);
+
+	RIP_NextAwardTime[clientIdx] = GetEngineTime() + RIP_AWARD_INTERVAL;
+	RIP_AwardAmmoCount[clientIdx] = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "award ammo");
+	RIP_IsPrimary[clientIdx] = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RIP_STRING, "is primary") == 1;
+}
+
 public void FF2_OnPlayBoss(int bossIdx)
 {
 	int clientIdx = GetClientOfUserId(FF2_GetBossUserId(bossIdx));
 	Ability_Init(clientIdx);
+
+	// post-PlayBoss
+	CreateTimer(0.4, Timer_PostPlayBoss, bossIdx, TIMER_FLAG_NO_MAPCHANGE);
 }
 
+public Action:Timer_PostPlayBoss(Handle:timer, int bossIdx)
+{
+	int clientIdx = GetClientOfUserId(FF2_GetBossUserId(bossIdx));
+
+	RIP_IsUsing[clientIdx] = FF2_HasAbility(bossIdx, PLUGIN_NAME, RIP_STRING);
+	if (RIP_IsUsing[clientIdx])
+	{
+		ROTT_GivePistol(clientIdx);
+	}
+
+	return Plugin_Continue;
+}
+
+// FIXME: 호출시기가 중복되는 부분이 있음 (라운드 시작 시, FF2_OnPlayBoss)
 void Ability_Init(int clientIdx)
 {
 	// ROTT weapons
