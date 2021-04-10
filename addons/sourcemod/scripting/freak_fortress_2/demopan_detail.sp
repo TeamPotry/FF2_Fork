@@ -26,18 +26,11 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
     {
         if(status == 0) return;
 
-        // float charge = FF2_GetBossCharge(boss, 0), requireCharge = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, abilityName, "require rage", 10.0);
-		// float time = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, abilityName, "time", 3.0);
-        int client = GetClientOfUserId(FF2_GetBossUserId(boss));
-
+				int client = GetClientOfUserId(FF2_GetBossUserId(boss));
         if(status == 1)
         {
             SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
             TF2_AddCondition(client, TFCond_Charging, 0.12);
-/*
-            if(status != 1)
-                FF2_SetBossCharge(boss, 0, charge - requireCharge);
-*/
         }
     }
 }
