@@ -19,21 +19,21 @@ public Plugin myinfo=
 
 public void OnPluginStart()
 {
-    FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
 }
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 {
-    if(StrEqual(abilityName, "democharge_detail"))
-    {
-        if(status == 0) return;
+	if(StrEqual(abilityName, "democharge_detail"))
+	{
+		if(status == 0) return;
 		int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
-        if(status == 1)
-        {
-            SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
-            TF2_AddCondition(client, TFCond_Charging, 0.12);
-        }
+		if(status == 1)
+		{
+			SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
+			TF2_AddCondition(client, TFCond_Charging, 0.12);
+		}
     }
 }
 
