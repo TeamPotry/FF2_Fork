@@ -35,9 +35,11 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2_stocks>
 #include <tf2items>
 #include <tf2attributes>
+#include <tf2utils>
 #include <unixtime_sourcemod>
 
 #include <stocksoup/tf/monster_resource>
+#include <stocksoup/tf/econ>
 
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
@@ -2340,7 +2342,7 @@ public Action MakeModelTimer(Handle timer, int boss)
 void EquipBoss(int boss)
 {
 	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
-	char classname[64], attributes[256], bossName[64];
+	char classname[64], attributes[256], oneAttrib[40][10], bossName[64];
 	int client=Boss[boss];
 
 	bool initCaptureAttribute = false;
@@ -2376,40 +2378,76 @@ void EquipBoss(int boss)
 				}
 
 				kv.GetString("attributes", attributes, sizeof(attributes));
-				if(attributes[0]!='\0')
+
+				int weapon = -1;
+
+				if(StrContains(classname, "tf_wearable") != -1)
 				{
-					Format(attributes, sizeof(attributes), "%s2 ; 3.1 ; %s", !initCaptureAttribute ? captureAttributeStr : "", attributes);
-						//2: x3.1 damage
+					bool demoshield = StrEqual(classname, "tf_wearable_demoshield");
+					weapon = demoshield ? TF2_SpawnDemoShield(index, 5, 101) : TF2_SpawnWearable(index, 5, 101);
+					TF2Util_EquipPlayerWearable(client, weapon);
+
+					int attributeCount = ExplodeString(attributes, ";", oneAttrib, sizeof(oneAttrib), sizeof(oneAttrib[]));
+					if(attributes[0] != '\0')
+					{
+						if(attributeCount % 2 != 0)
+							ThrowError("%s is not valid!", attributes);
+
+						for(int loop = 0; loop < attributeCount; loop += 2)
+						{
+							int attribIndex = StringToInt(oneAttrib[loop]);
+							float temp = StringToFloat(oneAttrib[loop + 1]);
+							Address itemAddress = TF2Attrib_GetByDefIndex(weapon, attribIndex);
+
+							if(itemAddress != Address_Null)
+								TF2Attrib_RemoveByDefIndex(weapon, attribIndex);
+
+							TF2Attrib_SetByDefIndex(weapon, attribIndex, temp);
+						}
+					}
+
+					// TODO: 데모쉴드인 경우에만 사용
+					if(demoshield)
+						SetEntProp(client, Prop_Send, "m_bShieldEquipped", 1);
 				}
 				else
 				{
-					Format(attributes, sizeof(attributes), "%s2 ; 3.1", !initCaptureAttribute ? captureAttributeStr : "");
-						//2: x3.1 damage
-				}
+					if(attributes[0]!='\0')
+					{
+						Format(attributes, sizeof(attributes), "%s2 ; 3.1 ; %s", !initCaptureAttribute ? captureAttributeStr : "", attributes);
+							//2: x3.1 damage
+					}
+					else
+					{
+						Format(attributes, sizeof(attributes), "%s2 ; 3.1", !initCaptureAttribute ? captureAttributeStr : "");
+							//2: x3.1 damage
+					}
 
-				int weapon=SpawnWeapon(client, classname, index, 101, 5, attributes);
-				if(StrEqual(classname, "tf_weapon_builder", false) && index!=735)  //PDA, normal sapper
-				{
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 0);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 1);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 2);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 3);
-				}
-				else if(StrEqual(classname, "tf_weapon_sapper", false) || index==735)  //Sappers
-				{
-					SetEntProp(weapon, Prop_Send, "m_iObjectType", 3);
-					SetEntProp(weapon, Prop_Data, "m_iSubType", 3);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 0);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 1);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 2);
-					SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 3);
+					weapon=SpawnWeapon(client, classname, index, 101, 5, attributes);
+					if(StrEqual(classname, "tf_weapon_builder", false) && index!=735)  //PDA, normal sapper
+					{
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 0);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 1);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 2);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 3);
+					}
+					else if(StrEqual(classname, "tf_weapon_sapper", false) || index==735)  //Sappers
+					{
+						SetEntProp(weapon, Prop_Send, "m_iObjectType", 3);
+						SetEntProp(weapon, Prop_Data, "m_iSubType", 3);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 0);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 1);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 2);
+						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 3);
+					}
+
+					SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 				}
 
 				if(!kv.GetNum("show", 0))
 				{
 					SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", 0.001);
 				}
-				SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 
 				initCaptureAttribute = true;
 			}
