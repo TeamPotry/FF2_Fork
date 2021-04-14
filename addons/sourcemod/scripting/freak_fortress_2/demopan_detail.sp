@@ -38,7 +38,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 }
 
 // 데모판의 돌진을 감지하고 Y축 속도값을 시야와 일치하도록 변경
-public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
+public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVelocity[3], float deAngles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
 {
 	int boss = FF2_GetBossIndex(client);
 	if(!IsPlayerAlive(client) || boss == -1) return Plugin_Continue;
@@ -51,8 +51,14 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
 		GetClientEyeAngles(client, angles);
 		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 
-		// y: angle = 0, velocity = 2
-		// 시야 기준에서 0도가 수치 상으로 몇 도인지 모름
+		// y축 Index: angles = 0, velocity = 2
+		// angles 시야 기준, 맨 아래 90 ~ 맨 위 -90
+
+		float yAngle = angles[0] * -1.0;
+		if(yAngle <= 0.0)	return Plugin_Continue;
+
+		velocity[2] = yAngle * 10.0;
+		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 	}
 
 	return Plugin_Continue;
