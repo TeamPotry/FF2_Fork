@@ -4427,8 +4427,9 @@ public Action BossTimer(Handle timer)
 		SetGlobalTransTarget(client);
 		char text[64];
 
-		// TODO: "use_fixed_speed"
-		SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.7*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
+		if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+			// TODO: "use_fixed_speed"
+			SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.7*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
 
 		if(BossHealth[boss]<=0 && IsPlayerAlive(client))  //Wat.  TODO:  Investigate
 		{
