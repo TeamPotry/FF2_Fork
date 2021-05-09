@@ -10,7 +10,7 @@ jobs:
         sm-version: [ '1.10.x' ]
 
     name: SM version ${{ matrix.sm-version }}
-    steps:        
+    steps:
       - name: Setup SourceMod
         uses: rumblefrog/setup-sp@master
         with:
@@ -18,26 +18,26 @@ jobs:
 
       - name: Setup Source
         uses: actions/checkout@master
-      
+
       - name: Setup Include
         working-directory: addons/sourcemod/scripting
-        run: |             
+        run: |
           wget "http://www.doctormckay.com/download/scripting/include/morecolors.inc" -P include
           wget "https://raw.githubusercontent.com/asherkin/TF2Items/master/pawn/tf2items.inc" -P include
           wget "https://forums.alliedmods.net/attachment.php?attachmentid=116849&d=1377667508" -O include/tf2attributes.inc
           wget "https://raw.githubusercontent.com/TeamPotry/tutorial_text/master/addons/sourcemod/scripting/include/tutorial_text.inc" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/SourceMod-DBSimple/master/include/db_simple.inc" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/unixtime_sourcemod.inc" -P include
-		  wget "https://raw.githubusercontent.com/nosoop/SM-TFUtils/master/scripting/include/tf2utils.inc" -P include
-		  wget "https://raw.githubusercontent.com/nosoop/sourcemod-tf2wearables/master/addons/sourcemod/scripting/include/tf2wearables.inc" -P include
-		  
+          wget "https://raw.githubusercontent.com/nosoop/SM-TFUtils/master/scripting/include/tf2utils.inc" -P include
+          wget "https://raw.githubusercontent.com/nosoop/sourcemod-tf2wearables/master/addons/sourcemod/scripting/include/tf2wearables.inc" -P include
+          
       - name: Compile
         working-directory: addons/sourcemod/scripting
         run: |
           mkdir -p build/freak_fortress_2
-          
+
           spcomp -iinclude freak_fortress_2.sp -o build/freak_fortress_2.smx
-          
+
       - name: Upload plugin artifact
         uses: actions/upload-artifact@master
         with:
