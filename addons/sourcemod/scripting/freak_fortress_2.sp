@@ -36,6 +36,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2items>
 #include <tf2attributes>
 #include <tf2utils>
+#include <tf2wearables>
 #include <unixtime_sourcemod>
 
 #include <stocksoup/tf/monster_resource>
@@ -2350,6 +2351,8 @@ void EquipBoss(int boss)
 
 	DoOverlay(client, "");
 	TF2_RemoveAllWeapons(client);
+	TF2_RemoveAllWearables(client);
+	
 	Format(captureAttributeStr, 12, captureAttributeStr, TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
 
 	kv.Rewind();
