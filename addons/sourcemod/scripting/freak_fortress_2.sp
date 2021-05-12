@@ -5969,7 +5969,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
-	if(Enabled && IsBoss(client))
+	if(!Enabled) return Plugin_Continue;
+
+	if(IsBoss(client))
 	{
 		int boss=GetBossIndex(client);
 		int damage=RoundFloat(damageFloat);
@@ -6131,6 +6133,10 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			BossCharge[boss][0]=100.0;
 		}
 		UpdateHealthBar();
+	}
+	else if(TF2_GetClientTeam(client) == BossTeam && TF2_GetClientTeam(attacker) != BossTeam)
+	{
+		Assist[attacker] += damage;
 	}
 }
 
