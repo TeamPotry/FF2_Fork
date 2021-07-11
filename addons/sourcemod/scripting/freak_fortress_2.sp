@@ -97,7 +97,9 @@ bool emitRageSound[MAXPLAYERS+1];
 bool bossHasReloadAbility[MAXPLAYERS+1];
 bool bossHasRightMouseAbility[MAXPLAYERS+1];
 
-float timeleft;
+int timeType;
+float timeleft, maxTime;
+int maxWave, currentWave;
 
 ConVar cvarVersion;
 ConVar cvarPointDelay;
@@ -120,6 +122,7 @@ ConVar cvarCaberDetonations;
 ConVar cvarUpdater;
 ConVar cvarDebug;
 ConVar cvarPreroundBossDisconnect;
+ConVar cvarTimerType;
 
 ArrayList bossesArray;
 ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
@@ -237,6 +240,7 @@ Handle OnAlivePlayersChanged;
 Handle OnParseUnknownVariable;
 
 // ff2_potry.inc
+Handle OnWaveStarted;
 Handle OnPlayBoss;
 Handle OnSpecialAttack;
 Handle OnSpecialAttack_Post;
@@ -304,6 +308,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_CheckSoundFlags", Native_CheckSoundFlags);
 
 	// ff2_potry.inc
+	CreateNative("FF2_GetTimerType", Native_GetTimerType);
 	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
 	CreateNative("FF2_GetClientAssist", Native_GetClientAssist);
@@ -315,6 +320,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_GetBossCreatorFlags", Native_GetBossCreatorFlags);
 	CreateNative("FF2_GetBossCreators", Native_GetBossCreators);
 
+	OnWaveStarted=CreateGlobalForward("FF2_OnWaveStarted", ET_Hook, Param_Cell); // wave
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
@@ -370,6 +376,8 @@ public void OnPluginStart()
 	cvarShieldCrits=CreateConVar("ff2_shield_crits", "1", "0 to disable grenade launcher crits when equipping a shield, 1 for minicrits, 2 for crits", _, true, 0.0, true, 2.0);
 	cvarUpdater=CreateConVar("ff2_updater", "1", "0-Disable Updater support, 1-Enable automatic updating (recommended, requires Updater)", _, true, 0.0, true, 1.0);
 	cvarDebug=CreateConVar("ff2_debug", "0", "0-Disable FF2 debug output, 1-Enable debugging (not recommended)", _, true, 0.0, true, 1.0);
+	cvarTimerType=CreateConVar("ff2_timer_type", "0", "0-Disable FF2 round timer, 1-Enable round timer, 2-Enable wave timer", _, true, 0.0, true, 2.0);
+
 
 	HookEvent("teamplay_round_start", OnRoundStart);
 	HookEvent("teamplay_round_win", OnRoundEnd);
@@ -2234,7 +2242,25 @@ public Action Timer_StartDrawGame(Handle timer)
 		}
 	}
 
-	timeleft=(bosscount*40.0)+(playerCount*30.0)+60.0;
+	timeType=cvarTimerType.IntValue;
+	switch(timeType)
+	{
+		case FF2Timer_RoundTimer:
+		{
+			timeleft=(bosscount*40.0)+(playerCount*30.0)+60.0;
+		}
+		case FF2Timer_WaveTimer:
+		{
+			maxTime=30.0+(playerCount > 18 ? float(playerCount-18) : 0.0), timeleft = maxTime;
+			maxWave=6+(playerCount > 18 ? 18 : playerCount);
+			currentWave=1;
+		}
+		default:
+		{
+			timeleft=-1.0;
+		}
+	}
+
 	CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -5166,12 +5192,15 @@ public Action Timer_DrawGame(Handle timer)
 	CheckAlivePlayers(INVALID_HANDLE);
 	timeleft-=0.1; // TODO: Forward
 
-	char timeDisplay[6];
+	char timeDisplay[6], waveDisplay[20];
 	int min=RoundToFloor(timeleft / 60.0), sec=RoundToCeil(timeleft)-(min*60)-1;
 	int timeInteger = RoundFloat(timeleft);
 	float fraction = FloatFraction(timeleft);
 
 	static int lastNotice = -1;
+
+	if(timeType == FF2Timer_WaveTimer)
+		Format(waveDisplay, sizeof(waveDisplay), "WAVE: %d / %d", currentWave, maxWave);
 
 	if(timeleft<60.0)
 	{
@@ -5197,6 +5226,12 @@ public Action Timer_DrawGame(Handle timer)
 		{
 			PlayerHudQueue[client].SetName("Timer");
 			SetGlobalTransTarget(client);
+
+			if(timeType == FF2Timer_WaveTimer)
+			{
+				hudDisplay=FF2HudDisplay.CreateDisplay("Wave", waveDisplay);
+				PlayerHudQueue[client].AddHud(hudDisplay, client);
+			}
 
 			hudDisplay=FF2HudDisplay.CreateDisplay("Game Timer", timeDisplay);
 			PlayerHudQueue[client].AddHud(hudDisplay, client);
@@ -5240,57 +5275,25 @@ public Action Timer_DrawGame(Handle timer)
 			}
 			case 0:
 			{
-				ForceTeamWin(TFTeam_Unassigned);
-
-				/*
-				int humanCount=1, aliveCount, boss, bossTotalHealth, bossTotalHealthMax;
-				for(int client=1; client<=MaxClients; client++)
+				if(timeType == FF2Timer_WaveTimer)
 				{
-					if(!IsClientInGame(client)) continue;
-
-					if(TF2_GetClientTeam(client) != BossTeam || !IsBoss(client))
+					if(currentWave == maxWave)
 					{
-						humanCount++;
-						if(IsPlayerAlive(client))
-							aliveCount++;
+						ForceTeamWin(TFTeam_Unassigned);
+						return Plugin_Stop;
 					}
-					else if((boss = GetBossIndex(client)) != -1)
-					{
-						bossTotalHealthMax+=BossHealthMax[boss]*BossLivesMax[boss];
-						bossTotalHealth+=BossHealth[boss];
-					}
-				}
 
-				float ratio = FloatDiv(view_as<float>(aliveCount), view_as<float>(humanCount));
-				float damaged = bossTotalHealthMax * ratio;
-				TFTeam winTeam = TFTeam_Unassigned;
-				if(bossTotalHealth > damaged)
-				{
-					winTeam = BossTeam;
-				}
-				else if(bossTotalHealth < damaged)
-				{
-					winTeam = BossTeam == TFTeam_Blue ? TFTeam_Red : TFTeam_Blue;
-				}
+					currentWave++;
+					timeleft=maxTime;
 
-				ForceTeamWin(winTeam);  //Stalemate
-				*/
-				/*
-				if(!cvarCountdownResult.BoolValue)
-				{
-					for(int client=1; client<=MaxClients; client++)  //Thx MasterOfTheXP
-					{
-						if(IsClientInGame(client) && IsPlayerAlive(client))
-						{
-							ForcePlayerSuicide(client);
-						}
-					}
+					Call_StartForward(OnWaveStarted);
+					Call_PushCell(currentWave);
+					Call_Finish();
+
+					return Plugin_Continue;
 				}
 				else
-				{
-					ForceTeamWin(TFTeam_Unassigned);  //Stalemate
-				}
-				*/
+					ForceTeamWin(TFTeam_Unassigned);
 
 				return Plugin_Stop;
 			}
@@ -8711,6 +8714,11 @@ public int Native_SetClientGlow(Handle plugin, int numParams)
 public int Native_Debug(Handle plugin, int numParams)
 {
 	return cvarDebug.BoolValue;
+}
+
+public int Native_GetTimerType(Handle plugin, int numParams)
+{
+	return timeType;
 }
 
 public void OnEntityCreated(int entity, const char[] classname)

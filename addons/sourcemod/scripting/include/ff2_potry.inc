@@ -15,6 +15,20 @@ enum
     FF2BossCreator_Sound
 };
 
+enum
+{
+    FF2Timer_Disable = 0,
+    FF2Timer_RoundTimer,
+    FF2Timer_WaveTimer
+};
+
+/**
+ * Get timer's type.
+ *
+ * @return          Remaining round time
+ */
+native int FF2_GetTimerType();
+
 /**
  * Get remaining round time.
  *
@@ -101,6 +115,14 @@ native ArrayList FF2_GetBossCreators(int boss, int creatorType, bool pushCharact
  *  - Plugin_Stop, Plugin_Handled: Block this event.
  */
 forward Action FF2_OnMinionSpawn(int client, int &ownerBossIndex);
+
+/**
+ * Called when each wave starts.
+ *
+ * @param wave    wave that started
+ * @noreturn
+ */
+forward void FF2_OnWaveStarted(int wave);
 
 /**
  * Called when Player became boss.
@@ -231,6 +253,9 @@ public SharedPlugin __pl_ff2_potry=
 #if !defined REQUIRE_PLUGIN
 public __pl_ff2_potry_SetNTVOptional()
 {
+    MarkNativeAsOptional("FF2_GetTimerType");
+    MarkNativeAsOptional("FF2_GetRoundTime");
+    MarkNativeAsOptional("FF2_SetRoundTime");
     MarkNativeAsOptional("FF2_GetClientAssist");
     MarkNativeAsOptional("FF2_SetClientAssist");
     MarkNativeAsOptional("FF2_SpecialAttackToBoss");
