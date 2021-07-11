@@ -258,7 +258,11 @@ public __pl_ff2_potry_SetNTVOptional()
     MarkNativeAsOptional("FF2_SetRoundTime");
     MarkNativeAsOptional("FF2_GetClientAssist");
     MarkNativeAsOptional("FF2_SetClientAssist");
+    MarkNativeAsOptional("FF2_EquipBoss");
     MarkNativeAsOptional("FF2_SpecialAttackToBoss");
     MarkNativeAsOptional("FF2_GetCharacterKV");
+    MarkNativeAsOptional("FF2_MakePlayerToBoss");
+    MarkNativeAsOptional("FF2_GetBossCreatorFlags");
+    MarkNativeAsOptional("FF2_GetBossCreators");
 }
 #endif
