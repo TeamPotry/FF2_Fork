@@ -3139,7 +3139,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "856 ; 1.0 ; 801 ; 18.0 ; 870 ; 4.0 ; 871 ; 4.0 ; 872 ; 1.0 ; 873 ; 1.0", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "856 ; 1.0 ; 801 ; 18.0 ; 872 ; 1.0 ; 873 ; 1.0", false);
 			//870: falling_impact_radius_pushback
 			//871: falling_impact_radius_stun
 			//872: thermal_thruster_air_launch
