@@ -4682,6 +4682,19 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 		if(IsBoss(client) && (condition==TFCond_Jarated || condition==TFCond_MarkedForDeath || (condition==TFCond_Dazed && TF2_IsPlayerInCondition(client, view_as<TFCond>(42)))))
 		{
 			TF2_RemoveCondition(client, condition);
+
+			if(condition == TFCond_MarkedForDeath) // Fan O' War(Yeah), Sandman balls
+			{
+				int boss = GetBossIndex(client);
+				if(BossCharge[boss][0]>0.0)
+				{
+					BossCharge[boss][0]-=5.0;
+					if(BossCharge[boss][0]<0.0)
+					{
+						BossCharge[boss][0]=0.0;
+					}
+				}
+			}
 		}
 		else if(!IsBoss(client) && condition==TFCond_BlastJumping)
 		{
