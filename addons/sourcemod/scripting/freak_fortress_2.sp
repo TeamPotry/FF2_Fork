@@ -20,6 +20,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <freak_fortress_2>
 #include <ff2_potry>
 
+#tryinclude <mannvsmann>
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
@@ -4194,6 +4195,12 @@ public Action ClientTimer(Handle timer)
 			}
 			else
 			{
+#if defined _MVM_included
+				Format(hudText, sizeof(hudText), "$%d", MVM_GetPlayerCurrency(client));
+				hudDisplay=FF2HudDisplay.CreateDisplay("Your Money", hudText);
+				PlayerHudQueue[client].AddHud(hudDisplay, client);
+#endif
+
 				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
 				if(Assist[client] > 0)
 					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
