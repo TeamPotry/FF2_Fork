@@ -3045,10 +3045,19 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 133, 444:  // Gunboats, Mantreads
 		{
-			if(iItemDefinitionIndex==444)
-				TF2Attrib_SetByDefIndex(client, 58, 1.5);
+			Handle itemOverride;
 
-			TF2Attrib_SetByDefIndex(client, 275, 1.0); // Wearer never takes falling damage
+			if(iItemDefinitionIndex==444)
+				itemOverride=PrepareItemHandle(item, _, _, "58 ; 1.5 ; 275 ; 1.0");
+			else
+				itemOverride=PrepareItemHandle(item, _, _, "275 ; 1.0");
+			// TF2Attrib_SetByDefIndex(client, 275, 1.0); // Wearer never takes falling damage
+
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
 		}
 		case 648:  //Wrap Assassin
 		{
