@@ -375,6 +375,7 @@ void Rage_Clone(const char[] abilityName, int boss)
 		velocity[2]=GetRandomFloat(300.0, 500.0);
 		TeleportEntity(clone, position, NULL_VECTOR, velocity);
 
+		SetGlobalTransTarget(clone);
 		PrintHintText(clone, "%t", "Seeldier Rage Message", bossName);
 
 		SetEntProp(clone, Prop_Data, "m_takedamage", 0);
