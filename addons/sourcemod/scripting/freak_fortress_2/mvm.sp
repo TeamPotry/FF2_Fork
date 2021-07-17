@@ -17,6 +17,16 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
+public void OnPluginStart()
+{
+	LoadTranslations("freak_fortress_2.phrases");
+}
+
+public void OnMapStart()
+{
+	PrecacheSound("mvm/mvm_money_pickup.wav");
+}
+
 public Action FF2_OnSpecialAttack(int attacker, int victimBoss, int weapon, const char[] name, float &damage)
 {
 	Address address = Address_Null;
@@ -49,7 +59,13 @@ public void FF2_OnWaveStarted(int wave)
 			boss = FF2_GetBossIndex(client);
 			FF2_SetBossHealth(boss, RoundFloat(FF2_GetBossHealth(boss) * 1.03));
 		}
+		else
+		{
+			EmitSoundToClient(client, "mvm/mvm_money_pickup.wav");
+		}
 	}
+
+	CPrintToChatAll("{olive}[FF2]{default} %t", "Wave Started");
 }
 
 public Action MVM_OnTouchedUpgradeStation(int upgradeStation, int client)
