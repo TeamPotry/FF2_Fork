@@ -8189,6 +8189,7 @@ public int SetBossHealth(int boss, int health)
 public int Native_SetBossHealth(Handle plugin, int numParams)
 {
 	SetBossHealth(GetNativeCell(1), GetNativeCell(2));
+	UpdateHealthBar();
 }
 
 public int GetBossMaxHealth(int boss)
