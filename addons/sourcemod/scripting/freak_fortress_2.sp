@@ -5351,12 +5351,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 	bool bChanged=false;
 
-	if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
-	{
-		return Plugin_Handled;
-	}
-
-	if(CheckRoundState()==FF2RoundState_Setup && IsBoss(client))
+	if(CheckRoundState()==FF2RoundState_Setup && IsBoss(client) && TF2_IsPlayerInCondition(client, TFCond_Ubercharged))
 	{
 		damage=0.0;
 		return Plugin_Changed;
