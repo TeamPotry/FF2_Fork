@@ -5996,12 +5996,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
-	if(!Enabled) return Plugin_Continue;
+	if(!Enabled) return;
+
+	int damage=RoundFloat(damageFloat);
 
 	if(IsBoss(client))
 	{
 		int boss=GetBossIndex(client);
-		int damage=RoundFloat(damageFloat);
+
 		for(int lives=1; lives<BossLives[boss]; lives++)
 		{
 			if(BossHealth[boss]-damage<=BossHealthMax[boss]*lives)
