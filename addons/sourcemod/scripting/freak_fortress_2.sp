@@ -323,7 +323,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	OnWaveStarted=CreateGlobalForward("FF2_OnWaveStarted", ET_Hook, Param_Cell); // wave
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
-	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
+	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_Cell, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
 
@@ -5395,7 +5395,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			damagetype|=DMG_CRIT;
 			damagecustom=0;
 
-			if(SpecialAttackToBoss(attacker, boss, "boss_backstab", damage) == Plugin_Handled)
+			if(SpecialAttackToBoss(attacker, boss, weapon, "boss_backstab", damage) == Plugin_Handled)
 				return Plugin_Handled;
 
 			bChanged=true;
@@ -5583,7 +5583,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						{
 							damage*=6.0;
 							ScaleVector(damageForce, 6.0);
-							SpecialAttackToBoss(attacker, boss, "combo_punch", damage);
+							SpecialAttackToBoss(attacker, boss, weapon, "combo_punch", damage);
 
 							return Plugin_Changed;
 						}
@@ -5700,7 +5700,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							damage=(Pow(float(BossHealthMax[boss]), 0.34074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
 							damagetype|=DMG_CRIT;
 
-							if(SpecialAttackToBoss(attacker, boss, "market_garden", damage) == Plugin_Handled)
+							if(SpecialAttackToBoss(attacker, boss, weapon, "market_garden", damage) == Plugin_Handled)
 								return Plugin_Handled;
 
 							if(Marketed[client]<5)
@@ -5798,7 +5798,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
 
-					if(SpecialAttackToBoss(attacker, boss, "backstab", damage) == Plugin_Handled)
+					if(SpecialAttackToBoss(attacker, boss, weapon, "backstab", damage) == Plugin_Handled)
 						return Plugin_Handled;
 
 					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
@@ -6127,7 +6127,8 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 			if(rage)
 			{
-				BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+				BossLastAirBlastedRage[boss]-=BossLastAirBlastedRage[boss] > 0.0 ? damage*100.0/BossRageDamage[boss] : 0.0;
+				BossCharge[boss][0]+=(damage*100.0/BossRageDamage[boss])+(BossLastAirBlastedRage[boss] <= 0.0 ? -BossLastAirBlastedRage[boss] : 0.0);
 			}
 		}
 
@@ -8411,25 +8412,27 @@ public int Native_EquipBoss(Handle plugin, int numParams)
 	EquipBoss(GetNativeCell(1));
 }
 
-public Action SpecialAttackToBoss(int attacker, int victimBoss, char[] name, float damage)
+public Action SpecialAttackToBoss(int attacker, int victimBoss, int weapon, char[] name, float &damage)
 {
-	return Forward_OnSpecialAttack(attacker, victimBoss, name, damage);
+	return Forward_OnSpecialAttack(attacker, victimBoss, weapon, name, damage);
 }
 
 public int Native_SpecialAttackToBoss(Handle plugin, int numParams)
 {
 	char name[80];
-	GetNativeString(3, name, sizeof(name));
-	SpecialAttackToBoss(GetNativeCell(1), GetNativeCell(2), name, GetNativeCell(4));
+	GetNativeString(4, name, sizeof(name));
+	float damage = GetNativeCell(5);
+	SpecialAttackToBoss(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), name, damage);
 }
 
-public Action Forward_OnSpecialAttack(int attacker, int victimBoss, const char[] name, float damage)
+public Action Forward_OnSpecialAttack(int attacker, int victimBoss, int weapon, const char[] name, float &damage)
 {
-	float tempDamage;
+	float tempDamage = damage;
 	Action action;
 	Call_StartForward(OnSpecialAttack);
 	Call_PushCell(attacker);
 	Call_PushCell(victimBoss);
+	Call_PushCell(weapon);
 	Call_PushString(name);
 	Call_PushFloatRef(tempDamage);
 	Call_Finish(action);

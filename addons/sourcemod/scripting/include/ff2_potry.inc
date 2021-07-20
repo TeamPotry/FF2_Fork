@@ -68,13 +68,14 @@ native void FF2_EquipBoss(int boss);
 native void FF2_MakePlayerToBoss(int client, int characterIndex);
 
 /**
- * @param attacker 	attacker's index
- * @param victimBoss	victim boss index
- * @param name    Special Attack name
- * @param damage    Special Attack damage
+ * @param attacker 	    attacker's index
+ * @param victimBoss    victim's boss index
+ * @param weapon        attacker's weapon
+ * @param name          Special Attack name
+ * @param damage        Special Attack damage
  * @noreturn
  */
-native void FF2_SpecialAttackToBoss(int attacker, int victimBoss, const char[] name, float damage);
+native void FF2_SpecialAttackToBoss(int attacker, int victimBoss, int weapon = -1, const char[] name, float damage);
 
 /**
  * Gets a Character's KV handle
@@ -144,7 +145,7 @@ forward void FF2_OnPlayBoss(int boss);
  *  - Plugin_Changed: Change result.
  *  - Plugin_Stop, Plugin_Handled: Change result.
  */
-forward Action FF2_OnSpecialAttack(int attacker, int victimBoss, const char[] name, float &damage);
+forward Action FF2_OnSpecialAttack(int attacker, int victimBoss, int weapon, const char[] name, float &damage);
 forward void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[] name, float damage);
 
 /*

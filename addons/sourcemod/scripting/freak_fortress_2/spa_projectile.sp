@@ -44,7 +44,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 		if(g_bTouched[client] && IsBoss(client) && TF2_IsPlayerInCondition(client, TFCond_BlastJumping))
 		{
 			if(damageFloat > 90.0)
-				FF2_SpecialAttackToBoss(attacker, FF2_GetBossIndex(client), "projectile_airshot", damageFloat);
+				FF2_SpecialAttackToBoss(attacker, FF2_GetBossIndex(client), weapon, "projectile_airshot", damageFloat);
 		}
 	}
 	g_bTouched[client] = false;
