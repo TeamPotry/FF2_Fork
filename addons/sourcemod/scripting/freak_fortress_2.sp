@@ -3048,10 +3048,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			Handle itemOverride;
 
 			if(iItemDefinitionIndex==444)
-				itemOverride=PrepareItemHandle(item, _, _, "58 ; 1.5 ; 275 ; 1.0");
-			else
-				itemOverride=PrepareItemHandle(item, _, _, "275 ; 1.0");
-			// TF2Attrib_SetByDefIndex(client, 275, 1.0); // Wearer never takes falling damage
+				itemOverride=PrepareItemHandle(item, _, _, "58 ; 1.5");
 
 			if(itemOverride!=null)
 			{
@@ -5975,18 +5972,6 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
 						SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
 					}
-				}
-			}
-
-			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
-			{
-				// bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
-				if(damagetype & DMG_FALL)
-				{
-					// damage /= valid ? 4.0 : 8.0;
-					damage /= 4.0;
-
-					return Plugin_Changed;
 				}
 			}
 		}
