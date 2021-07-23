@@ -1,7 +1,7 @@
-#define MAJOR_REVISION "2"
-#define MINOR_REVISION "3"
-#define STABLE_REVISION "0"
-#define DEV_REVISION "Write In Process"
+#define MAJOR_REVISION "2021"
+#define MINOR_REVISION "7"
+#define STABLE_REVISION "22"
+// #define DEV_REVISION ""
 #if !defined DEV_REVISION
 	#define PLUGIN_VERSION MAJOR_REVISION..."."...MINOR_REVISION..."."...STABLE_REVISION  //2.0.0
 #else

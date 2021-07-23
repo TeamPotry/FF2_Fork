@@ -377,7 +377,7 @@
 	"FF2 Contributors"
 	{
 		"#format"	"{1:s}"
-		"ko"		"=== Freak Fortress 2 v{1} (VS Saxton Hale Mode 기반 by {olive}RainBolt Dash{default} and {olive}FlaminSarge{default}) ==="
+		"ko"		"=== Freak Fortress 2 v{1} (VS Saxton Hale Mode 기반 by {olive}RainBolt Dash{default} and {olive}FlaminSarge{default}, Forked by {dodgerblue}Nopied◎{default}) ==="
 	}
 	"Boss Suicide Denied"
 	{

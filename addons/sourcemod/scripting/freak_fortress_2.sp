@@ -887,7 +887,8 @@ public void LoadCharacter(const char[] characterName)
 	kv.ImportFromFile(config);
 
 	int version=kv.GetNum("version", 1);
-	if(version!=StringToInt(MAJOR_REVISION))
+	// if(version!=StringToInt(MAJOR_REVISION))
+	if(version<=1)
 	{
 		LogError("[FF2 Bosses] Character %s is only compatible with FF2 v%i!", characterName, version);
 		return;
@@ -6151,7 +6152,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 	}
 	else if(TF2_GetClientTeam(client) == BossTeam && TF2_GetClientTeam(attacker) != BossTeam)
 	{
-		Assist[attacker] += damage;
+		Assist[attacker]+=damage;
 	}
 }
 
