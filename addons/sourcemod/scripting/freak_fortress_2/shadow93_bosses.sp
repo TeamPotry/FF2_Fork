@@ -138,13 +138,6 @@ public Plugin myinfo = {
 
 public void OnPluginStart()
 {
-    int version[3];
-    FF2_GetFF2Version(version);
-    if(version[0]!=2)
-    {
-    	SetFailState("This subplugin (shadow93_bosses.ff2) depends on at least FF2 v2.0.0!");
-    }
-
     HookEvent("arena_round_start", Event_RoundStart, EventHookMode_Pre);
     HookEvent("arena_win_panel", OnRoundEnd, EventHookMode_Pre);
     HookEvent("player_death", OnPlayerDeath, EventHookMode_Pre);
