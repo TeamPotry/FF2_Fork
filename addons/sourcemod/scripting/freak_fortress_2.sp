@@ -809,6 +809,12 @@ public void FindCharacters()
 		AddFileToDownloadsTable("sound/saxton_hale/9000.wav");
 		PrecacheSound("saxton_hale/9000.wav", true);
 	}
+
+	if(FileExists("sound/potry_v2/se/homerun_bat.wav", true))
+	{
+		AddFileToDownloadsTable("sound/potry_v2/se/homerun_bat.wav");
+		PrecacheSound("potry_v2/se/homerun_bat.wav", true);
+	}
 	PrecacheSound("vo/announcer_am_capincite01.mp3", true);
 	PrecacheSound("vo/announcer_am_capincite03.mp3", true);
 	PrecacheSound("vo/announcer_am_capenabled01.mp3", true);
@@ -5709,7 +5715,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							PrintHintText(attacker, "%t", "Market Gardener");  //You just market-gardened the boss!
 							PrintHintText(client, "%t", "Market Gardened");  //You just got market-gardened!
 
-							EmitSoundToClient(attacker, "player/doubledonk.wav", _, _, _, _, 0.6, _, _, position, _, false);
+							EmitSoundToClient(attacker, "potry_v2/se/homerun_bat.wav", _, _, _, _, 0.8, _, _, position, _, false);
+							EmitSoundToClient(attacker, "potry_v2/se/homerun_bat.wav", _, _, _, _, 0.8, _, _, position, _, false);
+							EmitSoundToClient(attacker, "potry_v2/se/homerun_bat.wav", _, _, _, _, 0.8, _, _, position, _, false);
 							EmitSoundToClient(client, "player/doubledonk.wav", _, _, _, _, 0.6, _, _, position, _, false);
 							return Plugin_Changed;
 						}
