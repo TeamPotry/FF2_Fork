@@ -87,6 +87,8 @@ int BossLivesMax[MAXPLAYERS+1];
 int BossRageDamage[MAXPLAYERS+1];
 float BossSpeed[MAXPLAYERS+1];
 float BossCharge[MAXPLAYERS+1][8];
+float BossLastAirBlastedTime[MAXPLAYERS+1];
+float BossLastAirBlastedRage[MAXPLAYERS+1];
 
 float Stabbed[MAXPLAYERS+1];
 float Marketed[MAXPLAYERS+1];
@@ -4491,6 +4493,11 @@ public Action BossTimer(Handle timer)
 			FF2_ShowSyncHudText(client, livesHUD, "%t", "Boss Lives Left", BossLives[boss], BossLivesMax[boss]);
 		}
 
+		if(BossLastAirBlastedTime[boss] <= GetGameTime())
+		{
+			BossLastAirBlastedRage[boss]=0.0;
+		}
+
 		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
 		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
@@ -5068,17 +5075,31 @@ public Action OnObjectDeflected(Event event, const char[] name, bool dontBroadca
 		return Plugin_Continue;
 	}
 
-	int boss=GetBossIndex(GetClientOfUserId(event.GetInt("ownerid")));
+	Address address = Address_Null;
+	int client=GetClientOfUserId(event.GetInt("ownerid")), boss=GetBossIndex(client);
+	float airblastRage=8.0; 		//TODO: Allow this to be customizable
 	if(boss!=-1 && BossCharge[boss][0]<100.0)
 	{
-		BossCharge[boss][0]+=7.0;  //TODO: Allow this to be customizable
+		int weapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
+		if(IsValidEntity(weapon))
+		{
+			// 파이로의 에어블라스트 위력 강화 업그레이드 영향을 받게 할 것
+			address=TF2Attrib_GetByDefIndex(weapon, 255); // airblast_pushback_scale
+			airblastRage*=(address != Address_Null) ? TF2Attrib_GetValue(Address) : 1.0;
+		}
+
+		BossCharge[boss][0]+=airblastRage;
 		if(BossCharge[boss][0]>100.0)
 		{
 			BossCharge[boss][0]=100.0;
 		}
 
 		if(executed)
-			timeleft += 5.0;
+			timeleft=(timeleft+=5.0) > 0.0 ?
+				(timeType == FF2Timer_RoundTimer ? timeleft : (timeleft > maxTime) ? maxTime : timeleft) : 0.0;
+
+		BossLastAirBlastedTime[boss]=GetGameTime()+3.0;
+		BossLastAirBlastedRage[boss]=airblastRage;
 	}
 	return Plugin_Continue;
 }
