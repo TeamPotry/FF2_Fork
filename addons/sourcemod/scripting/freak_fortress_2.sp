@@ -2321,7 +2321,7 @@ public Action MessageTimer(Handle timer)
 
 	for(int client=1; client<=MaxClients; client++)
 	{
-		if(IsBoss(client))
+		if(IsBoss(client) && TF2_GetClientTeam(client) == BossTeam)
 		{
 			bossindexs[bosscount++]=Boss[client];
 		}
