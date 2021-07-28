@@ -2528,10 +2528,12 @@ public Action MakeBoss(Handle timer, int boss)
 
 	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
 	kv.Rewind();
+/*
 	if(CheckRoundState() != FF2RoundState_RoundRunning && TF2_GetClientTeam(client)!=BossTeam)
 	{
 		AssignTeam(client, BossTeam);
 	}
+*/
 
 	BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(playing))*(float(playing)-1.0), 1.0341)+2046.0));
 	BossLivesMax[boss]=BossLives[boss]=ParseFormula(boss, "lives", 1);
