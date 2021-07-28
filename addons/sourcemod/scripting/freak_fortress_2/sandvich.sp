@@ -12,21 +12,21 @@ public Plugin:myinfo =
 	url = ""
 }
 
-public Action:OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
+public void OnPluginStart()
 {
-	if(FF2_GetBossIndex(client) == -1)
-	{
-		if(IsClientInGame(client) && IsPlayerAlive(client) && buttons & IN_ATTACK)
-		{
-			int activeWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-			char classname[64];
-			GetEdictClassname(activeWeapon, classname, sizeof(classname));
+    AddNormalSoundHook(SoundHook);
+}
 
-			if(StrEqual(classname, "tf_weapon_lunchbox", false))
-			{
-				TF2_AddCondition(client, TFCond_Ubercharged, 3.0);
-			}
-		}
-	}
-	return Plugin_Continue;
+public Action SoundHook(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH],
+	  int &entity, int &channel, float &volume, int &level, int &pitch, int &flags,
+	  char soundEntry[PLATFORM_MAX_PATH], int &seed)
+{
+	// vo/SandwichEat09.mp3
+    if(StrEqual(sample, "vo/SandwichEat09.mp3") && FF2_GetBossIndex(entity) == -1)
+		TF2_AddCondition(entity, TFCond_Ubercharged, 3.0);
+}
+
+stock bool IsValidClient(int client)
+{
+	return (0 < client && client <= MaxClients && IsClientInGame(client));
 }
