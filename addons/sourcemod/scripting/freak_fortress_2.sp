@@ -6121,7 +6121,6 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 
 			if(rage)
 			{
-				BossLastAirBlastedRage[boss]-=BossLastAirBlastedRage[boss] > 0.0 ? damage*100.0/BossRageDamage[boss] : 0.0;
 				BossCharge[boss][0]+=(damage*100.0/BossRageDamage[boss])+(BossLastAirBlastedRage[boss] <= 0.0 ? -BossLastAirBlastedRage[boss] : 0.0);
 			}
 		}
