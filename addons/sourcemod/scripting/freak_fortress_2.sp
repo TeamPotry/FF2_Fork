@@ -2479,14 +2479,13 @@ void EquipBoss(int boss)
 					}
 
 					SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
+					initCaptureAttribute = true;
 				}
 
 				if(!kv.GetNum("show", 0))
 				{
 					SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", 0.001);
 				}
-
-				initCaptureAttribute = true;
 			}
 			else
 			{
