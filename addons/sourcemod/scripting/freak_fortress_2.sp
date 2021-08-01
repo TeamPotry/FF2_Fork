@@ -660,7 +660,7 @@ public void EnableFF2()
 	FindConVar("tf_arena_first_blood").SetInt(0);
 	FindConVar("mp_forcecamera").SetInt(0);
 	FindConVar("tf_dropped_weapon_lifetime").SetInt(0);
-	FindConVar("tf_feign_death_activate_damage_scale").SetFloat(0.3);
+	FindConVar("tf_feign_death_activate_damage_scale").SetFloat(0.5);
 	FindConVar("tf_feign_death_damage_scale").SetFloat(0.0);
 	FindConVar("mp_humans_must_join_team").SetString("any");
 
