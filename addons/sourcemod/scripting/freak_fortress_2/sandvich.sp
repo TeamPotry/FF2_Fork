@@ -23,7 +23,7 @@ public Action SoundHook(int clients[MAXPLAYERS], int &numClients, char sample[PL
 {
 	// vo/SandwichEat09.mp3
     if(StrEqual(sample, "vo/SandwichEat09.mp3") && FF2_GetBossIndex(entity) == -1)
-		TF2_AddCondition(entity, TFCond_Ubercharged, 3.0);
+		TF2_AddCondition(entity, TFCond_UberchargedCanteen, 3.0);
 }
 
 stock bool IsValidClient(int client)
