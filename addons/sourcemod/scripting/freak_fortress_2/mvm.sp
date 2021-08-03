@@ -27,6 +27,23 @@ public void OnMapStart()
 	PrecacheSound("mvm/mvm_money_pickup.wav");
 }
 
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
+{
+	float time = MVM_GetPlayerCarteenCooldown(client);
+	if(!IsPlayerAlive(client) || MVM_GetPlayerCarteenCooldown(client) == 0.0)	return;
+
+	char text[60];
+	FF2HudDisplay hudDisplay = null;
+	hudQueue.GetName(text, sizeof(text));
+
+	if(StrEqual(text, "Player Additional"))
+	{
+		Format(text, sizeof(text), "%t: %.1f", "Carteen Cooldown", time);
+		hudDisplay = FF2HudDisplay.CreateDisplay("Carteen Cooldown", text);
+		hudQueue.PushDisplay(hudDisplay);
+	}
+}
+
 public Action FF2_OnSpecialAttack(int attacker, int victimBoss, int weapon, const char[] name, float &damage)
 {
 	Address address = Address_Null;
