@@ -337,8 +337,8 @@ void Boss_Abilities(const char[] ability_name, int boss, int rType, int bClient)
             // Because doing the commands directly seem to kick the boss, hence timers.
             bRange = FF2_GetAbilityArgumentFloat(boss,THIS_PLUGIN_NAME,ability_name, "explosion_range");	//range
             bDmg = FF2_GetAbilityArgument(boss,THIS_PLUGIN_NAME,ability_name, "explosion_damage"); // Damage
-            CreateTimer(0.1, SentryBustPrepare, bClient);
-            CreateTimer(2.1, SentryBusting, bClient);
+            CreateTimer(0.1, SentryBustPrepare, bClient, TIMER_FLAG_NO_MAPCHANGE);
+            CreateTimer(2.1, SentryBusting, bClient, TIMER_FLAG_NO_MAPCHANGE);
         }
     }
     if(rType!=2)
@@ -975,50 +975,53 @@ public Action SentryBustPrepare(Handle timer, any bClient)
 
 public Action SentryBusting(Handle timer, any bClient)
 {
-	int explosion = CreateEntityByName("env_explosion");
-	float clientPos[3];
-	GetClientAbsOrigin(bClient, clientPos);
-	if (explosion)
-	{
-		DispatchSpawn(explosion);
-		TeleportEntity(explosion, clientPos, NULL_VECTOR, NULL_VECTOR);
-		AcceptEntityInput(explosion, "Explode", -1, -1, 0);
-		RemoveEdict(explosion);
-	}
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsValidClient(i) || !IsPlayerAlive(i))
-			continue;
-		float zPos[3];
-		GetClientAbsOrigin(i, zPos);
-		float Dist = GetVectorDistance(clientPos, zPos);
-		if (Dist < bRange)
-			DoDamage(bClient, i, bDmg);
-	}
-	for (int i = MaxClients + 1; i <= 2048; i++)
-	{
-		if (!IsValidEntity(i)) continue;
-		char cls[20];
-		GetEntityClassname(i, cls, sizeof(cls));
-		if (!StrEqual(cls, "obj_sentrygun", false) &&
-		!StrEqual(cls, "obj_dispenser", false) &&
-		!StrEqual(cls, "obj_teleporter", false)) continue;
-		float zPos[3];
-		GetEntPropVector(i, Prop_Send, "m_vecOrigin", zPos);
-		float Dist = GetVectorDistance(clientPos, zPos);
-		if (Dist < bRange)
-		{
-			SetVariantInt(bDmg);
-			AcceptEntityInput(i, "RemoveHealth");
-		}
-	}
-	EmitSoundToAll(HSB_EXPLODE, bClient);
-	AttachParticle(bClient, "fluidSmokeExpl_ring_mvm");
-	SDKUnhook(bClient, SDKHook_OnTakeDamage, BlockDamage);
-	if(TF2_IsPlayerInCondition(bClient, TFCond_Taunting))
-		TF2_RemoveCondition(bClient,TFCond_Taunting);
-	SetEntityMoveType(bClient, MOVETYPE_WALK);
-	return Plugin_Continue;
+    if(!IsClientInGame(bClient) || !IsPlayerAlive(bClient))
+    return Plugin_Continue;
+
+    int explosion = CreateEntityByName("env_explosion");
+    float clientPos[3];
+    GetClientAbsOrigin(bClient, clientPos);
+    if (explosion)
+    {
+        DispatchSpawn(explosion);
+        TeleportEntity(explosion, clientPos, NULL_VECTOR, NULL_VECTOR);
+        AcceptEntityInput(explosion, "Explode", -1, -1, 0);
+        RemoveEdict(explosion);
+    }
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (!IsValidClient(i) || !IsPlayerAlive(i))
+            continue;
+        float zPos[3];
+        GetClientAbsOrigin(i, zPos);
+        float Dist = GetVectorDistance(clientPos, zPos);
+        if (Dist < bRange)
+            DoDamage(bClient, i, bDmg);
+    }
+    for (int i = MaxClients + 1; i <= 2048; i++)
+    {
+        if (!IsValidEntity(i)) continue;
+        char cls[20];
+        GetEntityClassname(i, cls, sizeof(cls));
+        if (!StrEqual(cls, "obj_sentrygun", false) &&
+        !StrEqual(cls, "obj_dispenser", false) &&
+        !StrEqual(cls, "obj_teleporter", false)) continue;
+        float zPos[3];
+        GetEntPropVector(i, Prop_Send, "m_vecOrigin", zPos);
+        float Dist = GetVectorDistance(clientPos, zPos);
+        if (Dist < bRange)
+        {
+            SetVariantInt(bDmg);
+            AcceptEntityInput(i, "RemoveHealth");
+        }
+    }
+    EmitSoundToAll(HSB_EXPLODE, bClient);
+    AttachParticle(bClient, "fluidSmokeExpl_ring_mvm");
+    SDKUnhook(bClient, SDKHook_OnTakeDamage, BlockDamage);
+    if(TF2_IsPlayerInCondition(bClient, TFCond_Taunting))
+        TF2_RemoveCondition(bClient,TFCond_Taunting);
+    SetEntityMoveType(bClient, MOVETYPE_WALK);
+    return Plugin_Continue;
 }
 
 public Action DeleteParticle(Handle timer, any Ent)
