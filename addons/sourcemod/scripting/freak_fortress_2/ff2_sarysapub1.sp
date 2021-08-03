@@ -1674,9 +1674,8 @@ public RP_TriggerSlicer(clientIdx, propIdx)
 	{
 		// damage the player, including self-damage
 		new owner = GetClientOfUserId(PROP_OwnerUserId[propIdx]);
-		if (!IsLivingPlayer(owner))
-			owner = clientIdx;
-		SDKHooks_TakeDamage(clientIdx, owner, owner, RPS_DamagePerCheck, DMG_GENERIC | (RPS_NegatePushForce ? DMG_PREVENT_PHYSICS_FORCE : 0), -1);
+		if (IsLivingPlayer(owner) && GetClientTeam(owner) != GetClientTeam(clientIdx))
+			SDKHooks_TakeDamage(clientIdx, owner, owner, RPS_DamagePerCheck, DMG_GENERIC | (RPS_NegatePushForce ? DMG_PREVENT_PHYSICS_FORCE : 0), -1);
 	}
 
 	// set trigger time
