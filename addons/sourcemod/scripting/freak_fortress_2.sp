@@ -1353,6 +1353,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		Assist[client]=0;
 		uberTarget[client]=-1;
 		emitRageSound[client]=true;
+		FF2Flags[client]=0; // TODO: 테스트
 		if(IsValidClient(client) && TF2_GetClientTeam(client)>TFTeam_Spectator)
 		{
 			playing++;
