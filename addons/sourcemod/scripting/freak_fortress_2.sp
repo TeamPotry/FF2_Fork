@@ -1643,7 +1643,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		}
 		else if(IsValidClient(boss))  //Boss here is actually a client index
 		{
-			SetClientGlow(boss, 0.0, 0.0);
 			shield[boss]=0;
 			detonations[boss]=0;
 		}
@@ -1701,13 +1700,14 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	int top[3];
 	Damage[0]=0;
 
-	for(int client=1; client<=MaxClients; client++)
+	for(int client=0; client<=MaxClients; client++)
 	{
 		if(!IsValidClient(client) || Damage[client]<=0 || (IsBoss(client) && BossTeam == TF2_GetClientTeam(client)))
 		{
 			continue;
 		}
 
+		SetClientGlow(client, 0.0, 0.0);
 		if(Assist[client]>10)
 			Damage[client]+=Assist[client]/2;
 		Assist[client]=0;
