@@ -309,6 +309,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_CheckSoundFlags", Native_CheckSoundFlags);
 
 	// ff2_potry.inc
+	CreateNative("FF2_AddBossCharge", Native_AddBossCharge);
 	CreateNative("FF2_GetTimerType", Native_GetTimerType);
 	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
@@ -4633,16 +4634,14 @@ public Action BossTimer(Handle timer)
 			}
 		}
 
-		if(BossCharge[boss][0]<100.0)
-		{
-			BossCharge[boss][0]+=OnlyScoutsLeft()*0.05;
-			if(BossCharge[boss][0]>100.0)
-			{
-				BossCharge[boss][0]=100.0;
-			}
-		}
+		int other=0, fast = ScoutsLeft(other);
+		fast -= other;
+		AddBossCharge(boss, 0, fast > 0 ? fast*0.1 : 0.0);
 
-		HPTime-=0.12;
+		// stock
+		AddBossCharge(boss, 0, 0.01);
+
+		HPTime-=0.05;
 		if(HPTime<0)
 		{
 			HPTime=0.0;
@@ -4703,7 +4702,7 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 			if(condition == TFCond_MarkedForDeath) // Fan O' War(Yeah), Sandman balls
 			{
 				int boss = GetBossIndex(client);
-				if(BossCharge[boss][0]>0.0)
+				AddBossCharge(boss, 0, -5.0);
 				{
 					BossCharge[boss][0]-=5.0;
 					if(BossCharge[boss][0]<0.0)
@@ -5075,11 +5074,7 @@ public Action OnObjectDeflected(Event event, const char[] name, bool dontBroadca
 	int boss=GetBossIndex(GetClientOfUserId(event.GetInt("ownerid")));
 	if(boss!=-1 && BossCharge[boss][0]<100.0)
 	{
-		BossCharge[boss][0]+=7.0;  //TODO: Allow this to be customizable
-		if(BossCharge[boss][0]>100.0)
-		{
-			BossCharge[boss][0]=100.0;
-		}
+		AddBossCharge(boss, 0, 7.0); //TODO: Allow this to be customizable
 
 		if(executed)
 			timeleft += 5.0;
@@ -5099,13 +5094,7 @@ public Action OnJarate(UserMsg msg_id, Handle bf, const int[] players, int playe
 		{
 			int index=GetEntProp(jarate, Prop_Send, "m_iItemDefinitionIndex");
 			if((index==58 || index==1083 || index==1105) && GetEntProp(jarate, Prop_Send, "m_iEntityLevel")!=-122)  //-122 is the Jar of Ants which isn't really Jarate
-			{
-				BossCharge[boss][0]-=8.0;  //TODO: Allow this to be customizable
-				if(BossCharge[boss][0]<0.0)
-				{
-					BossCharge[boss][0]=0.0;
-				}
-			}
+				AddBossCharge(boss, 0, -8.0); //TODO: Allow this to be customizable
 		}
 	}
 	return Plugin_Continue;
@@ -5669,14 +5658,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 					case 355:  //Fan O' War
 					{
-						if(BossCharge[boss][0]>0.0)
-						{
-							BossCharge[boss][0]-=5.0;
-							if(BossCharge[boss][0]<0.0)
-							{
-								BossCharge[boss][0]=0.0;
-							}
-						}
+						AddBossCharge(boss, 0, -5.0);
 					}
 					case 357:  //Half-Zatoichi
 					{
@@ -5949,15 +5931,11 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						}
 
 						BossHealth[boss]-=RoundFloat(damage);
-						BossCharge[boss][0]+=damage*100.0/BossRageDamage[boss];
+						AddBossCharge(boss, 0, damage*100.0/BossRageDamage[boss]);
+
 						if(BossHealth[boss]<=0)  //TODO: Wat
 						{
 							damage*=5;
-						}
-
-						if(BossCharge[boss][0]>100.0)
-						{
-							BossCharge[boss][0]=100.0;
 						}
 						return Plugin_Changed;
 					}
@@ -6126,9 +6104,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			}
 
 			if(rage)
-			{
-				BossCharge[boss][0]+=(damage*100.0/BossRageDamage[boss])+(BossLastAirBlastedRage[boss] <= 0.0 ? -BossLastAirBlastedRage[boss] : 0.0);
-			}
+				AddBossCharge(boss, 0, damage*100.0/BossRageDamage[boss]);
 		}
 
 		int[] healers=new int[MaxClients+1];
@@ -8272,6 +8248,27 @@ public int SetBossCharge(int boss, int slot, float charge)
 public int Native_SetBossCharge(Handle plugin, int numParams)
 {
 	SetBossCharge(GetNativeCell(1), GetNativeCell(2), view_as<float>(GetNativeCell(3)));
+}
+
+public void AddBossCharge(int boss, int slot, float charge)
+{
+	if(charge > 0.0)
+	{
+		BossCharge[boss][slot]+=charge;
+		if(BossCharge[boss][slot] > 100.0)
+			BossCharge[boss][slot]=100.0;
+	}
+	else if(BossCharge[boss][slot] < 90.0)
+	{
+		BossCharge[boss][slot]+=charge;
+		if(BossCharge[boss][slot] < 0.0)
+			BossCharge[boss][slot]=0.0;
+	}
+}
+
+public int Native_AddBossCharge(Handle plugin, int numParams)
+{
+	AddBossCharge(GetNativeCell(1), GetNativeCell(2), view_as<float>(GetNativeCell(3)));
 }
 
 public int GetBossRageDamage(int boss)

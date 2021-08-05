@@ -23,6 +23,16 @@ enum
 };
 
 /**
+ * Add Boss's charge.
+ *
+ * @param boss      Boss's index
+ * @param slow      Charge slot
+ * @param charge    charge amount
+ *                      (negative is also allowed. But it only effects when boss's charge < 90.0)
+ * @noreturn
+ */
+native void FF2_AddBossCharge(int boss, int slot, float charge);
+/**
  * Get timer's type.
  *
  * @return          Remaining round time
@@ -254,6 +264,7 @@ public SharedPlugin __pl_ff2_potry=
 #if !defined REQUIRE_PLUGIN
 public __pl_ff2_potry_SetNTVOptional()
 {
+    MarkNativeAsOptional("FF2_AddBossCharge");
     MarkNativeAsOptional("FF2_GetTimerType");
     MarkNativeAsOptional("FF2_GetRoundTime");
     MarkNativeAsOptional("FF2_SetRoundTime");
