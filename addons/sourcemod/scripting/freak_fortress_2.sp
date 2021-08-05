@@ -973,14 +973,14 @@ public void LoadCharacter(const char[] characterName)
 					kv.GetSectionName(file, sizeof(file));
 					Format(file, sizeof(file), "%s%s", file, extensions[extension]);
 
+					if(extension == 0) // .mdl
+					{
+						// LogMessage("Precache ''%s''\n = %s", file, PrecacheModel(file) != 0 ? "YES" : "NO");
+						PrecacheModel(file);
+					}
+
 					if(FileExists(file, true))
 					{
-						if(extension == 0) // .mdl
-						{
-							// LogMessage("Precache ''%s''\n = %s", file, PrecacheModel(file) != 0 ? "YES" : "NO");
-							PrecacheModel(file);
-						}
-
 						AddFileToDownloadsTable(file);
 					}
 					else
