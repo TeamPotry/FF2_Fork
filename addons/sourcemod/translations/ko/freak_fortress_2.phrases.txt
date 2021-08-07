@@ -33,7 +33,8 @@
 	}
 	"Ubercharge"
 	{
-		"ko"		"우버차지"
+		"#format"	"{1:i}"
+		"ko"		"우버차지: {1}%%"
 	}
 	"Boss Lives Left"
 	{

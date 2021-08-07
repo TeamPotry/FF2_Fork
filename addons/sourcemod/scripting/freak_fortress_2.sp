@@ -4428,7 +4428,7 @@ public Action ClientTimer(Handle timer)
 					if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 					{
 						int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
-						Format(hudText, sizeof(hudText), "%T: %i%%", "Ubercharge", client, charge);
+						Format(hudText, sizeof(hudText), "%T", "Ubercharge", client, charge);
 						hudDisplay=FF2HudDisplay.CreateDisplay("Ubercharge", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
