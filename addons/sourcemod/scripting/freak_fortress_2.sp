@@ -2384,13 +2384,12 @@ void EquipBoss(int boss)
 	int client=Boss[boss];
 
 	bool initCaptureAttribute = false;
-	char captureAttributeStr[12] = "68 ; %i ; "; // 68: +2 cap rate
+	char captureAttributeStr[64] = "252 ; 0.8 ; 68 ; %i ; "; // 68: +2 cap rate, 252: knockback scale, 259: goomba
 
-	DoOverlay(client, "");
 	TF2_RemoveAllWeapons(client);
 	TF2_RemoveAllWearables(client);
-	
-	Format(captureAttributeStr, 12, captureAttributeStr, TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
+
+	Format(captureAttributeStr, 64, captureAttributeStr, TF2_GetPlayerClass(client)==TFClass_Scout ? 1 : 2);
 
 	kv.Rewind();
 	kv.GetString("name", bossName, sizeof(bossName), "=Failed Name=");
@@ -2507,6 +2506,7 @@ void EquipBoss(int boss)
 
 	TF2Attrib_RemoveByDefIndex(client, 112);
 	TF2Attrib_RemoveByDefIndex(client, 113);
+	TF2Attrib_RemoveByDefIndex(client, 252);
 }
 
 public Action MakeBoss(Handle timer, int boss)
@@ -3516,6 +3516,7 @@ public Action CheckItems(Handle timer, int userid)
 
 	TF2Attrib_SetByDefIndex(client, 112, 0.05); // NOTE: 무한탄약
 	TF2Attrib_SetByDefIndex(client, 113, 30.0); // NOTE: 무한금속
+	TF2Attrib_RemoveByDefIndex(client, 252); // NOTE: 보스 넉백 저항
 
 	int entity=-1;
 	while((entity=FindEntityByClassname2(entity, "tf_wearable_demoshield"))!=-1)  //Demoshields

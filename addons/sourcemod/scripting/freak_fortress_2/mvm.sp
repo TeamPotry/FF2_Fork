@@ -75,7 +75,7 @@ public void FF2_OnWaveStarted(int wave)
 		{
 			boss = FF2_GetBossIndex(client);
 
-			int beforeHealth = FF2_GetBossMaxHealth(boss), heal = RoundFloat(FF2_GetBossMaxHealth(boss) * 1.02);
+			int beforeHealth = FF2_GetBossMaxHealth(boss), heal = RoundFloat(FF2_GetBossMaxHealth(boss) * 1.03);
 			heal -= beforeHealth;
 
 			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
