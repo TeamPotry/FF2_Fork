@@ -194,6 +194,19 @@
 	{
 		"ko"		"그 항목에서는 설정할 항목이 없습니다!"
 	}
+	"Human Team Boss Setting Title"
+	{
+		"ko"		"인간팀 보스 플레이 여부 설정"
+	}
+	"Human Team Boss Setting Description"
+	{
+		"ko"		" - 인간팀에서 일정 수 이상의 인원을 충족하면 그 중에 소수의 사람이 보스가 되어 팀을 도울 수 있습니다!\n - 보스 설정과 관계 없이 무작위 보스로 지정됩니다!"
+	}
+	"Menu Already Choose"
+	{
+		// 앞의 공백은 제대로 된 것이 맞으니 수정하지 말 것
+		"ko"		" (선택됨)"
+	}
 	"Exit Menu"
 	{
 		"ko"		"나가기"
@@ -434,10 +447,18 @@
 	"Human Hero"
 	{
 		"#format"	"{1:N},{2:s}"
-		"ko"	"{1}님이 영웅이 되었습니다! ({orange}{2}{default}) "
+		"ko"	"{1}님이 인간팀 보스가 되었습니다! ({orange}{2}{default}) "
 	}
 	"Wave Started"
 	{
 		"ko"	"웨이브가 시작되었습니다! 플레이어들은 돈을 얻고 보스들은 추가 체력을 얻었습니다."
+	}
+	"Carteen Cooldown"
+	{
+		"ko"	"수통 대기 시간"
+	}
+	"Randomly Choose Boss Player"
+	{
+		"ko"	"플레이어가 부족하여 무작위로 보스 플레이어를 고릅니다!"
 	}
 }
