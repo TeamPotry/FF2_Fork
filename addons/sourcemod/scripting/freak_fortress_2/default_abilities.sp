@@ -370,16 +370,16 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			{
 				if(enableSuperDuperJump[boss])
 				{
-					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*600*multiplier;
-					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*600*multiplier;
+					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*800*multiplier;
+					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*800*multiplier;
 					velocity[2]=(750.0+175.0*charge/70+2000)*multiplier;
 					enableSuperDuperJump[boss]=false;
 				}
 				else
 				{
-					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*300*multiplier;
-					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*300*multiplier;
-					velocity[2]=(750.0+175.0*charge/70+200)*multiplier;
+					velocity[0]+=Cosine(DegToRad(angles[0]))*Cosine(DegToRad(angles[1]))*450*multiplier;
+					velocity[1]+=Cosine(DegToRad(angles[0]))*Sine(DegToRad(angles[1]))*450*multiplier;
+					velocity[2]=(750.0+200.0*charge/70+300)*multiplier;
 				}
 			}
 
@@ -584,7 +584,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 			}
 
 			float velocity[3];
-			float multiplier = 900.0 * (Cosine(DegToRad((90.0 - angles[0]) * 2.0)) + Cosine(DegToRad((90.0 - angles[0]))));
+			float multiplier = 950.0 * (Cosine(DegToRad((90.0 - angles[0]) * 2.0)) + Cosine(DegToRad((90.0 - angles[0]))));
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 			GetAngleVectors(angles, velocity, NULL_VECTOR, NULL_VECTOR);
