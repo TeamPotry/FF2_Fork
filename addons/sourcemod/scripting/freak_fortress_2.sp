@@ -4443,18 +4443,21 @@ public Action ClientTimer(Handle timer)
 					}
 				}
 
-				int melee=GetPlayerWeaponSlot(client, TFWeaponSlot_Melee);
-				if(IsValidEntity(melee) && GetEntProp(melee, Prop_Send, "m_iItemDefinitionIndex") == 413)
+				int melee=GetPlayerWeaponSlot(client, TFWeaponSlot_Melee), meleeIndex;
+				if(IsValidEntity(melee))
 				{
-					int allRageDamage, bossIndex;
-					float allCharge;
-
-					for(int target=1; target<=MaxClients; target++)
+					meleeIndex=GetEntProp(melee, Prop_Send, "m_iItemDefinitionIndex");
+					if(meleeIndex == 413)
 					{
-						if((bossIndex = GetBossIndex(target)) != -1) {
-							allRageDamage += BossRageDamage[bossIndex];
-							allCharge += BossCharge[bossIndex][0];
-						}
+						int allRageDamage, bossIndex;
+						float allCharge;
+
+						for(int target=1; target<=MaxClients; target++)
+						{
+							if((bossIndex = GetBossIndex(target)) != -1 && TF2_GetClientTeam(target) == BossTeam) {
+								allRageDamage += BossRageDamage[bossIndex];
+								allCharge += BossCharge[bossIndex][0];
+							}
 					}
 					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allRageDamage/100.0)), allRageDamage);
 						hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
