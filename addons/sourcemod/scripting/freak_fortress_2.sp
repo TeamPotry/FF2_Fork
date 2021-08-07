@@ -5625,9 +5625,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					return Plugin_Continue;
 				}
 				else
-					RemoveShield(client, attacker, position);
-
-				return Plugin_Handled;
+				{
+					// RemoveShield(client, attacker, position);
+					PlayShieldBreakSound(client, attacker, position);
+					float charge = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") - damage;
+					SetEntPropFloat(client, Prop_Send, "m_flChargeMeter",
+						charge > 0.0 ? charge : 0.0);
+					return Plugin_Continue;
+				}
 			}
 
 			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
