@@ -4389,6 +4389,11 @@ public Action ClientTimer(Handle timer)
 
 			if(!IsPlayerAlive(client)) continue;
 
+			// Movement speed limit
+			float maxspeed = GetEntPropFloat(client, Prop_Send, "m_flMaxspeed");
+			if(maxspeed > 500.0 && !TF2_IsPlayerInCondition(client, TFCond_Charging) && !TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly))
+				SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 500.0);
+
 			TFClassType playerclass=TF2_GetPlayerClass(client);
 			int weapon=GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 			if(weapon<=MaxClients || !IsValidEntity(weapon) || !GetEntityClassname(weapon, classname, sizeof(classname)))
