@@ -1418,6 +1418,12 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 	bool[] omit=new bool[MaxClients+1];
 	Boss[0]=GetClientWithMostQueuePoints(omit);
+	if(Boss[0] == 0)
+	{
+		Boss[0]=RandomlySelectClient(omit);
+		CPrintToChatAll("{olive}[FF2]{default} %t", "Randomly Choose Boss Player");
+	}
+
 	omit[Boss[0]]=true;
 
 	bool teamHasPlayers[4]; // TODO: 컴파일러 버전 변경으로 인한 Enum 크기 구하는 방법 변경
@@ -6456,7 +6462,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 
 stock int GetClientWithMostQueuePoints(bool[] omit)
 {
-	int winner;
+	int winner=0;
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && GetClientQueuePoints(client)>=GetClientQueuePoints(winner) && !omit[client])
@@ -6467,6 +6473,28 @@ stock int GetClientWithMostQueuePoints(bool[] omit)
 			}
 		}
 	}
+
+	return winner;
+}
+
+stock int RandomlySelectClient(bool[] omit)
+{
+	int count;
+	ArrayList array=new ArrayList();
+	for(int client=1; client<=MaxClients; client++)
+	{
+		if(IsValidClient(client) && !omit[client])
+		{
+			if(SpecForceBoss || TF2_GetClientTeam(client)>TFTeam_Spectator)
+			{
+				array.Push(client);
+				count++;
+			}
+		}
+	}
+
+	int winner=array.Get(GetRandomInt(0, count-1));
+	delete array;
 	return winner;
 }
 
@@ -7042,6 +7070,9 @@ void FindCompanion(int boss, int players, bool[] omit)
 	if(playersNeeded<players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
 	{
 		int companion=GetClientWithMostQueuePoints(omit);
+		if(companion==0)
+			companion=RandomlySelectClient(omit);
+
 		Boss[companion]=companion;  //Woo boss indexes!
 		omit[companion]=true;
 		if(PickCharacter(boss, companion))  //TODO: This is a bit misleading
