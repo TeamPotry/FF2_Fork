@@ -4174,7 +4174,8 @@ public void OnClientPostAdminCheck(int client)
 		playBGM[client]=true;
 		if(Enabled)
 		{
-			CreateTimer(0.1, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			StartMusic(client);
+			// CreateTimer(0.1, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
 	else
