@@ -4436,7 +4436,8 @@ public Action ClientTimer(Handle timer)
 				else if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary))
 				{
 					int healtarget=GetHealingTarget(client, true);
-					if(IsValidClient(healtarget) && TF2_GetPlayerClass(healtarget)==TFClass_Scout)
+					if(IsValidClient(healtarget) && TF2_GetPlayerClass(healtarget)==TFClass_Scout
+						&& GetClientTeam(healtarget) == GetClientTeam(client))
 					{
 						TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.3);
 					}
