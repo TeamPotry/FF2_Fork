@@ -459,7 +459,8 @@ void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 			}
 			else if(charge<100)
 			{
-				CreateTimer(0.1, Timer_ResetCharge, boss*10000+slot, TIMER_FLAG_NO_MAPCHANGE);  //FIXME: Investigate.
+				ResetBossCharge(boss, slot);
+				// CreateTimer(0.1, Timer_ResetCharge, boss*10000+slot, TIMER_FLAG_NO_MAPCHANGE);  //FIXME: Investigate.
 				return;
 			}
 
