@@ -1,0 +1,19 @@
+"Phrases"
+{
+    "Loadout Unavailable"
+    {
+        "#format"   "{1:d}"
+        "en"        "Disconnected from Steam's item server. Reconnected in {1} secs."
+    }
+
+    "Free Sale"
+    {
+        "en"        "You had reached 100%% sale! Next damage will be deadly."
+    }
+
+    "Ban by Gabe"
+    {
+        "#format"   "{1:N}"
+        "en"        "Player {1} has been banned (Banned by Gabe Newell)"
+    }
+}
