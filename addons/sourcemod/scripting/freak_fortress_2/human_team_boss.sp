@@ -89,25 +89,24 @@ public Action OnReviveMarkerSpawn(int client, int reviveMarker)
 	return Plugin_Continue;
 }
 
-stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
+stock ArrayList GetBossArray(bool includeBlocked=false, bool includeAlive=false) // TODO: includeBlocked
 {
 	ArrayList array = new ArrayList();
 	KeyValues bossKV;
-	int count = 0, index;
 
 	for (int loop = 0; (bossKV = FF2_GetCharacterKV(loop)) != null; loop++)
 	{
 		bossKV.Rewind();
-		if(bossKV.GetNum("ban_boss_vs_boss", 0) > 0)
+		if(includeBlocked || bossKV.GetNum("ban_boss_vs_boss", 0) > 0)
 			continue;
 
 		array.Push(loop);
-		count++;
 	}
 
-	if(count > 0)
+	if(!includeAlive && array.Length > 0)
 	{
 		ArrayList bossArray = GetBossPlayers();
+		int index;
 
 		for (int loop = 0; loop < bossArray.Length; loop++)
 		{
@@ -115,17 +114,13 @@ stock int GetRandomBoss(bool includeBlocked=false) // TODO: includeBlocked
 			if(index != -1)
 			{
 				array.Erase(index);
-				count--;
 			}
 		}
 
 		delete bossArray;
 	}
 
-	int result = count > 0 ? array.Get(GetRandomInt(0, count-1)) : -1;
-
-	delete array;
-	return result;
+	return array;
 }
 
 public ArrayList GetBossPlayers()
@@ -133,10 +128,11 @@ public ArrayList GetBossPlayers()
 	ArrayList array = new ArrayList();
 	for(int client = 1; client <= MaxClients; client++)
 	{
-	    if(IsClientInGame(client) && IsPlayerAlive(client) && FF2_GetBossIndex(client) != -1)
-	    {
-	        array.Push(client);
-	    }
+		int boss = FF2_GetBossIndex(client);
+		if(IsClientInGame(client) && IsPlayerAlive(client) && boss != -1)
+		{
+			array.Push(client);
+		}
 	}
 
 	return array;
@@ -147,7 +143,8 @@ public ArrayList GetAlivePlayers(bool includeBoss)
 	ArrayList array = new ArrayList();
 	for(int client = 1; client <= MaxClients; client++)
 	{
-		if(IsClientInGame(client) && IsPlayerAlive(client) && FF2_GetQueuePoints(client) >= 0 && (!includeBoss && FF2_GetBossIndex(client) == -1))
+		if(IsClientInGame(client) && IsPlayerAlive(client)
+			&& (!includeBoss && FF2_GetBossIndex(client) == -1))
 		{
 		    array.Push(client);
 		}
