@@ -310,6 +310,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	// ff2_potry.inc
 	CreateNative("FF2_AddBossCharge", Native_AddBossCharge);
+	CreateNative("FF2_GetSettingData", Native_GetSettingData);
+	CreateNative("FF2_GetSettingStringData", Native_GetSettingStringData);
+	CreateNative("FF2_SetSettingData", Native_SetSettingData);
+	CreateNative("FF2_SetSettingStringData", Native_SetSettingStringData);
 	CreateNative("FF2_GetTimerType", Native_GetTimerType);
 	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
@@ -2183,7 +2187,7 @@ public void SetSoundFlags(int client, int soundFlags)
 	}
 
 	muteSound[client] |= soundFlags;
-	SetSettingData(client, "sound_mute_flag", muteSound[client]);
+	SetSettingData(client, "sound_mute_flag", muteSound[client], KvData_Int);
 }
 
 public void ClearSoundFlags(int client, int soundFlags)
@@ -2194,27 +2198,107 @@ public void ClearSoundFlags(int client, int soundFlags)
 	}
 
 	muteSound[client]&=~soundFlags;
-	SetSettingData(client, "sound_mute_flag", muteSound[client]);
+	SetSettingData(client, "sound_mute_flag", muteSound[client], KvData_Int);
 }
 
-public any GetSettingData(int client, const char[] key)
+public any GetSettingData(int client, const char[] settingId, KvDataTypes type)
 {
-	return (DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key);
+	char data[128];
+	GetSettingStringData(client, settingId, data, 128);
+
+	switch(type)
+	{
+		case KvData_Int:
+		{
+			return data[0] != '\0' ? StringToInt(data) : 0;
+		}
+		case KvData_Float:
+		{
+			return data[0] != '\0' ? StringToFloat(data) : 0.0;
+		}
+		default:
+		{
+			ThrowError("KvData_Int, KvData_Float supported!");
+		}
+	}
+
+	return -1;
 }
 
-public void GetSettingStringData(int client, const char[] key, char[] value, int buffer)
+public any Native_GetSettingData(Handle plugin, int numParams)
 {
-	(DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key, value, buffer);
+	int client = GetNativeCell(1);
+	char settingId[128];
+	GetNativeString(2, settingId, sizeof(settingId));
+	KvDataTypes type = GetNativeCell(3);
+
+	return GetSettingData(client, settingId, type);
 }
 
-public void SetSettingData(int client, const char[] key, any value)
+public void GetSettingStringData(int client, const char[] settingId, char[] value, int buffer)
 {
-	(DBSPlayerData.GetClientData(client)).SetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key, value);
+	(DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, settingId, "value", value, buffer);
 }
 
-public void SetSettingStringData(int client, const char[] key, char[] value)
+public int Native_GetSettingStringData(Handle plugin, int numParams)
 {
-	(DBSPlayerData.GetClientData(client)).SetStringData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, "", key, value);
+	int client = GetNativeCell(1), buffer = GetNativeCell(4);
+	char settingId[128], value[128];
+	GetNativeString(2, settingId, sizeof(settingId));
+
+	GetSettingStringData(client, settingId, value, buffer);
+	SetNativeString(3, value, sizeof(value));
+
+	return 0; // ??
+}
+
+public void SetSettingData(int client, const char[] settingId, any value, KvDataTypes type)
+{
+	// (DBSPlayerData.GetClientData(client)).SetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, settingId, "value", value);
+	char data[128];
+
+	switch(type)
+	{
+		case KvData_Int:
+		{
+			Format(data, sizeof(data), "%d", value);
+		}
+		case KvData_Float:
+		{
+			Format(data, sizeof(data), "%.1f", value);
+		}
+		default:
+		{
+			ThrowError("KvData_Int, KvData_Float supported!");
+		}
+	}
+
+	SetSettingStringData(client, settingId, data);
+}
+
+public any Native_SetSettingData(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	char settingId[128];
+	GetNativeString(2, settingId, sizeof(settingId));
+	KvDataTypes type = GetNativeCell(4);
+
+	SetSettingData(client, settingId, GetNativeCellRef(3), type);
+}
+
+public void SetSettingStringData(int client, const char[] settingId, char[] value)
+{
+	(DBSPlayerData.GetClientData(client)).SetStringData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, settingId, "value", value);
+}
+
+public any Native_SetSettingStringData(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	char settingId[128], value[128];
+	GetNativeString(2, settingId, sizeof(settingId));
+
+	SetSettingStringData(client, settingId, value);
+	SetNativeString(3, value, sizeof(value));
 }
 
 public Action Timer_Move(Handle timer)
@@ -3999,7 +4083,7 @@ public void OnClientPostAdminCheck(int client)
 
 	if(!IsFakeClient(client))
 	{
-		muteSound[client]=GetSettingData(client, "sound_mute_flag");
+		muteSound[client]=GetSettingData(client, "sound_mute_flag", KvData_Int);
 	}
 
 	if(playBGM[0])
@@ -7098,9 +7182,9 @@ public int ChangeBossMenuHandler(Handle menu, MenuAction action, int client, int
 	}
 }
 
-bool GetClientClassInfoCookie(int client)
+int GetClientClassInfoCookie(int client)
 {
-	return GetSettingData(client, "class_info_view") > 0;
+	return GetSettingData(client, "class_info_view", KvData_Int);
 }
 
 int GetClientQueuePoints(int client)
@@ -7486,7 +7570,8 @@ public int ClassInfoTogglePanelH(Menu menu, MenuAction action, int client, int s
 	{
 		if(action==MenuAction_Select)
 		{
-			SetSettingData(client, "class_info_view", selection==2 ? 0 : 1);
+			// class_info_view: 0: VIEW, 1: OFF, 2, VIEW: Main boss's help panel
+			SetSettingData(client, "class_info_view", selection - 1, KvData_Int);
 			CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Class Info", selection==2 ? "off" : "on");
 		}
 	}

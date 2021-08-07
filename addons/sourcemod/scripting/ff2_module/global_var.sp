@@ -46,17 +46,15 @@ FF2HudQueue PlayerHudQueue[MAXPLAYERS+1] = null;
 
 static const char g_QueryColumn[][] = {
 	"steam_id",
-	"changelog_last_view_time",
-	"sound_mute_flag",
-	"class_info_view",
+	"setting_id",
+	"value",
 	"last_saved_time"
 };
 
 static const KvDataTypes g_iQueryColumnDataType[] = {
 	KvData_String,
 	KvData_String,
-	KvData_Int,
-	KvData_Int,
+	KvData_String,
 	KvData_String
 };
 
@@ -76,7 +74,7 @@ static const KvDataTypes g_iHudQueryColumnDataType[] = {
 
 public void DBS_OnLoadData(DBSData data)
 {
-	KeyValues tabledata = DBSData.CreateTableData(FF2_DB_PLAYERDATA_TABLENAME, true);
+	KeyValues tabledata = DBSData.CreateTableData(FF2_DB_PLAYERDATA_TABLENAME);
 	for(int loop = 0; loop < sizeof(g_QueryColumn); loop++)
 	{
 		DBSData.PushTableData(tabledata, g_QueryColumn[loop], g_iQueryColumnDataType[loop]);

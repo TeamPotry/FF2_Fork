@@ -32,6 +32,21 @@ enum
  * @noreturn
  */
 native void FF2_AddBossCharge(int boss, int slot, float charge);
+
+/**
+ * Get/Set Player's setting data.
+ *
+ * @param client            client's index
+ * @param settingId         setting ID
+ * @param value             Get/Set data
+ * @param type              KvData_Int, KvData_Float is supported, otherwise error occured
+ *
+ */
+native any FF2_GetSettingData(int client, const char[] settingId, KvDataTypes type);
+native void FF2_GetSettingStringData(int client, const char[] settingId, char[] value, int buffer);
+
+native void FF2_SetSettingData(int client, const char[] settingId, any value, KvDataTypes type);
+native void FF2_SetSettingStringData(int client, const char[] settingId, char[] value);
 /**
  * Get timer's type.
  *
@@ -264,6 +279,10 @@ public SharedPlugin __pl_ff2_potry=
 #if !defined REQUIRE_PLUGIN
 public __pl_ff2_potry_SetNTVOptional()
 {
+    MarkNativeAsOptional("FF2_AddBossCharge");
+    MarkNativeAsOptional("FF2_GetSettingData");
+    MarkNativeAsOptional("FF2_GetSettingStringData");
+    MarkNativeAsOptional("FF2_SetSettingStringData");
     MarkNativeAsOptional("FF2_AddBossCharge");
     MarkNativeAsOptional("FF2_GetTimerType");
     MarkNativeAsOptional("FF2_GetRoundTime");
