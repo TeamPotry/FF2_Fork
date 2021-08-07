@@ -2529,7 +2529,7 @@ void EquipBoss(int boss)
 						}
 					}
 
-					// TODO: 데모쉴드인 경우에만 사용
+					// 데모쉴드인 경우에만 사용
 					if(demoshield)
 						SetEntProp(client, Prop_Send, "m_bShieldEquipped", 1);
 				}
@@ -3661,6 +3661,7 @@ public Action CheckItems(Handle timer, int userid)
 		SpawnWeapon(client, "tf_weapon_smg", 16, 1, 6, "149 ; 1.5 ; 15 ; 0.0 ; 1 ; 0.85");
 	}
 
+	// TODO: 이 구문 삭제
 	if(IsValidEntity(FindPlayerBack(client, 444)))  //Mantreads
 	{
 		TF2Attrib_SetByDefIndex(client, 58, 1.5);  //+50% increased push force
@@ -8910,6 +8911,7 @@ public int Native_GetClientGlow(Handle plugin, int numParams)
 	return view_as<int>(GetClientGlow(GetNativeCell(1)));
 }
 
+// FIXME: 구조가 명확하지 않음
 void SetClientGlow(int client, float time1, float time2=-1.0)
 {
 	if(IsValidClient(client))
