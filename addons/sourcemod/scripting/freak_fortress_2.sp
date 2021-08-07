@@ -4389,6 +4389,10 @@ public Action ClientTimer(Handle timer)
 
 			if(!IsPlayerAlive(client)) continue;
 
+			// Additional HUD Initialize
+			PlayerHudQueue[client].SetName("Player Additional");
+			SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
+
 			// Movement speed limit
 			float maxspeed = GetEntPropFloat(client, Prop_Send, "m_flMaxspeed");
 			if(maxspeed > 500.0 && !TF2_IsPlayerInCondition(client, TFCond_Charging) && !TF2_IsPlayerInCondition(client, TFCond_SpeedBuffAlly))
@@ -4405,15 +4409,14 @@ public Action ClientTimer(Handle timer)
 			int index=(validwep ? GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") : -1);
 			if(playerclass==TFClass_Medic)
 			{
-				PlayerHudQueue[client].SetName("Player Medic");
+				int medigun=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
 				if(weapon==GetPlayerWeaponSlot(client, TFWeaponSlot_Primary))
 				{
-					int medigun=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
 					char mediclassname[64];
 					if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 					{
 						int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
-						Format(hudText, sizeof(hudText), "%T: %i", "Ubercharge", client, charge);
+						Format(hudText, sizeof(hudText), "%T: %i%%", "Ubercharge", client, charge);
 						hudDisplay=FF2HudDisplay.CreateDisplay("Ubercharge", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
@@ -4448,13 +4451,20 @@ public Action ClientTimer(Handle timer)
 						}
 					}
 					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allRageDamage/100.0)), allRageDamage);
-					hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
-					PlayerHudQueue[client].AddHud(hudDisplay, client);
-				}
+						hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
+						PlayerHudQueue[client].AddHud(hudDisplay, client);
+					}
+					if(meleeIndex == 173
+						&& (IsValidEntity(medigun) && GetEntProp(medigun, Prop_Send, "m_bChargeRelease") == 0))
+					{
+						int decapitations=GetEntProp(client, Prop_Send, "m_iDecapitations");
+						float minCharge=0.1*(decapitations > 6 ? 6 : decapitations),
+							currentCharge=GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel");
 
-				SetHudTextParams(-1.0, 0.83, 0.35, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
-				PlayerHudQueue[client].ShowSyncHudQueueText(client, jumpHUD);
-				PlayerHudQueue[client].DeleteAllDisplay();
+						if(minCharge > currentCharge)
+							SetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel", minCharge);
+					}
+				}
 			}
 			else if(playerclass==TFClass_Soldier)
 			{
@@ -4477,15 +4487,14 @@ public Action ClientTimer(Handle timer)
 				{
 					SetClientGlow(client, 3600.0);
 				}
-				continue;
 			}
 			else if(RedAlivePlayers==2 && !TF2_IsPlayerInCondition(client, TFCond_Cloaked))
 			{
 				TF2_AddCondition(client, TFCond_Buffed, 0.3);
 			}
-
-			if(bMedieval)
+			else if(bMedieval)
 			{
+				PlayerHudQueue[client].DeleteAllDisplay();
 				continue;
 			}
 
@@ -4545,9 +4554,7 @@ public Action ClientTimer(Handle timer)
 						char mediclassname[64];
 						if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 						{
-							SetHudTextParams(-1.0, 0.83, 0.15, 255, 255, 255, 255, 0, 0.2, 0.0, 0.1);
 							int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
-							FF2_ShowHudText(client, -1, "%T: %i", "Ubercharge", client, charge);
 							if(charge==100 && !(FF2Flags[client] & FF2FLAG_UBERREADY))
 							{
 								FakeClientCommand(client, "voicemenu 1 7");  //"I am fully charged!"
@@ -4609,6 +4616,9 @@ public Action ClientTimer(Handle timer)
 					}
 				}
 			}
+
+			PlayerHudQueue[client].ShowSyncHudQueueText(client, jumpHUD);
+			PlayerHudQueue[client].DeleteAllDisplay();
 
 			if(addthecrit)
 			{
