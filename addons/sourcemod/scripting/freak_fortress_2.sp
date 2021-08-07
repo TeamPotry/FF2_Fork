@@ -7473,6 +7473,8 @@ public Action AdvanceMenu(int client, int args)
 		panel.DrawItem(text, ITEMDRAW_DISABLED); // TODO: For Now.
 		Format(text, sizeof(text), "%t", "Hud Setting");
 		panel.DrawItem(text);
+		Format(text, sizeof(text), "%t", "Human Team Boss Setting Title");
+		panel.DrawItem(text);
 		Format(text, sizeof(text), "%t", "Exit Menu");
 		panel.DrawItem(text);
 		panel.Send(client, Handler_AdvanceMenuPanel, MENU_TIME_FOREVER);
@@ -7495,6 +7497,10 @@ public int Handler_AdvanceMenuPanel(Menu menu, MenuAction action, int client, in
 			case 2:
 			{
 				HudMenu(client, 0);
+			}
+			case 3:
+			{
+				HumanTeamBossMenu(client, 0);
 			}
 			default:
 			{
@@ -7641,6 +7647,47 @@ public int HudData_Handler(Menu menu, MenuAction action, int client, int selecti
 
 		CPrintToChat(client, "{olive}[FF2]{default} %s: %s", infoBuf, statusString);
 		HudMenu(client, 0);
+	}
+}
+
+public Action HumanTeamBossMenu(int client, int args)
+{
+	if(Enabled2 && IsValidClient(client, false))
+	{
+		char text[512];
+		Menu menu=new Menu(HumanTeamBossMenu_Handler);
+
+		SetGlobalTransTarget(client);
+		int currentSetting = GetSettingData(client, "human_team_boss_play", KvData_Int);
+
+		Format(text, sizeof(text), "%t", "Advance Menu Title");
+		Format(text, sizeof(text), "%s > %t\n", text, "Human Team Boss Setting Title");
+		Format(text, sizeof(text), "%s\n", text, "Human Team Boss Setting Description");
+		menu.SetTitle(text);
+
+		Format(text, sizeof(text), "ON");
+		if(currentSetting == 0)
+			Format(text, sizeof(text), "%s%t", text, "Menu Already Choose");
+		menu.AddItem("ON", text, currentSetting == 0 ? ITEMDRAW_DISABLED : 0);
+
+		Format(text, sizeof(text), "OFF");
+		if(currentSetting == 1)
+			Format(text, sizeof(text), "%s%t", text, "Menu Already Choose");
+		menu.AddItem("OFF", text, currentSetting == 1 ? ITEMDRAW_DISABLED : 0);
+
+		menu.ExitButton=true;
+		menu.Display(client, MENU_TIME_FOREVER);
+	}
+}
+
+public int HumanTeamBossMenu_Handler(Menu menu, MenuAction action, int client, int selection)
+{
+	if(action==MenuAction_Select)
+	{
+		// 0: ON, 1: OFF
+		SetSettingData(client, "human_team_boss_play", selection, KvData_Int);
+		CPrintToChat(client, "{olive}[FF2]{default} %t: %s",
+			"Human Team Boss Setting Title", selection > 0 ? "OFF" : "ON");
 	}
 }
 
