@@ -502,7 +502,7 @@ Charge_RocketSpawn(const String:ability_name[],index,slot,action)
 			}
 			else
 			{
-				ResetBossCharge(boss, slot);
+				ResetBossCharge(index, slot);
 			}
 		}
 	}
