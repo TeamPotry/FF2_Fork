@@ -26,6 +26,19 @@
 #define HUDS_CONFIG "hud_setting.cfg"
 #define CHANGELOG "changelog.txt"
 
+TFTeam OtherTeam=TFTeam_Red;
+TFTeam BossTeam=TFTeam_Blue;
+int playing;
+int healthcheckused;
+int RedAlivePlayers;
+int BlueAlivePlayers;
+int RoundCount;
+int character[MAXPLAYERS+1];
+
+ArrayList bossesArray;
+ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
+ArrayList subpluginArray;
+
 int FF2CharSet;
 int validCharsets[64];
 char FF2CharSetString[42];
@@ -43,6 +56,49 @@ int ChangeLogLastTime;
 int Boss[MAXPLAYERS+1];
 
 FF2HudQueue PlayerHudQueue[MAXPLAYERS+1] = null;
+
+enum FF2RoundState
+{
+	FF2RoundState_Loading=-1,
+	FF2RoundState_Setup,
+	FF2RoundState_RoundRunning,
+	FF2RoundState_RoundEnd,
+}
+
+enum FF2WeaponSpecials
+{
+	FF2WeaponSpecial_PreventDamage,
+	FF2WeaponSpecial_RemoveOnDamage,
+	FF2WeaponSpecial_JarateOnChargedHit,
+}
+
+enum FF2WeaponModType
+{
+	FF2WeaponMod_AddAttrib,
+	FF2WeaponMod_RemoveAttrib,
+	FF2WeaponMod_Replace,
+	FF2WeaponMod_OnHit,
+	FF2WeaponMod_OnTakeDamage,
+}
+
+/*char WeaponSpecials[][]=
+{
+	"drop health pack on kill",
+	"glow on scoped hit",
+	"prevent damage",
+	"remove on damage",
+	"drain boost when full"
+};*/
+
+enum Operators
+{
+	Operator_None=0,
+	Operator_Add,
+	Operator_Subtract,
+	Operator_Multiply,
+	Operator_Divide,
+	Operator_Exponent,
+};
 
 static const char g_QueryColumn[][] = {
 	"steam_id",

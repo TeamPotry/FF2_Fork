@@ -56,14 +56,6 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 bool steamtools;
 #endif
 
-TFTeam OtherTeam=TFTeam_Red;
-TFTeam BossTeam=TFTeam_Blue;
-int playing;
-int healthcheckused;
-int RedAlivePlayers;
-int BlueAlivePlayers;
-int RoundCount;
-int character[MAXPLAYERS+1];
 int Incoming[MAXPLAYERS+1];
 
 int Damage[MAXPLAYERS+1];
@@ -71,11 +63,7 @@ int Assist[MAXPLAYERS+1];
 int uberTarget[MAXPLAYERS+1];
 int shield[MAXPLAYERS+1];
 int detonations[MAXPLAYERS+1];
-bool playBGM[MAXPLAYERS+1]=true;
 int queuePoints[MAXPLAYERS+1];
-int muteSound[MAXPLAYERS+1];
-
-char currentBGM[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
 int FF2Flags[MAXPLAYERS+1];
 
@@ -124,10 +112,6 @@ ConVar cvarUpdater;
 ConVar cvarDebug;
 ConVar cvarPreroundBossDisconnect;
 ConVar cvarTimerType;
-
-ArrayList bossesArray;
-ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
-ArrayList subpluginArray;
 
 Handle FF2Cookie_QueuePoints;
 
@@ -186,52 +170,8 @@ int changeGamemode;
 
 //Handle kvWeaponSpecials;
 
-enum FF2RoundState
-{
-	FF2RoundState_Loading=-1,
-	FF2RoundState_Setup,
-	FF2RoundState_RoundRunning,
-	FF2RoundState_RoundEnd,
-}
-
-enum FF2WeaponSpecials
-{
-	FF2WeaponSpecial_PreventDamage,
-	FF2WeaponSpecial_RemoveOnDamage,
-	FF2WeaponSpecial_JarateOnChargedHit,
-}
-
-enum FF2WeaponModType
-{
-	FF2WeaponMod_AddAttrib,
-	FF2WeaponMod_RemoveAttrib,
-	FF2WeaponMod_Replace,
-	FF2WeaponMod_OnHit,
-	FF2WeaponMod_OnTakeDamage,
-}
-
-/*char WeaponSpecials[][]=
-{
-	"drop health pack on kill",
-	"glow on scoped hit",
-	"prevent damage",
-	"remove on damage",
-	"drain boost when full"
-};*/
-
-enum Operators
-{
-	Operator_None=0,
-	Operator_Add,
-	Operator_Subtract,
-	Operator_Multiply,
-	Operator_Divide,
-	Operator_Exponent,
-};
-
 Handle PreAbility;
 Handle OnAbility;
-Handle OnMusic;
 Handle OnTriggerHurt;
 Handle OnBossSelected;
 Handle OnAddQueuePoints;
