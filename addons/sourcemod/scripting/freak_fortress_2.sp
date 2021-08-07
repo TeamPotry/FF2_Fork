@@ -4465,8 +4465,8 @@ public Action ClientTimer(Handle timer)
 								allRageDamage += BossRageDamage[bossIndex];
 								allCharge += BossCharge[bossIndex][0];
 							}
-					}
-					Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allRageDamage/100.0)), allRageDamage);
+						}
+						Format(hudText, sizeof(hudText), "%t (%i / %i)", "Current Boss Rage", RoundFloat(allCharge), RoundFloat(allCharge*(allRageDamage/100.0)), allRageDamage);
 						hudDisplay=FF2HudDisplay.CreateDisplay("Current Boss Rage", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 					}
@@ -5324,14 +5324,22 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 	int client = GetClientOfUserId(event.GetInt("patient"));
 	int healer = GetClientOfUserId(event.GetInt("healer"));
 	int healed = event.GetInt("amount");
+	int boss = GetBossIndex(client);
 
 	if(CheckRoundState() != FF2RoundState_RoundRunning)
 		return Plugin_Continue;
 
-	if(IsBoss(healer)) // TODO: 자가치유 가능 여부 설정
+	// TODO: 자가치유 가능 여부 설정
+	if(TF2_GetClientTeam(client) != BossTeam && IsBoss(client))
 	{
-		// BossHealth[GetBossIndex(healer)] += healed;
-		// UpdateHealthBar();
+		BossHealth[boss] += RoundFloat(healed * 0.1);
+
+		int maxHealth = BossHealthMax[boss] * BossLivesMax[boss];
+		if(BossHealth[boss] > maxHealth)
+		{
+			BossHealth[boss] = maxHealth;
+		}
+		UpdateHealthBar();
 	}
 	else if(client != healer)
 	{
