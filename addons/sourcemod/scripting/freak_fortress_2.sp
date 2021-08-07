@@ -4855,21 +4855,25 @@ public Action Timer_BotRage(Handle timer, int bot)
 	}
 }
 
-stock int OnlyScoutsLeft()
+public int ScoutsLeft(int& others)
 {
-	int scouts;
+	int scouts=0;
+	float velocity[3];
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client) && IsPlayerAlive(client) && TF2_GetClientTeam(client)!=BossTeam)
 		{
-			if(TF2_GetPlayerClass(client)!=TFClass_Scout)
-			{
-				return 0;
-			}
-			else
+			if(TF2_GetPlayerClass(client) == TFClass_Scout)
 			{
 				scouts++;
+				continue;
 			}
+
+			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+			if(GetVectorLength(velocity) >= 400.0)
+				scouts++;
+			else
+				others++;
 		}
 	}
 	return scouts;
