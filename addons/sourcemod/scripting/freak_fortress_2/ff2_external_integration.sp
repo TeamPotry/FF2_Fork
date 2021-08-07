@@ -38,7 +38,7 @@ public Plugin myinfo=
 public void OnPluginStart()
 {
 	cvarGoomba=CreateConVar("ff2_goomba", "1", "Allow FF2 to integrate with Goomba Stomp?", _, true, 0.0, true, 1.0);
-	cvarGoombaDamage=CreateConVar("ff2_goomba_damage", "0.05", "How much the Goomba damage should be multiplied by", _, true, 0.0, true, 1.0);
+	cvarGoombaDamage=CreateConVar("ff2_goomba_damage", "0.02", "How much the Goomba damage should be multiplied by", _, true, 0.0, true, 1.0);
 	cvarGoombaRebound=CreateConVar("ff2_goomba_rebound", "300.0", "How high players should rebound after a Goomba stomp", _, true, 0.0);
 	cvarRTD=CreateConVar("ff2_rtd", "1", "Allow FF2 to integrate with RTD?", _, true, 0.0, true, 1.0);
 	cvarBossRTD=CreateConVar("ff2_boss_rtd", "0", "Allow the boss to use RTD?", _, true, 0.0, true, 1.0);
@@ -69,26 +69,43 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			return Plugin_Handled;
 		}
 		*/
-		if(FF2_GetBossTeam() == TF2_GetClientTeam(attacker) && FF2_GetBossIndex(attacker) == -1)
+		int boss = FF2_GetBossIndex(attacker);
+		if(boss != -1 && FF2_GetBossIndex(victim) == -1)
 		{
-			return Plugin_Handled;
+			float velocity[3];
+			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", velocity);
+
+			damageBonus = 0.0;
+			damageMultiplier =  GetVectorLength(velocity) / 800.0;
+			return Plugin_Changed;
 		}
-		else if(FF2_GetBossIndex(victim) != -1)
+
+		if(FF2_GetBossIndex(victim) != -1)
 		{
 			damageMultiplier=cvarGoombaDamage.FloatValue;
 			JumpPower=cvarGoombaRebound.FloatValue;
-			PrintCenterText(victim, "%t", "Boss Got Goomba Stomped");
-			PrintCenterText(attacker, "%t", "Human Goomba Stomped");
 
-			int boss = FF2_GetBossIndex(victim);
-			int adddmg = RoundFloat(FindConVar("goomba_dmg_add").FloatValue);
-			if(boss != -1)
-				FF2_SpecialAttackToBoss(attacker, boss, _, "goomba", ((FF2_GetBossHealth(boss) - FF2_GetBossMaxHealth(boss) * (FF2_GetBossLives(boss) - 1)) * damageMultiplier) + adddmg);
 			return Plugin_Changed;
 		}
 	}
 	return Plugin_Continue;
 }
+
+public int OnStompPost(int attacker, int victim, float damageMultiplier, float damageBonus, float jumpPower)
+{
+	int boss = FF2_GetBossIndex(victim);
+
+	if(boss != -1)
+	{
+		PrintCenterText(victim, "%t", "Boss Got Goomba Stomped");
+		PrintCenterText(attacker, "%t", "Human Goomba Stomped");
+
+		int adddmg = RoundFloat(FindConVar("goomba_dmg_add").FloatValue);
+		if(boss != -1)
+			FF2_SpecialAttackToBoss(attacker, boss, _, "goomba", ((FF2_GetBossHealth(boss) - FF2_GetBossMaxHealth(boss) * (FF2_GetBossLives(boss) - 1)) * damageMultiplier) + adddmg);
+	}
+}
+
 
 public void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[] name, float damage)
 {
