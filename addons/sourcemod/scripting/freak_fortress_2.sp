@@ -6063,8 +6063,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					char sound[PLATFORM_MAX_PATH];
 					if(FindSound("stabbed", sound, sizeof(sound), boss))
 					{
-						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, client);
-						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, client);
+						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
+						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
 					}
 
 					if(Stabbed[boss]<3)
