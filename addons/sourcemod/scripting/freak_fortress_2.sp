@@ -1466,6 +1466,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		BossInfoTimer[boss][1]=null;
 		if(Boss[boss])
 		{
+			AssignTeam(Boss[boss], BossTeam);
 			CreateTimer(0.3, MakeBoss, boss, TIMER_FLAG_NO_MAPCHANGE);
 			BossInfoTimer[boss][0]=CreateTimer(30.2, BossInfoTimer_Begin, boss, TIMER_FLAG_NO_MAPCHANGE);
 		}
