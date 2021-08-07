@@ -2650,9 +2650,9 @@ public Action MakeBoss(Handle timer, int boss)
 	}
 
 	CreateTimer(0.2, MakeModelTimer, boss, TIMER_FLAG_NO_MAPCHANGE);
-	if(!IsFakeClient(client) && !IsVoteInProgress() && GetClientClassInfoCookie(client))
+	if(!IsFakeClient(client) && !IsVoteInProgress() && GetClientClassInfoCookie(client) != 1)
 	{
-		HelpPanelBoss(boss);
+		HelpPanelBoss(client, boss);
 	}
 
 	if(!IsPlayerAlive(client))
@@ -3553,9 +3553,13 @@ public Action MakeNotBoss(Handle timer, int userid)
 		return Plugin_Continue;
 	}
 
-	if(!IsFakeClient(client) && !IsVoteInProgress() && GetClientClassInfoCookie(client) && !(FF2Flags[client] & FF2FLAG_CLASSHELPED))
+	if(!IsFakeClient(client) && CheckRoundState()==FF2RoundState_Setup
+		&& !IsVoteInProgress() && !(FF2Flags[client] & FF2FLAG_CLASSHELPED))
 	{
-		HelpPanelClass(client);
+		if(!GetClientClassInfoCookie(client))
+			HelpPanelClass(client);
+		else if(GetClientClassInfoCookie(client) == 2)
+			HelpPanelBoss(client, GetBossIndex(Boss[0]));
 	}
 
 	SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);  //This really shouldn't be needed but I've been noticing players who still have glow
@@ -7672,6 +7676,7 @@ public Action HelpPanel3(int client)
 	panel.SetTitle("FF2 병과 정보를..");
 	panel.DrawItem("ON");
 	panel.DrawItem("OFF");
+	panel.DrawItem("ON: 이번 라운드 보스 설명");
 	panel.Send(client, ClassInfoTogglePanelH, MENU_TIME_FOREVER);
 	delete panel;
 	return Plugin_Handled;
@@ -7712,7 +7717,7 @@ public Action HelpPanelClass(int client)
 	int boss=GetBossIndex(client);
 	if(boss!=-1)
 	{
-		HelpPanelBoss(boss);
+		HelpPanelBoss(client, boss);
 		return Plugin_Continue;
 	}
 
@@ -7785,7 +7790,7 @@ public Action HelpPanelClass(int client)
 	return Plugin_Continue;
 }
 
-void HelpPanelBoss(int boss)
+void HelpPanelBoss(int client, int boss)
 {
 	if(!IsValidClient(Boss[boss]))
 	{
@@ -7797,7 +7802,7 @@ void HelpPanelBoss(int boss)
 	if(kv.JumpToKey("description"))
 	{
 		char text[512], language[8];
-		GetLanguageInfo(GetClientLanguage(Boss[boss]), language, sizeof(language));
+		GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
 		//kv.SetEscapeSequences(true);  //Not working
 		kv.GetString(language, text, sizeof(text));
 		if(!text[0])
@@ -7814,7 +7819,7 @@ void HelpPanelBoss(int boss)
 		Panel panel=CreatePanel();
 		panel.SetTitle(text);
 		panel.DrawItem("Exit");
-		panel.Send(Boss[boss], HintPanelH, 20);
+		panel.Send(client, HintPanelH, 20);
 		delete panel;
 	}
 }
