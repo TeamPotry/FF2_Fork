@@ -3030,7 +3030,16 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 40, 1146:  //Backburner, Festive Backburner
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "165 ; 1.0");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "165 ; 1.0 ; 255 ; 2.0 ; 255; 0.5");
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
+		case 215:  //The Degreaser
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "255 ; 2.0 ; 255; 0.5");
 			if(itemOverride!=null)
 			{
 				item=itemOverride;
@@ -3138,6 +3147,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+/*
 		case 133, 444:  // Gunboats, Mantreads
 		{
 			Handle itemOverride;
@@ -3151,6 +3161,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+*/
 		case 648:  //Wrap Assassin
 		{
 			Handle itemOverride=PrepareItemHandle(item, _, _, "279 ; 2.0");
@@ -3216,7 +3227,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 142: // The Gunslinger
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "6 ; 0.8 ; 140 ; 125.0");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "6 ; 0.8 ; 140 ; 50.0");
 			// 6: fire speed
 			// 140: max health
 			if(itemOverride!=null)
@@ -3225,9 +3236,22 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+/*
 		case 527: // The Widowmaker
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "6 ; 0.8 ; 106 ; 0.6");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "106 ; 0.8");
+			// 6: fire speed
+			// 106: accurate
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
+*/
+		case 594: // The Phlogistinator
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1 ; 356 ; 1.0");
 			// 6: fire speed
 			// 106: accurate
 			if(itemOverride!=null)
@@ -3245,6 +3269,17 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			//871: falling_impact_radius_stun
 			//872: thermal_thruster_air_launch
 			//96: Reload time increased
+
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
+	if(!StrContains(classname, "tf_weapon_jar") && !StrEqual(classname, "tf_weapon_jar_gas"))  // exclude gas passer
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "313 ; 0.1", false);
 
 		if(itemOverride!=null)
 		{
@@ -3275,10 +3310,23 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 	}
 
+	if(TF2_GetPlayerClass(client)==TFClass_Heavy && !StrContains(classname, "tf_weapon_shotgun", false))
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "741 ; 50.0");
+		//741: On Hit: Gain up to +%1$s health per attack
+
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
 	if(!StrContains(classname, "tf_weapon_pda_engineer_build"))  // Construction PDA
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 3.00", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 4.00 ; 276 ; 1.0", false);
 			//345: engy dispenser radius increased
+			//276: bidirectional_teleport
 
 		if(itemOverride!=null)
 		{
@@ -3299,7 +3347,8 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
-	else if(!StrContains(classname, "tf_weapon_medigun"))  //Mediguns
+
+	if(!StrContains(classname, "tf_weapon_medigun"))  //Mediguns
 	{
 		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.75 ; 11 ; 1.5 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 4 ; 547 ; 0.75", false);
 			//10: +75% faster charge rate
@@ -3314,6 +3363,29 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
+
+	if(!StrContains(classname, "tf_weapon_flamethrower"))
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1 ; 255 ; 2.0 ; 255; 0.5", false);
+		// 255: airblast push force
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
+	if(!StrContains(classname, "tf_weapon_rocketlauncher_fireball"))
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "856 ; 1 ; 801 ; 0.8 ; 37 ; 0.2 ; 2062 ; 0.25 ; 2065 ; 1 ; 2063 ; 1 ; 255 ; 2.0 ; 255; 0.5", false);
+		// 256: airblast_refire_time
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
 	return Plugin_Continue;
 }
 
@@ -4413,10 +4485,9 @@ public Action ClientTimer(Handle timer)
 			}
 
 			cond=TFCond_HalloweenCritCandy;
-			if(TF2_IsPlayerInCondition(client, TFCond_CritCola) && (playerclass==TFClass_Scout || playerclass==TFClass_Heavy))
+			if(TF2_IsPlayerInCondition(client, TFCond_CritCola) && (playerclass==TFClass_Scout /*|| playerclass==TFClass_Heavy*/))
 			{
 				TF2_AddCondition(client, cond, 0.3);
-				continue;
 			}
 
 			int healer=-1;
@@ -4445,10 +4516,13 @@ public Action ClientTimer(Handle timer)
 			         !StrContains(classname, "tf_weapon_handgun_scout_secondary"))
 			{
 				addthecrit=true;
+				cond=TFCond_Buffed;
+				/*
 				if(playerclass==TFClass_Scout && cond==TFCond_HalloweenCritCandy)
 				{
 					cond=TFCond_Buffed;
 				}
+				*/
 			}
 
 			if(index==16 && IsValidEntity(FindPlayerBack(client, 642)))  //SMG, Cozy Camper
@@ -4789,18 +4863,28 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 			{
 				int boss = GetBossIndex(client);
 				AddBossCharge(boss, 0, -5.0);
-				{
-					BossCharge[boss][0]-=5.0;
-					if(BossCharge[boss][0]<0.0)
-					{
-						BossCharge[boss][0]=0.0;
-					}
-				}
 			}
 		}
-		else if(!IsBoss(client) && condition==TFCond_BlastJumping)
+		else if(!IsBoss(client))
 		{
-			FF2Flags[client]|=FF2FLAG_BLAST_JUMPING;
+			switch(condition)
+			{
+				case TFCond_BlastJumping:
+				{
+					FF2Flags[client]|=FF2FLAG_BLAST_JUMPING;
+				}
+				case TFCond_RestrictToMelee:
+				{
+					TF2_RemoveCondition(client, TFCond_RestrictToMelee);
+					// TF2_AddCondition(client, TFCond_SpeedBuffAlly, 12.0);
+				}
+				case TFCond_Bonked:
+				{
+					TF2_RemoveCondition(client, TFCond_Bonked);
+					TF2_AddCondition(client, TFCond_HalloweenQuickHeal, 12.0);
+				}
+			}
+
 		}
 	}
 }
@@ -5603,21 +5687,29 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							}
 						}
 
-						if(GetVectorDistance(position, victimPosition)>1800.0)
-							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-
-						if(!(damagetype & DMG_CRIT))
+						if(!(damagetype & DMG_CRIT) && damagecustom != TF_CUSTOM_HEADSHOT
+							|| TF2_IsPlayerInCondition(attacker, TFCond_Buffed))
 						{
-							if(damagecustom != TF_CUSTOM_HEADSHOT)
-								damage*=2.4;
+							float distance = GetVectorDistance(position, victimPosition);
+							if(distance>1800.0)
+								damagetype|=DMG_PREVENT_PHYSICS_FORCE;
+
+							damage*=TF2_IsPlayerInCondition(attacker, TFCond_Buffed) ? 1.0 : 1.6;
 						}
+
 
 						return Plugin_Changed;
 					}
 				}
 
+				if(TF2_GetPlayerClass(attacker) == TFClass_Heavy && StrContains(classname, "tf_weapon_shotgun")!=-1)
+				{
+					TF2Util_TakeHealth(attacker, 30.0);
+				}
+
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
 				{
+/*
 					int sentry=-1, targettingCount=0, closestSentry, currentWeapon = GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon");
 					float distance, closestdistanse=800.0, sentryPos[3];
 
@@ -5638,7 +5730,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 					if(targettingCount > 1 && closestSentry != inflictor)
 						damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-
+*/
+					damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 					return Plugin_Changed;
 				}
 
@@ -5658,7 +5751,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							return Plugin_Changed;
 						}
 					}
-					case 132, 266, 482, 1082:  //Eyelander, HHHH, Nessie's Nine Iron, Festive Eyelander
+					case 132, 266, 482, 1082:  //Eyelander, HHHH, Nessie's Nine Iron, Festive Eyelander, Vita-Saw(?)
 					{
 						IncrementHeadCount(attacker);
 					}
@@ -5776,6 +5869,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
 						{
 							damage=(Pow(float(BossHealthMax[boss]), 0.34074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
+							if(damage * 3.0 < 300.0)
+								damage = 100.0; // x3
+
 							damagetype|=DMG_CRIT;
 
 							if(SpecialAttackToBoss(attacker, boss, weapon, "market_garden", damage) == Plugin_Handled)
@@ -5875,6 +5971,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/160);
+					if(damage * 3.0 < 600.0)
+						damage = 200.0; // x3
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
 
@@ -6182,7 +6280,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			{
 				switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 				{
-					case 588:
+					case 442, 588: // The Righteous Bison, The Pomson 6000
 					{
 						rage = false;
 					}
