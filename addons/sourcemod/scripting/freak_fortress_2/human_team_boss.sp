@@ -13,63 +13,71 @@ public Plugin myinfo=
 
 public void OnPluginStart()
 {
-	HookEvent("teamplay_round_start", OnRoundStart);
+	HookEvent("arena_round_start", OnRoundStart);
+	HookEvent("teamplay_round_active", OnRoundStart); // for non-arena maps
 
 	LoadTranslations("freak_fortress_2.phrases");
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-	CreateTimer(10.2, RoundStart, _, TIMER_FLAG_NO_MAPCHANGE);
-}
-
-public Action RoundStart(Handle timer)
-{
 	if(!FF2_IsFF2Enabled()) return Plugin_Continue;
 
 	int bossCount;
 	ArrayList clientArray = GetAlivePlayers(false);
 	ArrayList bossArray = GetBossPlayers();
+	ArrayList bossCharArray = GetBossArray();
 
-	if((bossCount = (clientArray.Length + bossArray.Length) / 6) > 0)
+	if((bossCount = (clientArray.Length / 8)) > 0)
 	{
-		int random, index, bossindex;
-		int healthPoint = 600 + (300 * bossCount);
+		int random, index, bossindex, randomBossIndex;
 		char bossName[64];
 		for(int loop = 0; loop < bossCount; loop++)
 		{
-			SetRandomSeed(GetTime()+loop);
-
-			index = GetRandomInt(0, clientArray.Length-1);
-			random = clientArray.Get(index);
-			bossindex = GetRandomBoss();
-
-			if(bossindex == -1)
+			int clientCount = clientArray.Length, bossCharCount = bossCharArray.Length;
+			if(clientCount == 0 || bossCharCount == 0)
 				break;
 
-			FF2_MakePlayerToBoss(random, bossindex);
+			SetRandomSeed(GetTime() + loop);
 
+			index = GetRandomInt(0, clientCount - 1);
+			random = clientArray.Get(index);
+
+			if(FF2_GetQueuePoints(random) < 0 || FF2_GetSettingData(random, "human_team_boss_play", KvData_Int) == 1)
+			{	// 제외
+				clientArray.Erase(index);
+				continue;
+			}
+
+			randomBossIndex = GetRandomInt(0, bossCharCount - 1);
+			bossindex = bossCharArray.Get(randomBossIndex);
+
+			FF2_MakePlayerToBoss(random, bossindex);
 			bossindex = FF2_GetBossIndex(random);
 
-			FF2_SetBossMaxHealth(bossindex, healthPoint);
-			FF2_SetBossHealth(bossindex, healthPoint);
+			FF2_SetBossMaxHealth(bossindex, 1000);
+			FF2_SetBossHealth(bossindex, 1000);
 			FF2_SetBossLives(bossindex, 1);
-			FF2_SetBossRageDamage(bossindex, 550 + (150 * bossCount));
+			FF2_SetBossMaxLives(bossindex, 1);
+			FF2_SetBossRageDamage(bossindex, 500);
 
-			for(int cloop=0; cloop < clientArray.Length; cloop++)
+			for(int client = 1; client <= MaxClients; client++)
 			{
-				// FIXME: 대기열 포인트가 0 미만일 경우, 아군이여도 누그 보스인지 메세지 출력이 안됨.
-				int client = clientArray.Get(cloop);
+				if(!IsClientInGame(client) || TF2_GetClientTeam(client) == FF2_GetBossTeam())
+					continue;
+
 				SetGlobalTransTarget(client);
 				FF2_GetBossName(bossindex, bossName, sizeof(bossName), client);
 				CPrintToChat(client, "{olive}[FF2]{default} %t", "Human Hero", random, bossName);
 			}
 			clientArray.Erase(index);
+			bossCharArray.Erase(randomBossIndex);
 		}
 	}
 
 	delete clientArray;
 	delete bossArray;
+	delete bossCharArray;
 	return Plugin_Continue;
 }
 
