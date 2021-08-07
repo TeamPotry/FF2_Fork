@@ -1,0 +1,40 @@
+"Phrases"
+{
+	"charge_status"
+	{
+		"#format" "{1:i}"
+		"ko"    "지옥불 충전: {1}%"
+	}
+	"charge_cooldown"
+	{
+		"#format" "{1:i}"
+		"ko"    "지옥불 쿨타임: {1}초"
+	}
+	"charge_ready"
+	{
+		"ko"    "지옥불: 재장전 버튼으로 충전하고 사용하세요!"
+	}
+	"rage_available_in_ground"
+	{
+		"ko"    "이 분노는 땅에서만 가능합니다."
+	}
+	"reincarnation_cooldown"
+	{
+		"#format" "{1:i}"
+		"ko"	"라이프를 다시 얻기까지 {1}초 남음"
+	}
+	"reincarnation_ready"
+	{
+		"ko"	"부활: 준비되었습니다!"
+	}
+	"reincarnation_info"
+	{
+		"#format" "{1:i},{2:s}"
+		"ko"	"{2}의 라이프를 다시 얻기까지 {1}초 남았습니다. 서둘러 처치하세요!"
+	}
+	"reincarnation_invulnerable"
+	{
+		"#format" "{1:s}"
+		"ko"	"{1}(은)는 지금 무적입니다."
+	}
+}

@@ -1,0 +1,40 @@
+"Phrases"
+{
+	"charge_status"
+	{
+		"#format" "{1:i}"
+		"en"    "Hellfire Charge: {1}%"
+	}
+	"charge_cooldown"
+	{
+		"#format" "{1:i}"
+		"en"    "Hellfire Cooldown: {1} sec."
+	}
+	"charge_ready"
+	{
+		"en"    "Hellfire: Ready! Press Reload to charge!"		
+	}
+	"rage_available_in_ground"
+	{
+		"en"    "You can use this rage only on ground"
+	}
+	"reincarnation_cooldown"
+	{
+		"#format" "{1:i}"
+		"en"	"Reincarnation: {1} sec."
+	}
+	"reincarnation_ready"
+	{	
+		"en"	"Reincarnation: Ready!"
+	}
+	"reincarnation_info"
+	{	
+		"#format" "{1:i},{2:s}"
+		"en"	"Quickly! You have {1} seconds to kill {2} while he can not reincarnate again!"
+	}
+	"reincarnation_invulnerable"
+	{	
+		"#format" "{1:s}"
+		"en"	"{1} is invulnerable. It's no use to attack him now."
+	}	
+}
