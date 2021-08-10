@@ -3960,17 +3960,34 @@ public Action OnPostInventoryApplication(Event event, const char[] name, bool do
 void MakePlayerToBoss(int client, int characterIndex)
 {
 	int boss = client;
+
 	if(IsBoss(client))
 	{
 		boss=GetBossIndex(client);
 		Boss[boss]=0;
 		character[boss]=0;
 	}
-	Boss[boss]=client;
-	character[boss]=characterIndex;
 
-	MakeBoss(INVALID_HANDLE, boss);
-	// CreateTimer(0.2, MakeBoss, boss, TIMER_FLAG_NO_MAPCHANGE); // FIXME: 보스인 상태에서
+	if(characterIndex != -1)
+	{
+		Boss[boss]=client;
+		character[boss]=characterIndex;
+		MakeBoss(INVALID_HANDLE, boss);
+	}
+	else
+	{
+		float pos[3], angles[3], velocity[3];
+		GetEntPropVector(client, Prop_Data, "m_vecOrigin", pos);
+		GetClientEyeAngles(client, angles);
+		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+
+		if((GetEntityFlags(client) & FL_ONGROUND) > 0
+			&& GetEntProp(client, Prop_Send, "m_bDucked") > 0)
+			pos[2]-=20.0;
+
+		TF2_RespawnPlayer(client);
+		TeleportEntity(client, pos, angles, velocity);
+	}
 }
 
 public int Native_MakePlayerToBoss(Handle plugin, int numParams)
