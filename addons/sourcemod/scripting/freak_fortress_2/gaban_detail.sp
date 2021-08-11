@@ -9,10 +9,13 @@
 #include <tf2utils>
 #include <tf2wearables>
 #include <freak_fortress_2>
-#tryinclude <ff2_potry>
 
-#define PLUGIN_NAME "gaben detail"
-#define PLUGIN_VERSION "20210807"
+#tryinclude <ff2_potry>
+#if !defined _ff2_potry_included
+	#include <freak_fortress_2_subplugin>
+#endif
+
+#define PLUGIN_VERSION "20210809"
 
 public Plugin myinfo=
 {
@@ -23,7 +26,17 @@ public Plugin myinfo=
 };
 
 #define DISCOUNT_NAME		"discount"
-#define DISCOUNTMARK_PATH	"materials/potry/steam_sale/"
+
+#if defined _ff2_potry_included
+	#define DISCOUNTMARK_PATH	"materials/potry/steam_sale/"
+	#define PLUGIN_NAME 		"gaben detail"
+#else
+	#define DISCOUNTMARK_PATH	"materials/freak_fortress_2/steam_sale/"
+	#define PLUGIN_NAME 		this_plugin_name
+
+	#define FF2_GetFF2Flags		FF2_GetFF2flags
+	#define FF2_SetFF2Flags		FF2_SetFF2flags
+#endif
 
 #define CARD_THROW			"card throw"
 
@@ -42,7 +55,12 @@ float g_flCardLifeTime[MAX_EDICTS+1];
 float g_flLoadoutDisableTime[MAXPLAYERS+1];
 char g_strCurrentLoadoutSoundPath[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
-public void OnPluginStart()
+
+#if defined _ff2_potry_included
+	public void OnPluginStart()
+#else
+	public void OnPluginStart2()
+#endif
 {
 	HookEvent("arena_round_start", OnRoundStart);
 	HookEvent("teamplay_round_active", OnRoundStart); // for non-arena maps
@@ -51,13 +69,14 @@ public void OnPluginStart()
 
 	LoadTranslations("ff2_gabe.phrases");
 
-	FF2_RegisterSubplugin(PLUGIN_NAME);
-
 	for(int client = 1; client <= MaxClients; client++)
 	{
 		if(IsClientInGame(client))
 			OnClientPostAdminCheck(client);
 	}
+#if defined _ff2_potry_included
+	FF2_RegisterSubplugin(PLUGIN_NAME);
+#endif
 }
 
 public void OnMapStart()
@@ -108,15 +127,27 @@ public void OnProjectileSpawn(int entity)
 				}
 			}
 
-			char key[64];
-			float origin[3], angles[3];
-			float speed = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "speed", 2000.0);
+
+			float origin[3], angles[3], speed;
+
+#if defined _ff2_potry_included
+			speed = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "speed", 2000.0);
+#else
+			speed = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, CARD_THROW, 1, 2000.0);
+#endif
 
 			GetEntPropVector(entity, Prop_Data, "m_vecOrigin", origin);
 			GetClientEyeAngles(client, angles);
 
+			int count;
+#if defined _ff2_potry_included
+			char key[64];
 			Format(key, sizeof(key), "slot %d card count", currentSlot);
-			int count = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, key, 3);
+			count = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, key, 3);
+#else
+			count = FF2_GetAbilityArgument(boss, this_plugin_name, CARD_THROW, 5+(currentSlot*100), 3);
+#endif
+
 			RemoveEntity(entity);
 
 			CreateCard(client, origin, angles, speed, currentSlot, count);
@@ -127,13 +158,18 @@ public void OnProjectileSpawn(int entity)
 void CreateCard(int owner, float pos[3], float angles[3], float speed, int currentSlot = TFWeaponSlot_Primary, int count = 1)
 {
 	int boss = FF2_GetBossIndex(owner);
-	float velocity[3];
-	char modelPath[PLATFORM_MAX_PATH], key[64];
+	float velocity[3], degreeDiff;
+	char modelPath[PLATFORM_MAX_PATH];
 
+#if defined _ff2_potry_included
+	char key[64];
 	Format(key, sizeof(key), "slot %d degree diff", currentSlot);
-	float degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, key, 5.0);
-
+	degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, key, 5.0);
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, CARD_THROW, "model path", modelPath, sizeof(modelPath), "");
+#else
+	degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 4+(currentSlot*100), 5.0);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, CARD_THROW, 3, modelPath, sizeof(modelPath));
+#endif
 
 	for(int loop = 0; loop < count; loop++)
 	{
@@ -185,8 +221,16 @@ public Action OnTouchCard(int prop, int other)
 			if(GetClientTeam(owner) == GetClientTeam(other))
 				return Plugin_Handled;
 
-			int onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
-			float damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "damage", 10.0);
+			int onHitSale;
+			float damage;
+
+#if defined _ff2_potry_included
+			onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
+			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "damage", 10.0);
+#else
+			onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 1, 10);
+			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 2, 10.0);
+#endif
 
 			if(g_iDiscountValue[other] >= 100)
 				if(FF2_GetBossIndex(other) == -1)
@@ -232,7 +276,11 @@ public Action OnCardThink(Handle timer, int prop)
 	return Plugin_Continue;
 }
 
+#if defined _ff2_potry_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
+#else
+public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
+#endif
 {
 	if(StrEqual(abilityName, LOADOUT_DISABLE))
 	{
@@ -243,10 +291,16 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 void LoadoutDisable(int boss)
 {
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss)), currentSlot;
-	float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, LOADOUT_DISABLE, "duration", 20.0);
+	float duration;
 	char soundPath[PLATFORM_MAX_PATH];
 
-	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sound path", soundPath, PLATFORM_MAX_PATH, "");
+	#if defined _ff2_potry_included
+		duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, LOADOUT_DISABLE, "duration", 20.0);
+		FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sound path", soundPath, PLATFORM_MAX_PATH, "");
+	#else
+		duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, LOADOUT_DISABLE, 1, 20.0);
+		FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 2, soundPath, PLATFORM_MAX_PATH);
+	#endif
 
 	for(int target = 1; target <= MaxClients; target++)
 	{
@@ -462,7 +516,13 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 	if(boss == -1 || !FF2_HasAbility(boss, PLUGIN_NAME, DISCOUNT_NAME))	return Plugin_Continue;
 
 	bool insertKill = g_iDiscountValue[client] >= 100;
-	int addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
+	int addDiscount;
+
+#if defined _ff2_potry_included
+	addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
+#else
+	addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 1, 10);
+#endif
 
 	if(insertKill)
 	{
@@ -485,9 +545,13 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 void AddDiscount(int client, int attacker, int addValue)
 {
 	char soundPath[PLATFORM_MAX_PATH];
-
 	int boss = FF2_GetBossIndex(attacker);
+
+#if defined _ff2_potry_included
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale sound", soundPath, sizeof(soundPath), "");
+#else
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, DISCOUNT_NAME, 2, soundPath, sizeof(soundPath));
+#endif
 
 	if(g_iDiscountValue[client] >= 100)
 	{
