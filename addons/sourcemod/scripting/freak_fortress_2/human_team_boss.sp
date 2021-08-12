@@ -97,7 +97,7 @@ stock ArrayList GetBossArray(bool includeBlocked=false, bool includeAlive=false)
 	for (int loop = 0; (bossKV = FF2_GetCharacterKV(loop)) != null; loop++)
 	{
 		bossKV.Rewind();
-		if(includeBlocked || bossKV.GetNum("ban_boss_vs_boss", 0) > 0)
+		if(!includeBlocked && bossKV.GetNum("ban_boss_vs_boss", 0) > 0)
 			continue;
 
 		array.Push(loop);
