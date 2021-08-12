@@ -15,7 +15,7 @@
 	#include <freak_fortress_2_subplugin>
 #endif
 
-#define PLUGIN_VERSION "20210809"
+#define PLUGIN_VERSION "20210813"
 
 public Plugin myinfo=
 {
@@ -253,7 +253,7 @@ void HitCard(int owner, int target, int prop)
 			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "damage", 10.0);
 #else
 			onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 1, 10);
-	damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 2, 10.0);
+			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 2, 10.0);
 #endif
 
 	if(g_iDiscountValue[target] >= 100)
@@ -342,7 +342,7 @@ public Action OnCardThink(Handle timer, int prop)
 
 public bool TraceDontHitSelf(int entity, int contentsMask, any data)
 {
-	return (entity != 0 && entity != data);
+	return (IsValidClient(entity) && entity != data);
 }
 
 #if defined _ff2_potry_included
@@ -428,19 +428,7 @@ public void OnLoadoutThink(int client)
 
 		if(IsPlayerAlive(client))
 		{
-			float pos[3], angles[3], velocity[3];
-			// GetClientEyePosition(client, pos);
-			GetClientEyeAngles(client, angles);
-
-			GetEntPropVector(client, Prop_Data, "m_vecOrigin", pos);
-			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-
-			if((GetEntityFlags(client) & FL_ONGROUND) > 0
-				&& GetEntProp(client, Prop_Send, "m_bDucked") > 0)
-				pos[2] -= 20.0;
-
-			TF2_RespawnPlayer(client);
-			TeleportEntity(client, pos, angles, velocity);
+			TF2_RegeneratePlayer(client);
 		}
 
 		int flags = FF2_GetFF2Flags(client);
