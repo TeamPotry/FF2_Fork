@@ -170,7 +170,7 @@ void CreateCard(int owner, float pos[3], float angles[3], float speed, int curre
 #else
 	degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 4+(currentSlot*100), 5.0);
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, CARD_THROW, 3, modelPath, sizeof(modelPath));
-	touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 4, 0);
+	touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 6, 0);
 #endif
 
 	for(int loop = 0; loop < count; loop++)
@@ -209,7 +209,7 @@ void CreateCard(int owner, float pos[3], float angles[3], float speed, int curre
 		SDKHook(prop, SDKHook_StartTouch, OnTouchCard);
 		SDKHook(prop, SDKHook_Touch, OnTouchCard);
 
-		CreateTimer(0.1, OnCardThink, prop, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(0.02, OnCardThink, prop, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
@@ -222,7 +222,7 @@ public Action OnTouchCard(int prop, int other)
 #if defined _ff2_potry_included
 		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
 #else
-		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 4, 0);
+		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 6, 0);
 #endif
 		if(other == 0)
 		{
@@ -306,28 +306,34 @@ public Action OnCardThink(Handle timer, int prop)
 		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
 		cardRange = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "card range", 10.0);
 	#else
-		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 4, 0);
-		cardRange = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 5, 10.0);
+		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 6, 0);
+		cardRange = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 7, 10.0);
 	#endif
 	if(touchType != 1)		return Plugin_Continue;
 
-	float pos[3], endPos[3], vecMin[3], vacMax[3];
+	float pos[3], velocity[3], vecMin[3], vacMax[3], angles[3], endPos[3];
 	int ent;
 	GetEntPropVector(prop, Prop_Data, "m_vecOrigin", pos);
+	GetEntPropVector(prop, Prop_Data, "m_vecVelocity", velocity);
+
+	GetVectorAngles(velocity, angles);
+	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
+	ScaleVector(angles, cardRange * 2.0);
 
 	for(int loop = 0; loop < 3; loop++)
 	{
 		vecMin[loop] = cardRange * -0.5;
 		vacMax[loop] = cardRange * 0.5;
-		endPos[loop] = pos[loop];
 	}
-	endPos[2] += cardRange;
 
+	AddVectors(pos, angles, endPos);
 	TR_TraceHullFilter(pos, endPos, vecMin, vacMax, MASK_ALL, TraceDontHitSelf, owner);
-	if(!TR_DidHit() || !IsValidClient((ent = TR_GetEntityIndex())))
+
+	if(!TR_DidHit())
 		return Plugin_Continue;
 
-	if(GetClientTeam(owner) == GetClientTeam(ent))
+	ent = TR_GetEntityIndex();
+	if(ent == 0 || GetClientTeam(owner) == GetClientTeam(ent))
 		return Plugin_Continue;
 
 	HitCard(owner, ent, prop);
@@ -371,7 +377,7 @@ void LoadoutDisable(int boss)
 		currentSlot = TFWeaponSlot_Primary;
 		if(!IsClientInGame(target) || !IsPlayerAlive(target)
 			|| GetClientTeam(client) == GetClientTeam(target) || FF2_GetBossIndex(target) != -1
-				|| ((flags = FF2_GetFF2Flags(target)) & FF2FLAG_CLASSTIMERDISABLED) > 0)		continue;
+				|| (((flags = FF2_GetFF2Flags(target)) & FF2FLAG_CLASSTIMERDISABLED) > 0 && g_flLoadoutDisableTime[client] == 0.0))		continue;
 
 		FF2_SetFF2Flags(target, flags | FF2FLAG_CLASSTIMERDISABLED);
 		SetEntProp(target, Prop_Send, "m_bLoadoutUnavailable", 1);
