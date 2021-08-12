@@ -406,8 +406,8 @@ public void OnPluginStart()
 	timeleftHUD=CreateHudSynchronizer();
 	infoHUD=CreateHudSynchronizer();
 
-	bossesArray=CreateArray();
-	bossesArrayShadow=CreateArray();
+	bossesArray = new ArrayList();
+	bossesArrayShadow = new ArrayList();
 
 	char oldVersion[64];
 	cvarVersion.GetString(oldVersion, sizeof(oldVersion));
@@ -529,12 +529,14 @@ public void OnMapStart()
 		MusicTimer[client]=null;
 	}
 
-	for(int index; index<GetArraySize(bossesArray); index++)
+	Handle temp;
+	for(int index; index < bossesArray.Length; index++)
 	{
-		if(view_as<Handle>(GetArrayCell(bossesArray, index))!=null)
+		temp = view_as<Handle>(bossesArray.Get(index));
+		if(temp != null)
 		{
-			delete view_as<Handle>(GetArrayCell(bossesArray, index));
-			SetArrayCell(bossesArray, index, INVALID_HANDLE);
+			delete temp;
+			bossesArray.Set(index, INVALID_HANDLE);
 		}
 		if(view_as<Handle>(GetArrayCell(bossesArrayShadow, index))!=null)
 		{
@@ -543,7 +545,7 @@ public void OnMapStart()
 		}
 	}
 
-	ResizeArray(bossesArray, 0);
+	bossesArray.Clear();
 	ResizeArray(bossesArrayShadow, 0);
 }
 
@@ -834,7 +836,7 @@ public void LoadCharacter(const char[] characterName)
 	}
 
 	KeyValues kv=new KeyValues("character");
-	PushArrayCell(bossesArray, kv);
+	bossesArray.Push(kv);
 	kv.ImportFromFile(config);
 
 	kv=new KeyValues("character");
@@ -1406,7 +1408,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	PickCharacter(0, 0);
-	if((character[0]<0) || !GetArrayCell(bossesArray, character[0]))
+	if((character[0]<0) || !bossesArray.Get(character[0]))
 	{
 		LogError("[FF2 Bosses] Couldn't find a boss!");
 		return Plugin_Continue;
@@ -2134,8 +2136,9 @@ public Action MakeModelTimer(Handle timer, int boss)
 	if(IsValidClient(client) && IsPlayerAlive(client) && CheckRoundState()!=FF2RoundState_RoundEnd)
 	{
 		char model[PLATFORM_MAX_PATH];
-		KvRewind(GetArrayCell(bossesArray, character[boss]));
-		KvGetString(GetArrayCell(bossesArray, character[boss]), "model", model, sizeof(model));
+		KeyValues bossKv = GetCharacterKV(character[boss]);
+		bossKv.Rewind();
+		bossKv.GetString("model", model, sizeof(model));
 		SetVariantString(model);
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
@@ -2146,7 +2149,7 @@ public Action MakeModelTimer(Handle timer, int boss)
 
 void EquipBoss(int boss)
 {
-	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+	KeyValues kv = GetCharacterKV(character[boss]);
 	char classname[64], attributes[256], oneAttrib[40][10], bossName[64];
 	int client=Boss[boss];
 
@@ -2299,7 +2302,7 @@ public Action MakeBoss(Handle timer, int boss)
 */
 	}
 
-	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+	KeyValues kv=GetCharacterKV(character[boss]);
 	kv.Rewind();
 /*
 	if(CheckRoundState() != FF2RoundState_RoundRunning && TF2_GetClientTeam(client)!=BossTeam)
@@ -3593,9 +3596,9 @@ public Action Command_SetNextBoss(int client, int args)
 	}
 	GetCmdArgString(name, sizeof(name));
 
-	for(int config; config<GetArraySize(bossesArray); config++)
+	for(int config; config < bossesArray.Length; config++)
 	{
-		KeyValues kv=GetArrayCell(bossesArray, config);
+		KeyValues kv = bossesArray.Get(config);
 		kv.Rewind();
 		kv.GetString("name", boss, sizeof(boss));
 		if(StrContains(boss, name, false)!=-1)
@@ -4437,7 +4440,7 @@ public Action BossTimer(Handle timer)
 
 		SetClientGlow(client, -0.05);
 
-		KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+		KeyValues kv = GetCharacterKV(character[boss]);
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
@@ -4660,7 +4663,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 
 	if(RoundFloat(BossCharge[boss][0])==100)
 	{
-		KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+		KeyValues kv = GetCharacterKV(character[boss]);
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
@@ -5945,7 +5948,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 				}
 
 				char ability[PLATFORM_MAX_PATH];  //FIXME: Create a new variable for the translation string later on
-				KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+				KeyValues kv = GetCharacterKV(character[boss]);
 				kv.Rewind();
 				if(kv.JumpToKey("abilities"))
 				{
@@ -6129,7 +6132,7 @@ stock void AssignTeam(int client, TFTeam team)
 		Debug("%N does not have a desired class!", client);
 		if(IsBoss(client))
 		{
-			SetEntProp(client, Prop_Send, "m_iDesiredPlayerClass", KvGetNum(GetArrayCell(bossesArray, character[Boss[client]]), "class", 1));  //So we assign one to prevent living spectators
+			SetEntProp(client, Prop_Send, "m_iDesiredPlayerClass", KvGetNum(GetCharacterKV(character[Boss[client]]), "class", 1));  //So we assign one to prevent living spectators
 		}
 		else
 		{
@@ -6146,7 +6149,7 @@ stock void AssignTeam(int client, TFTeam team)
 		Debug("%N is a living spectator!  Please report this to https://github.com/50DKP/FF2-Official", client);
 		if(IsBoss(client))
 		{
-			TF2_SetPlayerClass(client, view_as<TFClassType>(KvGetNum(GetArrayCell(bossesArray, character[Boss[client]]), "class", 1)));
+			TF2_SetPlayerClass(client, view_as<TFClassType>(KvGetNum(GetCharacterKV(character[Boss[client]]), "class", 1)));
 		}
 		else
 		{
@@ -6591,8 +6594,9 @@ public bool PickCharacter(int boss, int companion)
 			int newCharacter=character[boss];
 			Call_PushCellRef(newCharacter);
 			char newName[64];
-			KvRewind(GetArrayCell(bossesArray, character[boss]));
-			KvGetString(GetArrayCell(bossesArray, character[boss]), "name", newName, sizeof(newName));
+			KeyValues kv = GetCharacterKV(character[boss]);
+			kv.Rewind();
+			kv.GetString("name", newName, sizeof(newName));
 			Call_PushStringEx(newName, sizeof(newName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 			Call_PushCell(true);  //Preset
 			Call_Finish(action);
@@ -6602,10 +6606,10 @@ public bool PickCharacter(int boss, int companion)
 				{
 					char characterName[64];
 					int foundExactMatch=-1, foundPartialMatch=-1;
-					for(int characterIndex; characterIndex<GetArraySize(bossesArray) && GetArrayCell(bossesArray, characterIndex); characterIndex++)
+					for(int characterIndex; characterIndex < bossesArray.Length && (kv = GetCharacterKV(characterIndex)); characterIndex++)
 					{
-						KvRewind(GetArrayCell(bossesArray, characterIndex));
-						KvGetString(GetArrayCell(bossesArray, characterIndex), "name", characterName, sizeof(characterName));
+						kv.Rewind();
+						kv.GetString("name", characterName, sizeof(characterName));
 						if(StrEqual(newName, characterName, false))
 						{
 							foundExactMatch=characterIndex;
@@ -6617,7 +6621,7 @@ public bool PickCharacter(int boss, int companion)
 						}
 
 						//Do the same thing as above here, but look at the filename instead of the boss name
-						KvGetString(GetArrayCell(bossesArray, characterIndex), "filename", characterName, sizeof(characterName));
+						KvGetString(kv, "filename", characterName, sizeof(characterName));
 						if(StrEqual(newName, characterName, false))
 						{
 							foundExactMatch=characterIndex;
@@ -6673,22 +6677,25 @@ public bool PickCharacter(int boss, int companion)
 	}
 	else
 	{
+		KeyValues kv = GetCharacterKV(character[boss]);
 		char bossName[64], companionName[64];
-		KvRewind(GetArrayCell(bossesArray, character[boss]));
-		KvGetString(GetArrayCell(bossesArray, character[boss]), "companion", companionName, sizeof(companionName), "=Failed companion name=");
+
+		kv.Rewind();
+		kv.GetString("companion", companionName, sizeof(companionName), "=Failed companion name=");
 
 		int characterIndex;
-		while(characterIndex<GetArraySize(bossesArray))  //Loop through all the bosses to find the companion we're looking for
+		while(characterIndex < bossesArray.Length)  //Loop through all the bosses to find the companion we're looking for
 		{
-			KvRewind(GetArrayCell(bossesArray, characterIndex));
-			KvGetString(GetArrayCell(bossesArray, characterIndex), "name", bossName, sizeof(bossName), "=Failed name=");
+			kv = GetCharacterKV(characterIndex);
+			kv.Rewind();
+			kv.GetString("name", bossName, sizeof(bossName), "=Failed name=");
 			if(StrEqual(bossName, companionName, false))
 			{
 				character[companion]=characterIndex;
 				break;
 			}
 
-			KvGetString(GetArrayCell(bossesArray, characterIndex), "filename", bossName, sizeof(bossName), "=Failed name=");
+			kv.GetString("filename", bossName, sizeof(bossName), "=Failed name=");
 			if(StrEqual(bossName, companionName, false))
 			{
 				character[companion]=characterIndex;
@@ -6697,7 +6704,7 @@ public bool PickCharacter(int boss, int companion)
 			characterIndex++;
 		}
 
-		if(characterIndex==GetArraySize(bossesArray))  //Companion not found
+		if(characterIndex == bossesArray.Length)  //Companion not found
 		{
 			return false;
 		}
@@ -6708,10 +6715,12 @@ public bool PickCharacter(int boss, int companion)
 	Call_StartForward(OnBossSelected);
 	Call_PushCell(companion);
 	int newCharacter=character[companion];
+	KeyValues kv = GetCharacterKV(newCharacter);
+
 	Call_PushCellRef(newCharacter);
 	char newName[64];
-	KvRewind(GetArrayCell(bossesArray, character[companion]));
-	KvGetString(GetArrayCell(bossesArray, character[companion]), "name", newName, sizeof(newName));
+	kv.Rewind();
+	kv.GetString("name", newName, sizeof(newName));
 	Call_PushStringEx(newName, sizeof(newName), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
 	Call_PushCell(false);  //Not preset
 	Call_Finish(action);
@@ -6721,10 +6730,11 @@ public bool PickCharacter(int boss, int companion)
 		{
 			char characterName[64];
 			int foundExactMatch=-1, foundPartialMatch=-1;
-			for(int characterIndex; characterIndex<GetArraySize(bossesArray) && GetArrayCell(bossesArray, characterIndex); characterIndex++)
+			for(int characterIndex;
+				characterIndex < bossesArray.Length && (kv = GetCharacterKV(characterIndex)); characterIndex++)
 			{
-				KvRewind(GetArrayCell(bossesArray, characterIndex));
-				KvGetString(GetArrayCell(bossesArray, characterIndex), "name", characterName, sizeof(characterName));
+				kv.Rewind();
+				kv.GetString("name", characterName, sizeof(characterName));
 				if(StrEqual(newName, characterName, false))
 				{
 					foundExactMatch=characterIndex;
@@ -6736,7 +6746,7 @@ public bool PickCharacter(int boss, int companion)
 				}
 
 				//Do the same thing as above here, but look at the filename instead of the boss name
-				KvGetString(GetArrayCell(bossesArray, characterIndex), "filename", characterName, sizeof(characterName));
+				kv.GetString("filename", characterName, sizeof(characterName));
 				if(StrEqual(newName, characterName, false))
 				{
 					foundExactMatch=characterIndex;
@@ -6772,8 +6782,9 @@ void FindCompanion(int boss, int players, bool[] omit)
 {
 	static int playersNeeded=3;
 	char companionName[64];
-	KvRewind(GetArrayCell(bossesArray, character[boss]));
-	KvGetString(GetArrayCell(bossesArray, character[boss]), "companion", companionName, sizeof(companionName));
+	KeyValues kv = GetCharacterKV(character[boss]);
+	kv.Rewind();
+	kv.GetString("companion", companionName, sizeof(companionName));
 	if(playersNeeded<players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
 	{
 		int companion=GetClientWithMostQueuePoints(omit);
@@ -7600,7 +7611,7 @@ void HelpPanelBoss(int client, int boss)
 		return;
 	}
 
-	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
+	KeyValues kv = GetCharacterKV(character[boss]);
 	kv.Rewind();
 	if(kv.JumpToKey("description"))
 	{
@@ -7757,11 +7768,10 @@ public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MA
 			return Plugin_Changed;
 		}
 
-
-		if(character[boss]<GetArraySize(bossesArray))
+		if(character[boss] < bossesArray.Length)
 		{ // FIXME: ?? WHAT THE FUCK?
 			bool isBlockVoice=false;
-			KeyValues bossKv=view_as<KeyValues>(GetArrayCell(bossesArray, character[boss]));
+			KeyValues bossKv = GetCharacterKV(character[boss]);
 			int kvId;
 			bossKv.GetSectionSymbol(kvId);
 			bossKv.Rewind();
@@ -8019,13 +8029,15 @@ public int Native_GetBossTeam(Handle plugin, int numParams)
 
 public bool GetBossName(int boss, char[] bossName, int length, int client)
 {
+	// FIXME
 	if(boss>=0 && boss<=MaxClients && character[boss]>=0 && character[boss]<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, character[boss]))!=null)
 	{
-		KeyValues bossKv = view_as<KeyValues>(GetArrayCell(bossesArray, character[boss]));
+		KeyValues bossKv = GetCharacterKV(character[boss]);
 		int posId;
 
 		bossKv.GetSectionSymbol(posId);
 		bossKv.Rewind();
+		// FIXME
 		KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
 
 		if(client > 0)
@@ -8130,10 +8142,10 @@ public int Native_GetBossCreators(Handle plugin, int numParams)
 
 public KeyValues GetBossKV(int boss)
 {
-	if(boss>=0 && boss<=MaxClients && character[boss]>=0 && character[boss]<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, character[boss]))!=null)
+	if(boss >= 0 && boss <= MaxClients && character[boss] >= 0 && character[boss] < bossesArray.Length)
 	{
 		KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
-		return view_as<KeyValues>(GetArrayCell(bossesArray, character[boss]));
+		return view_as<KeyValues>(GetCharacterKV(character[boss]));
 	}
 	return null;
 }
@@ -8145,10 +8157,10 @@ public int Native_GetBossKV(Handle plugin, int numParams)
 
 public KeyValues GetCharacterKV(int characterIndex)
 {
-	if(characterIndex>=0 && characterIndex<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, characterIndex))!=null)
+	if(characterIndex >= 0 && characterIndex < bossesArray.Length)
 	{
 		KvRewind(GetArrayCell(bossesArrayShadow, characterIndex));
-		return view_as<KeyValues>(GetArrayCell(bossesArray, characterIndex));
+		return view_as<KeyValues>(bossesArray.Get(characterIndex));
 	}
 	return null;
 }
