@@ -6787,9 +6787,7 @@ void FindCompanion(int boss, int players, bool[] omit)
 	kv.GetString("companion", companionName, sizeof(companionName));
 	if(playersNeeded<players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
 	{
-		int companion=GetClientWithMostQueuePoints(omit);
-		if(companion==0)
-			companion=RandomlySelectClient(omit);
+		int companion=RandomlySelectClient(omit);
 
 		Boss[companion]=companion;  //Woo boss indexes!
 		omit[companion]=true;
