@@ -5636,10 +5636,10 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							PrintHintText(attacker, "%t", "Market Gardener");  //You just market-gardened the boss!
 							PrintHintText(client, "%t", "Market Gardened");  //You just got market-gardened!
 
-							EmitSoundToClient(attacker, "potry_v2/se/homerun_bat.wav", _, _, _, _, 0.8, _, _, position, _, false);
-							EmitSoundToClient(attacker, "potry_v2/se/homerun_bat.wav", _, _, _, _, 0.8, _, _, position, _, false);
-							EmitSoundToClient(attacker, "potry_v2/se/homerun_bat.wav", _, _, _, _, 0.8, _, _, position, _, false);
-							EmitSoundToClient(client, "player/doubledonk.wav", _, _, _, _, 0.6, _, _, position, _, false);
+							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+							// EmitSoundToClient(client, "player/doubledonk.wav", _, _, _, _, 0.6, _, _, position, _, false);
 							return Plugin_Changed;
 						}
 					}
