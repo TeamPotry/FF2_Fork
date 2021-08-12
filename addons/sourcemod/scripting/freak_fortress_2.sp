@@ -409,13 +409,6 @@ public void OnPluginStart()
 	bossesArray = new ArrayList();
 	bossesArrayOriginal = new ArrayList();
 
-	char oldVersion[64];
-	cvarVersion.GetString(oldVersion, sizeof(oldVersion));
-	if(!StrEqual(oldVersion, PLUGIN_VERSION, false))
-	{
-		PrintToServer("[FF2] Warning: Your config may be outdated. Back up tf/cfg/sourcemod/freak_fortress_2.cfg and delete it, and this plugin will generate a new one that you can then modify to your original values.");
-	}
-
 	LoadTranslations("freak_fortress_2.phrases");
 	LoadTranslations("common.phrases");
 
@@ -998,6 +991,13 @@ public void LoadCharacter(const char[] characterName)
 		}
 		while(kv.GotoNextKey());
 	}
+/*
+	kv.Rewind();
+	char path[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "data/ff2_dumps/%s.txt", characterName);
+	OpenFile(path, "w");
+	kv.ExportToFile(path);
+*/
 }
 
 public void CvarChange(ConVar convar, const char[] oldValue, const char[] newValue)
