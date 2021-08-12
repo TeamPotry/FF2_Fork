@@ -36,7 +36,7 @@ int RoundCount;
 int character[MAXPLAYERS+1];
 
 ArrayList bossesArray;
-ArrayList bossesArrayShadow; // FIXME: ULTRA HACKY HACK
+ArrayList bossesArrayOriginal; // FIXME: ULTRA HACKY HACK
 ArrayList subpluginArray;
 
 int FF2CharSet;

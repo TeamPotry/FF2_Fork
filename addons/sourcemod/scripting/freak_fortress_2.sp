@@ -407,7 +407,7 @@ public void OnPluginStart()
 	infoHUD=CreateHudSynchronizer();
 
 	bossesArray = new ArrayList();
-	bossesArrayShadow = new ArrayList();
+	bossesArrayOriginal = new ArrayList();
 
 	char oldVersion[64];
 	cvarVersion.GetString(oldVersion, sizeof(oldVersion));
@@ -538,15 +538,16 @@ public void OnMapStart()
 			delete temp;
 			bossesArray.Set(index, INVALID_HANDLE);
 		}
-		if(view_as<Handle>(GetArrayCell(bossesArrayShadow, index))!=null)
+		temp = view_as<Handle>(bossesArrayOriginal.Get(index));
+		if(temp != null)
 		{
-			delete view_as<Handle>(GetArrayCell(bossesArrayShadow, index));
-			SetArrayCell(bossesArrayShadow, index, INVALID_HANDLE);
+			delete temp;
+			bossesArrayOriginal.Set(index, INVALID_HANDLE);
 		}
 	}
 
 	bossesArray.Clear();
-	ResizeArray(bossesArrayShadow, 0);
+	bossesArrayOriginal.Clear();
 }
 
 public void OnMapEnd()
@@ -840,7 +841,7 @@ public void LoadCharacter(const char[] characterName)
 	kv.ImportFromFile(config);
 
 	kv=new KeyValues("character");
-	PushArrayCell(bossesArrayShadow, kv);
+	bossesArrayOriginal.Push(kv);
 	kv.ImportFromFile(config);
 
 	int version=kv.GetNum("version", 1);
@@ -6293,7 +6294,7 @@ stock void OperateString(ArrayList sumArray, int& bracket, char[] value, int siz
 stock int ParseFormula(int boss, const char[] key, int defaultValue)
 {
 	char formula[1024], bossName[64];
-	KeyValues kv=GetArrayCell(bossesArrayShadow, character[boss]);
+	KeyValues kv = GetCharacterKV(character[boss]);
 	kv.Rewind();
 	kv.GetString("name", bossName, sizeof(bossName), "=Failed name=");
 
@@ -6504,7 +6505,7 @@ stock int GetAbilityArgument(int boss, const char[] pluginName, const char[] abi
 {
 	if(HasAbility(boss, pluginName, abilityName))
 	{
-		KeyValues kv=GetArrayCell(bossesArrayShadow, character[boss]);
+		KeyValues kv=GetCharacterKV(character[boss]);
 		return kv.GetNum(argument, defaultValue);
 	}
 	return defaultValue;
@@ -6514,7 +6515,7 @@ stock float GetAbilityArgumentFloat(int boss, const char[] pluginName, const cha
 {
 	if(HasAbility(boss, pluginName, abilityName))
 	{
-		KeyValues kv=GetArrayCell(bossesArrayShadow, character[boss]);
+		KeyValues kv=GetCharacterKV(character[boss]);
 		return kv.GetFloat(argument, defaultValue);
 	}
 	return defaultValue;
@@ -6525,14 +6526,14 @@ stock void GetAbilityArgumentString(int boss, const char[] pluginName, const cha
 	strcopy(abilityString, length, defaultValue);
 	if(HasAbility(boss, pluginName, abilityName))
 	{
-		KeyValues kv=GetArrayCell(bossesArrayShadow, character[boss]);
+		KeyValues kv=GetCharacterKV(character[boss]);
 		kv.GetString(argument, abilityString, length, defaultValue);
 	}
 }
 
 stock bool FindSound(const char[] sound, char[] file, int length, int boss=0, bool ability=false, int slot=0)
 {
-	KeyValues kv=GetArrayCell(bossesArrayShadow, character[boss]);
+	KeyValues kv=GetCharacterKV(character[boss]);
 	if(boss<0 || character[boss]<0 || !kv)
 	{
 		return false;
@@ -8036,7 +8037,7 @@ public bool GetBossName(int boss, char[] bossName, int length, int client)
 		bossKv.GetSectionSymbol(posId);
 		bossKv.Rewind();
 		// FIXME
-		KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
+		// KvRewind(GetCharacterKV(character[boss]));
 
 		if(client > 0)
 		{
@@ -8142,7 +8143,6 @@ public KeyValues GetBossKV(int boss)
 {
 	if(boss >= 0 && boss <= MaxClients && character[boss] >= 0 && character[boss] < bossesArray.Length)
 	{
-		KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
 		return view_as<KeyValues>(GetCharacterKV(character[boss]));
 	}
 	return null;
@@ -8157,7 +8157,6 @@ public KeyValues GetCharacterKV(int characterIndex)
 {
 	if(characterIndex >= 0 && characterIndex < bossesArray.Length)
 	{
-		KvRewind(GetArrayCell(bossesArrayShadow, characterIndex));
 		return view_as<KeyValues>(bossesArray.Get(characterIndex));
 	}
 	return null;
@@ -8312,12 +8311,13 @@ public int Native_SetBossRageDamage(Handle plugin, int numParams)
 
 public int GetBossRageDistance(int boss, const char[] pluginName, const char[] abilityName)
 {
-	if(!GetArrayCell(bossesArrayShadow, character[boss]))  //Invalid boss
+	KeyValues kv = GetCharacterKV(character[boss]);
+	if(!kv)  //Invalid boss
 	{
 		return 0;
 	}
 
-	KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
+	kv.Rewind();
 	if(!abilityName[0])  //Return the global rage distance if there's no ability specified
 	{
 		return ParseFormula(boss, "rage distance", 400);
@@ -8331,7 +8331,7 @@ public int GetBossRageDistance(int boss, const char[] pluginName, const char[] a
 		int distance;
 		if((distance=ParseFormula(boss, key, -1))<0)  //Distance doesn't exist, return the global rage distance instead
 		{
-			KvRewind(GetArrayCell(bossesArrayShadow, character[boss]));
+			kv.Rewind();
 			distance=ParseFormula(boss, "rage distance", 400);
 		}
 		return distance;
@@ -8462,12 +8462,12 @@ public void Forward_OnSpecialAttack_Post(int attacker, int victimBoss, const cha
 
 public bool HasAbility(int boss, const char[] pluginName, const char[] abilityName)
 {
-	if(boss==-1 || character[boss]==-1 || !GetArrayCell(bossesArrayShadow, character[boss]))  //Invalid boss
+	if(boss==-1 || character[boss]==-1 || !GetCharacterKV(character[boss]))  //Invalid boss
 	{
 		return false;
 	}
 
-	KeyValues kv=GetArrayCell(bossesArrayShadow, character[boss]);
+	KeyValues kv=GetCharacterKV(character[boss]);
 	kv.Rewind();
 	if(kv.JumpToKey("abilities") && kv.JumpToKey(pluginName) && kv.JumpToKey(abilityName))
 	{
