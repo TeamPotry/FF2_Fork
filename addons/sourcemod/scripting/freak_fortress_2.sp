@@ -4662,29 +4662,32 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		return Plugin_Continue;
 	}
 
+	// FIXME
 	if(RoundFloat(BossCharge[boss][0])==100)
 	{
-		KeyValues kv = GetCharacterKV(character[boss]);
+		KeyValues kv = GetCharacterKV(character[boss]), abilityKv = new KeyValues("abilities");
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
+			abilityKv.Import(kv);
+
 			char ability[10];
-			kv.GotoFirstSubKey();
+			abilityKv.GotoFirstSubKey();
 			do
 			{
 				char pluginName[64];
-				kv.GetSectionName(pluginName, sizeof(pluginName));
-				kv.GotoFirstSubKey();
+				abilityKv.GetSectionName(pluginName, sizeof(pluginName));
+				abilityKv.GotoFirstSubKey();
 				do
 				{
 					char abilityName[64];
-					kv.GetSectionName(abilityName, sizeof(abilityName));
-					if(kv.GetNum("slot")) // Rage is slot 0
+					abilityKv.GetSectionName(abilityName, sizeof(abilityName));
+					if(abilityKv.GetNum("slot", 0) != 0) // Rage is slot 0
 					{
 						continue;
 					}
 
-					kv.GetString("life", ability, sizeof(ability), "");
+					abilityKv.GetString("life", ability, sizeof(ability), "");
 					if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
 					{
 						if(!UseAbility(boss, pluginName, abilityName, 0))
@@ -4712,10 +4715,10 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 						delete livesArray;
 					}
 				}
-				while(kv.GotoNextKey());
-				kv.GoBack();
+				while(abilityKv.GotoNextKey());
+				abilityKv.GoBack();
 			}
-			while(kv.GotoNextKey());
+			while(abilityKv.GotoNextKey());
 		}
 
 		char sound[PLATFORM_MAX_PATH];
@@ -4726,6 +4729,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		}
 		emitRageSound[boss]=true;
 
+		delete abilityKv;
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
