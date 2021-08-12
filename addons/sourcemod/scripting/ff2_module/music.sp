@@ -54,92 +54,91 @@ public Action Timer_PrepareBGM(Handle timer, int userid)
 
 void PlayBGM(int client)
 {
-	KeyValues kv=GetArrayCell(bossesArray, character[0]);
-	kv.Rewind();
-	if(kv.JumpToKey("sounds"))
-	{
-		ArrayList musicArray=CreateArray(PLATFORM_MAX_PATH);
-		ArrayList timeArray=CreateArray();
-		char music[PLATFORM_MAX_PATH];
-		kv.GotoFirstSubKey();
-		do
-		{
-			kv.GetSectionName(music, sizeof(music));
-			int time=kv.GetNum("time");
-			if(time>0)
-			{
-				if(musicArray.FindString(music)>=0)
-				{
-					char bossName[64];
-					kv.Rewind();
-					kv.GetString("name", bossName, sizeof(bossName));
-					PrintToServer("[FF2 Bosses] Character %s has a duplicate sound '%s'!", bossName, music);
-					continue; // We ignore all duplicates
-				}
-				musicArray.PushString(music);
-				timeArray.Push(time);
-			}
-			else if(time<0)
-			{
-				char bossName[64];
-				kv.Rewind();
-				kv.GetString("name", bossName, sizeof(bossName));
-				PrintToServer("[FF2 Bosses] Character %s has an invalid time for sound '%s'!", bossName, music);
-			}
-		}
-		while(kv.GotoNextKey());
+	char bossName[64];
+	KeyValues kv = GetCharacterKV(character[0]);
 
-		if(!musicArray.Length) // No music found, exiting!
+	kv.Rewind();
+	kv.GetString("name", bossName, sizeof(bossName));
+
+	if(!kv.JumpToKey("sounds"))		return;
+
+	ArrayList musicArray = new ArrayList(PLATFORM_MAX_PATH), timeArray = new ArrayList();
+	char music[PLATFORM_MAX_PATH];
+
+	kv.GotoFirstSubKey();
+	do
+	{
+		kv.GetSectionName(music, sizeof(music));
+		float time = kv.GetFloat("time", 0.0);
+
+		if(music[0] == '\0')
+		{
+			Debug("[FF2 Bosses] Character %s has a duplicate sound '%s'!", bossName, music);
+		}
+		else if(time > 0.0)
+		{
+			musicArray.PushString(music);
+			timeArray.Push(time);
+		}
+	}
+	while(kv.GotoNextKey());
+
+	if(!musicArray.Length) // No music found, exiting!
+	{
+		return;
+	}
+
+	char temp[PLATFORM_MAX_PATH], buffer[PLATFORM_MAX_PATH];
+	// char information[256];
+	int index = GetRandomInt(0, musicArray.Length-1);
+	Action action;
+
+	musicArray.GetString(index, buffer, sizeof(buffer));
+	strcopy(temp, sizeof(temp), buffer);
+	float time2 = timeArray.Get(index), tempTime = time2;
+	// kv.GetString("information", information, sizeof(information));
+
+	Call_StartForward(OnMusic);
+	Call_PushCell(client);
+	Call_PushStringEx(temp, sizeof(temp), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+	Call_PushCellRef(tempTime);
+	Call_Finish(action);
+	switch(action)
+	{
+		case Plugin_Stop, Plugin_Handled:
 		{
 			return;
 		}
-		int index=GetRandomInt(0, musicArray.Length-1);
-
-		Action action;
-		Call_StartForward(OnMusic);
-		char temp[PLATFORM_MAX_PATH];
-		char buffer[PLATFORM_MAX_PATH];
-		int time2=timeArray.Get(index);
-		musicArray.GetString(index, temp, sizeof(temp));
-		Call_PushCell(client);
-		Call_PushStringEx(temp, sizeof(temp), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-		Call_PushCellRef(time2);
-		Call_Finish(action);
-		switch(action)
+		case Plugin_Changed:
 		{
-			case Plugin_Stop, Plugin_Handled:
-			{
-				return;
-			}
-			case Plugin_Changed:
-			{
-				musicArray.SetString(index, temp);
-				timeArray.Set(index, time2);
-			}
+			strcopy(buffer, sizeof(buffer), temp);
+			time2 = tempTime;
 		}
-
-		musicArray.GetString(index, buffer, sizeof(buffer));
-		Format(temp, sizeof(temp), "sound/%s", buffer);
-		if(FileExists(temp, true))
-		{
-			if(CheckSoundFlags(client, FF2SOUND_MUTEMUSIC))
-			{
-				musicArray.GetString(index, currentBGM[client], sizeof(music));
-				EmitSoundToClient(client, currentBGM[client]);
-				MusicTimer[client]=CreateTimer(float(GetArrayCell(timeArray, index)), Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-			}
-		}
-		else
-		{
-			char bossName[64];
-			kv.Rewind();
-			kv.GetString("name", bossName, sizeof(bossName));
-			PrintToServer("[FF2 Bosses] Character %s is missing BGM file '%s'!", bossName, music);
-		}
-
-		delete musicArray;
-		delete timeArray;
 	}
+
+	Format(temp, sizeof(temp), "sound/%s", buffer);
+	if(FileExists(temp, true))
+	{
+		if(CheckSoundFlags(client, FF2SOUND_MUTEMUSIC))
+		{
+			strcopy(currentBGM[client], PLATFORM_MAX_PATH, buffer);
+			EmitSoundToClient(client, currentBGM[client]);
+			MusicTimer[client]=CreateTimer(time2, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+/*
+			if(information[0] != '\0')
+			{
+				CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %s", information);
+			}
+*/
+		}
+	}
+	else
+	{
+		PrintToServer("[FF2 Bosses] Character %s is missing BGM file '%s'!", bossName, music);
+	}
+
+	delete musicArray;
+	delete timeArray;
 }
 
 void StartMusic(int client=0)
