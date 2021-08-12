@@ -55,16 +55,19 @@ public Action Timer_PrepareBGM(Handle timer, int userid)
 void PlayBGM(int client)
 {
 	char bossName[64];
-	KeyValues kv = GetCharacterKV(character[0]);
+	KeyValues characterKv = GetCharacterKV(character[0]);
 
-	kv.Rewind();
-	kv.GetString("name", bossName, sizeof(bossName));
+	characterKv.Rewind();
+	characterKv.GetString("name", bossName, sizeof(bossName));
 
-	if(!kv.JumpToKey("sounds"))		return;
+	if(!characterKv.JumpToKey("sounds"))		return;
 
-	ArrayList musicArray = new ArrayList(PLATFORM_MAX_PATH), timeArray = new ArrayList();
+	KeyValues kv = new KeyValues("sounds");
+	ArrayList musicArray = new ArrayList();
 	char music[PLATFORM_MAX_PATH];
+	int id;
 
+	kv.Import(characterKv);
 	kv.GotoFirstSubKey();
 	do
 	{
@@ -77,26 +80,33 @@ void PlayBGM(int client)
 		}
 		else if(time > 0.0)
 		{
-			musicArray.PushString(music);
-			timeArray.Push(time);
+			kv.GetSectionSymbol(id);
+			musicArray.Push(id);
 		}
 	}
 	while(kv.GotoNextKey());
 
 	if(!musicArray.Length) // No music found, exiting!
 	{
+		delete musicArray;
+		delete kv;
+
 		return;
 	}
 
-	char temp[PLATFORM_MAX_PATH], buffer[PLATFORM_MAX_PATH];
-	// char information[256];
+	char temp[PLATFORM_MAX_PATH], buffer[PLATFORM_MAX_PATH], information[256];
 	int index = GetRandomInt(0, musicArray.Length-1);
 	Action action;
 
-	musicArray.GetString(index, buffer, sizeof(buffer));
+	kv.Rewind();
+	id = musicArray.Get(index);
+	kv.JumpToKeySymbol(id);
+
+	kv.GetSectionName(buffer, sizeof(buffer));
 	strcopy(temp, sizeof(temp), buffer);
-	float time2 = timeArray.Get(index), tempTime = time2;
-	// kv.GetString("information", information, sizeof(information));
+
+	float time2 = kv.GetFloat("time"), tempTime = time2;
+	kv.GetString("information", information, sizeof(information));
 
 	Call_StartForward(OnMusic);
 	Call_PushCell(client);
@@ -124,12 +134,16 @@ void PlayBGM(int client)
 			strcopy(currentBGM[client], PLATFORM_MAX_PATH, buffer);
 			EmitSoundToClient(client, currentBGM[client]);
 			MusicTimer[client]=CreateTimer(time2, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
-/*
+
 			if(information[0] != '\0')
 			{
 				CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %s", information);
 			}
-*/
+			else
+			{
+				GetBossName(GetBossIndex(Boss[0]), information, sizeof(information), client);
+				CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %T", "Boss Music Info", client, information, index + 1);
+			}
 		}
 	}
 	else
@@ -138,7 +152,7 @@ void PlayBGM(int client)
 	}
 
 	delete musicArray;
-	delete timeArray;
+	delete kv;
 }
 
 void StartMusic(int client=0)

@@ -462,4 +462,9 @@
 	{
 		"en"	"Not enough players! Choose boss randomly."
 	}
+	"Boss Music Info"
+	{
+		"#format"	"{1:s},{2:d}"
+		"en"		"{1}'s music (#{2})"
+	}
 }
