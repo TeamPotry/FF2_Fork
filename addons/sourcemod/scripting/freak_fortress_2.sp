@@ -7767,19 +7767,15 @@ public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MA
 			return Plugin_Changed;
 		}
 
-		if(character[boss] < bossesArray.Length)
-		{ // FIXME: ?? WHAT THE FUCK?
-			bool isBlockVoice=false;
-			KeyValues bossKv = GetCharacterKV(character[boss]);
-			int kvId;
-			bossKv.GetSectionSymbol(kvId);
+		bool isBlockVoice = false;
+		KeyValues bossKv = GetCharacterKV(character[boss]);
+
 			bossKv.Rewind();
-			isBlockVoice=bossKv.GetNum("block voice", 0)>0;
-			bossKv.JumpToKeySymbol(kvId);
+			isBlockVoice=bossKv.GetNum("block voice", 0) > 0;
+
 			if(isBlockVoice)
 			{
-				return Plugin_Stop;
-			}
+			return Plugin_Stop;
 		}
 	}
 	return Plugin_Continue;
