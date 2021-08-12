@@ -7774,11 +7774,11 @@ public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MA
 		bool isBlockVoice = false;
 		KeyValues bossKv = GetCharacterKV(character[boss]);
 
-			bossKv.Rewind();
-			isBlockVoice=bossKv.GetNum("block voice", 0) > 0;
+		bossKv.Rewind();
+		isBlockVoice=bossKv.GetNum("block voice", 0) > 0;
 
-			if(isBlockVoice)
-			{
+		if(isBlockVoice)
+		{
 			return Plugin_Stop;
 		}
 	}
@@ -8028,35 +8028,28 @@ public int Native_GetBossTeam(Handle plugin, int numParams)
 
 public bool GetBossName(int boss, char[] bossName, int length, int client)
 {
-	// FIXME
-	if(boss>=0 && boss<=MaxClients && character[boss]>=0 && character[boss]<GetArraySize(bossesArray) && view_as<Handle>(GetArrayCell(bossesArray, character[boss]))!=null)
+	KeyValues bossKv = GetCharacterKV(character[boss]);
+	int posId;
+
+	bossKv.GetSectionSymbol(posId);
+	bossKv.Rewind();
+
+	if(client > 0)
 	{
-		KeyValues bossKv = GetCharacterKV(character[boss]);
-		int posId;
-
-		bossKv.GetSectionSymbol(posId);
-		bossKv.Rewind();
-		// FIXME
-		// KvRewind(GetCharacterKV(character[boss]));
-
-		if(client > 0)
+		char language[8];
+		GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
+		if(bossKv.JumpToKey("name_lang"))
 		{
-			char language[8];
-			GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
-			if(bossKv.JumpToKey("name_lang"))
-			{
-				bossKv.GetString(language, bossName, length, "");
-				if(bossName[0]!='\0')
-					return true;
-			}
-			bossKv.Rewind();
+			bossKv.GetString(language, bossName, length, "");
+			if(bossName[0]!='\0')
+				return true;
 		}
-		bossKv.GetString("name", bossName, length);
-		bossKv.JumpToKeySymbol(posId);
-
-		return true;
+		bossKv.Rewind();
 	}
-	return false;
+	bossKv.GetString("name", bossName, length);
+	bossKv.JumpToKeySymbol(posId);
+
+	return true;
 }
 
 public int Native_GetBossName(Handle plugin, int numParams)
