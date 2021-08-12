@@ -2,3 +2,4 @@
 
 #define FF2_DB_PLAYERDATA_TABLENAME "ff2_player_setting"
 #define FF2_DB_PLAYER_HUDDATA_TABLENAME "ff2_player_hud_setting"
+#define FF2_DB_PLAYER_MUSICDATA_TABLENAME "ff2_player_music_setting"

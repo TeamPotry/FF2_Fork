@@ -7667,6 +7667,8 @@ public Action MusicTogglePanel(int client)
 	panel.SetTitle(text);
 	panel.DrawItem("ON");
 	panel.DrawItem("OFF");
+	Format(text, sizeof(text), "%T", "Music Track Select Title", client);
+	panel.DrawItem(text);
 	panel.Send(client, MusicTogglePanelH, MENU_TIME_FOREVER);
 	delete panel;
 	return Plugin_Continue;
@@ -7676,7 +7678,12 @@ public int MusicTogglePanelH(Menu menu, MenuAction action, int client, int selec
 {
 	if(IsValidClient(client) && action==MenuAction_Select)
 	{
-		if(selection==2)  //Off
+		if(selection == 3)
+		{
+			MusicTrackMenu(client);
+			return 0;
+		}
+		else if(selection==2)  //Off
 		{
 			SetSoundFlags(client, FF2SOUND_MUTEMUSIC);
 			StopMusic(client, true);
@@ -7691,6 +7698,226 @@ public int MusicTogglePanelH(Menu menu, MenuAction action, int client, int selec
 			}
 		}
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Music", selection==2 ? "off" : "on");
+	}
+	return 0;
+}
+
+public void MusicTrackMenu(int client)
+{
+	if(!Enabled || !IsValidClient(client))
+	{
+		return;
+	}
+
+	SetGlobalTransTarget(client);
+
+	char text[128], musicId[84], bossName[64], kvString[64];
+	Menu menu = new Menu(MusicTrackMenu_Handler);
+
+	Format(text, sizeof(text), "%T", "Music Track Select Title", client);
+	menu.SetTitle(text);
+
+	MD5_String(currentBGM[client], musicId, sizeof(musicId));
+	Format(text, sizeof(text), "[%s] %T", GetMusicSetting(client, musicId) ? "ON" : "OFF",
+		"Menu Music Track Current Music", client);
+	menu.AddItem(musicId, text);
+
+	KeyValues bossKv;
+	bool hasMusic;
+	// TODO: 외부 팩 지원
+	char language[8];
+	int lang = GetClientLanguage(client);
+
+	GetLanguageInfo(lang, language, sizeof(language));
+	for(int characterIndex = 0; characterIndex < bossesArray.Length && (bossKv = GetCharacterKV(characterIndex)); characterIndex++)
+	{
+		hasMusic = false;
+
+		bossKv.Rewind();
+		if(bossKv.JumpToKey("name_lang"))
+			bossKv.GetString(language, bossName, sizeof(bossName));
+		else
+			bossKv.GetString("name", bossName, sizeof(bossName));
+
+		bossKv.Rewind();
+		if(!bossKv.JumpToKey("sounds")) 	continue;
+
+		bossKv.GotoFirstSubKey();
+		do
+		{
+			int time = RoundFloat(bossKv.GetFloat("time", 0.0));
+			if(time > 0)
+			{
+				hasMusic = true;
+				break;
+			}
+		}
+		while(bossKv.GotoNextKey());
+
+		if(!hasMusic)	continue;
+
+		IntToString(view_as<int>(bossKv), kvString, sizeof(kvString));
+		Format(text, sizeof(text), "%T", "Menu Music Track Boss Music", client, bossName);
+		menu.AddItem(kvString, text);
+	}
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+enum
+{
+	MusicTrackMenu_SelectCurrentMusic = 0,
+
+	MusicTrackMenu_Count
+};
+
+public int MusicTrackMenu_Handler(Menu menu, MenuAction action, int client, int selection)
+{
+	char packName[128];
+
+	switch(action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+		case MenuAction_Cancel:
+		{
+			if(selection == MenuCancel_ExitBack)
+				MusicTogglePanel(client);
+		}
+		case MenuAction_Select:
+		{
+			GetMenuItem(menu, selection, packName, sizeof(packName));
+			switch(selection)
+			{
+				case MusicTrackMenu_SelectCurrentMusic:
+				{
+					bool value = !GetMusicSetting(client, packName);
+					SetMusicSetting(client, packName, value);
+
+					CPrintToChat(client, "{olive}[FF2]{default} %T", "Menu Music Track Choose Music Setting",
+						client, value ? "ON" : "OFF");
+					MusicTrackMenu(client);
+
+					StopMusic(client);
+					StartMusic(client);
+				}
+				default:
+				{
+					MusicTrackDetailMenu(client, view_as<KeyValues>(StringToInt(packName)));
+				}
+			}
+		}
+	}
+}
+
+public void MusicTrackDetailMenu(int client, KeyValues kv)
+{
+	if(!Enabled || !IsValidClient(client) || kv == null)
+	{
+		return;
+	}
+
+	SetGlobalTransTarget(client);
+
+	char text[128], musicId[84], path[PLATFORM_MAX_PATH], information[258], bossName[64], language[8];
+	Menu menu = new Menu(MusicTrackDetailMenu_Handler);
+	int lang = GetClientLanguage(client);
+
+	GetLanguageInfo(lang, language, sizeof(language));
+	kv.Rewind();
+
+	if(kv.JumpToKey("name_lang"))
+		kv.GetString(language, bossName, sizeof(bossName), "");
+	else
+		kv.GetString("name", bossName, sizeof(bossName), "");
+
+	kv.Rewind();
+	if(!kv.JumpToKey("sounds"))		return;
+
+	Format(text, sizeof(text), "%T", "Music Track Detail Title", client, bossName);
+	menu.SetTitle(text);
+
+	IntToString(view_as<int>(kv), musicId, sizeof(musicId));
+	menu.AddItem(musicId, musicId, ITEMDRAW_IGNORE);
+
+	int index = 1;
+
+	kv.GotoFirstSubKey();
+	do
+	{
+		kv.GetSectionName(path, PLATFORM_MAX_PATH);
+		MD5_String(path, musicId, sizeof(musicId));
+		int time = RoundFloat(kv.GetFloat("time", 0.0));
+		if(time > 0)
+		{
+			kv.GetString("information", information, sizeof(information), "");
+			if(information[0] == '\0')
+			{
+				Format(information, sizeof(information), "%T", "Boss Music Info", client, bossName, index);
+			}
+
+			Format(text, sizeof(text), "[%s] %s", GetMusicSetting(client, musicId) ? "ON" : "OFF",
+				information);
+			menu.AddItem(path, text);
+
+			index++;
+		}
+	}
+	while(kv.GotoNextKey());
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int MusicTrackDetailMenu_Handler(Menu menu, MenuAction action, int client, int selection)
+{
+	char kvString[84], musicId[84], currentMusicId[84], path[PLATFORM_MAX_PATH];
+
+	switch(action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+		case MenuAction_Cancel:
+		{
+			if(selection == MenuCancel_ExitBack)
+				MusicTrackMenu(client);
+		}
+		case MenuAction_Select:
+		{
+			GetMenuItem(menu, 0, kvString, sizeof(kvString));
+			GetMenuItem(menu, selection, path, sizeof(path));
+			MD5_String(path, musicId, sizeof(musicId));
+/*
+//			TODO: THIS
+			if(GetClientButtons(client) & IN_RELOAD)
+			{
+
+				strcopy(currentBGM[client], sizeof(currentBGM[]), path);
+
+				StopMusic(client);
+				StartMusic(client);
+			}
+*/
+			bool value = !GetMusicSetting(client, musicId);
+			SetMusicSetting(client, musicId, value);
+
+			CPrintToChat(client, "{olive}[FF2]{default} %T", "Menu Music Track Choose Music Setting", client, value ? "ON" : "OFF");
+
+			MD5_String(currentBGM[client], currentMusicId, sizeof(currentMusicId));
+			if(StrEqual(currentMusicId, musicId))
+			{
+				StopMusic(client);
+				StartMusic(client);
+			}
+
+			KeyValues kv = view_as<KeyValues>(StringToInt(kvString));
+			MusicTrackDetailMenu(client, kv);
+		}
 	}
 }
 

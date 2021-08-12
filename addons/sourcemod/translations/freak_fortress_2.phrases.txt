@@ -324,6 +324,29 @@
 	{
 		"en"		"Turn the Freak Fortress 2 music..."
 	}
+	"Music Track Select Title"
+	{
+		"en"		"Music track Setting"
+	}
+	"Menu Music Track Current Music"
+	{
+		"en"		"Current music"
+	}
+	"Menu Music Track Boss Music"
+	{
+		"#format"	"{1:s}"
+		"en"		"{1}'s Music"
+	}
+	"Menu Music Track Choose Music Setting"
+	{
+		"#format"	"{1:s}"
+		"en"		"Selected Music: {orange}{1}{default}"
+	}
+	"Music Track Detail Title"
+	{
+		"#format"	"{1:s}"
+		"en"		"Toggle {1}'s music"
+	}
 	"Toggle Monologue"
 	{
 		"en"		"Toggle monologues (/ff2_voice)"

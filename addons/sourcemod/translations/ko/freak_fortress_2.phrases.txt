@@ -324,6 +324,29 @@
 	{
 		"ko"		"보스 음악 ON/OFF"
 	}
+	"Music Track Select Title"
+	{
+		"ko"		"음악 트랙 설정"
+	}
+	"Menu Music Track Current Music"
+	{
+		"ko"		"지금 듣고 있는 음악"
+	}
+	"Menu Music Track Boss Music"
+	{
+		"#format"	"{1:s}"
+		"ko"		"{1}의 음악"
+	}
+	"Menu Music Track Choose Music Setting"
+	{
+		"#format"	"{1:s}"
+		"ko"		"선택된 음악: {orange}{1}{default}"
+	}
+	"Music Track Detail Title"
+	{
+		"#format"	"{1:s}"
+		"ko"		"{1}의 음악 트랙 설정"
+	}
 	"Toggle Monologue"
 	{
 		"ko"		"보스 대사 ON / OFF (/ff2_voice)"

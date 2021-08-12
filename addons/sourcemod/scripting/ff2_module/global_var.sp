@@ -128,6 +128,20 @@ static const KvDataTypes g_iHudQueryColumnDataType[] = {
 	KvData_String
 };
 
+static const char g_MusicQueryColumn[][] = {
+	"steam_id",
+	"music_id",
+	"setting_value",
+	"last_saved_time"
+};
+
+static const KvDataTypes g_iMusicQueryColumnDataType[] = {
+	KvData_String,
+	KvData_String,
+	KvData_Int,
+	KvData_String
+};
+
 public void DBS_OnLoadData(DBSData data)
 {
 	KeyValues tabledata = DBSData.CreateTableData(FF2_DB_PLAYERDATA_TABLENAME);
@@ -142,6 +156,14 @@ public void DBS_OnLoadData(DBSData data)
 	for(int loop = 0; loop < sizeof(g_HudQueryColumn); loop++)
 	{
 		DBSData.PushTableData(tabledata, g_HudQueryColumn[loop], g_iHudQueryColumnDataType[loop]);
+	}
+	data.Add(FF2DATABASE_CONFIG_NAME, tabledata);
+	delete tabledata;
+
+	tabledata = DBSData.CreateTableData(FF2_DB_PLAYER_MUSICDATA_TABLENAME);
+	for(int loop = 0; loop < sizeof(g_MusicQueryColumn); loop++)
+	{
+		DBSData.PushTableData(tabledata, g_MusicQueryColumn[loop], g_iMusicQueryColumnDataType[loop]);
 	}
 	data.Add(FF2DATABASE_CONFIG_NAME, tabledata);
 	delete tabledata;

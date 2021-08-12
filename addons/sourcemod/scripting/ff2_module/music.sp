@@ -54,7 +54,7 @@ public Action Timer_PrepareBGM(Handle timer, int userid)
 
 void PlayBGM(int client)
 {
-	char bossName[64];
+	char bossName[64], musicId[84];
 	KeyValues characterKv = GetCharacterKV(character[0]);
 
 	characterKv.Rewind();
@@ -80,8 +80,12 @@ void PlayBGM(int client)
 		}
 		else if(time > 0.0)
 		{
-			kv.GetSectionSymbol(id);
-			musicArray.Push(id);
+			MD5_String(music, musicId, sizeof(musicId));
+			if(GetMusicSetting(client, musicId))
+			{
+				kv.GetSectionSymbol(id);
+				musicArray.Push(id);
+			}
 		}
 	}
 	while(kv.GotoNextKey());
@@ -284,6 +288,19 @@ public void ClearSoundFlags(int client, int soundFlags)
 	SetSettingData(client, "sound_mute_flag", muteSound[client], KvData_Int);
 }
 
+stock bool GetMusicSetting(int client, char[] musicId)
+{
+	return (DBSPlayerData.GetClientData(client)).GetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYER_MUSICDATA_TABLENAME, musicId, "setting_value") == 0;
+}
+
+stock void SetMusicSetting(int client, char[] musicId, bool value)
+{
+	char timeStr[32];
+	FormatTime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", GetTime());
+
+	(DBSPlayerData.GetClientData(client)).SetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYER_MUSICDATA_TABLENAME, musicId, "setting_value", value ? 0 : 1);
+	(DBSPlayerData.GetClientData(client)).SetStringData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYER_MUSICDATA_TABLENAME, musicId, "last_saved_time", timeStr);
+}
 
 ///
 //NATIVES
