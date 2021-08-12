@@ -157,7 +157,7 @@ public void OnProjectileSpawn(int entity)
 
 void CreateCard(int owner, float pos[3], float angles[3], float speed, int currentSlot = TFWeaponSlot_Primary, int count = 1)
 {
-	int boss = FF2_GetBossIndex(owner);
+	int boss = FF2_GetBossIndex(owner), touchType;
 	float velocity[3], degreeDiff;
 	char modelPath[PLATFORM_MAX_PATH];
 
@@ -166,9 +166,11 @@ void CreateCard(int owner, float pos[3], float angles[3], float speed, int curre
 	Format(key, sizeof(key), "slot %d degree diff", currentSlot);
 	degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, key, 5.0);
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, CARD_THROW, "model path", modelPath, sizeof(modelPath), "");
+	touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
 #else
 	degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 4+(currentSlot*100), 5.0);
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, CARD_THROW, 3, modelPath, sizeof(modelPath));
+	touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 4, 0);
 #endif
 
 	for(int loop = 0; loop < count; loop++)
@@ -187,10 +189,19 @@ void CreateCard(int owner, float pos[3], float angles[3], float speed, int curre
 
 		SetEntityModel(prop, modelPath);
 		SetEntityMoveType(prop, MOVETYPE_VPHYSICS);
-		SetEntProp(prop, Prop_Send, "m_CollisionGroup", 0x200);
 		SetEntPropEnt(prop, Prop_Send, "m_hOwnerEntity", owner);
 
-		SetEntProp(prop, Prop_Send, "m_usSolidFlags", 512);
+		if(touchType == 0)
+		{
+			SetEntProp(prop, Prop_Send, "m_CollisionGroup", 0x200);
+			SetEntProp(prop, Prop_Send, "m_usSolidFlags", 512);
+		}
+		else
+		{
+			SetEntProp(prop, Prop_Send, "m_CollisionGroup", 2);
+			SetEntProp(prop, Prop_Send, "m_usSolidFlags", 0x0004);
+		}
+
 		DispatchSpawn(prop);
 
 		TeleportEntity(prop, pos, angles, velocity);
@@ -204,10 +215,15 @@ void CreateCard(int owner, float pos[3], float angles[3], float speed, int curre
 
 public Action OnTouchCard(int prop, int other)
 {
-	int owner = GetEntPropEnt(prop, Prop_Send, "m_hOwnerEntity"), boss = FF2_GetBossIndex(owner);
+	int owner = GetEntPropEnt(prop, Prop_Send, "m_hOwnerEntity"), boss = FF2_GetBossIndex(owner), touchType;
 
 	if(boss != -1)
 	{
+#if defined _ff2_potry_included
+		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
+#else
+		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 4, 0);
+#endif
 		if(other == 0)
 		{
 			SDKUnhook(prop, SDKHook_StartTouch, OnTouchCard);
@@ -216,52 +232,61 @@ public Action OnTouchCard(int prop, int other)
 			g_flCardLifeTime[prop] = GetGameTime() + 3.0;
 			return Plugin_Continue;
 		}
-		else if(IsValidClient(other))
+		else if(touchType == 0 && IsValidClient(other))
 		{
 			if(GetClientTeam(owner) == GetClientTeam(other))
 				return Plugin_Handled;
 
-			int onHitSale;
-			float damage;
+			HitCard(owner, other, prop);
+		}
+	}
+	return Plugin_Continue;
+}
+
+void HitCard(int owner, int target, int prop)
+{
+	int boss = FF2_GetBossIndex(owner), onHitSale;
+	float damage;
 
 #if defined _ff2_potry_included
 			onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
 			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "damage", 10.0);
 #else
 			onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 1, 10);
-			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 2, 10.0);
+	damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 2, 10.0);
 #endif
 
-			if(g_iDiscountValue[other] >= 100)
-				if(FF2_GetBossIndex(other) == -1)
-					damage = 10000.0;
-				else
-					damage *= 1.0 + (g_iDiscountValue[other] * 0.01);
-			else
-				damage *= 1.0 + (g_iDiscountValue[other] * 0.01);
+	if(g_iDiscountValue[target] >= 100)
+		if(FF2_GetBossIndex(target) == -1)
+			damage = 10000.0;
+		else
+			damage *= 1.0 + (g_iDiscountValue[target] * 0.01);
+	else
+		damage *= 1.0 + (g_iDiscountValue[target] * 0.01);
 
-			SDKHooks_TakeDamage(other, owner, owner,
-				damage, DMG_DIRECT);
+	SDKHooks_TakeDamage(target, owner, owner,
+		damage, DMG_DIRECT);
 
-			AddDiscount(other, owner, onHitSale);
+	AddDiscount(target, owner, onHitSale);
 
-			SDKUnhook(prop, SDKHook_StartTouch, OnTouchCard);
-			SDKUnhook(prop, SDKHook_Touch, OnTouchCard);
+	SDKUnhook(prop, SDKHook_StartTouch, OnTouchCard);
+	SDKUnhook(prop, SDKHook_Touch, OnTouchCard);
 
-			g_flCardLifeTime[prop] == 0.0;
-			AcceptEntityInput(prop, "Kill");
-		}
-	}
-	return Plugin_Continue;
+	g_flCardLifeTime[prop] == 0.0;
+	AcceptEntityInput(prop, "Kill");
 }
 
 public Action OnCardThink(Handle timer, int prop)
 {
 	// LogMessage("FF2_GetRoundState = %d, g_flCardLifeTime[prop] = %.1f", FF2_GetRoundState(), g_flCardLifeTime[prop]);
+
+	if(!IsValidEntity(prop))
+		return Plugin_Stop;
+
 	if(FF2_GetRoundState() != 1
 		|| (g_flCardLifeTime[prop] == 0.0 || g_flCardLifeTime[prop] < GetGameTime()))
 	{
-		if(IsValidEntity(prop))
+		// 라운드가 다 끝나거나 시간이 다 된 경우
 		{
 			SDKUnhook(prop, SDKHook_StartTouch, OnTouchCard);
 			SDKUnhook(prop, SDKHook_Touch, OnTouchCard);
@@ -273,7 +298,45 @@ public Action OnCardThink(Handle timer, int prop)
 		return Plugin_Stop;
 	}
 
+	int owner = GetEntPropEnt(prop, Prop_Send, "m_hOwnerEntity"), boss = FF2_GetBossIndex(owner),
+		touchType;
+	float cardRange;
+
+	#if defined _ff2_potry_included
+		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
+		cardRange = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "card range", 10.0);
+	#else
+		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 4, 0);
+		cardRange = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, 5, 10.0);
+	#endif
+	if(touchType != 1)		return Plugin_Continue;
+
+	float pos[3], endPos[3], vecMin[3], vacMax[3];
+	int ent;
+	GetEntPropVector(prop, Prop_Data, "m_vecOrigin", pos);
+
+	for(int loop = 0; loop < 3; loop++)
+	{
+		vecMin[loop] = cardRange * -0.5;
+		vacMax[loop] = cardRange * 0.5;
+		endPos[loop] = pos[loop];
+	}
+	endPos[2] += cardRange;
+
+	TR_TraceHullFilter(pos, endPos, vecMin, vacMax, MASK_ALL, TraceDontHitSelf, owner);
+	if(!TR_DidHit() || !IsValidClient((ent = TR_GetEntityIndex())))
+		return Plugin_Continue;
+
+	if(GetClientTeam(owner) == GetClientTeam(ent))
+		return Plugin_Continue;
+
+	HitCard(owner, ent, prop);
 	return Plugin_Continue;
+}
+
+public bool TraceDontHitSelf(int entity, int contentsMask, any data)
+{
+	return (entity != 0 && entity != data);
 }
 
 #if defined _ff2_potry_included
