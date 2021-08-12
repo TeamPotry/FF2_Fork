@@ -2287,7 +2287,7 @@ public Action MakeBoss(Handle timer, int boss)
 	if(!IsPlayerAlive(client))
 	{
 		TF2_RespawnPlayer(client);
-		/*
+/*
 		if(CheckRoundState()==FF2RoundState_Setup)
 		{
 			TF2_RespawnPlayer(client);
@@ -2296,7 +2296,7 @@ public Action MakeBoss(Handle timer, int boss)
 		{
 			return Plugin_Continue;
 		}
-		*/
+*/
 	}
 
 	KeyValues kv=GetArrayCell(bossesArray, character[boss]);
