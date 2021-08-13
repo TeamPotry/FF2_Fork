@@ -48,7 +48,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(!strcmp(abilityName, "rage_tfcondition"))
 	{
-		TFC_Invoke(client);
+		TFC_Invoke(client, slot);
 	}
 	if(!strcmp(abilityName, "charge_tfcondition"))
 	{
@@ -373,10 +373,10 @@ public bool:TFC_CanInvoke(client)
 	return true; // no special conditions will prevent this ability
 }
 
-public TFC_Invoke(client)
+public TFC_Invoke(client, slot)
 {
 	new boss=FF2_GetBossIndex(client);
-	InvokeCondition(boss, client, -1);
+	InvokeCondition(boss, client, -1, slot);
 }
 
 ////////////////////////////////////////
@@ -493,7 +493,7 @@ public TC9_Invoke(client)
 	InvokeCondition(boss, client, 9);
 }
 
-public void InvokeCondition(int boss, int client, int tfcnum)
+void InvokeCondition(int boss, int client, int tfcnum, int slot = -3)
 {
 	char amsCond[96];// , abilitySound[PLATFORM_MAX_PATH];
 
@@ -509,8 +509,8 @@ public void InvokeCondition(int boss, int client, int tfcnum)
 	}
 
 	char PlayerCond[768], BossCond[768], snd[PLATFORM_MAX_PATH];
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, amsCond, "boss_conditions", BossCond, sizeof(BossCond)); // client TFConds
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, amsCond, "player_conditions", PlayerCond, sizeof(PlayerCond)); // Player TFConds
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, amsCond, "boss_conditions", BossCond, sizeof(BossCond), _, slot); // client TFConds
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, amsCond, "player_conditions", PlayerCond, sizeof(PlayerCond), _, slot); // Player TFConds
 
 	if(FF2_FindSound("tfcond", snd, sizeof(snd), boss, true, 0))
 	{
@@ -524,7 +524,7 @@ public void InvokeCondition(int boss, int client, int tfcnum)
 	if(PlayerCond[0]!='\0')
 	{
 		float pos[3], pos2[3], dist;
-		float dist2=FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, amsCond, "distance", view_as<float>(FF2_GetBossRageDistance(boss, THIS_PLUGIN_NAME, amsCond)));
+		float dist2=FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, amsCond, "distance", view_as<float>(FF2_GetBossRageDistance(boss, THIS_PLUGIN_NAME, amsCond, slot)));
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 
 		for(int target=1; target<=MaxClients; target++)

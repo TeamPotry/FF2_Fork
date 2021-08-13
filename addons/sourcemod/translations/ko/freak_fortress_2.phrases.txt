@@ -45,6 +45,14 @@
 	{
 		"ko"		"메딕을 불러 \"분노\" 능력을 사용하세요!"
 	}
+	"Rage Duration"
+	{
+		"ko"		"분노 지속시간"
+	}
+	"Life Skill Duration"
+	{
+		"ko"		"라이프 스킬 지속시간"
+	}
 	"Rage Meter"
 	{
 		"#format"	"{1:i},{2:i}"

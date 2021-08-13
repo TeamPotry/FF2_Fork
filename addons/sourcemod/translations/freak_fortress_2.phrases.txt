@@ -45,6 +45,14 @@
 	{
 		"en"		"Call for medic to activate your \"RAGE\" ability!"
 	}
+	"Rage Duration"
+	{
+		"en"		"RAGE Duration"
+	}
+	"Life Skill Duration"
+	{
+		"en"		"LIFE Skill Duration"
+	}
 	"Rage Meter"
 	{
 		"#format"	"{1:i},{2:i}"

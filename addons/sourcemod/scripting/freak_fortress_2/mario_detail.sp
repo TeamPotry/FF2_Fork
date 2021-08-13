@@ -64,7 +64,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(!strcmp(abilityName, STAR))
 	{
-		Mario_Star_Start(client);
+		Mario_Star_Start(client, slot);
 	}
 }
 
@@ -97,7 +97,7 @@ public int OnStompPost(int attacker, int victim, float damageMultiplier, float d
     }
 }
 
-void Mario_Star_Start(int client)
+void Mario_Star_Start(int client, int slot)
 {
     /*
         - 무지개 광채 표현
@@ -108,8 +108,8 @@ void Mario_Star_Start(int client)
         // 만약 시간 도중에 재발동 된 경우, 넉백 면역 부여
     */
 	int boss = FF2_GetBossIndex(client);
-	float time = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STAR, "time", 10.0);
-	float volume = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STAR, "sound volume", 1.0);
+	float time = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STAR, "time", 10.0, slot);
+	float volume = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STAR, "sound volume", 1.0, slot);
 	float pos[3];
 
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);

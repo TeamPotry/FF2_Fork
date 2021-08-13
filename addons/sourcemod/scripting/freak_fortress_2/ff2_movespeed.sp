@@ -90,17 +90,17 @@ public bool:MVS_CanInvoke(client)
 	return true;
 }
 
-Rage_MoveSpeed(client)
+Rage_MoveSpeed(client, slot)
 {
-	MVS_Invoke(client); // Activate RAGE normally, if ability is configured to be used as a normal RAGE.
+	MVS_Invoke(client, slot); // Activate RAGE normally, if ability is configured to be used as a normal RAGE.
 }
 
-public MVS_Invoke(client)
+MVS_Invoke(client, slot = -3)
 {
 	new boss=FF2_GetBossIndex(client);
-	decl String:nSpeed[10], String:nDuration[10]; // Foolproof way so that args always return floats instead of ints
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, MOVESPEED, "boss set speed", nSpeed, sizeof(nSpeed));
-	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, MOVESPEED, "boss duration", nDuration, sizeof(nDuration));
+	char nSpeed[10], nDuration[10]; // Foolproof way so that args always return floats instead of ints
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, MOVESPEED, "boss set speed", nSpeed, sizeof(nSpeed), _, slot);
+	FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, MOVESPEED, "boss duration", nDuration, sizeof(nDuration), _, slot);
 
 
 	if(nSpeed[0]!='\0' || nDuration[0]!='\0')
@@ -169,7 +169,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	new client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(!strcmp(abilityName, MOVESPEED))
 	{
-		Rage_MoveSpeed(client);
+		Rage_MoveSpeed(client, slot);
 	}
 	return;
 }

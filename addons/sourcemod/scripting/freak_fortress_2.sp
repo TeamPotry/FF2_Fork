@@ -79,6 +79,7 @@ int BossRageDamage[MAXPLAYERS+1];
 float BossSpeed[MAXPLAYERS+1];
 float BossCharge[MAXPLAYERS+1][8];
 float BossMaxRageCharge[MAXPLAYERS+1];
+float BossSkillDuration[MAXPLAYERS+1][3];
 
 float Stabbed[MAXPLAYERS+1];
 float Marketed[MAXPLAYERS+1];
@@ -170,6 +171,21 @@ int g_Monoculus=-1;
 static bool executed;
 
 int changeGamemode;
+
+enum
+{
+	SkillName_Rage = 0,
+	SkillName_200Rage,
+	SkillName_LostLife,
+
+	SkillName_MaxCounts
+}
+
+static const char g_strSkillNameKey[][] = {
+	"rage",
+	"200 rage",
+	"lost life"
+};
 
 //Handle kvWeaponSpecials;
 
@@ -2384,6 +2400,11 @@ public Action MakeBoss(Handle timer, int boss)
 	KSpreeCount[boss]=0;
 	BossCharge[boss][0]=0.0;
 
+	for(int loop = 0; loop < 3; loop++)
+	{
+		BossSkillDuration[boss][loop] = 0.0;
+	}
+
 	if(Boss[0]==client)
 		SetClientQueuePoints(client, 0);
 
@@ -4396,6 +4417,33 @@ public Action BossTimer(Handle timer)
 		}
 
 		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
+
+		for(int loop = SkillName_MaxCounts - 1; loop >= 0; loop--)
+		{
+			if(BossSkillDuration[boss][loop] <= GetGameTime())		continue;
+
+			SetHudTextParams(-1.0, 0.83, 0.06, 0, 255, 0, 255);
+			if(!GetBossSkillName(boss, loop, text, sizeof(text), client))
+			{
+				switch(loop)
+				{
+					case SkillName_Rage, SkillName_200Rage:
+					{
+						Format(text, sizeof(text), "%T", "Rage Duration", client);
+					}
+					case SkillName_LostLife:
+					{
+						Format(text, sizeof(text), "%T", "Life Skill Duration", client);
+					}
+				}
+			}
+
+			// FIXME: 라이프 스킬과 분노가 겹치는 경우, 라이프 스킬 이름이 씹힘 
+			Format(text, sizeof(text), "%s: %.1f", text, BossSkillDuration[boss][loop] - GetGameTime());
+			bossHudDisplay=FF2HudDisplay.CreateDisplay("Skill Duration", text);
+			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
+		}
+
 		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossMaxRageCharge[boss]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
 		bossHudDisplay=FF2HudDisplay.CreateDisplay("Rage Meter", text);
@@ -4410,7 +4458,10 @@ public Action BossTimer(Handle timer)
 			}
 			else
 			{
-				if((RoundFloat(BossMaxRageCharge[boss]) >= 200
+				if(BossSkillDuration[boss][SkillName_Rage] > GetGameTime()
+					|| BossSkillDuration[boss][SkillName_200Rage] > GetGameTime())
+					SetHudTextParams(-1.0, 0.83, 0.06, 0, 255, 0, 255);
+				else if((RoundFloat(BossMaxRageCharge[boss]) >= 200
 					&& (100 <= RoundFloat(BossCharge[boss][0]) && RoundFloat(BossCharge[boss][0]) < 200)))
 					SetHudTextParams(-1.0, 0.83, 0.06, 255, 228, 0, 255);
 				else
@@ -4674,6 +4725,10 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		int slot = RoundFloat(BossMaxRageCharge[boss]) >= 200 && RoundFloat(BossCharge[boss][0]) >= 200
 			? -2 : 0;
 
+		if(BossSkillDuration[boss][SkillName_Rage] > GetGameTime()
+			|| BossSkillDuration[boss][SkillName_200Rage] > GetGameTime())
+			return Plugin_Handled;
+
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
@@ -4736,6 +4791,10 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 			EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound, client);
 		}
 		emitRageSound[boss]=true;
+
+		int type = slot == 0 ? SkillName_Rage : SkillName_200Rage;
+		float duration = GetBossSkillDuration(boss, type);
+		BossSkillDuration[boss][type] = GetGameTime() + duration;
 
 		delete abilityKv;
 		return Plugin_Handled;
@@ -6026,6 +6085,9 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
 					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
 				}
+
+				float duration = GetBossSkillDuration(boss, SkillName_LostLife);
+				BossSkillDuration[boss][SkillName_LostLife] = GetGameTime() + duration;
 
 				break;
 			}
@@ -8276,6 +8338,51 @@ public bool GetBossName(int boss, char[] bossName, int length, int client)
 	bossKv.JumpToKeySymbol(posId);
 
 	return true;
+}
+
+public bool GetBossSkillName(int boss, int type, char[] skillName, int length, int client)
+{
+	KeyValues bossKv = GetCharacterKV(character[boss]);
+	int posId;
+
+	bossKv.GetSectionSymbol(posId);
+	bossKv.Rewind();
+
+	if(bossKv.JumpToKey("skill info") && bossKv.JumpToKey(g_strSkillNameKey[type]))
+	{
+		char language[12];
+		GetLanguageInfo(client > 0 ? GetClientLanguage(client) : GetServerLanguage(),
+			language, sizeof(language));
+
+		Format(language, sizeof(language), "name %s", language);
+		bossKv.GetString(language, skillName, length, "");
+		if(skillName[0] != '\0')
+			return true;
+	}
+
+	bossKv.Rewind();
+	bossKv.JumpToKeySymbol(posId);
+
+	return false;
+}
+
+float GetBossSkillDuration(int boss, int type)
+{
+	KeyValues bossKv = GetCharacterKV(character[boss]);
+	int posId;
+
+	bossKv.GetSectionSymbol(posId);
+	bossKv.Rewind();
+
+	if(bossKv.JumpToKey("skill info") && bossKv.JumpToKey(g_strSkillNameKey[type]))
+	{
+		return bossKv.GetFloat("duration", 0.0);
+	}
+
+	bossKv.Rewind();
+	bossKv.JumpToKeySymbol(posId);
+
+	return 0.0;
 }
 
 public int Native_GetBossName(Handle plugin, int numParams)
