@@ -232,7 +232,7 @@ native void FF2_SetBossRageDamage(int boss, int damage);
  * @param abilityName   Name of ability (use an empty string if you want get the boss's global "rage distance" value)
  * @return              Ability's rage distance
  */
-native int FF2_GetBossRageDistance(int boss=0, const char[] pluginName="", const char[] abilityName="");
+native int FF2_GetBossRageDistance(int boss=0, const char[] pluginName="", const char[] abilityName="", int slot = -3);
 
 /**
  * Gets damage dealt by this client
@@ -259,7 +259,7 @@ native void FF2_SetClientDamage(int client, int damage);
  * @param abilityName   Name of ability
  * @return              True if the boss has this ability, false if it doesn't
  */
-native bool FF2_HasAbility(int boss, const char[] pluginName, const char[] abilityName);
+native bool FF2_HasAbility(int boss, const char[] pluginName, const char[] abilityName, int slot = -3);
 
 /**
  * Gets the integer value of an ability argument
@@ -271,7 +271,7 @@ native bool FF2_HasAbility(int boss, const char[] pluginName, const char[] abili
  * @param defaultValue  Value to return if argument does not exist
  * @return              Value of argument
  */
-native int FF2_GetAbilityArgument(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, int defaultValue=0);
+native int FF2_GetAbilityArgument(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, int defaultValue=0, int slot=-3);
 
 /**
  * Gets the float value of an ability argument
@@ -283,7 +283,7 @@ native int FF2_GetAbilityArgument(int boss, const char[] pluginName, const char[
  * @param defaultValue  Value to return if argument does not exist
  * @return              Value of argument
  */
-native float FF2_GetAbilityArgumentFloat(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, float defaultValue=0.0);
+native float FF2_GetAbilityArgumentFloat(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, float defaultValue=0.0, int slot=-3);
 
 /**
  * Gets the string value of an ability argument
@@ -297,7 +297,7 @@ native float FF2_GetAbilityArgumentFloat(int boss, const char[] pluginName, cons
  * @param defaultValue  Value to return if argument does not exist
  * @noreturn
  */
-native void FF2_GetAbilityArgumentString(int boss, const char[] pluginName, const char[] abilityName, const char[] argument , char[] buffer, int bufferLength, char[] defaultValue="");
+native void FF2_GetAbilityArgumentString(int boss, const char[] pluginName, const char[] abilityName, const char[] argument , char[] buffer, int bufferLength, char[] defaultValue="", int slot=-3);
 
 /**
  * Determines how the Boss should use a certain ability

@@ -78,6 +78,7 @@ int BossLivesMax[MAXPLAYERS+1];
 int BossRageDamage[MAXPLAYERS+1];
 float BossSpeed[MAXPLAYERS+1];
 float BossCharge[MAXPLAYERS+1][8];
+float BossMaxRageCharge[MAXPLAYERS+1];
 
 float Stabbed[MAXPLAYERS+1];
 float Marketed[MAXPLAYERS+1];
@@ -2316,6 +2317,7 @@ public Action MakeBoss(Handle timer, int boss)
 	BossLivesMax[boss]=BossLives[boss]=ParseFormula(boss, "lives", 1);
 	BossHealth[boss]=BossHealthLast[boss]=BossHealthMax[boss]*BossLivesMax[boss];
 	BossRageDamage[boss]=ParseFormula(boss, "rage damage", 1900);
+	BossMaxRageCharge[boss] = kv.GetFloat("rage max charge", 100.0);
 	BossSpeed[boss]=float((ParseFormula(boss, "speed", 340)));
 
 	SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
@@ -4394,12 +4396,12 @@ public Action BossTimer(Handle timer)
 		}
 
 		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
-		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
+		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossMaxRageCharge[boss]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
 		bossHudDisplay=FF2HudDisplay.CreateDisplay("Rage Meter", text);
 		PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 
-		if(RoundFloat(BossCharge[boss][0])==100.0)
+		if(RoundFloat(BossCharge[boss][0]) >= 100.0)
 		{
 			if(IsFakeClient(client) && !(FF2Flags[client] & FF2FLAG_BOTRAGE))
 			{
@@ -4408,9 +4410,13 @@ public Action BossTimer(Handle timer)
 			}
 			else
 			{
-				SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
-				Format(text, sizeof(text), "%t", "Activate Rage");
+				if((RoundFloat(BossMaxRageCharge[boss]) >= 200
+					&& (100 <= RoundFloat(BossCharge[boss][0]) && RoundFloat(BossCharge[boss][0]) < 200)))
+					SetHudTextParams(-1.0, 0.83, 0.06, 255, 228, 0, 255);
+				else
+					SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
 
+				Format(text, sizeof(text), "%T", "Activate Rage", client);
 				bossHudDisplay=FF2HudDisplay.CreateDisplay("Activate Rage", text);
 				PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 
@@ -4662,10 +4668,12 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		return Plugin_Continue;
 	}
 
-	// FIXME
-	if(RoundFloat(BossCharge[boss][0])==100)
+	if(RoundFloat(BossCharge[boss][0])>=100)
 	{
 		KeyValues kv = GetCharacterKV(character[boss]), abilityKv = new KeyValues("abilities");
+		int slot = RoundFloat(BossMaxRageCharge[boss]) >= 200 && RoundFloat(BossCharge[boss][0]) >= 200
+			? -2 : 0;
+
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
@@ -4682,7 +4690,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 				{
 					char abilityName[64];
 					abilityKv.GetSectionName(abilityName, sizeof(abilityName));
-					if(abilityKv.GetNum("slot", 0) != 0) // Rage is slot 0
+					if(abilityKv.GetNum("slot", 0) != slot) // Rage is slot 0 or -2
 					{
 						continue;
 					}
@@ -4690,7 +4698,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 					abilityKv.GetString("life", ability, sizeof(ability), "");
 					if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
 					{
-						if(!UseAbility(boss, pluginName, abilityName, 0))
+						if(!UseAbility(boss, pluginName, abilityName, slot))
 						{
 							return Plugin_Continue;
 						}
@@ -4705,7 +4713,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 							livesArray.GetString(n, temp, sizeof(temp));
 							if(StringToInt(temp)==BossLives[boss])
 							{
-								if(!UseAbility(boss, pluginName, abilityName, 0))
+								if(!UseAbility(boss, pluginName, abilityName, slot))
 								{
 									return Plugin_Continue;
 								}
@@ -4987,7 +4995,7 @@ public Action OnObjectDeflected(Event event, const char[] name, bool dontBroadca
 	}
 
 	int boss=GetBossIndex(GetClientOfUserId(event.GetInt("ownerid")));
-	if(boss!=-1 && BossCharge[boss][0]<100.0)
+	if(boss != -1)
 	{
 		AddBossCharge(boss, 0, 7.0); //TODO: Allow this to be customizable
 
@@ -5888,11 +5896,6 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 				}
 			}
-
-			if(BossCharge[boss][0]>100.0)
-			{
-				BossCharge[boss][0]=100.0;
-			}
 		}
 		else
 		{
@@ -6076,10 +6079,6 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			}
 		}
 
-		if(BossCharge[boss][0]>100.0)
-		{
-			BossCharge[boss][0]=100.0;
-		}
 		UpdateHealthBar();
 	}
 	else if(TF2_GetClientTeam(client) == BossTeam && TF2_GetClientTeam(attacker) != BossTeam)
@@ -6505,9 +6504,9 @@ stock int ParseFormula(int boss, const char[] key, int defaultValue)
 	return result;
 }
 
-stock int GetAbilityArgument(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, int defaultValue=0)
+stock int GetAbilityArgument(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, int defaultValue = 0, int slot = -3)
 {
-	if(HasAbility(boss, pluginName, abilityName))
+	if(HasAbility(boss, pluginName, abilityName, slot))
 	{
 		KeyValues kv=GetCharacterKV(character[boss]);
 		return kv.GetNum(argument, defaultValue);
@@ -6515,9 +6514,9 @@ stock int GetAbilityArgument(int boss, const char[] pluginName, const char[] abi
 	return defaultValue;
 }
 
-stock float GetAbilityArgumentFloat(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, float defaultValue=0.0)
+stock float GetAbilityArgumentFloat(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, float defaultValue=0.0, int slot = -3)
 {
-	if(HasAbility(boss, pluginName, abilityName))
+	if(HasAbility(boss, pluginName, abilityName, slot))
 	{
 		KeyValues kv=GetCharacterKV(character[boss]);
 		return kv.GetFloat(argument, defaultValue);
@@ -6525,10 +6524,10 @@ stock float GetAbilityArgumentFloat(int boss, const char[] pluginName, const cha
 	return defaultValue;
 }
 
-stock void GetAbilityArgumentString(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, char[] abilityString, int length, const char[] defaultValue="")
+stock void GetAbilityArgumentString(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, char[] abilityString, int length, const char[] defaultValue="", int slot = -3)
 {
 	strcopy(abilityString, length, defaultValue);
-	if(HasAbility(boss, pluginName, abilityName))
+	if(HasAbility(boss, pluginName, abilityName, slot))
 	{
 		KeyValues kv=GetCharacterKV(character[boss]);
 		kv.GetString(argument, abilityString, length, defaultValue);
@@ -8493,14 +8492,16 @@ public void AddBossCharge(int boss, int slot, float charge)
 	if(charge > 0.0)
 	{
 		BossCharge[boss][slot]+=charge;
-		if(BossCharge[boss][slot] > 100.0)
-			BossCharge[boss][slot]=100.0;
+		if(slot == 0)
+			BossCharge[boss][slot] = BossCharge[boss][slot] > BossMaxRageCharge[boss] ? BossMaxRageCharge[boss] : BossCharge[boss][slot];
+		else if(BossCharge[boss][slot] > 100.0)
+			BossCharge[boss][slot] = 100.0;
 	}
-	else if(BossCharge[boss][slot] < 90.0)
+	else
 	{
-		BossCharge[boss][slot]+=charge;
+		BossCharge[boss][slot] += charge;
 		if(BossCharge[boss][slot] < 0.0)
-			BossCharge[boss][slot]=0.0;
+			BossCharge[boss][slot] = 0.0;
 	}
 }
 
@@ -8529,7 +8530,7 @@ public int Native_SetBossRageDamage(Handle plugin, int numParams)
 	SetBossRageDamage(GetNativeCell(1), GetNativeCell(2));
 }
 
-public int GetBossRageDistance(int boss, const char[] pluginName, const char[] abilityName)
+int GetBossRageDistance(int boss, const char[] pluginName, const char[] abilityName, int slot = -3)
 {
 	KeyValues kv = GetCharacterKV(character[boss]);
 	if(!kv)  //Invalid boss
@@ -8543,13 +8544,13 @@ public int GetBossRageDistance(int boss, const char[] pluginName, const char[] a
 		return ParseFormula(boss, "rage distance", 400);
 	}
 
-	if(HasAbility(boss, pluginName, abilityName))
+	if(HasAbility(boss, pluginName, abilityName, slot))
 	{
-		char key[128];
-		Format(key, sizeof(key), "%s > %s > distance", pluginName, abilityName);
+		// char key[128];
+		// Format(key, sizeof(key), "distance");
 
 		int distance;
-		if((distance=ParseFormula(boss, key, -1))<0)  //Distance doesn't exist, return the global rage distance instead
+		if((distance = RoundFloat(kv.GetFloat("distance", -1.0))) < 0/*ParseFormula(boss, key, -1))<0*/)  //Distance doesn't exist, return the global rage distance instead
 		{
 			kv.Rewind();
 			distance=ParseFormula(boss, "rage distance", 400);
@@ -8564,7 +8565,7 @@ public int Native_GetBossRageDistance(Handle plugin, int numParams)
 	char pluginName[64], abilityName[64];
 	GetNativeString(2, pluginName, sizeof(pluginName));
 	GetNativeString(3, abilityName, sizeof(abilityName));
-	return GetBossRageDistance(GetNativeCell(1), pluginName, abilityName);
+	return GetBossRageDistance(GetNativeCell(1), pluginName, abilityName, GetNativeCell(4));
 }
 
 public int GetClientDamage(int client)
@@ -8680,18 +8681,36 @@ public void Forward_OnSpecialAttack_Post(int attacker, int victimBoss, const cha
 	Call_Finish();
 }
 
-public bool HasAbility(int boss, const char[] pluginName, const char[] abilityName)
+bool HasAbility(int boss, const char[] pluginName, const char[] abilityName, int slot = -3)
 {
 	if(boss==-1 || character[boss]==-1 || !GetCharacterKV(character[boss]))  //Invalid boss
 	{
 		return false;
 	}
 
+	char temp[64];
 	KeyValues kv=GetCharacterKV(character[boss]);
+
 	kv.Rewind();
-	if(kv.JumpToKey("abilities") && kv.JumpToKey(pluginName) && kv.JumpToKey(abilityName))
+	if(kv.JumpToKey("abilities") && kv.JumpToKey(pluginName))
 	{
-		return true;
+		if(slot == -3)
+		{
+			return kv.JumpToKey(abilityName);
+		}
+		else
+		{
+			kv.GotoFirstSubKey();
+			do
+			{
+				kv.GetSectionName(temp, sizeof(temp));
+				if(StrEqual(temp, abilityName) && kv.GetNum("slot", 0) == slot)
+				{
+					return true;
+				}
+			}
+			while(kv.GotoNextKey());
+		}
 	}
 	return false;
 }
@@ -8701,12 +8720,12 @@ public int Native_HasAbility(Handle plugin, int numParams)
 	char pluginName[64], abilityName[64];
 	GetNativeString(2, pluginName, sizeof(pluginName));
 	GetNativeString(3, abilityName, sizeof(abilityName));
-	return HasAbility(GetNativeCell(1), pluginName, abilityName);
+	return HasAbility(GetNativeCell(1), pluginName, abilityName, GetNativeCell(4));
 }
 
-public int GetAbilityArgumentWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, int defaultValue)
+public int GetAbilityArgumentWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, int defaultValue, int slot)
 {
-	return GetAbilityArgument(boss, pluginName, abilityName, argument, defaultValue);
+	return GetAbilityArgument(boss, pluginName, abilityName, argument, defaultValue, slot);
 }
 
 public int Native_GetAbilityArgument(Handle plugin, int numParams)
@@ -8715,12 +8734,12 @@ public int Native_GetAbilityArgument(Handle plugin, int numParams)
 	GetNativeString(2, pluginName, sizeof(pluginName));
 	GetNativeString(3, abilityName, sizeof(abilityName));
 	GetNativeString(4, argument, sizeof(argument));
-	return GetAbilityArgumentWrapper(GetNativeCell(1), pluginName, abilityName, argument, GetNativeCell(5));
+	return GetAbilityArgumentWrapper(GetNativeCell(1), pluginName, abilityName, argument, GetNativeCell(5), GetNativeCell(6));
 }
 
-public float GetAbilityArgumentFloatWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, float defaultValue)
+public float GetAbilityArgumentFloatWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, float defaultValue, int slot)
 {
-	return GetAbilityArgumentFloat(boss, pluginName, abilityName, argument, defaultValue);
+	return GetAbilityArgumentFloat(boss, pluginName, abilityName, argument, defaultValue, slot);
 }
 
 public int Native_GetAbilityArgumentFloat(Handle plugin, int numParams)
@@ -8729,12 +8748,12 @@ public int Native_GetAbilityArgumentFloat(Handle plugin, int numParams)
 	GetNativeString(2, pluginName, sizeof(pluginName));
 	GetNativeString(3, abilityName, sizeof(abilityName));
 	GetNativeString(4, argument, sizeof(argument));
-	return view_as<int>(GetAbilityArgumentFloatWrapper(GetNativeCell(1), pluginName, abilityName, argument, view_as<float>(GetNativeCell(5))));
+	return view_as<int>(GetAbilityArgumentFloatWrapper(GetNativeCell(1), pluginName, abilityName, argument, view_as<float>(GetNativeCell(5)), GetNativeCell(6)));
 }
 
-public int GetAbilityArgumentStringWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, char[] abilityString, int length, const char[] defaultValue)
+public int GetAbilityArgumentStringWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, char[] abilityString, int length, const char[] defaultValue, int slot)
 {
-	GetAbilityArgumentString(boss, pluginName, abilityName, argument, abilityString, length, defaultValue);
+	GetAbilityArgumentString(boss, pluginName, abilityName, argument, abilityString, length, defaultValue, slot);
 }
 
 public int Native_GetAbilityArgumentString(Handle plugin, int numParams)
@@ -8746,7 +8765,7 @@ public int Native_GetAbilityArgumentString(Handle plugin, int numParams)
 	GetNativeString(7, defaultValue, sizeof(defaultValue));
 	int length=GetNativeCell(6);
 	char[] abilityString=new char[length];
-	GetAbilityArgumentStringWrapper(GetNativeCell(1), pluginName, abilityName, argument, abilityString, length, defaultValue);
+	GetAbilityArgumentStringWrapper(GetNativeCell(1), pluginName, abilityName, argument, abilityString, length, defaultValue, GetNativeCell(8));
 	SetNativeString(5, abilityString, length);
 }
 
@@ -8775,12 +8794,12 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 		Call_PushCell(3);  //We're assuming here a life-loss ability will always be in use if it gets called
 		Call_Finish();
 	}
-	else if(!slot)
+	else if(slot == 0 || slot == -2)
 	{
 		FF2Flags[Boss[boss]]&=~FF2FLAG_BOTRAGE;
 		Call_PushCell(3);  //We're assuming here a rage ability will always be in use if it gets called
 		Call_Finish();
-		BossCharge[boss][slot]=0.0;
+		AddBossCharge(boss, 0, slot == 0 ? -100.0 : -200.0);
 	}
 	else
 	{

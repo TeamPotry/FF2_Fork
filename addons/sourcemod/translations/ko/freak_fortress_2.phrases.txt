@@ -47,8 +47,8 @@
 	}
 	"Rage Meter"
 	{
-		"#format"	"{1:i}"
-		"ko"		"분노: {1}%%"
+		"#format"	"{1:i},{2:i}"
+		"ko"		"분노: {1}%% / {2}%%"
 	}
 	"Current Boss Rage"
 	{

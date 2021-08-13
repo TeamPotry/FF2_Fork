@@ -180,7 +180,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 	else if(StrEqual(abilityName, "stun", false))
 	{
-		Rage_Stun(abilityName, boss);
+		Rage_Stun(abilityName, boss, slot);
 	}
 	else if(StrEqual(abilityName, "stun sentry gun", false))
 	{
@@ -228,12 +228,12 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 }
 
-void Rage_Stun(const char[] abilityName, int boss)
+void Rage_Stun(const char[] abilityName, int boss, int slot)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float bossPosition[3], targetPosition[3];
-	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0), slowdown=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "slowdown", 0.0);
-	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName), stunflags=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "custom flags", TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT);
+	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0, slot), slowdown=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "slowdown", 0.0, slot);
+	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName, slot), stunflags=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "custom flags", TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, slot);
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 
 	for(int target=1; target<=MaxClients; target++)

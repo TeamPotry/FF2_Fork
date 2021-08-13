@@ -47,8 +47,8 @@
 	}
 	"Rage Meter"
 	{
-		"#format"	"{1:i}"
-		"en"		"Rage is {1} percent ready"
+		"#format"	"{1:i},{2:i}"
+		"en"		"RAGE Meter: {1}%% / {2}%%"
 	}
 	"Current Boss Rage"
 	{
