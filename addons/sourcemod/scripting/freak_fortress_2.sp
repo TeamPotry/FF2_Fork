@@ -5518,7 +5518,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(TF2_GetPlayerClass(attacker) == TFClass_Heavy && StrContains(classname, "tf_weapon_shotgun")!=-1)
 				{
-					TF2Util_TakeHealth(attacker, 30.0);
+					int maxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
+					TF2Util_TakeHealth(attacker, 50.0, TAKEHEALTH_IGNORE_MAXHEALTH);
+
+					int currentHealth = GetEntProp(attacker, Prop_Data, "m_iHealth");
+					if(currentHealth > maxHealth * 2)
+					{
+						SetEntProp(attacker, Prop_Data, "m_iHealth", maxHealth * 2);
+					}
 				}
 
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
