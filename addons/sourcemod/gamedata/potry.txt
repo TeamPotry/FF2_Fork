@@ -1,0 +1,19 @@
+"Games"
+{
+	"tf"
+	{
+		"Signatures"
+		{
+            "CTFPlayer::GiveAmmo"
+            {
+                "linux"		"@_ZN9CTFPlayer8GiveAmmoEiib"
+                "windows"	" "
+            }
+			"CTFWeaponSapper::GetChargeMaxTime"
+			{
+				"linux"		"@_ZN15CTFWeaponSapper16GetChargeMaxTimeEv"
+				"windows"	" "
+			}
+        }
+    }
+}
