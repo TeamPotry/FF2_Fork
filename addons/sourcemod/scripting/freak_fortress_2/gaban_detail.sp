@@ -393,7 +393,7 @@ void LoadoutDisable(int boss)
 
 		TF2_RemoveAllWeapons(target);
 		TF2_RemoveAllWearables(target);
-		SwitchToDefalutWeapon(target, currentSlot);
+		SwitchToDefalutWeapon(boss, target, currentSlot);
 
 		if(g_flLoadoutDisableTime[target] <= 0.0)
 		{
@@ -444,51 +444,112 @@ public void OnLoadoutThink(int client)
 	PrintCenterText(client, "%t", "Loadout Unavailable", RoundToCeil(g_flLoadoutDisableTime[client] - GetGameTime()));
 }
 
-void SwitchToDefalutWeapon(int client, int currentSlot = TFWeaponSlot_Primary)
+void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_Primary)
 {
 	TFClassType class = TF2_GetPlayerClass(client);
+	char attribs[6][128];
 	int weapon;
 
 	switch(class)
 	{
 		case TFClass_Scout:
 		{
-			SpawnWeapon(client, "tf_weapon_scattergun", 200, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_pistol", 209, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_bat", 190, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "scout 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "scout 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "scout 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 11, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 12, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 13, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_scattergun", 200, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_pistol", 209, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_bat", 190, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_Soldier:
 		{
-			SpawnWeapon(client, "tf_weapon_rocketlauncher", 205, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_shotgun_soldier", 199, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_shovel", 196, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "soldier 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "soldier 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "soldier 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 31, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 32, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 33, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_rocketlauncher", 205, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_shotgun_soldier", 199, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_shovel", 196, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_Pyro:
 		{
-			SpawnWeapon(client, "tf_weapon_flamethrower", 208, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_shotgun_pyro", 199, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_fireaxe", 192, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "pyro 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "pyro 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "pyro 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 71, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 72, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 73, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_flamethrower", 208, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_shotgun_pyro", 199, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_fireaxe", 192, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_DemoMan:
 		{
-			SpawnWeapon(client, "tf_weapon_grenadelauncher", 206, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_pipebomblauncher", 207, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_bottle", 191, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "demoman 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "demoman 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "demoman 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 41, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 42, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 43, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_grenadelauncher", 206, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_pipebomblauncher", 207, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_bottle", 191, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_Heavy:
 		{
-			SpawnWeapon(client, "tf_weapon_minigun", 202, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_shotgun_hwg", 199, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_fists", 195, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "heavy 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "heavy 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "heavy 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 61, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 62, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 63, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_minigun", 202, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_shotgun_hwg", 199, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_fists", 195, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_Engineer:
 		{
-			SpawnWeapon(client, "tf_weapon_shotgun_primary", 199, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_pistol", 209, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_wrench", 197, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_pda_engineer_build", 737, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_pda_engineer_destroy", 26, 1, 0, "");
-			weapon = SpawnWeapon(client, "tf_weapon_builder", 28, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 2", attribs[TFWeaponSlot_Melee], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 3", attribs[TFWeaponSlot_Grenade], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 4", attribs[TFWeaponSlot_Building], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 5", attribs[TFWeaponSlot_PDA], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 91, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 92, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 93, attribs[TFWeaponSlot_Melee], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 94, attribs[TFWeaponSlot_Grenade], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 95, attribs[TFWeaponSlot_Building], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 96, attribs[TFWeaponSlot_PDA], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_shotgun_primary", 199, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_pistol", 209, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_wrench", 197, 1, 0, attribs[TFWeaponSlot_Melee]);
+			SpawnWeapon(client, "tf_weapon_pda_engineer_build", 737, 1, 0, attribs[TFWeaponSlot_Building]);
+			SpawnWeapon(client, "tf_weapon_pda_engineer_destroy", 26, 1, 0, attribs[TFWeaponSlot_PDA]);
+			weapon = SpawnWeapon(client, "tf_weapon_builder", 28, 1, 0, attribs[TFWeaponSlot_Grenade]);
 
 			SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 0);
 			SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 1);
@@ -497,20 +558,52 @@ void SwitchToDefalutWeapon(int client, int currentSlot = TFWeaponSlot_Primary)
 		}
 		case TFClass_Medic:
 		{
-			SpawnWeapon(client, "tf_weapon_syringegun_medic", 204, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_medigun", 211, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_bonesaw", 198, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "medic 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "medic 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "medic 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 51, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 52, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 53, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_syringegun_medic", 204, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_medigun", 211, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_bonesaw", 198, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_Sniper:
 		{
-			SpawnWeapon(client, "tf_weapon_sniperrifle", 201, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_smg", 203, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_club", 193, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sniper 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sniper 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sniper 2", attribs[TFWeaponSlot_Melee], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 21, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 22, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 23, attribs[TFWeaponSlot_Melee], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_sniperrifle", 201, 1, 0, attribs[TFWeaponSlot_Primary]);
+			SpawnWeapon(client, "tf_weapon_smg", 203, 1, 0, attribs[TFWeaponSlot_Secondary]);
+			SpawnWeapon(client, "tf_weapon_club", 193, 1, 0, attribs[TFWeaponSlot_Melee]);
 		}
 		case TFClass_Spy:
 		{
-			SpawnWeapon(client, "tf_weapon_revolver", 210, 1, 0, "");
-			weapon = SpawnWeapon(client, "tf_weapon_builder", 736, 1, 0, "");
+#if defined _ff2_potry_included
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 0", attribs[TFWeaponSlot_Primary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 1", attribs[TFWeaponSlot_Secondary], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 2", attribs[TFWeaponSlot_Melee], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 3", attribs[TFWeaponSlot_Grenade], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 4", attribs[TFWeaponSlot_Building], 128, "");
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 5", attribs[TFWeaponSlot_PDA], 128, "");
+#else
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 81, attribs[TFWeaponSlot_Primary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 82, attribs[TFWeaponSlot_Secondary], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 83, attribs[TFWeaponSlot_Melee], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 84, attribs[TFWeaponSlot_Grenade], 128);
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, 85, attribs[TFWeaponSlot_Building], 128);
+#endif
+			SpawnWeapon(client, "tf_weapon_revolver", 210, 1, 0, attribs[TFWeaponSlot_Primary]);
+			weapon = SpawnWeapon(client, "tf_weapon_builder", 736, 1, 0, attribs[TFWeaponSlot_Secondary]);
 
 			SetEntProp(weapon, Prop_Send, "m_iObjectType", 3);
 			SetEntProp(weapon, Prop_Data, "m_iSubType", 3);
@@ -519,9 +612,9 @@ void SwitchToDefalutWeapon(int client, int currentSlot = TFWeaponSlot_Primary)
 			SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 0, _, 2);
 			SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 3);
 
-			SpawnWeapon(client, "tf_weapon_knife", 194, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_pda_spy", 27, 1, 0, "");
-			SpawnWeapon(client, "tf_weapon_invis", 212, 1, 0, "");
+			SpawnWeapon(client, "tf_weapon_knife", 194, 1, 0, attribs[TFWeaponSlot_Melee]);
+			SpawnWeapon(client, "tf_weapon_pda_spy", 27, 1, 0, attribs[TFWeaponSlot_Grenade]);
+			SpawnWeapon(client, "tf_weapon_invis", 212, 1, 0, attribs[TFWeaponSlot_Building]);
 		}
 	}
 
