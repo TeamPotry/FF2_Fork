@@ -4422,7 +4422,7 @@ public Action BossTimer(Handle timer)
 				}
 			}
 
-			// FIXME: 라이프 스킬과 분노가 겹치는 경우, 라이프 스킬 이름이 씹힘 
+			// FIXME: 라이프 스킬과 분노가 겹치는 경우, 라이프 스킬 이름이 씹힘
 			Format(text, sizeof(text), "%s: %.1f", text, BossSkillDuration[boss][loop] - GetGameTime());
 			bossHudDisplay=FF2HudDisplay.CreateDisplay("Skill Duration", text);
 			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
@@ -8937,7 +8937,7 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(2);  //Ready
 				Call_Finish();
-				float charge=100.0*0.05/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.5);
+				float charge=100.0*0.05/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.0);
 				if(BossCharge[boss][slot]+charge<100.0)
 				{
 					BossCharge[boss][slot]+=charge;
