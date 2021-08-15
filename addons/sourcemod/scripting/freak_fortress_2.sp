@@ -4572,12 +4572,16 @@ public Action BossTimer(Handle timer)
 			}
 		}
 
-		int other=0, fast = ScoutsLeft(other);
-		fast -= other;
-		AddBossCharge(boss, 0, fast > 0 ? fast*0.1 : 0.0);
+		// 분노 보정
+		if(TF2_GetClientTeam(client) == BossTeam)
+		{
+			int other=0, fast = ScoutsLeft(other);
+			fast -= other;
+			AddBossCharge(boss, 0, fast > 0 ? fast*0.1 : 0.0);
 
-		// stock
-		AddBossCharge(boss, 0, 0.01);
+			// stock
+			AddBossCharge(boss, 0, 0.01);
+		}
 
 		HPTime-=0.05;
 		if(HPTime<0)
