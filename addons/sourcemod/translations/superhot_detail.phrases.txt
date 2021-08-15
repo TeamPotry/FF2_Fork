@@ -1,0 +1,12 @@
+"Phrases"
+{
+    "Must Aim Human"
+    {
+        "en"    "Must aim to human for use HOTSWITCH!"
+    }
+
+    "One Of Us"
+    {
+        "en"    "SUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOT"
+    }
+}

@@ -1,0 +1,12 @@
+"Phrases"
+{
+    "Must Aim Human"
+    {
+        "ko"    "사람을 바라봐야 사용할 수 있습니다!"
+    }
+
+    "One Of Us"
+    {
+        "ko"    "SUPERHOT에게 육체를 잠식당했습니다!"
+    }
+}
