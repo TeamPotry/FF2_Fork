@@ -4780,6 +4780,8 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		}
 		emitRageSound[boss]=true;
 
+		AddBossCharge(boss, 0, slot == 0 ? -100.0 : -200.0);
+
 		int type = slot == 0 ? SkillName_Rage : SkillName_200Rage;
 		float duration = GetBossSkillDuration(boss, type);
 		BossSkillDuration[boss][type] = GetGameTime() + duration;
@@ -8901,7 +8903,6 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 		FF2Flags[Boss[boss]]&=~FF2FLAG_BOTRAGE;
 		Call_PushCell(3);  //We're assuming here a rage ability will always be in use if it gets called
 		Call_Finish();
-		AddBossCharge(boss, 0, slot == 0 ? -100.0 : -200.0);
 	}
 	else
 	{
