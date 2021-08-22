@@ -1,0 +1,15 @@
+"Phrases"
+{
+    "Wave Started"
+    {
+        "en"	"WAVE STARTED! Players earned money, Bosses gained their HP!"
+    }
+    "Carteen Cooldown"
+    {
+        "en"	"Carteen Cooldown"
+    }
+    "Sapper Charge"
+    {
+        "en"    "Sapper Charge"
+    }
+}

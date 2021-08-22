@@ -14,6 +14,52 @@
 				"linux"		"@_ZN15CTFWeaponSapper16GetChargeMaxTimeEv"
 				"windows"	" "
 			}
-        }
+			"CTFPlayer::GetMaxAmmo"
+			{
+				"linux"		"@_ZN9CTFPlayer10GetMaxAmmoEii"
+				"windows"	" "
+			}
+			"CTFPlayer::CanPickupDroppedWeapon"
+			{
+				"linux"		"@_ZN9CTFPlayer22CanPickupDroppedWeaponEPK16CTFDroppedWeapon"
+				"windows"	" "
+			}
+			"CTFPlayer::PickupWeaponFromOther"
+			{
+				"linux"		"@_ZN9CTFPlayer21PickupWeaponFromOtherEP16CTFDroppedWeapon"
+				"windows"	" "
+			}
+		}
+		"Functions"
+		{
+			"CTFPlayer::CanPickupDroppedWeapon"
+			{
+				"signature"	"CTFPlayer::CanPickupDroppedWeapon"
+				"callconv"	"thiscall"
+				"return"	"bool"
+				"this"		"entity"
+				"arguments"
+				{
+					"pDroppedWeapon"
+					{
+						"type"	"cbaseentity"
+					}
+				}
+			}
+			"CTFPlayer::PickupWeaponFromOther"
+			{
+				"signature"	"CTFPlayer::CanPickupDroppedWeapon"
+				"callconv"	"thiscall"
+				"return"	"bool"
+				"this"		"entity"
+				"arguments"
+				{
+					"pDroppedWeapon"
+					{
+						"type"	"cbaseentity"
+					}
+				}
+			}
+		}
     }
 }
