@@ -95,7 +95,7 @@ int timeType;
 float timeleft, maxTime;
 int maxWave, currentWave;
 
-ConVar cvarVersion;
+// ConVar cvarVersion;
 ConVar cvarPointDelay;
 ConVar cvarAnnounce;
 ConVar cvarEnabled;
@@ -322,7 +322,7 @@ public void OnPluginStart()
 {
 	LogMessage("===Freak Fortress 2 Initializing-v%s===", PLUGIN_VERSION);
 
-	cvarVersion=CreateConVar("ff2_version", PLUGIN_VERSION, "Freak Fortress 2 Version", FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_SPONLY|FCVAR_DONTRECORD);
+	// cvarVersion=CreateConVar("ff2_version", PLUGIN_VERSION, "Freak Fortress 2 Version", FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_SPONLY|FCVAR_DONTRECORD);
 	cvarPointType=CreateConVar("ff2_point_type", "0", "0-Use ff2_point_alive, 1-Use ff2_point_time", _, true, 0.0, true, 1.0);
 	cvarPointDelay=CreateConVar("ff2_point_delay", "6", "Seconds to add to the point delay per player", _, true, 0.0);
 	cvarAliveToEnable=CreateConVar("ff2_point_alive", "5", "The control point will only activate when there are this many people or less left alive");
@@ -603,7 +603,7 @@ public void EnableFF2()
 	kvHudConfigs=LoadHudConfig();
 
 	//Cache cvars
-	SetConVarString(FindConVar("ff2_version"), PLUGIN_VERSION);
+	// SetConVarString(FindConVar("ff2_version"), PLUGIN_VERSION);
 	Announce=cvarAnnounce.FloatValue;
 	PointType=cvarPointType.IntValue;
 	PointDelay=cvarPointDelay.IntValue;
