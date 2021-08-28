@@ -233,7 +233,8 @@ void Rage_Stun(const char[] abilityName, int boss, int slot)
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float bossPosition[3], targetPosition[3];
 	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 5.0, slot), slowdown=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "slowdown", 0.0, slot);
-	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName, slot), stunflags=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "custom flags", TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, slot);
+	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName, slot), stunflags=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "custom flags", TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT|TF_STUNFLAG_SLOWDOWN, slot);
+	bool ignoreUber = FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "ignore uber", slot) > 0;
 	GetEntPropVector(client, Prop_Send, "m_vecOrigin", bossPosition);
 
 	for(int target=1; target<=MaxClients; target++)
@@ -241,7 +242,7 @@ void Rage_Stun(const char[] abilityName, int boss, int slot)
 		if(IsClientInGame(target) && IsPlayerAlive(target) && TF2_GetClientTeam(target)!=TF2_GetClientTeam(client))
 		{
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPosition);
-			if(!TF2_IsPlayerInCondition(target, TFCond_Ubercharged) && (GetVectorDistance(bossPosition, targetPosition)<=distance))
+			if((ignoreUber || (!ignoreUber && !TF2_IsPlayerInCondition(target, TFCond_Ubercharged))) && (GetVectorDistance(bossPosition, targetPosition)<=distance))
 			{
 				if(removeBaseJumperOnStun)
 				{
