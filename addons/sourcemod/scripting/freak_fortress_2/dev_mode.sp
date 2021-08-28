@@ -18,9 +18,12 @@ public void OnPluginStart()
 {
 	RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
 	RegAdminCmd("ff2_disable_timer", Command_DisableTimer, ADMFLAG_CHEATS, "WOW! NO TIMER!");
+	RegAdminCmd("ff2_change_boss", ChangeBossCmd, ADMFLAG_CHEATS, "WOW! CHANGE USER's BOSS!");
 
 	HookEvent("teamplay_round_start", OnRoundStart);
+
 	LoadTranslations("freak_fortress_2.phrases");
+	LoadTranslations("common.phrases");
 }
 
 public Action Command_DevMode(int client, int args)
@@ -28,13 +31,88 @@ public Action Command_DevMode(int client, int args)
     CPrintToChatAll("{olive}[FF2]{default} DEVMode: %s", !g_bDEVmode ? "ON" : "OFF");
     g_bDEVmode = !g_bDEVmode;
 
-    return Plugin_Continue;
+    return Plugin_Handled;
 }
 
 public Action Command_DisableTimer(int client, int args)
 {
+	CPrintToChatAll("{olive}[FF2]{default} Disabled Timer.");
 	FF2_SetRoundTime(-1.0); // 라운드 타이머 끄기
-	return Plugin_Continue;
+	return Plugin_Handled;
+}
+
+public Action ChangeBossCmd(int client, int args)
+{
+	if(!FF2_IsFF2Enabled())
+	{
+		return Plugin_Continue;
+	}
+
+	char pattern[MAX_TARGET_LENGTH];
+	GetCmdArg(1, pattern, sizeof(pattern));
+	char targetName[MAX_TARGET_LENGTH];
+	int targets[MAXPLAYERS];
+	bool targetNounIsMultiLanguage;
+
+	// This is only for test.
+	if(ProcessTargetString(pattern, client, targets, 1, 0, targetName, sizeof(targetName), targetNounIsMultiLanguage)<=0)
+	{
+		Format(pattern, MAX_TARGET_LENGTH, "@me");
+	}
+
+	char bossName[64], realName[64];
+	Menu menu = new Menu(ChangeBossMenuHandler);
+	KeyValues BossKV;
+
+	menu.AddItem(pattern, "", ITEMDRAW_IGNORE);
+	for (int i = 0; (BossKV = FF2_GetCharacterKV(i)) != null; i++)
+	{
+		GetCharacterName(BossKV, realName, 64, 0);
+		GetCharacterName(BossKV, bossName, 64, client);
+		menu.AddItem(realName, bossName);
+	}
+	menu.ExitButton = true;
+	menu.Display(client, 90);
+
+	return Plugin_Handled;
+}
+
+public int ChangeBossMenuHandler(Menu menu, MenuAction action, int client, int item)
+{
+	switch(action)
+	{
+		case MenuAction_End:
+		{
+			delete menu;
+		}
+
+		case MenuAction_Select:
+		{
+			char pattern[MAX_TARGET_LENGTH], targetName[MAX_TARGET_LENGTH];
+			char realName[64];
+			int targets[MAXPLAYERS], matches;
+			bool targetNounIsMultiLanguage;
+
+			menu.GetItem(0, pattern, MAX_TARGET_LENGTH);
+			if((matches=ProcessTargetString(pattern, client, targets, MAXPLAYERS, 0, targetName, sizeof(targetName), targetNounIsMultiLanguage))<=0)
+			{
+				ReplyToTargetError(client, matches);
+				return 0;
+			}
+
+			for(int loop = 0; loop <= matches; loop++)
+			{
+				if(targets[loop] == 0 || IsClientSourceTV(targets[loop]) || IsClientReplay(targets[loop]))
+					continue;
+
+				KeyValues BossKV = FF2_GetCharacterKV(item - 1);
+				GetCharacterName(BossKV, realName, 64, targets[loop]);
+				CPrintToChatAll("{olive}[FF2]{default} %N → {orange}%s", targets[loop], realName);
+				FF2_MakePlayerToBoss(targets[loop], item - 1);
+			}
+		}
+	}
+	return 0;
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
@@ -47,7 +125,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool& result)
 {
 	if(g_bDEVmode && FF2_GetBossIndex(client) != -1) {
-		FF2_AddBossCharge(FF2_GetBossIndex(client), 0, 100.0); // TODO: 최대 분노량 조절
+		FF2_AddBossCharge(FF2_GetBossIndex(client), 0, 100.0);
 	}
 
 	return Plugin_Continue;
@@ -104,6 +182,28 @@ public Action FF2_OnCheckSelectRules(int client, int characterIndex, const char[
 		return g_bDEVmode ? Plugin_Continue : Plugin_Handled;
 
 	return Plugin_Continue;
+}
+
+public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
+{
+	int currentSpot;
+	characterKv.GetSectionSymbol(currentSpot);
+	characterKv.Rewind();
+
+	if(client > 0)
+	{
+		char language[8];
+		GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
+		if(characterKv.JumpToKey("name_lang"))
+		{
+			characterKv.GetString(language, bossName, size, "");
+			if(bossName[0] != '\0')
+				return;
+		}
+		characterKv.Rewind();
+	}
+	characterKv.GetString("name", bossName, size);
+	characterKv.JumpToKeySymbol(currentSpot);
 }
 
 stock bool IsBoss(int client)
