@@ -29,6 +29,32 @@
 				"linux"		"@_ZN9CTFPlayer21PickupWeaponFromOtherEP16CTFDroppedWeapon"
 				"windows"	" "
 			}
+			"CTFPlayer::TeamFortress_SetSpeed()"
+			{
+				"linux"			"@_ZN9CTFPlayer21TeamFortress_SetSpeedEv"
+				"windows"		"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x1C\x53"
+			}
+			"CTFDroppedWeapon::InitDroppedWeapon"
+			{
+				// WHY?
+				"linux"		"@_ZN16CTFDroppedWeapon17InitDroppedWeaponEP9CTFPlayerP13CTFWeaponBasebb"
+				"windows"	" "
+			}
+			"CTFDroppedWeapon::Create"
+			{
+				"linux"		"@_ZN16CTFDroppedWeapon6CreateEP9CTFPlayerRK6VectorRK6QAnglePKcPK13CEconItemView"
+				"windows"	" "
+			}
+			"CEconItemView::GetStaticData"
+			{
+				"linux"		"@_ZNK13CEconItemView13GetStaticDataEv"
+				"windows"	" "
+			}
+			"CTFItemDefinition::GetLoadoutSlot"
+			{
+				"linux"		"@_ZNK17CTFItemDefinition14GetLoadoutSlotEi"
+				"windows"	" "
+			}
 		}
 		"Functions"
 		{
@@ -59,6 +85,83 @@
 						"type"	"cbaseentity"
 					}
 				}
+			}
+			"CTFDroppedWeapon::InitDroppedWeapon"
+			{
+				"signature"	"CTFDroppedWeapon::InitDroppedWeapon"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+				"arguments"
+				{
+					"pPlayer"
+					{
+						"type"	"cbaseentity"
+					}
+					"pWeapon"
+					{
+						"type"	"cbaseentity"
+					}
+					"bSwap"
+					{
+						"type"	"bool"
+					}
+					"bIsSuicide"
+					{
+						"type"	"bool"
+					}
+				}
+			}
+			"CTFPlayer::TeamFortress_SetSpeed()"
+			{
+				"signature"	"CTFPlayer::TeamFortress_SetSpeed()"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+			}
+			"CTFDroppedWeapon::Create"
+			{
+				"signature"	"CTFDroppedWeapon::Create"
+				"callconv"	"thiscall"
+				"return"	"cbaseentity"
+				"this"		"entity"
+				"arguments"
+				{
+					"pLastOwner"
+					{
+						"type"	"cbaseentity"
+					}
+					"vecOrigin"
+					{
+						"type"	"vectorptr"
+					}
+					"vecAngles"
+					{
+						"type"	"vectorptr"
+					}
+					"pszModelName"
+					{
+						"type"	"stringptr"
+					}
+					"pItem"
+					{
+						"type"	"objectptr"
+					}
+				}
+			}
+			"CEconItemView::GetStaticData"
+			{
+				"signature"	"CEconItemView::GetStaticData"
+				"callconv"	"thiscall"
+				"return"	"int" 	// address??
+				"this"		"address"
+			}
+			"CTFItemDefinition::GetLoadoutSlot"
+			{
+				"signature"	"CTFItemDefinition::GetLoadoutSlot"
+				"callconv"	"thiscall"
+				"return"	"int"
+				"this"		"ignore"
 			}
 		}
     }
