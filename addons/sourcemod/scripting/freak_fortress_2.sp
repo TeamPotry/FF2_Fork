@@ -2751,22 +2751,24 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 40, 1146:  //Backburner, Festive Backburner
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "165 ; 1.0 ; 255 ; 2.0 ; 255; 0.5");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "165 ; 1.0");
 			if(itemOverride!=null)
 			{
 				item=itemOverride;
 				return Plugin_Changed;
 			}
 		}
+/*
 		case 215:  //The Degreaser
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "255 ; 2.0 ; 255; 0.5");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "");
 			if(itemOverride!=null)
 			{
 				item=itemOverride;
 				return Plugin_Changed;
 			}
 		}
+*/
 		case 224:  //L'etranger
 		{
 			Handle itemOverride=PrepareItemHandle(item, _, _, "85 ; 0.5 ; 157 ; 1.0 ; 253 ; 1.0");
@@ -2997,7 +2999,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
-
+/*
 	if(!StrContains(classname, "tf_weapon_jar") && !StrEqual(classname, "tf_weapon_jar_gas"))  // exclude gas passer
 	{
 		Handle itemOverride=PrepareItemHandle(item, _, _, "313 ; 0.1", false);
@@ -3008,7 +3010,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
-
+*/
 	if(TF2_GetPlayerClass(client)==TFClass_Soldier && (!StrContains(classname, "tf_weapon_rocketlauncher", false) || !StrContains(classname, "tf_weapon_shotgun", false)))
 	{
 		Handle itemOverride;
@@ -3084,7 +3086,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
-
+/*
 	if(!StrContains(classname, "tf_weapon_flamethrower"))
 	{
 		Handle itemOverride=PrepareItemHandle(item, _, _, "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1 ; 255 ; 2.0 ; 255; 0.5", false);
@@ -3106,7 +3108,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
-
+*/
 	return Plugin_Continue;
 }
 
@@ -4411,7 +4413,7 @@ public Action BossTimer(Handle timer)
 		if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
 		{
 			if(TF2_GetClientTeam(client) == BossTeam)
-				SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+1.6*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
+				SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.8*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
 			else
 				SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]);
 		}
@@ -4694,7 +4696,7 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 				case TFCond_Bonked:
 				{
 					TF2_RemoveCondition(client, TFCond_Bonked);
-					TF2_AddCondition(client, TFCond_HalloweenQuickHeal, 12.0);
+					TF2_AddCondition(client, TFCond_HalloweenQuickHeal, 2.0);
 				}
 			}
 
@@ -5609,8 +5611,13 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(damagecustom==TF_CUSTOM_COMBO_PUNCH)
 						{
-							damage*=6.0;
-							ScaleVector(damageForce, 6.0);
+							damage*=5.0;
+							ScaleVector(damageForce, 5.0);
+
+							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+
 							SpecialAttackToBoss(attacker, boss, weapon, "combo_punch", damage);
 
 							return Plugin_Changed;
@@ -5719,8 +5726,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
 						{
 							damage=(Pow(float(BossHealthMax[boss]), 0.34074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
-							if(damage * 3.0 < 300.0)
-								damage = 100.0; // x3
+							if(damage < 300.0)
+								damage = 300.0; // x3
 
 							damagetype|=DMG_CRIT;
 
@@ -5802,10 +5809,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							return Plugin_Changed;
 						}
 					}
+/*
 					case 1099:  //Tide Turner
 					{
 						SetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter", 100.0);
 					}
+*/
 					case 1104:
 					{
 						static float airStrikeDamage;
@@ -5820,9 +5829,10 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/160);
-					if(damage * 3.0 < 600.0)
-						damage = 200.0; // x3
+					// damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
+					damage = BossHealth[boss] * 0.06;
+					if(damage < 900.0)
+						damage = 900.0; // x3
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
 
@@ -5833,6 +5843,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
 					EmitSoundToClient(attacker, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
+					EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+					EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+					EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 					SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+2.0);
 					SetEntPropFloat(attacker, Prop_Send, "m_flNextAttack", GetGameTime()+2.0);
 					SetEntPropFloat(attacker, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+2.0);
