@@ -93,7 +93,7 @@ public int OnStompPost(int attacker, int victim, float damageMultiplier, float d
     int boss = FF2_GetBossIndex(attacker);
     if(boss != -1 && FF2_HasAbility(boss, THIS_PLUGIN_NAME, GOOMBA_BONUS))
     {
-        FF2_SetBossCharge(boss, 0, 100.0);
+        FF2_AddBossCharge(boss, 0, 100.0);
     }
 }
 
