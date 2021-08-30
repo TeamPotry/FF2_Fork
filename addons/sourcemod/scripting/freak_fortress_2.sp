@@ -1891,6 +1891,12 @@ public Action StartBossTimer(Handle timer)
 		{
 			isBossAlive=true;
 			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
+
+			// 초기 쿨타임
+			for(int slot = 1; slot < 8; slot++)
+			{
+				BossCharge[boss][slot] = -15.0;
+			}
 		}
 	}
 
