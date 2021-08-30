@@ -20,11 +20,11 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <freak_fortress_2>
 #include <ff2_potry>
 
-#tryinclude <mannvsmann>
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
 #undef REQUIRE_PLUGIN
+#tryinclude <mannvsmann>
 #include <db_simple>
 #tryinclude <smac>
 #tryinclude <updater>
@@ -58,6 +58,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #if defined _steamtools_included
 bool steamtools;
 #endif
+bool mannvsmann = false;
 
 int Incoming[MAXPLAYERS+1];
 
@@ -438,6 +439,10 @@ public void OnPluginStart()
 	#if defined _steamtools_included
 	steamtools=LibraryExists("SteamTools");
 	#endif
+
+	#if defined _MVM_included
+	mannvsmann=LibraryExists("mannvsmann");
+	#endif
 }
 
 public bool BossTargetFilter(const char[] pattern, Handle clients)
@@ -472,6 +477,13 @@ public void OnLibraryAdded(const char[] name)
 	}
 	#endif
 
+	#if defined _MVM_included
+	if(StrEqual(name, "mannvsmann", false))
+	{
+		mannvsmann = true;
+	}
+	#endif
+
 	#if defined _updater_included && !defined DEV_REVISION
 	if(StrEqual(name, "updater") && cvarUpdater.BoolValue)
 	{
@@ -486,6 +498,13 @@ public void OnLibraryRemoved(const char[] name)
 	if(StrEqual(name, "SteamTools", false))
 	{
 		steamtools=false;
+	}
+	#endif
+
+	#if defined _MVM_included
+	if(StrEqual(name, "mannvsmann", false))
+	{
+		mannvsmann = false;
 	}
 	#endif
 
@@ -4091,9 +4110,12 @@ public Action ClientTimer(Handle timer)
 			else
 			{
 #if defined _MVM_included
-				Format(hudText, sizeof(hudText), "$%d", MVM_GetPlayerCurrency(client));
-				hudDisplay=FF2HudDisplay.CreateDisplay("Your Money", hudText);
-				PlayerHudQueue[client].AddHud(hudDisplay, client);
+				if(mannvsmann)
+				{
+					Format(hudText, sizeof(hudText), "$%d", MVM_GetPlayerCurrency(client));
+					hudDisplay=FF2HudDisplay.CreateDisplay("Your Money", hudText);
+					PlayerHudQueue[client].AddHud(hudDisplay, client);
+				}
 #endif
 
 				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
