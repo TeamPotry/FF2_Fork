@@ -69,13 +69,13 @@
 	}
 	"Teleportation Charge"
 	{
-		"#format"	"{1:i}"
-		"en"		"Teleportation is {1} percent ready. When at 100 percent look up and stand up"
+		"#format"	"{1:i},{2:s}"
+		"en"		"PRESS {2}: Teleportation is {1} percent ready. When at 100 percent look up and stand up"
 	}
 	"Super Jump Charge"
 	{
-		"#format"	"{1:i}"
-		"en"		"Super Jump charge is {1} percent. Look upwards and stand up for jump"
+		"#format"	"{1:i},{2:s}"
+		"en"		"PRESS {2}: Super Jump charge is {1} percent. Look upwards and stand up for jump"
 	}
 	"Teleportation Cooldown"
 	{
@@ -86,6 +86,14 @@
 	{
 		"#format"	"{1:i}"
 		"en"		"Super Jump will be available in {1} second(s)"
+	}
+	"Right Click"
+	{
+		"en"		"Right Click"
+	}
+	"Reload"
+	{
+		"en"		"Reload"
 	}
 	"Scout Advice"
 	{

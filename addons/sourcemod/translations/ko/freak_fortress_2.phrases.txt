@@ -69,13 +69,13 @@
 	}
 	"Teleportation Charge"
 	{
-		"#format"	"{1:i}"
-		"ko"		"텔레포트: {1}%% / 100%% \n100%%일 때, 위를 보고 버튼을 때면 발동"
+		"#format"	"{1:i},{2:s}"
+		"ko"		"텔레포트: {1}%% ({2})/ 100%% \n100%%일 때, 위를 보고 버튼을 때면 발동"
 	}
 	"Super Jump Charge"
 	{
-		"#format"	"{1:i}"
-		"ko"		"슈퍼점프: {1}%% \n위를 보고 버튼을 때면 발동"
+		"#format"	"{1:i},{2:s}"
+		"ko"		"슈퍼점프: {1}%% ({2})\n위를 보고 버튼을 때면 발동"
 	}
 	"Teleportation Cooldown"
 	{
@@ -86,6 +86,14 @@
 	{
 		"#format"	"{1:i}"
 		"ko"		"슈퍼점프 사용 대기시간: {1}초"
+	}
+	"Right Click"
+	{
+		"ko"		"우클릭"
+	}
+	"Reload"
+	{
+		"ko"		"재장전"
 	}
 	"Scout Advice"
 	{

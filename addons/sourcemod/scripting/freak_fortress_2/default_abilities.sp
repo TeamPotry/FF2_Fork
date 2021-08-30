@@ -308,7 +308,7 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 			FF2_ShowSyncHudText(client, jumpHUD, "%t", "Super Jump Cooldown", -RoundFloat(charge));
 		}
-		case 2:
+		case 0, 2:
 		{
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 			if(enableSuperDuperJump[boss])
@@ -318,7 +318,10 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 			}
 			else
 			{
-				Format(message, sizeof(message), "%t", "Super Jump Charge", RoundFloat(charge));
+				char buttonText[32];
+				int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "buttonmode", 0);
+				Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+				Format(message, sizeof(message), "%t", "Super Jump Charge", RoundFloat(charge), buttonText);
 				ReAddPercentCharacter(message, sizeof(message), 2);
 				FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
 			}
@@ -415,17 +418,20 @@ void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 	float charge=FF2_GetBossCharge(boss, slot);
 
 	SetGlobalTransTarget(client);
+	SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
+
 	switch(status)
 	{
 		case 1:
 		{
-			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 			FF2_ShowSyncHudText(client, jumpHUD, "%t", "Teleportation Cooldown", -RoundFloat(charge));
 		}
-		case 2:
+		case 0, 2:
 		{
-			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
-			Format(message, sizeof(message), "%t", "Teleportation Charge", RoundFloat(charge));
+			char buttonText[32];
+			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "buttonmode", 0);
+			Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+			Format(message, sizeof(message), "%t", "Teleportation Charge", RoundFloat(charge), buttonText);
 			ReAddPercentCharacter(message, sizeof(message), 2);
 			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
 		}
