@@ -5340,13 +5340,29 @@ public Action Timer_DrawGame(Handle timer)
 		}
 	}
 
+	bool notice = false;
+	switch(timeType)
+	{
+		case FF2Timer_WaveTimer:
+		{
+			if(currentWave == maxWave)
+				notice = true;
+		}
+		default:
+		{
+			notice = true;
+		}
+	}
+
 	if(lastNotice != timeInteger && fraction < 0.1)
 	{
 		lastNotice = timeInteger;
 
-		switch(timeInteger)
+		if(notice)
 		{
-			case 300:
+			switch(timeInteger)
+			{
+				case 300:
 			{
 				EmitSoundToAll("vo/announcer_ends_5min.mp3");
 			}
@@ -5369,13 +5385,17 @@ public Action Timer_DrawGame(Handle timer)
 			case 1, 2, 3, 4, 5:
 			{
 				char sound[PLATFORM_MAX_PATH];
-				Format(sound, sizeof(sound), "vo/announcer_ends_%isec.mp3", timeInteger);
-				EmitSoundToAll(sound);
+					Format(sound, sizeof(sound), "vo/announcer_ends_%isec.mp3", timeInteger);
+					EmitSoundToAll(sound);
+				}
 			}
-			case 0:
+		}
+
+
+		if(timeInteger == 0)
+		{
+			if(timeType == FF2Timer_WaveTimer)
 			{
-				if(timeType == FF2Timer_WaveTimer)
-				{
 					if(currentWave == maxWave)
 					{
 						ForceTeamWin(TFTeam_Unassigned);
@@ -5394,9 +5414,9 @@ public Action Timer_DrawGame(Handle timer)
 				else
 					ForceTeamWin(TFTeam_Unassigned);
 
-				return Plugin_Stop;
-			}
+			return Plugin_Stop;
 		}
+
 	}
 
 	return Plugin_Continue;
