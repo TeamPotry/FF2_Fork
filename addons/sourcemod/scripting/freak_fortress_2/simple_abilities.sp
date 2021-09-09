@@ -4,12 +4,14 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <tf2_stocks>
+#include <tf2utils>
+#include <tf2attributes>
 #include <freak_fortress_2>
 #include <ff2_potry>
 #include <stocksoup/sdkports/util>
 
 #define PLUGIN_NAME "simple abilities"
-#define PLUGIN_VERSION 	"20210723"
+#define PLUGIN_VERSION 	"20210827"
 
 public Plugin myinfo=
 {
@@ -19,12 +21,16 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
-#define CLIP_ADD_NAME 				"set clip"
-#define DELAY_ABILITY_NAME 			"delay"
-#define REGENERATE_ABILITY_NAME 	"regenerate"
-#define SCREENFADE_ABILITY_NAME		"screen fade"
-#define HIDEHUD_ABILITY_NAME		"hide hud"
-#define PLAYERFADE_ABILITY_NAME		"player fade"
+#define CLIP_ADD_NAME 						"set clip"
+#define DELAY_ABILITY_NAME 					"delay"
+#define REGENERATE_ABILITY_NAME 			"regenerate"
+#define SCREENFADE_ABILITY_NAME				"screen fade"
+#define HIDEHUD_ABILITY_NAME				"hide hud"
+#define PLAYERFADE_ABILITY_NAME				"player fade"
+#define PLAYERWEAPONDROP_ABILITY_NAME		"player weapon drop"
+#define INSERT_ATTIBUTES_ABILITY_NAME		"insert attributes"
+#define REPLACE_BUTTONS_NAME				"replace buttons"
+#define REMOVE_EMPTY_ABILITY_NAME			"remove weapon when empty"
 
 #define HIDEHUD_FLAGS			0b101101001010
 /*
@@ -48,6 +54,11 @@ float g_flCurrentDelay[MAXPLAYERS+1];
 float g_flHideHudTime[MAXPLAYERS+1];
 float g_flPlayerFadeTime[MAXPLAYERS+1];
 
+int g_hDroppedWeapons[MAXPLAYERS+1];
+int g_hDisabledWeapon[MAXPLAYERS+1];
+int g_hDisabledWeaponSlot[MAXPLAYERS+1];
+float g_flWeaponDisabledTime[MAXPLAYERS+1];
+
 enum
 {
 	Effect_OtherTeam = 0,
@@ -58,6 +69,8 @@ enum
 
 public void OnPluginStart()
 {
+	LoadTranslations("ff2_simple_abilities.phrases");
+
 	HookEvent("arena_round_start", Event_RoundStart);
 	HookEvent("teamplay_round_active", Event_RoundStart); // for non-arena maps
 
@@ -95,6 +108,250 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	{
 		InvokePlayerFade(boss);
 	}
+
+	if(StrEqual(PLAYERWEAPONDROP_ABILITY_NAME, abilityName))
+	{
+		InvokePlayerWeaponDrop(boss, slot);
+	}
+
+	if(StrEqual(INSERT_ATTIBUTES_ABILITY_NAME, abilityName))
+	{
+		InvokeInsertAttributes(boss, slot);
+	}
+}
+
+void InvokeInsertAttributes(int boss, int slot)
+{
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+/*
+	// NOTE: TF2Attrib_AddCustomPlayerAttribute Is only works for player.
+	bool isWearable = FF2_GetAbilityArgument(boss, PLUGIN_NAME, INSERT_ATTIBUTES_ABILITY_NAME, "is wearable", 0, slot) > 0;
+	int weapon = -1,
+		weaponSlot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, INSERT_ATTIBUTES_ABILITY_NAME, "weapon slot", 0, slot);
+
+	if(!isWearable)
+		weapon = GetPlayerWeaponSlot(client, weaponSlot);
+	else
+		weapon = TF2Util_GetPlayerWearable(client, weaponSlot);
+*/
+	char key[32], name[128];
+	float value, duration;
+	int loop = 1;
+
+	do
+	{
+		Format(key, sizeof(key), "name %d", loop);
+		FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, INSERT_ATTIBUTES_ABILITY_NAME, key, name, sizeof(name), "", slot);
+		if(name[0] == '\0')
+			break;
+
+		Format(key, sizeof(key), "value %d", loop);
+		value = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, INSERT_ATTIBUTES_ABILITY_NAME, key, 0.0, slot);
+
+		Format(key, sizeof(key), "duration %d", loop);
+		duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, INSERT_ATTIBUTES_ABILITY_NAME, key, 0.0, slot);
+
+		TF2Attrib_AddCustomPlayerAttribute(client, name, value, duration);
+	}
+	while(loop++);
+}
+
+void InvokePlayerWeaponDrop(int boss, int slot)
+{
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss)),
+		weaponSlot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, PLAYERWEAPONDROP_ABILITY_NAME, "weapon slot", 0, slot);
+	float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, PLAYERWEAPONDROP_ABILITY_NAME, "duration", 6.0, slot);
+
+	int team = GetClientTeam(client);
+	for(int target = 1; target <= MaxClients; target++)
+	{
+		if(!IsClientInGame(target) || !IsPlayerAlive(target) || GetClientTeam(target) == team
+			|| FF2_GetBossIndex(target) != -1)
+			continue;
+
+		int weapon = GetPlayerWeaponSlot(target, weaponSlot);
+		if(IsValidEntity(weapon))
+		{
+			if(g_flWeaponDisabledTime[target] < GetGameTime())
+			{
+				g_hDisabledWeapon[target] = weapon;
+				g_hDisabledWeaponSlot[target] = weaponSlot;
+				g_hDroppedWeapons[target] = FF2_DropWeapon(target, weapon, DROPPED_DONTALLOW_SWAP);
+
+				SDKHook(target, SDKHook_PostThink, OnWeaponDisableThink);
+
+				SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
+				SetEntityRenderColor(weapon, 255, 255, 255, 75);
+			}
+
+			g_flWeaponDisabledTime[target] = GetGameTime() + duration;
+		}
+	}
+}
+
+public void OnWeaponDisableThink(int client)
+{
+	if(FF2_GetRoundState() != 1 || !IsClientInGame(client) || !IsPlayerAlive(client)
+	|| g_flWeaponDisabledTime[client] < GetGameTime())
+	{
+		int weapon = GetPlayerWeaponSlot(client, g_hDisabledWeaponSlot[client]);
+		if(g_hDisabledWeapon[client] == weapon)
+		{
+			SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
+			SetEntityRenderColor(weapon, 255, 255, 255, 255);
+		}
+
+		// NOTE: 스왑된 드롭 무기는 항상 서로의 인덱스가 맞음?
+		if(IsValidEntity(g_hDroppedWeapons[client]))
+			RemoveEntity(g_hDroppedWeapons[client]);
+
+		g_hDroppedWeapons[client] = -1;
+		g_hDisabledWeapon[client] = -1;
+		g_hDisabledWeaponSlot[client] = -1;
+		g_flWeaponDisabledTime[client] = 0.0;
+
+		SDKUnhook(client, SDKHook_PostThink, OnWeaponDisableThink);
+	}
+}
+
+public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weaponSwitched, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
+{
+	if(FF2_GetRoundState() != 1 || !IsClientInGame(client) || !IsPlayerAlive(client))		return Plugin_Continue;
+
+	bool bChange = false;
+	int currentWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+	if(g_flWeaponDisabledTime[client] > GetGameTime())
+	{
+		if(IsValidEntity(weaponSwitched) && g_hDisabledWeapon[client] == weaponSwitched)
+		{
+			int remainTime = RoundFloat(g_flWeaponDisabledTime[client] - GetGameTime());
+			PrintCenterText(client, "%T", "Weapon Disabled", client, remainTime);
+			PrintToChat(client, "%T", "Weapon Disabled", client, remainTime);
+		}
+
+		int weapon = GetPlayerWeaponSlot(client, g_hDisabledWeaponSlot[client]);
+		if(weapon == currentWeapon && currentWeapon == g_hDisabledWeapon[client])
+		{
+			bChange = true;
+			buttons &= ~(IN_ATTACK|IN_ATTACK2|IN_ATTACK3);
+			/*
+			SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+0.3);
+			SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime()+0.3);
+			SetEntPropFloat(client, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+0.3);
+			*/
+		}
+		else if(weapon != g_hDisabledWeapon[client])
+		{
+			g_flWeaponDisabledTime[client] = 0.0;
+			OnWeaponDisableThink(client);
+		}
+	}
+
+	int boss = FF2_GetBossIndex(client);
+	if(boss != -1)
+	{
+		if(IsValidEntity(currentWeapon) && FF2_HasAbility(boss, PLUGIN_NAME, REPLACE_BUTTONS_NAME))
+		{
+			bChange = true;
+			int disabled = GetDisabledButtons(boss, GetSlotOfWeapon(client, currentWeapon)),
+				replace = GetReplaceButtons(boss, GetSlotOfWeapon(client, currentWeapon));
+
+			if((buttons & disabled) > 0)
+			{
+				buttons &= ~(disabled);
+				buttons |= replace;
+			}
+		}
+
+		if(IsValidEntity(currentWeapon) && FF2_HasAbility(boss, PLUGIN_NAME, REMOVE_EMPTY_ABILITY_NAME))
+		{
+			int ammoType = GetEntProp(currentWeapon, Prop_Send, "m_iPrimaryAmmoType"),
+				weaponSlot = GetSlotOfWeapon(client, currentWeapon);
+
+			if(IsDetectWeaponEmpty(boss, weaponSlot))
+			{
+				// CPrintToChatAll("currentWeapon: %d: ammoType: %d, clip1: %d, ammo: %d", currentWeapon, ammoType, GetEntProp(currentWeapon, Prop_Data, "m_iClip1"), GetEntProp(client, Prop_Data, "m_iAmmo", _, ammoType));
+
+				bool empty = false;
+				if(GetEntProp(currentWeapon, Prop_Data, "m_iClip1") == 0 &&
+					(ammoType == -1 || (ammoType != -1 && GetEntProp(client, Prop_Data, "m_iAmmo", _, ammoType) <= 0)))
+				{
+					empty = true;
+				}
+
+				if(empty)
+				{
+					RemoveEntity(currentWeapon);
+					TryReplaceWeapon(client, boss, weaponSlot);
+				}
+			}
+		}
+	}
+
+	return bChange ? Plugin_Changed : Plugin_Continue;
+}
+
+bool IsDetectWeaponEmpty(int boss, int weaponSlot)
+{
+	char key[32];
+	Format(key, sizeof(key), "detect weapon slot %i", weaponSlot);
+	return FF2_GetAbilityArgument(boss, PLUGIN_NAME, REMOVE_EMPTY_ABILITY_NAME, key, 0) > 0;
+}
+
+void TryReplaceWeapon(int client, int boss, int weaponSlot)
+{
+	char key[32];
+	Format(key, sizeof(key), "replace weapon slot %i", weaponSlot);
+	int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, REMOVE_EMPTY_ABILITY_NAME, key, -1);
+	if(slot > -1)
+		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", GetPlayerWeaponSlot(client, slot));
+}
+
+int GetDisabledButtons(int boss, int weaponSlot)
+{
+	char key[32];
+	Format(key, sizeof(key), "detect weapon slot %i", weaponSlot);
+	int buttons = FF2_GetAbilityArgument(boss, PLUGIN_NAME, REPLACE_BUTTONS_NAME, key, 0);
+	return buttons;
+}
+
+int GetReplaceButtons(int boss, int weaponSlot)
+{
+	char key[32];
+	Format(key, sizeof(key), "replace weapon slot %i", weaponSlot);
+	int buttons = FF2_GetAbilityArgument(boss, PLUGIN_NAME, REPLACE_BUTTONS_NAME, key, 0);
+	return buttons;
+}
+
+stock int GetSlotOfWeapon(int client, int weapon)
+{
+	for(int loop = 0; loop < 6; loop++)
+	{
+		int temp = GetPlayerWeaponSlot(client, loop);
+		if(weapon == temp)
+			return loop;
+	}
+	return -1;
+}
+
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
+{
+	if(g_flWeaponDisabledTime[client] > GetGameTime())
+	{
+		char text[128];
+		FF2HudDisplay hudDisplay = null;
+
+		hudQueue.GetName(text, sizeof(text));
+		if(StrEqual(text, "Player Additional"))
+		{
+			int remainTime = RoundFloat(g_flWeaponDisabledTime[client] - GetGameTime());
+			Format(text, sizeof(text), "%T", "Weapon Disabled Time", client, remainTime);
+			hudDisplay = FF2HudDisplay.CreateDisplay("Weapon Disabled Time", text);
+			hudQueue.PushDisplay(hudDisplay);
+		}
+	}
+
 }
 
 void InvokeScreenFade(int boss)
@@ -324,5 +581,8 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	{
 		g_flHideHudTime[client] = 0.0;
 		g_flPlayerFadeTime[client] = 0.0;
+
+		g_hDisabledWeapon[client] = -1;
+		g_flWeaponDisabledTime[client] = 0.0;
 	}
 }
