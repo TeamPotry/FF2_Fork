@@ -34,18 +34,13 @@ public void OnPluginStart2()
 	// HookEvent("teamplay_round_win", Event_RoundEnd); // for non-arena maps
 }
 
-public void OnMapStart()
-{
-	CreateTimer(0.05, OnTick, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-}
-
 public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
 {
 	// Do nothing.
 	return Plugin_Continue;
 }
 
-public Action OnTick(Handle timer)
+public void OnGameFrame()
 {
     float currentTime = GetGameTime();
     for(int client = 1; client <= MaxClients; client++)
@@ -79,10 +74,8 @@ public Action OnTick(Handle timer)
 		ScaleVector(angles, (speed * actualRatio));
 
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, angles);
-		g_flNextTick[client] = currentTime + 0.05;
+		g_flNextTick[client] = currentTime + 0.07;
     }
-
-	return Plugin_Continue;
 }
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
