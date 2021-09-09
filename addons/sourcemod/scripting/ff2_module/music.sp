@@ -16,37 +16,34 @@ public Action Timer_PrepareBGM(Handle timer, int userid)
 	{
 		for(client=1; client<=MaxClients; client++)
 		{
+			if(MusicTimer[client] != null)
+			{
+				KillTimer(MusicTimer[client]);
+				MusicTimer[client] = null;
+			}
 			if(IsValidClient(client))
 			{
 				if(playBGM[client])
 				{
-					MusicTimer[client]=null;
 					StopMusic(client);
+
 					RequestFrame(PlayBGM, client); // Naydef: We might start playing the music before it gets stopped
 				}
-				else if(MusicTimer[client]!=null)
-				{
-					MusicTimer[client]=null;
-				}
-			}
-			else if(MusicTimer[client]!=null)
-			{
-				MusicTimer[client]=null;
 			}
 		}
 	}
 	else
 	{
+		if(MusicTimer[client]!=null)
+		{
+			KillTimer(MusicTimer[client]);
+			MusicTimer[client] = null;
+		}
+
 		if(playBGM[client])
 		{
-			MusicTimer[client]=null;
 			StopMusic(client);
 			RequestFrame(PlayBGM, client); // Naydef: We might start playing the music before it gets stopped
-		}
-		else if(MusicTimer[client]!=null)
-		{
-			MusicTimer[client]=null;
-			return Plugin_Stop;
 		}
 	}
 	return Plugin_Continue;
@@ -193,9 +190,10 @@ void StopMusic(int client=0, bool permanent=false)
 			{
 				StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
 
-				if(MusicTimer[client]!=null)
+				if(MusicTimer[client] != null)
 				{
-					delete MusicTimer[client];
+					KillTimer(MusicTimer[client]);
+					MusicTimer[client] = null;
 				}
 			}
 
@@ -211,9 +209,10 @@ void StopMusic(int client=0, bool permanent=false)
 		StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
 		StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
 
-		if(MusicTimer[client]!=null)
+		if(MusicTimer[client] != null)
 		{
-			delete MusicTimer[client];
+			KillTimer(MusicTimer[client]);
+			MusicTimer[client] = null;
 		}
 
 		strcopy(currentBGM[client], PLATFORM_MAX_PATH, "");
