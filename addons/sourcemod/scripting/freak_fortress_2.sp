@@ -5542,7 +5542,11 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(valid && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==226  //Battalion's Backup
 				&& !(FF2Flags[client] & FF2FLAG_ISBUFFED))
-					SetEntPropFloat(client, Prop_Send, "m_flRageMeter", 100.0);
+				{
+					float charge = GetEntPropFloat(client, Prop_Send, "m_flRageMeter") + (damage * 1.5);
+					SetEntPropFloat(client, Prop_Send, "m_flRageMeter",
+						charge > 100.0 ? 100.0 : charge);
+				}
 			}
 		}
 	}
