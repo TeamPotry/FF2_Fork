@@ -6999,6 +6999,12 @@ public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, cons
 		int flags = GetBossCreatorFlags(authId, characterIndex, true);
 		return flags > 0 ? Plugin_Continue : Plugin_Handled;
 	}
+	if(StrEqual(ruleName, "alive"))
+	{
+		CheckAlivePlayers(INVALID_HANDLE);
+		return RedAlivePlayers + BlueAlivePlayers >= integerValue ? Plugin_Continue : Plugin_Handled;
+
+	}
 
 	return Plugin_Continue;
 }
