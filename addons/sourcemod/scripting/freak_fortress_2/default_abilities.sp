@@ -580,7 +580,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 	{
 		float angles[3];
 		GetClientEyeAngles(client, angles);
-		if(angles[0]>45.0)
+		if(angles[0]>60.0)
 		{
 			Action action;
 			Call_StartForward(OnWeighdown);
@@ -591,19 +591,52 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 				return;
 			}
 
-			float velocity[3];
-			float multiplier = 950.0 * (Cosine(DegToRad((90.0 - angles[0]) * 2.0)) + Cosine(DegToRad((90.0 - angles[0]))));
+			float currentVelocity[3], velocity[3], cul = DegToRad(90.0 - angles[0]), currentSpeed, angleDiff;
+			float multiplier = 3500.0, speed = multiplier * (Cosine(cul * 2.0)) + Cosine(cul), ratio, actualRatio;
 
+			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-			GetAngleVectors(angles, velocity, NULL_VECTOR, NULL_VECTOR);
+			GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
 
-			ScaleVector(velocity, multiplier);
+			currentSpeed = GetVectorLength(velocity);
+			GetVectorAngles(velocity, velocity);
+			GetAngleVectors(velocity, velocity, NULL_VECTOR, NULL_VECTOR);
+			// SubtractVectors(angles, velocity, velocity);
+			angleDiff = GetVectorDotProduct(velocity, angles) * 0.6; // 0.8 -> 딜레이 및 추진력
 
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+			// PrintToChatAll("%.1f %.1f", speed, GetVectorDotProduct(velocity, angles));
+			// ratio = (((currentSpeed / speed) * (2.5 * ((currentSpeed - currentUpSpeed) / currentSpeed))) + 0.3) * GetVectorDotProduct(velocity, angles);
+			// NOTE: 속력을 받을 때를 늦춰야 한다면 GetVectorDotProduct가 점진적으로 값이 상승되도록 조정할 것
+			ratio = (((currentSpeed / speed) * (1.5 * (currentSpeed / speed))) + 0.3) * (angleDiff + 0.1);
+			actualRatio = (fmin(1.0, ratio) == 1.0) ? 1.0 : fmax(0.1, ratio);
+			ScaleVector(angles, (speed * actualRatio));
+
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, angles);
 
 			FF2_SetBossCharge(boss, slot, 0.0);
+
+			/*
+						currentSpeed = GetVectorLength(velocity);
+						if(currentSpeed * Cosine(cul * 2.0) > speed)
+							velocity[2] = angles[0] * speed;
+							ScaleVector(velocity, speed);
+						else
+							velocity[2] *= Cosine(cul * 2.0) * 20.0;
+							// ScaleVector(velocity, Cosine(cul * 2.0) * 100.0);
+			*/
+						// ScaleVector(angles, (speed * (currentSpeed / speed)) * GetVectorDotProduct(velocity, angles));
 		}
 	}
+}
+
+stock float fmax(float x, float y)
+{
+	return x < y ? y : x;
+}
+
+stock float fmin(float x, float y)
+{
+	return x > y ? y : x;
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
