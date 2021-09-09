@@ -1,0 +1,36 @@
+/*
+ * Copyright (C) 2021  Mikusch
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+"Phrases"
+{
+	"MvM_Upgrade_DisposableSentry"
+	{
+		"en"	"Use the 'build 2 0' console command (%%build 2 0%%) to build a Disposable Sentry Gun."
+	}
+	"MvM_UpgradeStation"
+	{
+		"en"	"Upgrade Station"
+	}
+	"MvM_UpgradeRespec"
+	{
+		"en"	"Refund Upgrades"
+	}
+    "MvM_BannedUpgrade"
+	{
+		"en"	"This upgrade has been banned! Please upgrade another!"
+	}
+}

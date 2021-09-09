@@ -555,11 +555,11 @@ public void FF2_OnWaveStarted(int wave)
 		{
 			boss = FF2_GetBossIndex(client);
 
-			int beforeHealth = FF2_GetBossMaxHealth(boss), heal = RoundFloat(FF2_GetBossMaxHealth(boss) * 1.03);
+			int beforeHealth = FF2_GetBossMaxHealth(boss), heal = RoundFloat(FF2_GetBossMaxHealth(boss) * 1.05);
 			heal -= beforeHealth;
 
 			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
-			FF2_SetBossMaxHealth(boss, FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss)));
+			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))) - 1);
 
 			Address address = TF2Attrib_GetByDefIndex(client, 252);
 

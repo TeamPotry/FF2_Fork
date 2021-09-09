@@ -2821,7 +2821,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 56, 1005, 1092:  //Huntsman, Festive Huntsman, Fortified Compound
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.5 ; 76 ; 2");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.25 ; 76 ; 2");
 				//2: +50% damage
 				//76: +100% ammo
 			if(itemOverride!=null)
@@ -3007,6 +3007,18 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+
+		case 997: // The Rescue Ranger (구조대원)
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "287 ; 0.8 ; 4351 ; 0.9");
+			//287: sentry damage
+			// 4351: (hidden) sentry ammo
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
 	}
 
 	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
@@ -3057,23 +3069,41 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 	}
 
-	if(TF2_GetPlayerClass(client)==TFClass_Heavy && !StrContains(classname, "tf_weapon_shotgun", false))
+	if(TF2_GetPlayerClass(client)==TFClass_Heavy)
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "741 ; 50.0");
-		//741: On Hit: Gain up to +%1$s health per attack
+		if(!StrContains(classname, "tf_weapon_shotgun", false))
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "741 ; 50.0");
+			//741: On Hit: Gain up to +%1$s health per attack
 
 		if(itemOverride!=null)
 		{
 			item=itemOverride;
 			return Plugin_Changed;
+			}
+		}
+
+		if(!StrContains(classname, "tf_weapon_minigun", false))
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "4347 ; 1.0");
+			//4347: (hidden) enable holster when even minigun spining.
+
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
 		}
 	}
 
 	if(!StrContains(classname, "tf_weapon_pda_engineer_build"))  // Construction PDA
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 4.00 ; 276 ; 1.0", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 4.00 ; 276 ; 1.0 ; 4351 ; 0.4 ; 287 ; 0.8", false);
 			//345: engy dispenser radius increased
 			//276: bidirectional_teleport
+			//287: sentry damage
+			// 4351: (hidden) sentry ammo
+			// 4354: (hidden) teleporter charge rate
 
 		if(itemOverride!=null)
 		{
