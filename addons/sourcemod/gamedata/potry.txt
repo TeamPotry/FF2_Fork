@@ -55,6 +55,41 @@
 				"linux"		"@_ZNK17CTFItemDefinition14GetLoadoutSlotEi"
 				"windows"	" "
 			}
+			"CTFParticleCannon::FireChargedShot"
+			{
+				"linux"		"@_ZN17CTFParticleCannon15FireChargedShotEv"
+				"windows"	" "
+			}
+			"CBaseEntity::SetAbsVelocity"
+			{
+				"linux"		"@_ZN11CBaseEntity14SetAbsVelocityERK6Vector"
+				"windows"	" "
+			}
+			"CBaseEntity::VPhysicsGetObjectList"
+			{
+				"linux"		"@_ZN11CBaseEntity21VPhysicsGetObjectListEPP14IPhysicsObjecti"
+				"windows"	" "
+			}
+			"CBaseEntity::GetVelocity"
+			{
+				"linux"		"@_ZN11CBaseEntity11GetVelocityEP6VectorS1_"
+				"windows"	" "
+			}
+			"PhysCallbackImpulse"
+			{
+				"linux"		"@_Z19PhysCallbackImpulseP14IPhysicsObjectRK6VectorS3_"
+				"windows"	" "
+			}
+			"TE_FireBullets"
+			{
+				"linux"		"@_Z14TE_FireBulletsiRK6VectorRK6QAngleiiifb"
+				"windows"	" "
+			}
+			"CBaseEntity::ApplyLocalAngularVelocityImpulse"
+			{
+				"linux"		"@_ZN11CBaseEntity32ApplyLocalAngularVelocityImpulseERK6Vector"
+				"windows"	" "
+			}
 		}
 		"Functions"
 		{
@@ -162,6 +197,14 @@
 				"callconv"	"thiscall"
 				"return"	"int"
 				"this"		"ignore"
+			}
+
+			"CTFParticleCannon::FireChargedShot"
+			{
+				"signature"	"CTFParticleCannon::FireChargedShot"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
 			}
 		}
     }
