@@ -16,6 +16,7 @@ rage_new_weapon:	slot - slot (def.0)
 #include <sourcemod>
 #include <tf2items>
 #include <tf2_stocks>
+#include <tf2attributes>
 #include <freak_fortress_2>
 
 #pragma newdecls required
@@ -54,7 +55,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 	if(StrEqual(abilityName, "equip weapon", false))
 	{
-		Rage_New_Weapon(boss, abilityName);
+		Rage_New_Weapon(boss, abilityName, slot);
 	}
 }
 
@@ -82,7 +83,7 @@ public Action Timer_Disable_Anims(Handle timer)
 	return Plugin_Continue;
 }
 
-void Rage_New_Weapon(int boss, const char[] abilityName)
+void Rage_New_Weapon(int boss, const char[] abilityName, int slot)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(!client || !IsClientInGame(client) || !IsPlayerAlive(client))
@@ -90,15 +91,16 @@ void Rage_New_Weapon(int boss, const char[] abilityName)
 		return;
 	}
 
-	char classname[64], attributes[256];
-	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "classname", classname, sizeof(classname));
-	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "attributes", attributes, sizeof(attributes));
+	char classname[64], attributes[256], model[PLATFORM_MAX_PATH];
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "classname", classname, sizeof(classname), "", slot);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "attributes", attributes, sizeof(attributes), "", slot);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "projectile model", model, sizeof(model), "", slot);
 
-	int slot=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "weapon slot", -1);
-	if(slot >= 0)
-		TF2_RemoveWeaponSlot(client, slot);
+	int weaponSlot=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "weapon slot", -1, slot);
+	if(weaponSlot >= 0)
+		TF2_RemoveWeaponSlot(client, weaponSlot);
 
-	int index=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "index");
+	int index=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "index", slot);
 	int weapon=SpawnWeapon(client, classname, index, 101, 5, attributes);
 	if(StrEqual(classname, "tf_weapon_builder") && index!=735)  //PDA, normal sapper
 	{
@@ -117,13 +119,21 @@ void Rage_New_Weapon(int boss, const char[] abilityName)
 		SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 3);
 	}
 
-	if(FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "set as active weapon"))
+	if(model[0] != '\0')
+	{
+		TF2Attrib_SetFromStringValue(weapon, "custom projectile model", model);
+		// PrintToServer("%s", TF2Attrib_SetFromStringValue(weapon, "custom projectile model", model) ? "true" : "false");
+	}
+
+
+	if(FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "set as active weapon", slot))
 	{
 		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 	}
 
-	int ammo=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "ammo", 0);
-	int clip=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "clip", 0);
+	int ammo=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "ammo", 0, slot);
+	int clip=FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "clip", 0, slot);
+
 	if(ammo || clip)
 	{
 		FF2_SetAmmo(client, weapon, ammo, clip);
