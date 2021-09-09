@@ -3979,6 +3979,7 @@ public void OnClientDisconnect(int client)
 
 			if(Boss[boss])
 			{
+				TF2_ChangeClientTeam(Boss[boss], BossTeam);
 				CreateTimer(0.1, MakeBoss, boss, TIMER_FLAG_NO_MAPCHANGE);
 				CPrintToChat(Boss[boss], "{olive}[FF2]{default} %t", "Replace Disconnected Boss");
 				CPrintToChatAll("{olive}[FF2]{default} %t", "Boss Disconnected", client, Boss[boss]);
