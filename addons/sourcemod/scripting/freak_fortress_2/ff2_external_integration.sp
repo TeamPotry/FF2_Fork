@@ -76,7 +76,7 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", velocity);
 
 			damageBonus = 0.0;
-			damageMultiplier =  GetVectorLength(velocity) / 800.0;
+			damageMultiplier =  GetVectorLength(velocity) / 1200.0;
 			return Plugin_Changed;
 		}
 
