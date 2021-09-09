@@ -27,7 +27,7 @@ public Plugin:myinfo=
 #define RAGE_REINCARNATION			"rage_reincarnation"
 */
 new Handle:chargeHUD;
-new Handle:cooldownHUD;
+// new Handle:cooldownHUD;
 new BossTeam=_:TFTeam_Blue;
 new bool:isDead[MAXPLAYERS+1];
 new bool:bRaged[MAXPLAYERS+1];
@@ -52,7 +52,7 @@ public OnPluginStart()
 public OnMapStart()
 {
 	chargeHUD = CreateHudSynchronizer();
-	cooldownHUD = CreateHudSynchronizer();
+	// cooldownHUD = CreateHudSynchronizer();
 }
 
 
@@ -145,12 +145,11 @@ public Action:FF2_OnLoseLife(index)
 
 		for(new player=1; player<=MaxClients; player++)
 		{
-			if(IsValidClient(player) && GetClientTeam(player)!=GetClientTeam(client))
+			if(IsValidClient(player) && player != client)
 			{
-				SetGlobalTransTarget(player);
 				char charnaem[64], text[256];
-				FF2_GetBossSpecial(index,charnaem,64,GetClientLanguage(player));
-				Format(text,256,"%t","reincarnation_info",timeleft[index],charnaem);
+				GetCharacterName(FF2_GetBossKV(index),charnaem,64,player);
+				Format(text,256,"%T","reincarnation_info",player,timeleft[index],charnaem);
 
 				TF2_ShowPositionalAnnotationToClient(player, pos, text, _, _, 10.0);
 				// ShowSyncHudText(player, cooldownHUD, text);
@@ -162,19 +161,26 @@ public Action:FF2_OnLoseLife(index)
 	return Plugin_Continue;
 }
 
-public void FF2_GetBossSpecial(int boss, char[] name, int buffer, int lang)
+public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
 {
-	char langCode[8];
-	GetLanguageInfo(lang, langCode, 8);
-	KeyValues bossKV = FF2_GetBossKV(boss);
+	int currentSpot;
+	characterKv.GetSectionSymbol(currentSpot);
+	characterKv.Rewind();
 
-	bossKV.Rewind();
-	if(StrEqual(langCode, "en"))
-		bossKV.GetString("name", name, buffer, "ERROR NAME");
-	else if(!bossKV.JumpToKey("name_lang"))
-		return;
-
-	bossKV.GetString(langCode, name, buffer);
+	if(client > 0)
+	{
+		char language[8];
+		GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
+		if(characterKv.JumpToKey("name_lang"))
+		{
+			characterKv.GetString(language, bossName, size, "");
+			if(bossName[0] != '\0')
+				return;
+		}
+		characterKv.Rewind();
+	}
+	characterKv.GetString("name", bossName, size);
+	characterKv.JumpToKeySymbol(currentSpot);
 }
 
 public Action:FF2_OnTriggerHurt(index, triggerhurt, &Float:damage)
@@ -225,7 +231,7 @@ public Action:FF2_OnTriggerHurt(index, triggerhurt, &Float:damage)
 
 public Action:StopTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3], damagecustom)
 {
-	new String:charnaem[64];
+	// new String:charnaem[64];
 	new index = FF2_GetBossIndex(client);
 	if (index==-1)
 	{
@@ -318,7 +324,7 @@ public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damage
 public Action:Timer_nowUcanReincarnate(Handle:hTimer,any:index)
 {
 	timeleft[index]--;
-	new boss=GetClientOfUserId(FF2_GetBossUserId(index));
+	// new boss=GetClientOfUserId(FF2_GetBossUserId(index));
 	if (FF2_GetRoundState()!=1)
 	{
 		KillTimer(Timer_toReincarnate[index]);
@@ -348,7 +354,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 		return;
 
 	char text[256];
-	bool changed = false;
+	// bool changed = false;
 	FF2HudDisplay hudDisplay = null;
 
 	SetGlobalTransTarget(client);
@@ -418,7 +424,7 @@ public void FF2_OnAbility(int index, const char[] pluginName, const char[] abili
 	}
 	else if(!strcmp(abilityName, "rage_wraithfire_eruption"))
 	{
-		Rage_Eruption(abilityName, index, slot);
+		Rage_Eruption(abilityName, index);
 	}
 }
 
@@ -430,7 +436,6 @@ Charge_RocketSpawn(const String:ability_name[],index,slot,action)
 		return;
 	*/
 	new boss=GetClientOfUserId(FF2_GetBossUserId(index));
-	new Float:see=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name,"charge duration",5.0);
 	new Float:charge=FF2_GetBossCharge(index,slot);
 	switch(action)
 	{
@@ -442,73 +447,70 @@ Charge_RocketSpawn(const String:ability_name[],index,slot,action)
 		case 2:
 		{
 			SetHudTextParams(-1.0, 0.73, 0.08, 255, 255, 255, 255);
-			if(charge+1<see)
-				FF2_SetBossCharge(index,slot,charge+1);
-			else
-				charge=see;
-			ShowSyncHudText(boss, chargeHUD, "%t","charge_status",RoundFloat(charge*100/see));
-		}
-		default:
-		{
-			if (charge<=0.2)
+			ShowSyncHudText(boss, chargeHUD, "%t","charge_status",RoundFloat(charge));
+
+			if(charge == 100.0)
 			{
 				SetHudTextParams(-1.0, 0.73, 0.08, 255, 255, 255, 255);
 				ShowSyncHudText(boss, chargeHUD, "%t","charge_ready");
 			}
-			else if (charge>=see)
-			{
-				// FF2_SetBossCharge(index,0,zero_charge-10);
-				decl Float:position[3];
-				decl Float:rot[3];
-				decl Float:velocity[3];
-				GetEntPropVector(boss, Prop_Send, "m_vecOrigin", position);
-				GetClientEyeAngles(boss,rot);
-				position[2]+=63;
+		}
+		case 3:
+		{
+			// FF2_SetBossCharge(index,0,zero_charge-10);
 
-				new proj=CreateEntityByName("tf_projectile_rocket");
-				SetVariantInt(BossTeam);
-				AcceptEntityInput(proj, "TeamNum", -1, -1, 0);
-				SetVariantInt(BossTeam);
-				AcceptEntityInput(proj, "SetTeam", -1, -1, 0);
-				SetEntPropEnt(proj, Prop_Send, "m_hOwnerEntity",boss);
-				new Float:speed=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name,"projectile speed",1000.0);
-				velocity[0]=Cosine(DegToRad(rot[0]))*Cosine(DegToRad(rot[1]))*speed;
-				velocity[1]=Cosine(DegToRad(rot[0]))*Sine(DegToRad(rot[1]))*speed;
-				velocity[2]=Sine(DegToRad(rot[0]))*speed;
-				velocity[2]*=-1;
-				TeleportEntity(proj, position, rot,velocity);
-				SetEntProp(proj, Prop_Send, "m_bCritical", 1);
-				SetEntDataFloat(proj, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name,"damage",40.0), true);
-				DispatchSpawn(proj);
-				new String:s[PLATFORM_MAX_PATH];
-				FF2_GetAbilityArgumentString(index,THIS_PLUGIN_NAME,ability_name,"model path",s,PLATFORM_MAX_PATH);
-				if(strlen(s)>5)
-					SetEntityModel(proj,s);
-				FF2_GetAbilityArgumentString(index,THIS_PLUGIN_NAME,ability_name,"projectile particle",s,PLATFORM_MAX_PATH);
-				if(strlen(s)>2)
-					CreateTimer(15.0, RemoveEntity_Delay, EntIndexToEntRef(AttachParticle(proj, s,_,true)));
-				if(FF2_FindSound("ability",s,PLATFORM_MAX_PATH,index,true,slot))
-				{
-					EmitSoundToAll(s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
-					EmitSoundToAll(s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
-
-					for(new i=1; i<=MaxClients; i++)
-						if(IsClientInGame(i) && i!=boss)
-						{
-							EmitSoundToClient(i,s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
-							EmitSoundToClient(i,s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
-						}
-				}
-			}
-			else
+			if(charge < 100.0)
 			{
 				ResetBossCharge(index, slot);
+				return;
+			}
+
+			decl Float:position[3];
+			decl Float:rot[3];
+			decl Float:velocity[3];
+			GetEntPropVector(boss, Prop_Send, "m_vecOrigin", position);
+			GetClientEyeAngles(boss,rot);
+			position[2]+=63;
+
+			new proj=CreateEntityByName("tf_projectile_rocket");
+			SetVariantInt(BossTeam);
+			AcceptEntityInput(proj, "TeamNum", -1, -1, 0);
+			SetVariantInt(BossTeam);
+			AcceptEntityInput(proj, "SetTeam", -1, -1, 0);
+			SetEntPropEnt(proj, Prop_Send, "m_hOwnerEntity",boss);
+			new Float:speed=FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name,"projectile speed",1000.0, slot);
+			velocity[0]=Cosine(DegToRad(rot[0]))*Cosine(DegToRad(rot[1]))*speed;
+			velocity[1]=Cosine(DegToRad(rot[0]))*Sine(DegToRad(rot[1]))*speed;
+			velocity[2]=Sine(DegToRad(rot[0]))*speed;
+			velocity[2]*=-1;
+			TeleportEntity(proj, position, rot,velocity);
+			SetEntProp(proj, Prop_Send, "m_bCritical", 1);
+			SetEntDataFloat(proj, FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4, FF2_GetAbilityArgumentFloat(index,THIS_PLUGIN_NAME,ability_name,"damage",40.0, slot), true);
+			DispatchSpawn(proj);
+			new String:s[PLATFORM_MAX_PATH];
+			FF2_GetAbilityArgumentString(index,THIS_PLUGIN_NAME,ability_name,"model path",s,PLATFORM_MAX_PATH);
+			if(strlen(s)>5)
+				SetEntityModel(proj,s);
+			FF2_GetAbilityArgumentString(index,THIS_PLUGIN_NAME,ability_name,"projectile particle",s,PLATFORM_MAX_PATH);
+			if(strlen(s)>2)
+				CreateTimer(15.0, RemoveEntity_Delay, EntIndexToEntRef(AttachParticle(proj, s,_,true)));
+			if(FF2_FindSound("ability",s,PLATFORM_MAX_PATH,index,true,slot))
+			{
+				EmitSoundToAll(s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
+				EmitSoundToAll(s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
+
+				for(new i=1; i<=MaxClients; i++)
+					if(IsClientInGame(i) && i!=boss)
+					{
+						EmitSoundToClient(i,s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
+						EmitSoundToClient(i,s, boss, _, SNDLEVEL_TRAFFIC, SND_NOFLAGS, SNDVOL_NORMAL, 100, boss, position, NULL_VECTOR, true, 0.0);
+					}
 			}
 		}
 	}
 }
 
-Rage_Eruption(const String:ability_name[], index, slot)
+Rage_Eruption(const String:ability_name[], index)
 {
 	new client=GetClientOfUserId(FF2_GetBossUserId(index));
 	/*
