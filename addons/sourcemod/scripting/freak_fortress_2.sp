@@ -1408,7 +1408,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	Boss[0]=GetClientWithMostQueuePoints(omit);
 	if(Boss[0] == 0)
 	{
-		Boss[0]=RandomlySelectClient(omit);
+		Boss[0]=RandomlySelectClient(true, omit);
 		CPrintToChatAll("{olive}[FF2]{default} %t", "Randomly Choose Boss Player");
 	}
 
@@ -6376,7 +6376,7 @@ stock int GetClientWithMostQueuePoints(bool[] omit)
 	return winner;
 }
 
-stock int RandomlySelectClient(bool[] omit)
+stock int RandomlySelectClient(bool force, bool[] omit)
 {
 	int count;
 	ArrayList array=new ArrayList();
@@ -6384,7 +6384,9 @@ stock int RandomlySelectClient(bool[] omit)
 	{
 		if(IsValidClient(client) && !omit[client])
 		{
-			if(SpecForceBoss || TF2_GetClientTeam(client)>TFTeam_Spectator)
+			if(SpecForceBoss
+				|| (TF2_GetClientTeam(client)>TFTeam_Spectator
+					&& (force || (!force && GetClientQueuePoints(client) >= 0))))
 			{
 				array.Push(client);
 				count++;
@@ -6392,8 +6394,11 @@ stock int RandomlySelectClient(bool[] omit)
 		}
 	}
 
-	int winner=array.Get(GetRandomInt(0, count-1));
+	int winner = -1;
+	if(count > 0)
+		winner=array.Get(GetRandomInt(0, count-1));
 	delete array;
+
 	return winner;
 }
 
@@ -6976,7 +6981,7 @@ void FindCompanion(int boss, int players, bool[] omit)
 	kv.GetString("companion", companionName, sizeof(companionName));
 	if(playersNeeded<players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
 	{
-		int companion=RandomlySelectClient(omit);
+		int companion=RandomlySelectClient(false, omit);
 
 		Boss[companion]=companion;  //Woo boss indexes!
 		omit[companion]=true;
