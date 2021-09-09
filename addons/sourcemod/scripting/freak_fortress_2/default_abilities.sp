@@ -367,8 +367,16 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 					velocity[2]=750+(charge/4)*13.0;
 				}
 				SetEntProp(client, Prop_Send, "m_bJumping", 1);
+				// velocity[0]+=750*(1+Sine((charge/4)*FLOAT_PI/50));
+				// velocity[1]+=750*(1+Sine((charge/4)*FLOAT_PI/50));
 				velocity[0]*=(1+Sine((charge/4)*FLOAT_PI/50));
 				velocity[1]*=(1+Sine((charge/4)*FLOAT_PI/50));
+
+				float speed = GetVectorLength(velocity);
+				if(!(GetEntityFlags(client) & FL_ONGROUND) && speed > 1500.0)
+					ScaleVector(velocity, 1500.0 / speed);
+
+				// PrintToServer("%.1f %.1f %.1f", velocity[0], velocity[1], velocity[2]);
 			}
 			else
 			{
