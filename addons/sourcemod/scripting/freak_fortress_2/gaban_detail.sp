@@ -7,6 +7,7 @@
 #include <tf2_stocks>
 #include <tf2items>
 #include <tf2utils>
+#include <tf2attributes>
 #include <tf2wearables>
 #include <freak_fortress_2>
 
@@ -428,6 +429,7 @@ public void OnLoadoutThink(int client)
 
 		if(IsPlayerAlive(client))
 		{
+			// TF2_RemoveAllWeapons(client); // 무기만 삭제됨
 			TF2_RegeneratePlayer(client);
 		}
 
@@ -621,6 +623,14 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 	weapon = GetPlayerWeaponSlot(client, currentSlot);
 	if(IsValidEntity(weapon))
 		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
+
+	// 업그레이드 초기화
+	for(int slot = 0; slot < 6; slot++)
+	{
+		weapon = GetPlayerWeaponSlot(client, slot);
+		if(IsValidEntity(weapon))
+			TF2Attrib_RemoveAll(weapon);
+	}
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
