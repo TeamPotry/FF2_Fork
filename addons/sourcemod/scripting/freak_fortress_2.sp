@@ -4539,25 +4539,28 @@ public Action BossTimer(Handle timer)
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
+			KeyValues abilityKv = new KeyValues("abilities");
+			abilityKv.Import(kv);
+
 			char ability[10];
-			kv.GotoFirstSubKey();
+			abilityKv.GotoFirstSubKey();
 			do
 			{
 				char pluginName[64];
-				kv.GetSectionName(pluginName, sizeof(pluginName));
-				kv.GotoFirstSubKey();
+				abilityKv.GetSectionName(pluginName, sizeof(pluginName));
+				abilityKv.GotoFirstSubKey();
 				do
 				{
 					char abilityName[64];
-					kv.GetSectionName(abilityName, sizeof(abilityName));
-					int slot=kv.GetNum("slot", 0);
-					int buttonmode=kv.GetNum("buttonmode", 0);
+					abilityKv.GetSectionName(abilityName, sizeof(abilityName));
+					int slot=abilityKv.GetNum("slot", 0);
+					int buttonmode=abilityKv.GetNum("buttonmode", 0);
 					if(slot<1) // We don't care about rage/life-loss abilities here
 					{
 						continue;
 					}
 
-					kv.GetString("life", ability, sizeof(ability), "");
+					abilityKv.GetString("life", ability, sizeof(ability), "");
 					if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
 					{
 						UseAbility(boss, pluginName, abilityName, slot, buttonmode);
@@ -4579,10 +4582,12 @@ public Action BossTimer(Handle timer)
 						delete livesArray;
 					}
 				}
-				while(kv.GotoNextKey());
-				kv.GoBack();
+				while(abilityKv.GotoNextKey());
+				abilityKv.GoBack();
 			}
-			while(kv.GotoNextKey());
+			while(abilityKv.GotoNextKey());
+
+			delete abilityKv;
 		}
 
 		if(RedAlivePlayers==1)
@@ -4762,7 +4767,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 
 	if(RoundFloat(BossCharge[boss][0])>=100)
 	{
-		KeyValues kv = GetCharacterKV(character[boss]), abilityKv = new KeyValues("abilities");
+		KeyValues kv = GetCharacterKV(character[boss]);
 		int slot = RoundFloat(BossMaxRageCharge[boss]) >= 200 && RoundFloat(BossCharge[boss][0]) >= 200
 			? -2 : 0;
 
@@ -4773,6 +4778,7 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		kv.Rewind();
 		if(kv.JumpToKey("abilities"))
 		{
+			KeyValues abilityKv = new KeyValues("abilities");
 			abilityKv.Import(kv);
 
 			char ability[10];
@@ -4823,6 +4829,8 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 				abilityKv.GoBack();
 			}
 			while(abilityKv.GotoNextKey());
+
+			delete abilityKv;
 		}
 
 		char sound[PLATFORM_MAX_PATH];
@@ -4839,7 +4847,6 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		float duration = GetBossSkillDuration(boss, type);
 		BossSkillDuration[boss][type] = GetGameTime() + duration;
 
-		delete abilityKv;
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
