@@ -155,6 +155,7 @@ bool checkDoors;
 bool bMedieval;
 bool firstBlood;
 
+int tf_arena_preround_time;
 int tf_arena_use_queue;
 int mp_teams_unbalance_limit;
 int tf_arena_first_blood;
@@ -518,6 +519,7 @@ public void OnLibraryRemoved(const char[] name)
 
 public void OnConfigsExecuted()
 {
+	tf_arena_preround_time=FindConVar("tf_arena_preround_time").IntValue;
 	tf_arena_use_queue=FindConVar("tf_arena_use_queue").IntValue;
 	mp_teams_unbalance_limit=FindConVar("mp_teams_unbalance_limit").IntValue;
 	tf_arena_first_blood=FindConVar("tf_arena_first_blood").IntValue;
@@ -1464,9 +1466,9 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
-	CreateTimer(3.5, StartResponseTimer, _, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(9.1, StartBossTimer, _, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(9.6, MessageTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer((tf_arena_preround_time - 10.0) + 3.5, StartResponseTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer((tf_arena_preround_time - 10.0) + 9.1, StartBossTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer((tf_arena_preround_time - 10.0) + 9.6, MessageTimer, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	for(int entity=MaxClients+1; entity<MAXENTITIES; entity++)
 	{
