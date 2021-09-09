@@ -43,6 +43,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <stocksoup/tf/monster_resource>
 #include <stocksoup/tf/econ>
 
+#include "ff2_module/sdkcalls.sp"
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
 #include "ff2_module/methodmap.sp"
@@ -444,6 +445,9 @@ public void OnPluginStart()
 	#if defined _MVM_included
 	mannvsmann=LibraryExists("mannvsmann");
 	#endif
+
+	// ff2_module/sdkcalls.sp
+	GameData_Init();
 }
 
 public bool BossTargetFilter(const char[] pattern, Handle clients)
@@ -2200,6 +2204,7 @@ void EquipBoss(int boss)
 	bool initCaptureAttribute = false;
 	char captureAttributeStr[64] = "252 ; 0.8 ; 68 ; %i ; "; // 68: +2 cap rate, 252: knockback scale, 259: goomba
 
+	TF2Attrib_RemoveAll(client);
 	TF2_RemoveAllWeapons(client);
 	TF2_RemoveAllWearables(client);
 
@@ -2294,8 +2299,22 @@ void EquipBoss(int boss)
 						SetEntProp(weapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, 3);
 					}
 
+					// 무기의 투사체 모델 적용
+					char model[PLATFORM_MAX_PATH];
+					kv.GetString("projectile model", model, sizeof(model));
+					if(model[0] != '\0')
+						TF2Attrib_SetFromStringValue(weapon, "custom projectile model", model);
+
 					SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 					initCaptureAttribute = true;
+
+					// FIXME: 본래의 병과가 아닌 다른 무기를 든 경우 산정이 이상하게 됨.
+					int ammoType = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
+					if(ammoType != -1)
+					{
+						int maxAmmo = SDKCall_GetMaxAmmo(client, ammoType, view_as<int>(TF2_GetPlayerClass(client)));
+						SetEntProp(client, Prop_Data, "m_iAmmo", maxAmmo, _, ammoType);
+					}
 				}
 
 				if(!kv.GetNum("show", 0))
@@ -2317,10 +2336,6 @@ void EquipBoss(int boss)
 	{
 		TF2_SetPlayerClass(client, playerclass, _, !GetEntProp(client, Prop_Send, "m_iDesiredPlayerClass") ? true : false);
 	}
-
-	TF2Attrib_RemoveByDefIndex(client, 112);
-	TF2Attrib_RemoveByDefIndex(client, 113);
-	TF2Attrib_RemoveByDefIndex(client, 252);
 }
 
 public Action MakeBoss(Handle timer, int boss)
