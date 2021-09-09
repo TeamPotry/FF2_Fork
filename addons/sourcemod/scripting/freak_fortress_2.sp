@@ -3076,10 +3076,10 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			Handle itemOverride=PrepareItemHandle(item, _, _, "741 ; 50.0");
 			//741: On Hit: Gain up to +%1$s health per attack
 
-		if(itemOverride!=null)
-		{
-			item=itemOverride;
-			return Plugin_Changed;
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
 			}
 		}
 
@@ -5363,28 +5363,28 @@ public Action Timer_DrawGame(Handle timer)
 			switch(timeInteger)
 			{
 				case 300:
-			{
-				EmitSoundToAll("vo/announcer_ends_5min.mp3");
-			}
-			case 120:
-			{
-				EmitSoundToAll("vo/announcer_ends_2min.mp3");
-			}
-			case 60:
-			{
-				EmitSoundToAll("vo/announcer_ends_60sec.mp3");
-			}
-			case 30:
-			{
-				EmitSoundToAll("vo/announcer_ends_30sec.mp3");
-			}
-			case 10:
-			{
-				EmitSoundToAll("vo/announcer_ends_10sec.mp3");
-			}
-			case 1, 2, 3, 4, 5:
-			{
-				char sound[PLATFORM_MAX_PATH];
+				{
+					EmitSoundToAll("vo/announcer_ends_5min.mp3");
+				}
+				case 120:
+				{
+					EmitSoundToAll("vo/announcer_ends_2min.mp3");
+				}
+				case 60:
+				{
+					EmitSoundToAll("vo/announcer_ends_60sec.mp3");
+				}
+				case 30:
+				{
+					EmitSoundToAll("vo/announcer_ends_30sec.mp3");
+				}
+				case 10:
+				{
+					EmitSoundToAll("vo/announcer_ends_10sec.mp3");
+				}
+				case 1, 2, 3, 4, 5:
+				{
+					char sound[PLATFORM_MAX_PATH];
 					Format(sound, sizeof(sound), "vo/announcer_ends_%isec.mp3", timeInteger);
 					EmitSoundToAll(sound);
 				}
@@ -5396,23 +5396,23 @@ public Action Timer_DrawGame(Handle timer)
 		{
 			if(timeType == FF2Timer_WaveTimer)
 			{
-					if(currentWave == maxWave)
-					{
-						ForceTeamWin(TFTeam_Unassigned);
-						return Plugin_Stop;
-					}
-
-					currentWave++;
-					timeleft=maxTime;
-
-					Call_StartForward(OnWaveStarted);
-					Call_PushCell(currentWave);
-					Call_Finish();
-
-					return Plugin_Continue;
-				}
-				else
+				if(currentWave == maxWave)
+				{
 					ForceTeamWin(TFTeam_Unassigned);
+					return Plugin_Stop;
+				}
+
+				currentWave++;
+				timeleft=maxTime;
+
+				Call_StartForward(OnWaveStarted);
+				Call_PushCell(currentWave);
+				Call_Finish();
+
+				return Plugin_Continue;
+			}
+			else
+				ForceTeamWin(TFTeam_Unassigned);
 
 			return Plugin_Stop;
 		}
@@ -5441,8 +5441,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 	bool bChanged=false;
 
-	if(CheckRoundState()==FF2RoundState_Setup || (IsBoss(client)
-	&& (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) || TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden))))
+	if(CheckRoundState()==FF2RoundState_Setup ||
+		(IsBoss(client)	&& (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) || TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden))))
 	{
 		damage=0.0;
 		return Plugin_Changed;
