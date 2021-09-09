@@ -7,6 +7,8 @@
 #define FF2BOSSCREATOR_PLUGIN               (1<<2)
 #define FF2BOSSCREATOR_SOUND                (1<<3)
 
+#define DROPPED_DONTALLOW_SWAP 	(1 << 0)
+
 enum
 {
     FF2BossCreator_Other = 0,
@@ -129,6 +131,10 @@ native int FF2_GetBossCreatorFlags(char[] steamId, int boss, bool pushCharacterI
  * @return                  return ArrayList that has STEAMID of boss creators.
  */
 native ArrayList FF2_GetBossCreators(int boss, int creatorType, bool pushCharacterIndex=false);
+
+native int FF2_DropWeapon(int owner, int weapon, int flags);
+
+native void FF2_EqiupWeaponFromDropped(int owner, int droppedWeapon);
 
 /**
  * Called when boss uses minion spawn ability.
