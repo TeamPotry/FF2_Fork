@@ -2361,6 +2361,13 @@ public Action MakeBoss(Handle timer, int boss)
 	BossMaxRageCharge[boss] = kv.GetFloat("rage max charge", 100.0);
 	BossSpeed[boss]=float((ParseFormula(boss, "speed", 340)));
 
+	for(int slot = 0; slot < 8; slot++)
+	{
+		BossCharge[boss][slot] = 0.0;
+		if(slot < 3)
+			BossSkillDuration[boss][slot] = 0.0;
+	}
+
 	SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
 	TF2_RemovePlayerDisguise(client);
 	TF2_SetPlayerClass(client, view_as<TFClassType>(kv.GetNum("class", 1)), _, !GetEntProp(client, Prop_Send, "m_iDesiredPlayerClass") ? true : false);
