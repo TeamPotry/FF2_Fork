@@ -1,0 +1,21 @@
+"Phrases"
+{
+	"Teleportation Cooldown"
+    {
+        "#format"   "{1:i}"
+        "ko"		"텔레포트 사용 대기시간: {1}초"
+    }
+    "Point Teleportation Charge"
+    {
+        "#format"   "{1:i},{2:s}"
+        "ko"		"텔레포트: {1}%% / 100%% ({2})\n10%% 이상일 때, 위치를 바라보며 버튼을 때세요"
+    }
+	"Right Click"
+	{
+		"ko"		"우클릭"
+	}
+	"Reload"
+	{
+		"ko"		"재장전"
+}
+}
