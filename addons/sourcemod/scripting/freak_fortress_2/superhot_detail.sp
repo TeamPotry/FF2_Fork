@@ -30,6 +30,7 @@ enum
 }
 
 Handle g_SDKCallGiveAmmo;
+Handle g_SDKCallGetMaxAmmo;
 
 bool g_bOneOfUs[MAXPLAYERS+1];
 
@@ -45,6 +46,7 @@ public void OnPluginStart()
 	if (gamedata)
 	{
 		g_SDKCallGiveAmmo = PrepSDKCall_GiveAmmo(gamedata);
+		g_SDKCallGetMaxAmmo = PrepSDKCall_GetMaxAmmo(gamedata);
 		delete gamedata;
 	}
 	else
@@ -56,6 +58,9 @@ public void OnPluginStart()
 public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot)
 {
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+
+	if(g_bOneOfUs[client])
+		return Plugin_Handled;
 
 	if(FF2_HasAbility(boss, PLUGIN_NAME, HOTSWITCH_NAME, slot)
 		|| FF2_HasAbility(boss, PLUGIN_NAME, ONEOFUS_NAME, slot))
@@ -93,7 +98,6 @@ public void HotSwitch_Init(int boss, const char[] abilityName, int slot, int typ
 	float aimTime = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "aim time", 2.0, slot);
 	float targetPos[3];
 
-	LookatTarget(client, target);
 	LookatTarget(target, client);
 
 	SetEntityMoveType(client, MOVETYPE_NONE);
@@ -163,11 +167,13 @@ public void HotSwitch_Init(int boss, const char[] abilityName, int slot, int typ
 public Action HotSwitch_Teleport(Handle timer, DataPack data)
 {
 	int client = data.ReadCell(), target = data.ReadCell();
+
+	if(IsPlayerAlive(client))
+		SetEntityMoveType(client, MOVETYPE_WALK);
+
 	if(!IsValidClient(client) || !IsValidClient(target)
 		|| !IsPlayerAlive(client) || !IsPlayerAlive(target))
 			return Plugin_Continue;
-
-	SetEntityMoveType(client, MOVETYPE_WALK);
 
 	SetEntProp(client, Prop_Send, "m_bDucked", 1);
 	SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
@@ -178,6 +184,8 @@ public Action HotSwitch_Teleport(Handle timer, DataPack data)
 	targetPos[2] = data.ReadFloat();
 
 	TeleportEntity(client, targetPos, NULL_VECTOR, NULL_VECTOR);
+	// LookatTarget(client, target);
+
 	return Plugin_Continue;
 }
 
@@ -193,37 +201,121 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 	if(!IsValidEntity(weapon))
 		return Plugin_Continue;
 
-	int attribDefIndexs[20], staticDefIndexs[20], attribDefCount, staticDefCount;
-	float attribDefAttribs[20], staticDefAttribs[20];
+	// ArrayList array = new ArrayList();
+	// ArrayStack stack = new ArrayStack(), attribStack = new ArrayStack();
+	char attributes[256];
+	int attribDefIndexs[20], attribDefCount, clip, count = 0;
+	float attribDefAttribs[20];
 	index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+	clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
 	GetEntityClassname(weapon, classname, sizeof(classname));
 	attribDefCount = TF2Attrib_ListDefIndices(weapon, attribDefIndexs, sizeof(attribDefIndexs));
-	staticDefCount = TF2Attrib_GetStaticAttribs(index, staticDefIndexs, staticDefAttribs, sizeof(staticDefIndexs));
 
 	Address address;
 	for(int loop = 0; loop < attribDefCount; loop++)
 	{
+		// if(IsBanned(attribDefIndexs[loop]))
+			// continue;
+
 		address = TF2Attrib_GetByDefIndex(weapon, attribDefIndexs[loop]);
 		if(address != Address_Null)
+		{
 			attribDefAttribs[loop] = TF2Attrib_GetValue(address);
+
+			if(count == 0)
+				Format(attributes, sizeof(attributes), "%d ; %.1f", attribDefIndexs[loop], attribDefAttribs[loop]);
+			else
+				Format(attributes, sizeof(attributes), "%s ; %d ; %.1f", attributes, attribDefIndexs[loop], attribDefAttribs[loop]);
+			// stack.Push(attribDefIndexs[loop]);
+			// attribStack.Push(attribDefAttribs[loop]);
+
+			count++;
+		}
 	}
 
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-	weapon = SpawnWeapon(client, classname, index, 101, 0, "");
 
-	for(int loop = 0; loop < staticDefCount; loop++)
-		TF2Attrib_SetByDefIndex(weapon, staticDefIndexs[loop], staticDefAttribs[loop]);
-	for(int loop = 0; loop < attribDefCount; loop++)
-		TF2Attrib_SetByDefIndex(weapon, attribDefIndexs[loop], attribDefAttribs[loop]);
+	/*
+		NOTE: 용의 격노는 현재 작동되지 않음
+		일부 클라이언트의 경우, 한번에 능력치를 적용하면 크래쉬가 생기는 현상이 있어
+		한 프레임에 능력치 하나씩 밀어넣는 구조로 변경됨.
+	*/
+	// 기본 화염방사기 지급
+
+	if(index == 1178)
+	{
+		PrintCenterText(client, "THIS IS BUG. I WILL FIX THIS AS SOON.");
+		weapon = SpawnWeapon(client, "tf_weapon_flamethrower", 208, 101, 0, "");
+	}
+	else
+		weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
+
+	// weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
+	// TF2Attrib_RemoveAll(weapon);
+
+	// array.Push(weapon);
+	// array.Push(stack);
+	// array.Push(attribStack);
+
+	// RequestFrame(AddAttribs, array);
 
 	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
-	for(int loop = 0; loop < 7; loop++)
-	{
-		SDKCall_GiveAmmo(client, 200, loop, false);
-	}
+	SetEntProp(weapon, Prop_Data, "m_iClip1", clip);
+	int ammoType = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
+	int maxAmmo = SDKCall_GetMaxAmmo(target, ammoType, view_as<int>(TF2_GetPlayerClass(target)));
+	SetEntProp(client, Prop_Data, "m_iAmmo", maxAmmo, _, ammoType);
+
+	SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+1.0);
+	SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime()+1.0);
+	SetEntPropFloat(client, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+1.0);
 
 	g_bOneOfUs[target] = false;
 	return Plugin_Continue;
+}
+
+stock bool IsBanned(int index)
+{
+	switch(index)
+	{
+		case 719, 731:
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+public void AddAttribs(ArrayList array)
+{
+	int weapon = array.Get(0);
+	ArrayStack stack = array.Get(1), attribStack = array.Get(2);
+
+	if(attribStack.Empty)
+	{
+		delete stack;
+		delete attribStack;
+		delete array;
+
+		return;
+	}
+	int index = stack.Pop();
+	float value = attribStack.Pop();
+
+	Address address = TF2Attrib_GetByDefIndex(weapon, index);
+	if(value != 0.0)
+	{
+		if(address == Address_Null)
+		{
+			TF2Attrib_SetByDefIndex(weapon, index, value);
+		}
+		else
+		{
+			TF2Attrib_RemoveByDefIndex(weapon, index);
+			TF2Attrib_SetByDefIndex(weapon, index, value);
+		}
+	}
+
+	RequestFrame(AddAttribs, array);
 }
 
 public Action OneOfUs_Boss(Handle timer, DataPack data)
@@ -238,8 +330,8 @@ public Action OneOfUs_Boss(Handle timer, DataPack data)
 	int bossindex = FF2_GetBossIndex(target);
 
 	TF2Attrib_RemoveAll(target);
-	FF2_SetBossMaxHealth(bossindex, 250);
-	FF2_SetBossHealth(bossindex, 250);
+	FF2_SetBossMaxHealth(bossindex, 300);
+	FF2_SetBossHealth(bossindex, 300);
 	FF2_SetBossLives(bossindex, 1);
 	FF2_SetBossMaxLives(bossindex, 1);
 	FF2_SetBossRageDamage(bossindex, 9999999);
@@ -252,7 +344,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	if(!g_bOneOfUs[client])		return;
 
-	char text[60] = "SUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOT";
+	char text[128] = "SUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOT";
 	FF2HudDisplay hudDisplay = null;
 
 	hudQueue.DeleteAllDisplay();
@@ -271,6 +363,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	int client=GetClientOfUserId(event.GetInt("userid"));
 	g_bOneOfUs[client] = false;
 }
+
+//////////////////////////////////////
 
 Handle PrepSDKCall_GiveAmmo(GameData gamedata)
 {
@@ -296,15 +390,39 @@ int SDKCall_GiveAmmo(int player, int iCount, int iAmmoIndex, bool bSuppressSound
 	return -1;
 }
 
+Handle PrepSDKCall_GetMaxAmmo(GameData gamedata)
+{
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CTFPlayer::GetMaxAmmo");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+
+	Handle call = EndPrepSDKCall();
+	if (!call)
+		LogMessage("Failed to create SDK call: CTFPlayer::GiveAmmo");
+
+	return call;
+}
+
+int SDKCall_GetMaxAmmo(int player, int iAmmoIndex, int iClassIndex = -1)
+{
+	if (g_SDKCallGetMaxAmmo)
+		return SDKCall(g_SDKCallGetMaxAmmo, player, iAmmoIndex, iClassIndex);
+
+	return 0;
+}
+
 //////////////////////
 
 stock int SpawnWeapon(int client, char[] name, int index, int level, int quality, char[] attribute)
 {
-	Handle weapon=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+	Handle weapon=TF2Items_CreateItem(FORCE_GENERATION|PRESERVE_ATTRIBUTES);
 	TF2Items_SetClassname(weapon, name);
 	TF2Items_SetItemIndex(weapon, index);
 	TF2Items_SetLevel(weapon, level);
 	TF2Items_SetQuality(weapon, quality);
+	TF2Items_SetNumAttributes(weapon, 15);
 	char attributes[32][32];
 	int count = ExplodeString(attribute, ";", attributes, 32, 32);
 	if(count%2!=0)
@@ -314,7 +432,7 @@ stock int SpawnWeapon(int client, char[] name, int index, int level, int quality
 
 	if(count>0)
 	{
-		TF2Items_SetNumAttributes(weapon, count/2);
+		// TF2Items_SetNumAttributes(weapon, count/2);
 		int i2=0;
 		for(int i=0; i<count; i+=2)
 		{
@@ -404,7 +522,7 @@ stock int GetClientAimTarget2(int client)
 	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
 	ScaleVector(angles, 10000.0);
 
-	float range = 20.0;
+	static float range = 20.0;
 	for(int loop = 0; loop < 2; loop++)
 	{
 		vecMin[loop] = range * -0.5;
@@ -439,11 +557,33 @@ stock void LookatTarget(int client, int target)
 	GetClientEyePosition(client, pos);
 	GetClientEyePosition(target, targetPos);
 
-	SubtractVectors(targetPos, pos, angles);
+	SubtractVectors(pos, targetPos, angles);
 	GetVectorAngles(angles, angles);
 
-// 	NegateVector(angles);
-	TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
+	if(angles[0] > 90.0)
+		angles[0] = -(angles[0] - 360.0);
+	else
+		angles[0] *= -1.0;
+	angles[1] -= 180.0;
+
+	// PrintToChatAll("%N, %.1f, %.1f, %.1f", client, angles[0], angles[1], angles[2]);
+
+	// FIXME: 각도는 맞는데 이 값이 반영되지 않음
+	SetEntPropFloat(client, Prop_Send, "m_angEyeAngles[0]", angles[0]);
+	SetEntPropFloat(client, Prop_Send, "m_angEyeAngles[1]", angles[1]);
+	// TeleportEntity(client, NULL_VECTOR, angles, NULL_VECTOR);
+	// ForcePlayerViewAngles(client, angles);
+	//
+	// PrintToChatAll("%N, NOW: %.1f, %.1f, %.1f", client, angles[0], angles[1], angles[2]);
+}
+
+stock void ForcePlayerViewAngles(iClient, float vAng[3]) // TODO: Base this off of the info_player_teamspawn under you.
+{
+    Handle bf = StartMessageOne("ForcePlayerViewAngles", iClient);
+    BfWriteByte(bf, 1);
+    BfWriteByte(bf, iClient);
+    BfWriteAngles(bf, vAng);
+    EndMessage();
 }
 
 /*
