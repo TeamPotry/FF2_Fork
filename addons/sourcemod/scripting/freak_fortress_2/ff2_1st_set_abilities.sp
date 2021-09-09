@@ -6,6 +6,7 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <tf2items>
+#include <tf2wearables>
 #include <freak_fortress_2>
 
 #pragma newdecls required
@@ -301,6 +302,7 @@ void Rage_Clone(const char[] abilityName, int boss)
 		FF2_SetFF2Flags(clone, FF2_GetFF2Flags(clone)|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_CLASSTIMERDISABLED);
 		TF2_ChangeClientTeam(clone, bossTeam);
 		TF2_RespawnPlayer(clone);
+		TF2_RemoveAllWearables(clone);
 		CloneOwnerIndex[clone]=tempBossIndex;
 		TF2_SetPlayerClass(clone, (playerclass ? (view_as<TFClassType>(playerclass)) : (view_as<TFClassType>(bossKV[config].GetNum("class", 0)))), _, false);
 
@@ -388,32 +390,6 @@ void Rage_Clone(const char[] abilityName, int boss)
 		data.WriteString(model);
 	}
 	delete players;
-
-	// FIXME: 각 개인별로 감지 후 삭제할 것
-	int entity, owner;
-	while((entity=FindEntityByClassname(entity, "tf_wearable"))!=-1)
-	{
-		if((owner=GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"))<=MaxClients && owner>0 && TF2_GetClientTeam(owner)==BossTeam)
-		{
-			TF2_RemoveWearable(owner, entity);
-		}
-	}
-
-	while((entity=FindEntityByClassname(entity, "tf_wearable_demoshield"))!=-1)
-	{
-		if((owner=GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"))<=MaxClients && owner>0 && TF2_GetClientTeam(owner)==BossTeam)
-		{
-			TF2_RemoveWearable(owner, entity);
-		}
-	}
-
-	while((entity=FindEntityByClassname(entity, "tf_powerup_bottle"))!=-1)
-	{
-		if((owner=GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"))<=MaxClients && owner>0 && TF2_GetClientTeam(owner)==BossTeam)
-		{
-			TF2_RemoveWearable(owner, entity);
-		}
-	}
 }
 
 public Action Forward_OnMinionSpawn(int client, int ownerBossIndex)
