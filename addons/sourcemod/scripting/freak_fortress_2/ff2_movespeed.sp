@@ -5,6 +5,7 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <sdktools_functions>
+#include <tf2utils>
 #include <freak_fortress_2>
 #include <ff2_potry>
 
@@ -127,7 +128,7 @@ MVS_Invoke(client, slot = -3)
 		SDKHook(client, SDKHook_PreThink, MoveSpeed_Prethink);
 	}
 
-	new Float:dist2=FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, MOVESPEED, "victim range");
+	new Float:dist2=FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, MOVESPEED, "victim range", 0.0, slot);
 	if(dist2)
 	{
 		if(dist2 < 0.0)		return;
@@ -206,6 +207,7 @@ public SpeedTick(client, Float:gameTime)
 
 		NewSpeed[client]=0.0;
 		NewSpeedDuration[client]=INACTIVE;
+		TF2Util_UpdatePlayerSpeed(client, true);
 		SDKUnhook(client, SDKHook_PreThink, MoveSpeed_Prethink);
 	}
 }
