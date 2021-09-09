@@ -9032,7 +9032,7 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(2);  //Ready
 				Call_Finish();
-				float charge=100.0*0.05/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.0);
+				float charge=100.0*0.05/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.0, slot);
 				if(BossCharge[boss][slot]+charge<100.0)
 				{
 					BossCharge[boss][slot]+=charge;
@@ -9046,13 +9046,13 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(1);  //Recharging
 				Call_Finish();
-				BossCharge[boss][slot]+=0.12;
+				BossCharge[boss][slot]+=0.09;
 			}
 		}
 		else if(BossCharge[boss][slot]>0.3)
 		{
 			Call_PushCell(3);  //In use
-			float cooldown=GetAbilityArgumentFloat(boss, pluginName, abilityName, "cooldown", 0.0);
+			float cooldown=GetAbilityArgumentFloat(boss, pluginName, abilityName, "cooldown", 0.0, slot);
 
 			if(cooldown>0.0)
 			{
@@ -9070,7 +9070,7 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 		{
 			Call_PushCell(1);  //Recharging
 			Call_Finish();
-			BossCharge[boss][slot]+=0.12;
+			BossCharge[boss][slot]+=0.09;
 		}
 		else
 		{
