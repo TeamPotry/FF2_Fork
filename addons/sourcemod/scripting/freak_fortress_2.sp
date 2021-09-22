@@ -6335,7 +6335,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			Damage[attacker]+=damage;
 			bool rage = true;
 
-			if(IsValidEntity(weapon))
+			if(weapon > MaxClients && IsValidEntity(weapon))
 			{
 				switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 				{
