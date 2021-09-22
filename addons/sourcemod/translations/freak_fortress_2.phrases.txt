@@ -24,8 +24,8 @@
 	}
 	"Point Unlocked"
 	{
-		"#format"	"{1:i}"
-		"en"		"Only {1} player(s) left, the control point has been unlocked!"
+		"#format"	"{1:i},{2:i}"
+		"en"		"When {1} player(s) left or {2} seconds remaining, the control point has been unlocked!"
 	}
 	"Top 3"
 	{

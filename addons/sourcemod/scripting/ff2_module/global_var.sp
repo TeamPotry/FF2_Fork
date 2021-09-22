@@ -32,6 +32,7 @@ int playing;
 int healthcheckused;
 int RedAlivePlayers;
 int BlueAlivePlayers;
+int StartingPlayers;
 int RoundCount;
 int character[MAXPLAYERS+1];
 

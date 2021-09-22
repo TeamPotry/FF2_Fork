@@ -1940,8 +1940,10 @@ public Action StartBossTimer(Handle timer)
 		}
 	}
 
+	CheckAlivePlayers(null);
+	StartingPlayers = RedAlivePlayers;
+
 	CreateTimer(0.05, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(0.2, CheckAlivePlayers, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, StartRound, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, ClientTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(2.0, Timer_PrepareBGM, 0, TIMER_FLAG_NO_MAPCHANGE);
@@ -5268,27 +5270,44 @@ public Action CheckAlivePlayers(Handle timer)
 		}
 	}
 
-	if(!PointType && RedAlivePlayers<=AliveToEnable && !executed && timeleft <= 180.0)
+	if(CheckRoundState() < FF2RoundState_RoundRunning)
+		return Plugin_Continue;
+
+	// TODO: @limit ConVar
+	float actualTimeleft, limit = 90.0;
+	if(timeType == FF2Timer_WaveTimer)
 	{
-		PrintHintTextToAll("%t", "Point Unlocked", AliveToEnable);
-		if(RedAlivePlayers==AliveToEnable)
+		int remainWave = maxWave - currentWave;
+		actualTimeleft = (maxTime * (remainWave)) + timeleft;
+	}
+	else
+		actualTimeleft = timeleft;
+
+	// PrintToChatAll("StartingPlayers: %d, AliveToEnable: %d, RedAlivePlayers: %d", StartingPlayers, AliveToEnable, RedAlivePlayers);
+
+	bool aliveOpen = (!PointType && (StartingPlayers >= (AliveToEnable * 2) && RedAlivePlayers <= AliveToEnable)),
+		timeOpen = actualTimeleft <= limit;
+
+	if(!executed && (aliveOpen || timeOpen))
+	{
+		PrintHintTextToAll("%t", "Point Unlocked", AliveToEnable, RoundFloat(limit));
+
+		char sound[64];
+		if(GetRandomInt(0, 1))
 		{
-			char sound[64];
-			if(GetRandomInt(0, 1))
-			{
 				Format(sound, sizeof(sound), "vo/announcer_am_capenabled0%i.mp3", GetRandomInt(1, 4));
 			}
 			else
 			{
-				Format(sound, sizeof(sound), "vo/announcer_am_capincite0%i.mp3", GetRandomInt(0, 1) ? 1 : 3);
-			}
-			EmitSoundToAll(sound);
+			Format(sound, sizeof(sound), "vo/announcer_am_capincite0%i.mp3", GetRandomInt(0, 1) ? 1 : 3);
 		}
+		EmitSoundToAll(sound);
+
 		SetControlPoint(true);
 		// SetArenaCapTime(20);
 		executed=true;
 	}
-	else if(executed && timeleft > 180.0)
+	else if(executed && (!aliveOpen && !timeOpen))
 	{
 		SetControlPoint(false);
 		executed=false;
