@@ -750,9 +750,11 @@ public Action OnDeflect(Event event, const char[] name, bool dontBroadcast)
 public Action FF2_OnTriggerHurt(int boss, int triggerhurt, float& damage)
 {
 	enableSuperDuperJump[boss]=true;
+	/*
 	if(FF2_GetBossCharge(boss, 1)<0)
 	{
 		FF2_SetBossCharge(boss, 1, 0.0);
 	}
+	*/
 	return Plugin_Continue;
 }
