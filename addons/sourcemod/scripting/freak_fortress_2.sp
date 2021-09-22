@@ -1946,7 +1946,7 @@ public Action StartBossTimer(Handle timer)
 	CreateTimer(0.05, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, StartRound, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, ClientTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(2.0, Timer_PrepareBGM, 0, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(2.0, Timer_PrepareBGM_Delayed, 0, TIMER_FLAG_NO_MAPCHANGE);
 
 	if(!PointType)
 	{
@@ -3825,18 +3825,18 @@ public Action Command_StartMusic(int client, int args)
 			{
 				for(int target=1; target<matches; target++)
 				{
-					StartMusic(targets[target]);
+					StartMusic(targets[target], true);
 				}
 			}
 			else
 			{
-				StartMusic(targets[0]);
+				StartMusic(targets[0], true);
 			}
 			CReplyToCommand(client, "{olive}[FF2]{default} Started boss music for %s.", targetName);
 		}
 		else
 		{
-			StartMusic();
+			StartMusic(_, true);
 			CReplyToCommand(client, "{olive}[FF2]{default} Started boss music for all clients.");
 		}
 		return Plugin_Handled;
@@ -3991,7 +3991,7 @@ public void OnClientPostAdminCheck(int client)
 		playBGM[client]=true;
 		if(Enabled)
 		{
-			StartMusic(client);
+			StartMusic(client, true);
 			// CreateTimer(0.1, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
@@ -7910,7 +7910,7 @@ public int MusicTogglePanelH(Menu menu, MenuAction action, int client, int selec
 			if(!CheckSoundFlags(client, FF2SOUND_MUTEMUSIC))
 			{
 				ClearSoundFlags(client, FF2SOUND_MUTEMUSIC);
-				StartMusic(client);
+				StartMusic(client, true);
 			}
 		}
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Music", selection==2 ? "off" : "on");
@@ -8018,7 +8018,7 @@ public int MusicTrackMenu_Handler(Menu menu, MenuAction action, int client, int 
 					MusicTrackMenu(client);
 
 					StopMusic(client);
-					StartMusic(client);
+					StartMusic(client, true);
 				}
 				default:
 				{
@@ -8108,17 +8108,7 @@ public int MusicTrackDetailMenu_Handler(Menu menu, MenuAction action, int client
 			GetMenuItem(menu, 0, kvString, sizeof(kvString));
 			GetMenuItem(menu, selection, path, sizeof(path));
 			MD5_String(path, musicId, sizeof(musicId));
-/*
-//			TODO: THIS
-			if(GetClientButtons(client) & IN_RELOAD)
-			{
 
-				strcopy(currentBGM[client], sizeof(currentBGM[]), path);
-
-				StopMusic(client);
-				StartMusic(client);
-			}
-*/
 			bool value = !GetMusicSetting(client, musicId);
 			SetMusicSetting(client, musicId, value);
 
@@ -8128,7 +8118,7 @@ public int MusicTrackDetailMenu_Handler(Menu menu, MenuAction action, int client
 			if(StrEqual(currentMusicId, musicId))
 			{
 				StopMusic(client);
-				StartMusic(client);
+				StartMusic(client, true);
 			}
 
 			KeyValues kv = view_as<KeyValues>(StringToInt(kvString));

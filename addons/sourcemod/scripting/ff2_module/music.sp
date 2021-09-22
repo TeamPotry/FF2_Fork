@@ -4,6 +4,19 @@ Handle OnMusic;
 // Functions
 /////
 
+public Action Timer_PrepareBGM_Delayed(Handle timer, int userid)
+{
+	int client=GetClientOfUserId(userid);
+	if(CheckRoundState()!=FF2RoundState_RoundRunning || (!client && MapHasMusic()) || (!client && userid))
+	{
+		return Plugin_Stop;
+	}
+
+	StartMusic(client, true);
+	return Plugin_Continue;
+}
+
+
 public Action Timer_PrepareBGM(Handle timer, int userid)
 {
 	int client=GetClientOfUserId(userid);
@@ -26,7 +39,6 @@ public Action Timer_PrepareBGM(Handle timer, int userid)
 				if(playBGM[client])
 				{
 					StopMusic(client);
-
 					RequestFrame(PlayBGM, client); // Naydef: We might start playing the music before it gets stopped
 				}
 			}
@@ -49,15 +61,14 @@ public Action Timer_PrepareBGM(Handle timer, int userid)
 	return Plugin_Continue;
 }
 
-void PlayBGM(int client)
+public int GetRandomBGM(int client, KeyValues characterKv, char[] path, int buffer, float &time, char[] information, int informationBuffer)
 {
-	char bossName[64], musicId[84];
-	KeyValues characterKv = GetCharacterKV(character[0]);
+	char musicId[84], bossName[64];
 
 	characterKv.Rewind();
 	characterKv.GetString("name", bossName, sizeof(bossName));
 
-	if(!characterKv.JumpToKey("sounds"))		return;
+	if(!characterKv.JumpToKey("sounds"))		return -1;
 
 	KeyValues kv = new KeyValues("sounds");
 	ArrayList musicArray = new ArrayList();
@@ -69,13 +80,13 @@ void PlayBGM(int client)
 	do
 	{
 		kv.GetSectionName(music, sizeof(music));
-		float time = kv.GetFloat("time", 0.0);
+		float tempTime = kv.GetFloat("time", 0.0);
 
 		if(music[0] == '\0')
 		{
 			Debug("[FF2 Bosses] Character %s has a duplicate sound '%s'!", bossName, music);
 		}
-		else if(time > 0.0)
+		else if(tempTime > 0.0)
 		{
 			MD5_String(music, musicId, sizeof(musicId));
 			if(GetMusicSetting(client, musicId))
@@ -92,38 +103,156 @@ void PlayBGM(int client)
 		delete musicArray;
 		delete kv;
 
-		return;
+		return -1;
 	}
 
-	char temp[PLATFORM_MAX_PATH], buffer[PLATFORM_MAX_PATH], information[256];
 	int index = GetRandomInt(0, musicArray.Length-1);
-	Action action;
 
 	kv.Rewind();
 	id = musicArray.Get(index);
 	kv.JumpToKeySymbol(id);
 
-	kv.GetSectionName(buffer, sizeof(buffer));
+	kv.GetSectionName(path, buffer);
+	time = kv.GetFloat("time");
+	kv.GetString("information", information, informationBuffer);
+
+	if(kv.JumpToKey("phase"))
+	{
+		kv.GetString("starting phase", currentMusicPhase[client], sizeof(currentMusicPhase[]), "");
+
+		if(kv.JumpToKey(currentMusicPhase[client]))
+			time = kv.GetFloat("end");
+	}
+
+	delete musicArray;
+	delete kv;
+
+	return index;
+}
+
+public bool TryPlayNextPhase(int client, KeyValues characterKv, const char[] path, float &startTime, float &endTime)
+{
+	characterKv.Rewind();
+	if(!characterKv.JumpToKey("sounds"))
+		return false;
+
+	// Yes, JumpToKey does't work on the names with slash.
+	// Linear solution
+	{
+		bool foundKey = false;
+		char sectionName[64];
+
+		characterKv.GotoFirstSubKey();
+		do
+		{
+			characterKv.GetSectionName(sectionName, sizeof(sectionName));
+			if(StrEqual(sectionName, path) && characterKv.JumpToKey("phase"))
+			{
+				foundKey = true;
+				break;
+			}
+		}
+		while(characterKv.GotoNextKey());
+
+		if(!foundKey)
+			return false;
+	}
+
+	KeyValues kv = new KeyValues("phase");
+
+	kv.Import(characterKv);
+	kv.Rewind();
+
+	if(!kv.JumpToKey(currentMusicPhase[client]))
+	{
+		// 아무것도 발견 못함.
+		delete kv;
+		return false;
+	}
+
+	kv.GetString("next", currentMusicPhase[client], sizeof(currentMusicPhase[]), "");
+	// PrintToChatAll("next: %s", currentMusicPhase[client]);
+
+	kv.Rewind();
+	if(!kv.JumpToKey(currentMusicPhase[client]))
+	{
+		delete kv;
+		return false;
+	}
+
+	startTime = kv.GetFloat("start", 0.0);
+	endTime = kv.GetFloat("end", 0.0);
+
+	// PrintToChatAll("startTime: %.1f, endTime: %.1f", startTime, endTime);
+
+	if(startTime > endTime)
+	{
+		LogError("[FF2] Start time must be smaller than end time! (%s)", path);
+
+		delete kv;
+		return false;
+	}
+
+	delete kv;
+	return true;
+}
+
+void PlayBGM(int client)
+{
+	KeyValues characterKv = GetCharacterKV(character[0]);
+	char temp[PLATFORM_MAX_PATH], buffer[PLATFORM_MAX_PATH], information[256], bossName[64];
+	float time2, startTime = 0.0, endTime = 0.0;
+	int index;
+
+	characterKv.Rewind();
+	characterKv.GetString("name", bossName, sizeof(bossName));
+
+	// 현재 페이즈가 없는 경우
+	bool hasNextPhase = false;
+	if(currentBGM[client][0] != '\0'
+		&& TryPlayNextPhase(client, characterKv, currentBGM[client], startTime, endTime))
+	{
+		hasNextPhase = true;
+		strcopy(buffer, PLATFORM_MAX_PATH, currentBGM[client]);
+	}
+	else
+	{
+		currentMusicPhase[client] = "";
+		index = GetRandomBGM(client, characterKv, buffer, PLATFORM_MAX_PATH, time2, information, sizeof(information));
+
+		// For test
+		// startTime = 10.0;
+		if(index == -1)
+			return;
+	}
+
 	strcopy(temp, sizeof(temp), buffer);
 
-	float time2 = kv.GetFloat("time"), tempTime = time2;
-	kv.GetString("information", information, sizeof(information));
-
-	Call_StartForward(OnMusic);
-	Call_PushCell(client);
-	Call_PushStringEx(temp, sizeof(temp), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
-	Call_PushCellRef(tempTime);
-	Call_Finish(action);
-	switch(action)
+	if(hasNextPhase)
 	{
-		case Plugin_Stop, Plugin_Handled:
+		time2 = endTime - startTime;
+	}
+	else
+	{
+		Action action;
+		float tempTime = time2;
+
+		Call_StartForward(OnMusic);
+		Call_PushCell(client);
+		Call_PushStringEx(temp, sizeof(temp), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, SM_PARAM_COPYBACK);
+		Call_PushCellRef(tempTime);
+		Call_Finish(action);
+		switch(action)
 		{
-			return;
-		}
-		case Plugin_Changed:
-		{
-			strcopy(buffer, sizeof(buffer), temp);
-			time2 = tempTime;
+			case Plugin_Stop, Plugin_Handled:
+			{
+				return;
+			}
+			case Plugin_Changed:
+			{
+				strcopy(buffer, sizeof(buffer), temp);
+				time2 = tempTime;
+			}
 		}
 	}
 
@@ -133,45 +262,56 @@ void PlayBGM(int client)
 		if(CheckSoundFlags(client, FF2SOUND_MUTEMUSIC))
 		{
 			strcopy(currentBGM[client], PLATFORM_MAX_PATH, buffer);
-			EmitSoundToClient(client, currentBGM[client]);
+			EmitSoundToClient(client, currentBGM[client], _, _, _, _, _, _, _, _, _, _, startTime * -1.0);
 			MusicTimer[client]=CreateTimer(time2, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
-			if(information[0] != '\0')
+			if(!hasNextPhase)
 			{
-				CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %s", information);
-			}
-			else
-			{
-				GetBossName(GetBossIndex(Boss[0]), information, sizeof(information), client);
-				CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %T", "Boss Music Info", client, information, index + 1);
+				if(information[0] != '\0')
+				{
+					CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %s", information);
+				}
+				else
+				{
+					GetBossName(GetBossIndex(Boss[0]), information, sizeof(information), client);
+					CPrintToChat(client, "{olive}[FF2]{default} Now Playing: %T", "Boss Music Info", client, information, index + 1);
+				}
 			}
 		}
 	}
 	else
 	{
-		PrintToServer("[FF2 Bosses] Character %s is missing BGM file '%s'!", bossName, music);
+		PrintToServer("[FF2 Bosses] Character %s is missing BGM file '%s'!", bossName, buffer);
 	}
 
-	delete musicArray;
-	delete kv;
+	// PrintToChatAll("%N's hasNextPhase(%s), %s %s\n time2: %.1f, %.1f %.1f", client, hasNextPhase ? "true" : "false", currentBGM[client], currentMusicPhase[client], time2, startTime, endTime);
 }
 
-void StartMusic(int client=0)
+void StartMusic(int client = 0, bool init = false)
 {
 	if(client<=0)  //Start music for all clients
 	{
-		StopMusic();
+		// StopMusic();
 		for(int target; target<=MaxClients; target++)
 		{
+			if(init)
+				currentMusicPhase[client] = "";
+
 			playBGM[target]=true;  //This includes the 0th index
 		}
-		CreateTimer(0.1, Timer_PrepareBGM, 0, TIMER_FLAG_NO_MAPCHANGE);
+
+		Timer_PrepareBGM(null, 0);
+		// CreateTimer(0.1, Timer_PrepareBGM, 0, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	else
 	{
-		StopMusic(client);
+		if(init)
+			currentMusicPhase[client] = "";
+
+		// StopMusic(client);
 		playBGM[client]=true;
-		CreateTimer(0.1, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		Timer_PrepareBGM(null, GetClientUserId(client));
+		// CreateTimer(0.1, Timer_PrepareBGM, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
@@ -197,9 +337,9 @@ void StopMusic(int client=0, bool permanent=false)
 				}
 			}
 
-			strcopy(currentBGM[client], PLATFORM_MAX_PATH, "");
 			if(permanent)
 			{
+				strcopy(currentBGM[client], PLATFORM_MAX_PATH, "");
 				playBGM[client]=false;
 			}
 		}
@@ -207,7 +347,9 @@ void StopMusic(int client=0, bool permanent=false)
 	else
 	{
 		StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
-		StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
+		// StopSound(client, SNDCHAN_AUTO, currentBGM[client]);
+
+		// PrintToChatAll("%N's music stopped. (%s)", client, currentBGM[client]);
 
 		if(MusicTimer[client] != null)
 		{
@@ -215,9 +357,9 @@ void StopMusic(int client=0, bool permanent=false)
 			MusicTimer[client] = null;
 		}
 
-		strcopy(currentBGM[client], PLATFORM_MAX_PATH, "");
 		if(permanent)
 		{
+			strcopy(currentBGM[client], PLATFORM_MAX_PATH, "");
 			playBGM[client]=false;
 		}
 	}
