@@ -4,14 +4,24 @@
 	{
 		"Signatures"
 		{
+			"CTFWeaponBaseMelee::DoMeleeDamage"
+			{
+				"linux"		"@_ZN18CTFWeaponBaseMelee13DoMeleeDamageEP11CBaseEntityR10CGameTracef"
+				"windows"	" "
+			}
+			"CTFWeaponBaseMelee::OnEntityHit"
+			{
+				"linux"		"@_ZN18CTFWeaponBaseMelee11OnEntityHitEP11CBaseEntityP15CTakeDamageInfo"
+				"windows"	" "
+			}
             "CTFPlayer::GiveAmmo"
             {
                 "linux"		"@_ZN9CTFPlayer8GiveAmmoEiib"
                 "windows"	" "
             }
-			"CTFWeaponSapper::GetChargeMaxTime"
+			"CTFWeaponBase::GetEffectBarProgress"
 			{
-				"linux"		"@_ZN15CTFWeaponSapper16GetChargeMaxTimeEv"
+				"linux"		"@_ZN13CTFWeaponBase20GetEffectBarProgressEv"
 				"windows"	" "
 			}
 			"CTFPlayer::GetMaxAmmo"
@@ -93,6 +103,46 @@
 		}
 		"Functions"
 		{
+			"CTFWeaponBaseMelee::DoMeleeDamage"
+			{
+				"signature"	"CTFWeaponBaseMelee::DoMeleeDamage"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+				"arguments"
+				{
+					"ent"
+					{
+						"type"	"cbaseentity"
+					}
+					"trace"
+					{
+						"type"	"objectptr"
+					}
+					"flDamageMod"
+					{
+						"type"	"float"
+					}
+				}
+			}
+			"CTFWeaponBaseMelee::OnEntityHit"
+			{
+				"signature"	"CTFWeaponBaseMelee::OnEntityHit"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+				"arguments"
+				{
+					"ent"
+					{
+						"type"	"cbaseentity"
+					}
+					"info"
+					{
+						"type"	"objectptr"
+					}
+				}
+			}
 			"CTFPlayer::CanPickupDroppedWeapon"
 			{
 				"signature"	"CTFPlayer::CanPickupDroppedWeapon"
