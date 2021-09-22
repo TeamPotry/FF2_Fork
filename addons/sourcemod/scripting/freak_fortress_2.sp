@@ -2905,9 +2905,9 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 305, 1079:  //Crusader's Crossbow, Festive Crusader's Crossbow
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.2 ; 17 ; 0.15");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.2 ; 17 ; 0.05");
 				//2: +20% damage
-				//17: +15% uber on hit
+				//17: +5% uber on hit
 			if(itemOverride!=null)
 			{
 				item=itemOverride;
@@ -3142,6 +3142,20 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 	}
 
+	if(TF2_GetPlayerClass(client) == TFClass_Spy &&
+		(!StrContains(classname, "tf_weapon_builder") || !StrContains(classname, "tf_weapon_sapper")))
+	// Sapper
+	{
+		Handle itemOverride=PrepareItemHandle(item, _, _, "278 ; 4.0");
+		// 278: (MVM) charge time increase
+
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
 	if(!StrContains(classname, "tf_weapon_pda_engineer_build"))  // Construction PDA
 	{
 		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 4.00 ; 276 ; 1.0 ; 4351 ; 0.4 ; 287 ; 0.8", false);
@@ -3160,8 +3174,8 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_syringegun_medic"))  //Syringe guns
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "17 ; 0.05 ; 144 ; 1", false);
-			//17: 5% uber on hit
+		Handle itemOverride=PrepareItemHandle(item, _, _, "17 ; 0.02 ; 144 ; 1", false);
+			//17: 2% uber on hit
 			//144: Sets weapon mode - *possibly* the overdose speed effect
 
 		if(itemOverride!=null)
@@ -3173,9 +3187,9 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_medigun"))  //Mediguns
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.75 ; 11 ; 1.5 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 4 ; 547 ; 0.75", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.75 ; 482 ; 2.0 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 4 ; 547 ; 0.75", false);
 			//10: +75% faster charge rate
-			//11: +50% overheal bonus
+			//11: +50% overheal bonus, 482: overheal_expert
 			//144: Quick-fix speed/jump effects
 			//199: Deploys 25% faster
 			//314: Ubercharge lasts 4 seconds longer (aka 50% longer)
@@ -3186,6 +3200,18 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
+
+	if(!StrContains(classname, "tf_weapon_pipebomblauncher"))  // Pipe launchers
+	{
+		Handle itemOverride = PrepareItemHandle(item, _, _, "670 ; 0.1");
+
+		if(itemOverride!=null)
+		{
+			item=itemOverride;
+			return Plugin_Changed;
+		}
+	}
+
 /*
 	if(!StrContains(classname, "tf_weapon_flamethrower"))
 	{
@@ -4378,7 +4404,7 @@ public Action ClientTimer(Handle timer)
 				}
 			}
 			else if((!StrContains(classname, "tf_weapon_smg") && index!=751) ||  //Cleaner's Carbine
-			         !StrContains(classname, "tf_weapon_compound_bow") ||
+			         // !StrContains(classname, "tf_weapon_compound_bow") ||
 			         !StrContains(classname, "tf_weapon_crossbow") ||
 			         !StrContains(classname, "tf_weapon_pistol") ||
 			         !StrContains(classname, "tf_weapon_handgun_scout_secondary"))
@@ -4498,10 +4524,15 @@ public Action BossTimer(Handle timer)
 	for(int boss; boss<=MaxClients; boss++)
 	{
 		int client=Boss[boss];
+		/*
+		if(!IsPlayerAlive(client) && (BossTeam != TF2_GetClientTeam(client)))
+			continue;
+		*/
 		if(!IsValidClient(client) || !IsPlayerAlive(client) || !(FF2Flags[client] & FF2FLAG_USEBOSSTIMER))
 		{
 			continue;
 		}
+
 		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
 
 		PlayerHudQueue[client].SetName("Boss");
@@ -5320,10 +5351,10 @@ public Action CheckAlivePlayers(Handle timer)
 		char sound[64];
 		if(GetRandomInt(0, 1))
 		{
-				Format(sound, sizeof(sound), "vo/announcer_am_capenabled0%i.mp3", GetRandomInt(1, 4));
-			}
-			else
-			{
+			Format(sound, sizeof(sound), "vo/announcer_am_capenabled0%i.mp3", GetRandomInt(1, 4));
+		}
+		else
+		{
 			Format(sound, sizeof(sound), "vo/announcer_am_capincite0%i.mp3", GetRandomInt(0, 1) ? 1 : 3);
 		}
 		EmitSoundToAll(sound);
@@ -5606,7 +5637,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				if(valid && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==226  //Battalion's Backup
 				&& !(FF2Flags[client] & FF2FLAG_ISBUFFED))
 				{
-					float charge = GetEntPropFloat(client, Prop_Send, "m_flRageMeter") + (damage * 1.5);
+					float charge = GetEntPropFloat(client, Prop_Send, "m_flRageMeter") + (damage * 0.75);
 					SetEntPropFloat(client, Prop_Send, "m_flRageMeter",
 						charge > 100.0 ? 100.0 : charge);
 				}
@@ -5696,16 +5727,23 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 				}
 
-				if(TF2_GetPlayerClass(attacker) == TFClass_Heavy && StrContains(classname, "tf_weapon_shotgun")!=-1)
+				if(TF2_GetPlayerClass(attacker) == TFClass_Heavy)
 				{
-					int maxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
-					TF2Util_TakeHealth(attacker, 50.0, TAKEHEALTH_IGNORE_MAXHEALTH);
-
-					int currentHealth = GetEntProp(attacker, Prop_Data, "m_iHealth");
-					if(currentHealth > maxHealth * 2)
+					if(StrContains(classname, "tf_weapon_shotgun")!=-1)
 					{
-						SetEntProp(attacker, Prop_Data, "m_iHealth", maxHealth * 2);
+						int maxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
+						TF2Util_TakeHealth(attacker, 50.0, TAKEHEALTH_IGNORE_MAXHEALTH);
+
+						int currentHealth = GetEntProp(attacker, Prop_Data, "m_iHealth");
+						if(currentHealth > maxHealth * 2)
+						{
+							SetEntProp(attacker, Prop_Data, "m_iHealth", maxHealth * 2);
+						}
 					}
+
+					float charge = GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter") + (damage * 0.056);
+					SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter",
+						charge > 100.0 ? 100.0 : charge);
 				}
 
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
@@ -5744,6 +5782,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				switch(index)
 				{
+					case 37:
+					{
+						if(damagecustom == TF_CUSTOM_AXTINGUISHER_BOOSTED)
+						{
+							damage *= 3.0;
+							return Plugin_Changed;
+						}
+					}
 					case 61, 1006:  //Ambassador, Festive Ambassador
 					{
 						if(damagecustom==TF_CUSTOM_HEADSHOT)
@@ -6145,18 +6191,21 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		else
 		{
 			int index=(IsValidEntity(weapon) && weapon>MaxClients && attacker<=MaxClients ? GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") : -1);
-			if(index==307)  //Ullapool Caber
+
+			switch(index)
 			{
-				if(detonations[attacker]<allowedDetonations)
+				case 307:
 				{
-					detonations[attacker]++;
-					PrintHintText(attacker, "%t", "Detonations Left", allowedDetonations-detonations[attacker]);
-					if(allowedDetonations-detonations[attacker])  //Don't reset their caber if they have 0 detonations left
+					if(detonations[attacker]<allowedDetonations)
 					{
-						SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
-						SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
+						detonations[attacker]++;
+						PrintHintText(attacker, "%t", "Detonations Left", allowedDetonations-detonations[attacker]);
+						if(allowedDetonations-detonations[attacker])  //Don't reset their caber if they have 0 detonations left
+						{
+							SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
+							SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
+						}
 					}
-				}
 			}
 		}
 	}

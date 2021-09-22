@@ -512,7 +512,7 @@ void Rage_Bow(int boss)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-	int weapon=SpawnWeapon(client, "tf_weapon_compound_bow", 1005, 100, 5, "2 ; 2.0 ; 6 ; 0.5 ; 37 ; 0.0 ; 280 ; 19");
+	int weapon=SpawnWeapon(client, "tf_weapon_compound_bow", 1005, 100, 5, "2 ; 2.5 ; 6 ; 0.5 ; 37 ; 0.0 ; 280 ; 19 ; 137 ; 2.0 ; 4381 ; 1.0");
 	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 	TFTeam team=(TF2_GetClientTeam(client)==TFTeam_Blue ? TFTeam_Red : TFTeam_Blue);
 
