@@ -1902,6 +1902,9 @@ public Action StartBossTimer(Handle timer)
 {
 	CreateTimer(0.1, Timer_Move, _, TIMER_FLAG_NO_MAPCHANGE);
 	bool isBossAlive;
+
+	static float firstAbilityCooldown = 15.0;
+
 	for(int boss; boss<=MaxClients; boss++)
 	{
 		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss]))
@@ -1912,8 +1915,13 @@ public Action StartBossTimer(Handle timer)
 			// 초기 쿨타임
 			for(int slot = 1; slot < 8; slot++)
 			{
-				BossCharge[boss][slot] = -15.0;
+				BossCharge[boss][slot] = -firstAbilityCooldown;
 			}
+
+			// TODO: 초기 설정 함수 따로 만들어 이전
+			SetEntPropFloat(Boss[boss], Prop_Send, "m_flChargeMeter", 0.0);
+
+			TF2Attrib_AddCustomPlayerAttribute(Boss[boss], "charge recharge rate increased", 0.0, firstAbilityCooldown);
 		}
 	}
 
