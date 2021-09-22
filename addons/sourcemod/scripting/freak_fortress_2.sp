@@ -5131,7 +5131,7 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 		}
 
 		BossHealth[boss]=0;
-		UpdateHealthBar();
+		UpdateHealthBar(true);
 
 		Stabbed[boss]=0.0;
 		Marketed[boss]=0.0;
@@ -5238,7 +5238,7 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 		{
 			BossHealth[boss] = maxHealth;
 		}
-		UpdateHealthBar();
+		UpdateHealthBar(false);
 	}
 	else if(client != healer)
 	{
@@ -6327,7 +6327,7 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 			}
 		}
 
-		UpdateHealthBar();
+		UpdateHealthBar(true);
 	}
 	else if(TF2_GetClientTeam(client) == BossTeam && TF2_GetClientTeam(attacker) != BossTeam)
 	{
@@ -8656,7 +8656,7 @@ public int SetBossHealth(int boss, int health)
 public int Native_SetBossHealth(Handle plugin, int numParams)
 {
 	SetBossHealth(GetNativeCell(1), GetNativeCell(2));
-	UpdateHealthBar();
+	UpdateHealthBar(false);
 }
 
 public int GetBossMaxHealth(int boss)
@@ -9331,7 +9331,7 @@ public void HealthbarEnableChanged(ConVar convar, const char[] oldValue, const c
 {
 	if(Enabled && cvarHealthBar.BoolValue && IsValidEntity(healthBar.Index))
 	{
-		UpdateHealthBar();
+		UpdateHealthBar(true);
 	}
 	else if(!IsValidEntity(g_Monoculus) && IsValidEntity(healthBar.Index))
 	{
