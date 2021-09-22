@@ -275,6 +275,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_CheckSoundFlags", Native_CheckSoundFlags);
 
 	// ff2_potry.inc
+	CreateNative("FF2_GetCharacterIndex", Native_GetCharacterIndex);
 	CreateNative("FF2_AddBossCharge", Native_AddBossCharge);
 	CreateNative("FF2_GetSettingData", Native_GetSettingData);
 	CreateNative("FF2_GetSettingStringData", Native_GetSettingStringData);
@@ -8694,6 +8695,16 @@ public int SetBossCharge(int boss, int slot, float charge)
 public int Native_SetBossCharge(Handle plugin, int numParams)
 {
 	SetBossCharge(GetNativeCell(1), GetNativeCell(2), view_as<float>(GetNativeCell(3)));
+}
+
+public int GetCharacterIndex(int boss)
+{
+	return character[boss];
+}
+
+public int Native_GetCharacterIndex(Handle plugin, int numParams)
+{
+	return GetCharacterIndex(GetNativeCell(1));
 }
 
 public void AddBossCharge(int boss, int slot, float charge)

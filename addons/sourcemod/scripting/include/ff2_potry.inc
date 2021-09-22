@@ -24,6 +24,15 @@ enum
     FF2Timer_WaveTimer
 };
 
+/*
+*   Get Boss's character index
+*   If you want to change character of boss, see FF2_MakePlayerToBoss Function.
+*
+*   @param boss      Boss's index
+*   @return         Boss's character index
+*/
+native FF2_GetCharacterIndex(int boss);
+
 /**
  * Add Boss's charge.
  *
