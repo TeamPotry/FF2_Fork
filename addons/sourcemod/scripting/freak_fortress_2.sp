@@ -33,6 +33,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <adt_array>
 #include <morecolors>
 #include <sdkhooks>
+#include <dhooks>
 #include <tf2_stocks>
 #include <tf2items>
 #include <tf2attributes>
@@ -43,12 +44,13 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <stocksoup/tf/monster_resource>
 #include <stocksoup/tf/econ>
 
-#include "ff2_module/sdkcalls.sp"
 #include "ff2_module/database.sp"
 #include "ff2_module/global_var.sp"
 #include "ff2_module/methodmap.sp"
 
 #include "ff2_module/stocks.sp"
+#include "ff2_module/sdkcalls.sp"
+#include "ff2_module/dhooks.sp"
 
 #include "ff2_module/hud.sp"
 #include "ff2_module/music.sp"
@@ -446,8 +448,16 @@ public void OnPluginStart()
 	mannvsmann=LibraryExists("mannvsmann");
 	#endif
 
+
+	GameData gamedata = new GameData("potry");
+
 	// ff2_module/sdkcalls.sp
-	GameData_Init();
+	GameData_Init(gamedata);
+
+	// ff2_module/dhooks.sp
+	DHooks_Init(gamedata);
+
+	delete gamedata;
 }
 
 public bool BossTargetFilter(const char[] pattern, Handle clients)
