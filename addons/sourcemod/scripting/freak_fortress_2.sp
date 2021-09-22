@@ -2072,6 +2072,7 @@ public Action StartRound(Handle timer)
 	UpdateHealthBar(true);
 
 	CreateTimer(6.5, Timer_StartDrawGame, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(6.6, Timer_CorrectionBossHealth, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Handled;
 }
@@ -2111,6 +2112,30 @@ public Action Timer_StartDrawGame(Handle timer)
 	}
 
 	CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public Action Timer_CorrectionBossHealth(Handle timer)
+{
+	if(timeType != FF2Timer_WaveTimer)
+		return Plugin_Continue;
+
+	int correctionWave = maxWave / 2, boss;
+	float ratio = Pow(1.05, float(correctionWave)) - 1.0;
+
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		if(IsValidClient(client) && IsPlayerAlive(client)
+			&& ((boss = GetBossIndex(client)) != -1 && BossTeam == TF2_GetClientTeam(client)))
+		{
+			int heal = RoundFloat(BossHealthMax[boss] * ratio);
+
+			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
+			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))) - 1);
+		}
+	}
+
+	CPrintToChatAll("{olive}[FF2]{default} %t", "Wave Correction Boss Health", RoundFloat(ratio * 100.0));
+	return Plugin_Continue;
 }
 
 public Action Timer_NextBossPanel(Handle timer)

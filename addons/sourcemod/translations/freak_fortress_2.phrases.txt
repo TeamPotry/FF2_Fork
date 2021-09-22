@@ -506,4 +506,9 @@
 		"#format"	"{1:s},{2:d}"
 		"en"		"{1}'s music (#{2})"
 	}
+	"Wave Correction Boss Health"
+	{
+		"#format"	"{1:d}"
+		"en"		"Wave Correction: Boss's health {orange}{1:d}%%{default} increased!"
+	}
 }

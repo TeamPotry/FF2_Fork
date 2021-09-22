@@ -553,19 +553,20 @@ public void FF2_OnWaveStarted(int wave)
 
 		if(IsBoss(client) && FF2_GetBossTeam() == TF2_GetClientTeam(client))
 		{
+			/*
 			boss = FF2_GetBossIndex(client);
 
-			int beforeHealth = FF2_GetBossMaxHealth(boss), heal = RoundFloat(FF2_GetBossMaxHealth(boss) * 1.05);
+			int beforeHealth = FF2_GetBossMaxHealth(boss), heal = RoundFloat(FF2_GetBossMaxHealth(boss) * 1.04);
 			heal -= beforeHealth;
 
 			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
 			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))) - 1);
-
+			*/
 			Address address = TF2Attrib_GetByDefIndex(client, 252);
 
-			float value = 0.98;
+			float value = 0.97;
 			if(address != Address_Null)
-				value = TF2Attrib_GetValue(address) - 0.02;
+				value = TF2Attrib_GetValue(address) - 0.03;
 
 			TF2Attrib_SetByDefIndex(client, 252, value);
 		}

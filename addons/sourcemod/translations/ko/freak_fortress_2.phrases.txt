@@ -506,4 +506,9 @@
 		"#format"	"{1:s},{2:d}"
 		"ko"		"{1}의 음악 (#{2})"
 	}
+	"Wave Correction Boss Health"
+	{
+		"#format"	"{1:d}"
+		"en"		"웨이브 보정: 보스의 체력이 {orange}{1:d}%%{default} 증가됩니다!"
+	}
 }
