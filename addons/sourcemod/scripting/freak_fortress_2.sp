@@ -6206,6 +6206,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
 						}
 					}
+				}
 			}
 		}
 	}
@@ -6351,17 +6352,16 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 		}
 
 		int[] healers=new int[MaxClients+1];
-		int healerCount;
+		int healerCount = 0;
 		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsValidClient(target) && IsPlayerAlive(target) && (GetHealingTarget(target, true)==attacker))
 			{
-				healers[healerCount]=target;
-				healerCount++;
+				healers[healerCount++] = target;
 			}
 		}
 
-		for(int target=1; target<healerCount; target++)
+		for(int target = 0; target < healerCount; target++)
 		{
 			if(IsValidClient(healers[target]) && IsPlayerAlive(healers[target]))
 			{
@@ -6377,10 +6377,6 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 		}
 
 		UpdateHealthBar(true);
-	}
-	else if(TF2_GetClientTeam(client) == BossTeam && TF2_GetClientTeam(attacker) != BossTeam)
-	{
-		Assist[attacker]+=damage;
 	}
 }
 
@@ -7145,7 +7141,6 @@ public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, cons
 	{
 		CheckAlivePlayers(INVALID_HANDLE);
 		return RedAlivePlayers + BlueAlivePlayers >= integerValue ? Plugin_Continue : Plugin_Handled;
-
 	}
 
 	return Plugin_Continue;
