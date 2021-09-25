@@ -63,28 +63,6 @@ bool steamtools;
 #endif
 bool mannvsmann = false;
 
-int Incoming[MAXPLAYERS+1];
-
-int Damage[MAXPLAYERS+1];
-int Assist[MAXPLAYERS+1];
-int uberTarget[MAXPLAYERS+1];
-int shield[MAXPLAYERS+1];
-int detonations[MAXPLAYERS+1];
-int queuePoints[MAXPLAYERS+1];
-
-int FF2Flags[MAXPLAYERS+1];
-
-int BossHealthMax[MAXPLAYERS+1];
-int BossHealth[MAXPLAYERS+1];
-int BossHealthLast[MAXPLAYERS+1];
-int BossLives[MAXPLAYERS+1];
-int BossLivesMax[MAXPLAYERS+1];
-int BossRageDamage[MAXPLAYERS+1];
-float BossSpeed[MAXPLAYERS+1];
-float BossCharge[MAXPLAYERS+1][8];
-float BossMaxRageCharge[MAXPLAYERS+1];
-float BossSkillDuration[MAXPLAYERS+1][3];
-
 float Stabbed[MAXPLAYERS+1];
 float Marketed[MAXPLAYERS+1];
 float KSpreeTimer[MAXPLAYERS+1];
