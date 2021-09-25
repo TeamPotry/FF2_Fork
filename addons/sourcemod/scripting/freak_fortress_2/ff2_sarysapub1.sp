@@ -632,7 +632,10 @@ void Ability_Init(int clientIdx)
 		ReadCenterText(bossIdx, RP_STRING, "not enough rage", RP_StrNotEnoughRage);
 		ReadCenterText(bossIdx, RP_STRING, "slicer placement error", RP_StrGroundOnly);
 		ReadCenterText(bossIdx, RP_STRING, "player blocking", RP_StrPlayerBlocking);
-		RP_NoFallDamage = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RP_STRING, "no fall damage") == 1;
+
+		if(TF2_GetClientTeam(clientIdx) == FF2_GetBossTeam())
+			RP_NoFallDamage = FF2_GetAbilityArgument(bossIdx, PLUGIN_NAME, RP_STRING, "no fall damage") == 1;
+
 		ReadCenterText(bossIdx, RP_STRING, "ability description", RP_HUDMessage);
 
 		// jump pad info
