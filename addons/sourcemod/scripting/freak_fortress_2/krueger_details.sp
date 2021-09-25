@@ -49,8 +49,20 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 void AddHudNoiseTime(int boss)
 {
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	float duration = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, PLAYER_HUD_NOISE, "duration", 12.0);
 	g_flHudNoiseTime = GetGameTime() + duration;
+
+	float inOut = duration / 4.0, fadeDuration = inOut * 2.0;
+
+	for(int target = 1; target <= MaxClients; target++)
+	{
+		if(!IsClientInGame(target) || !IsPlayerAlive(target)
+			|| GetClientTeam(client) == GetClientTeam(target))
+				continue;
+
+		FadeClientVolume(target, 80.0, inOut, fadeDuration, inOut);
+	}
 }
 
 public Action SoundHook(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH],
