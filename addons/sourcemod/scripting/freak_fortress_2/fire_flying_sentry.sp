@@ -82,6 +82,7 @@ public void OnProjectileSpawn(int entity)
             }
             */
 
+            angles[0] = 0.0;
             TeleportEntity(sentry, sentryPos, angles, angVector);
 
             if(!IsSpotSafe(sentry, sentryPos, 1.0))
