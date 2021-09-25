@@ -1,0 +1,12 @@
+"Phrases"
+{
+    "Reflecter Health"
+    {
+        "#format"   "{1:d}"
+        "en"        "Reflecter HP: {1}"
+    }
+    "Reflecter By Force"
+    {
+        "en"        "PRESS DUCK to use Reflecter"
+    }
+}

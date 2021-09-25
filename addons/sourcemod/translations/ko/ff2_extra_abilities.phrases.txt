@@ -1,0 +1,12 @@
+"Phrases"
+{
+    "Reflecter Health"
+    {
+        "#format"   "{1:d}"
+        "ko"        "반사막 HP: {1}"
+    }
+    "Reflecter By Force"
+    {
+        "ko"        "앉으면 반사막 켜짐"
+    }
+}
