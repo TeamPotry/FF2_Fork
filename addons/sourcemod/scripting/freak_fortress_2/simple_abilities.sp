@@ -31,6 +31,7 @@ public Plugin myinfo=
 #define INSERT_ATTIBUTES_ABILITY_NAME		"insert attributes"
 #define REPLACE_BUTTONS_NAME				"replace buttons"
 #define REMOVE_EMPTY_ABILITY_NAME			"remove weapon when empty"
+#define CHANGE_FIRE_DURATION				"change fire duration"
 
 #define HIDEHUD_FLAGS			0b101101001010
 /*
@@ -560,6 +561,20 @@ public void Delay_Update(int boss)
 	}
 
 	RequestFrame(Delay_Update, boss);
+}
+
+public void TF2_OnConditionAdded(int client, TFCond condition)
+{
+	int attacker = TF2Util_GetPlayerConditionProvider(client, condition),
+		boss = FF2_GetBossIndex(attacker);
+	if(boss == -1)	return;
+
+	if(condition == TFCond_OnFire
+		&& FF2_HasAbility(boss, PLUGIN_NAME, CHANGE_FIRE_DURATION))
+	{
+		float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CHANGE_FIRE_DURATION, "fire time", 0.0);
+		TF2Util_SetPlayerBurnDuration(client, duration);
+	}
 }
 
 
