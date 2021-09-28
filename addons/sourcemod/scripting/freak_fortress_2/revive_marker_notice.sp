@@ -39,7 +39,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
                 while((temp = FindEntityByClassname(temp, "entity_revive_marker")) != -1)
                     if(temp == healed)
                     {
-                        Format(text, sizeof(text), "%t", "Revive Marker Healing", observer, GetEntProp(healed, Prop_Send, "m_iMaxHealth") - GetEntProp(healed, Prop_Send, "m_iHealth"));
+                        Format(text, sizeof(text), "%T", "Revive Marker Healing", client, GetEntProp(healed, Prop_Send, "m_iMaxHealth") - GetEntProp(healed, Prop_Send, "m_iHealth"));
                         hudDisplay = FF2HudDisplay.CreateDisplay("Dev Mode", text);
                         hudQueue.AddHud(hudDisplay, client);
                     }

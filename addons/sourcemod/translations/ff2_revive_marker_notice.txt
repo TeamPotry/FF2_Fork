@@ -2,7 +2,7 @@
 {
     "Revive Marker Healing"
     {
-        "#format" "{1:N},{2:d}"
-        "en"      "{1} is reviving you! Remaining: {2}"
+        "#format" "{1:d}"
+        "en"      "Reviving.. Remaining HP: {1}"
     }
 }
