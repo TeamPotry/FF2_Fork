@@ -87,7 +87,7 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 
     return Plugin_Continue;
 }
-
+/*
 public int OnStompPost(int attacker, int victim, float damageMultiplier, float damageBonus, float jumpPower)
 {// WHy iS tHiS INT????
     int boss = FF2_GetBossIndex(attacker);
@@ -96,7 +96,7 @@ public int OnStompPost(int attacker, int victim, float damageMultiplier, float d
         FF2_AddBossCharge(boss, 0, 100.0);
     }
 }
-
+*/
 void Mario_Star_Start(int client, int slot)
 {
     /*
