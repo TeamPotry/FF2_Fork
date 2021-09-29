@@ -670,7 +670,7 @@ public void OnDiscountThink(int client)
 
 public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if(!FF2_IsFF2Enabled())					return Plugin_Continue;
+	if(!FF2_IsFF2Enabled() || client == attacker)					return Plugin_Continue;
 
 	int boss = FF2_GetBossIndex(attacker);
 	if(boss == -1 || !FF2_HasAbility(boss, PLUGIN_NAME, DISCOUNT_NAME))	return Plugin_Continue;
