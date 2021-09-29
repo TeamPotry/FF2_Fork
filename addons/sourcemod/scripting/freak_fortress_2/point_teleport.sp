@@ -22,7 +22,7 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
-Handle jumpHUD;
+// Handle jumpHUD;
 
 #define	MAX_EDICT_BITS		12
 #define	MAX_EDICTS			(1 << MAX_EDICT_BITS)
@@ -348,7 +348,7 @@ methodmap CTFPortal < ArrayList {
 	}
 }
 
-CTFPortal g_hPortal[MAX_EDICTS+1];
+// CTFPortal g_hPortal[MAX_EDICTS+1];
 
 public void Portal_Update(CTFPortal portal)
 {
@@ -474,7 +474,7 @@ public int Native_CTFPortal_Create(Handle plugin, int numParams)
 
 public void OnPluginStart()
 {
-	jumpHUD=CreateHudSynchronizer();
+	// jumpHUD=CreateHudSynchronizer();
 
 	LoadTranslations("ff2_point_teleport.phrases");
 	FF2_RegisterSubplugin(PLUGIN_NAME);
@@ -516,9 +516,57 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 }
 
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
+{
+	int boss = FF2_GetBossIndex(client);
+	if(boss == -1)
+		return;
+
+	bool hasCharge = FF2_HasAbility(boss, PLUGIN_NAME, "point teleport");
+
+	char text[256];
+	// bool changed = false;
+	FF2HudDisplay hudDisplay = null;
+
+	SetGlobalTransTarget(client);
+	hudQueue.GetName(text, sizeof(text));
+
+	if(StrEqual(text, "Boss Down Additional") && hasCharge)
+	{
+		int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "point teleport", "slot");
+		float charge = FF2_GetBossCharge(boss, slot);
+
+		if(charge < 0.0)
+			Format(text, sizeof(text), "%t", "Teleportation Cooldown", -RoundFloat(charge));
+		else
+		{
+			// 힌트 HUD
+			{
+				SetHudTextParams(-1.0, 0.92, 0.12, 255, 255, 255, 255);
+
+				Format(text, sizeof(text), "%t", "Point Teleportation Hint");
+				ReAddPercentCharacter(text, sizeof(text), 4);
+
+				FF2_ShowHudText(client, FF2HudChannel_Other, text);
+				SetHudTextParams(-1.0, 0.88, 0.12, 255, 255, 255, 255);
+			}
+
+			char buttonText[32];
+			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "teleport", "buttonmode", 0);
+			Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+
+			// 분리
+			Format(text, sizeof(text), "%t", "Point Teleportation Charge", RoundFloat(charge), buttonText);
+		}
+
+		hudDisplay = FF2HudDisplay.CreateDisplay("Point Teleportation", text);
+		hudQueue.AddHud(hudDisplay, client);
+	}
+}
+
 void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 {
-	char message[128];
+	// char message[128];
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge = FF2_GetBossCharge(boss, slot);
 
@@ -538,13 +586,16 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 	SetGlobalTransTarget(client);
 	switch(status)
 	{
+/*
 		case 1:
 		{
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
-			FF2_ShowSyncHudText(client, jumpHUD, "%t", "Teleportation Cooldown", -RoundFloat(charge));
+			FF2_ShowHudText(client, -1, "%t", "Teleportation Cooldown", -RoundFloat(charge));
 		}
+*/
 		case 0, 2:
 		{
+/*
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 
 			char buttonText[32];
@@ -553,7 +604,7 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			Format(message, sizeof(message), "%t", "Point Teleportation Charge", RoundFloat(charge), buttonText);
 			ReAddPercentCharacter(message, sizeof(message), 2);
 			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
-
+*/
 			if(charge <= 10.0)	return;
 
 			TE_SetupBeamPoints(pos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 0.1, 10.0, 30.0, 0, 0.0, colors, 10);
