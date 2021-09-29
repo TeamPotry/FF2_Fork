@@ -106,7 +106,7 @@ Menu changelogMenu;
 
 Handle jumpHUD;
 Handle rageHUD;
-Handle livesHUD;
+Handle upAddtionalHUD, downAddtionalHUD;
 Handle timeleftHUD;
 Handle abilitiesHUD;
 Handle infoHUD;
@@ -401,7 +401,8 @@ public void OnPluginStart()
 
 	jumpHUD=CreateHudSynchronizer();
 	rageHUD=CreateHudSynchronizer();
-	livesHUD=CreateHudSynchronizer();
+	upAddtionalHUD = CreateHudSynchronizer();
+	downAddtionalHUD = CreateHudSynchronizer();
 	abilitiesHUD=CreateHudSynchronizer();
 	timeleftHUD=CreateHudSynchronizer();
 	infoHUD=CreateHudSynchronizer();
@@ -1675,7 +1676,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 					}
 					CPrintToChat(client, "{olive}[FF2]{default} %t", "Boss Win Final Health", bossName, Boss[bossindexs[loop]], BossHealth[bossindexs[loop]]-BossHealthMax[bossindexs[loop]]*(BossLives[bossindexs[loop]]-1), BossHealthMax[bossindexs[loop]], lives);
 				}
-				FF2_ShowHudText(client, -1, "%s", text);
+				FF2_ShowHudText(client, FF2HudChannel_Info, "%s", text);
 			}
 		}
 	}
@@ -1921,7 +1922,7 @@ public Action StartBossTimer(Handle timer)
 	CheckAlivePlayers(null);
 	StartingPlayers = RedAlivePlayers;
 
-	CreateTimer(0.05, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, StartRound, _, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, ClientTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(2.0, Timer_PrepareBGM_Delayed, 0, TIMER_FLAG_NO_MAPCHANGE);
@@ -4238,7 +4239,7 @@ public Action ClientTimer(Handle timer)
 				hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 				PlayerHudQueue[client].AddHud(hudDisplay, client);
 			}
-			PlayerHudQueue[client].ShowSyncHudQueueText(client, rageHUD);
+			PlayerHudQueue[client].ShowSyncHudQueueText(client, null, FF2HudChannel_Rage);
 			PlayerHudQueue[client].DeleteAllDisplay();
 
 			if(!IsPlayerAlive(client)) continue;
@@ -4475,7 +4476,7 @@ public Action ClientTimer(Handle timer)
 				}
 			}
 
-			PlayerHudQueue[client].ShowSyncHudQueueText(client, jumpHUD);
+			PlayerHudQueue[client].ShowSyncHudQueueText(client, null, FF2HudChannel_DownAddtional);
 			PlayerHudQueue[client].DeleteAllDisplay();
 
 			if(addthecrit)
@@ -4519,33 +4520,22 @@ public Action BossTimer(Handle timer)
 		SetGlobalTransTarget(client);
 		char text[64];
 
-		// TODO: "use_fixed_speed"
-		if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
-		{
-			if(TF2_GetClientTeam(client) == BossTeam)
-				SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.8*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
-			else
-				SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]);
-		}
-
-		if(BossHealth[boss]<=0 && IsPlayerAlive(client))  //Wat.  TODO:  Investigate
-		{
-			BossHealth[boss]=1;
-		}
-
 		if(BossLivesMax[boss]>1)
 		{
-			SetHudTextParams(-1.0, 0.77, 0.06, 255, 255, 255, 255);
-			FF2_ShowSyncHudText(client, livesHUD, "%t", "Boss Lives Left", BossLives[boss], BossLivesMax[boss]);
+			// SetHudTextParams(-1.0, 0.77, 0.12, 255, 255, 255, 255);
+			// FF2_ShowSyncHudText(client, livesHUD, "%t", "Boss Lives Left", BossLives[boss], BossLivesMax[boss]);
+			Format(text, sizeof(text), "%t", "Boss Lives Left", BossLives[boss], BossLivesMax[boss]);
+			bossHudDisplay=FF2HudDisplay.CreateDisplay("Boss Lives Left", text);
+			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 		}
 
-		SetHudTextParams(-1.0, 0.83, 0.06, 255, 255, 255, 255);
+		SetHudTextParams(-1.0, 0.83, 0.12, 255, 255, 255, 255);
 
 		for(int loop = SkillName_MaxCounts - 1; loop >= 0; loop--)
 		{
 			if(BossSkillDuration[boss][loop] <= GetGameTime())		continue;
 
-			SetHudTextParams(-1.0, 0.83, 0.06, 0, 255, 0, 255);
+			SetHudTextParams(-1.0, 0.83, 0.12, 0, 255, 0, 255);
 			if(!GetBossSkillName(boss, loop, text, sizeof(text), client))
 			{
 				switch(loop)
@@ -4583,12 +4573,12 @@ public Action BossTimer(Handle timer)
 			{
 				if(BossSkillDuration[boss][SkillName_Rage] > GetGameTime()
 					|| BossSkillDuration[boss][SkillName_200Rage] > GetGameTime())
-					SetHudTextParams(-1.0, 0.83, 0.06, 0, 255, 0, 255);
+					SetHudTextParams(-1.0, 0.83, 0.12, 0, 255, 0, 255);
 				else if((RoundFloat(BossMaxRageCharge[boss]) >= 200
 					&& (100 <= RoundFloat(BossCharge[boss][0]) && RoundFloat(BossCharge[boss][0]) < 200)))
-					SetHudTextParams(-1.0, 0.83, 0.06, 255, 228, 0, 255);
+					SetHudTextParams(-1.0, 0.83, 0.12, 255, 228, 0, 255);
 				else
-					SetHudTextParams(-1.0, 0.83, 0.06, 255, 64, 64, 255);
+					SetHudTextParams(-1.0, 0.83, 0.12, 255, 64, 64, 255);
 
 				Format(text, sizeof(text), "%T", "Activate Rage", client);
 				bossHudDisplay=FF2HudDisplay.CreateDisplay("Activate Rage", text);
@@ -4614,67 +4604,20 @@ public Action BossTimer(Handle timer)
 			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 		}
 
-		PlayerHudQueue[client].ShowSyncHudQueueText(client, rageHUD);
+		PlayerHudQueue[client].ShowSyncHudQueueText(client, null, FF2HudChannel_Rage);
 		PlayerHudQueue[client].DeleteAllDisplay();
 
-		SetHudTextParams(-1.0, 0.88, 0.06, 255, 255, 255, 255);
+		SetHudTextParams(-1.0, 0.73, 0.12, 255, 255, 255, 255);
+		PlayerHudQueue[client].SetName("Boss Up Additional");
 
-		SetClientGlow(client, -0.05);
+		PlayerHudQueue[client].ShowSyncHudQueueText(client, null, FF2HudChannel_UpAddtional);
+		PlayerHudQueue[client].DeleteAllDisplay();
 
-		KeyValues kv = GetCharacterKV(character[boss]);
-		kv.Rewind();
-		if(kv.JumpToKey("abilities"))
-		{
-			KeyValues abilityKv = new KeyValues("abilities");
-			abilityKv.Import(kv);
+		SetHudTextParams(-1.0, 0.88, 0.12, 255, 255, 255, 255);
+		PlayerHudQueue[client].SetName("Boss Down Additional");
 
-			char ability[10];
-			abilityKv.GotoFirstSubKey();
-			do
-			{
-				char pluginName[64];
-				abilityKv.GetSectionName(pluginName, sizeof(pluginName));
-				abilityKv.GotoFirstSubKey();
-				do
-				{
-					char abilityName[64];
-					abilityKv.GetSectionName(abilityName, sizeof(abilityName));
-					int slot=abilityKv.GetNum("slot", 0);
-					int buttonmode=abilityKv.GetNum("buttonmode", 0);
-					if(slot<1) // We don't care about rage/life-loss abilities here
-					{
-						continue;
-					}
-
-					abilityKv.GetString("life", ability, sizeof(ability), "");
-					if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
-					{
-						UseAbility(boss, pluginName, abilityName, slot, buttonmode);
-					}
-					else // But these do
-					{
-						char temp[3];
-						ArrayList livesArray=CreateArray(sizeof(temp));
-						int count=ExplodeStringIntoArrayList(ability, " ", livesArray, sizeof(temp));
-						for(int n; n<count; n++)
-						{
-							livesArray.GetString(n, temp, sizeof(temp));
-							if(StringToInt(temp)==BossLives[boss])
-							{
-								UseAbility(boss, pluginName, abilityName, slot, buttonmode);
-								break;
-							}
-						}
-						delete livesArray;
-					}
-				}
-				while(abilityKv.GotoNextKey());
-				abilityKv.GoBack();
-			}
-			while(abilityKv.GotoNextKey());
-
-			delete abilityKv;
-		}
+		PlayerHudQueue[client].ShowSyncHudQueueText(client, null, FF2HudChannel_DownAddtional);
+		PlayerHudQueue[client].DeleteAllDisplay();
 
 		if(RedAlivePlayers==1)
 		{
@@ -4716,18 +4659,7 @@ public Action BossTimer(Handle timer)
 			}
 		}
 
-		// 분노 보정
-		if(TF2_GetClientTeam(client) == BossTeam)
-		{
-			int other=0, fast = ScoutsLeft(other);
-			fast -= other;
-			AddBossCharge(boss, 0, fast > 0 ? fast*0.1 : 0.0);
-
-			// stock
-			AddBossCharge(boss, 0, 0.01);
-		}
-
-		HPTime-=0.05;
+		HPTime-=0.1;
 		if(HPTime<0)
 		{
 			HPTime=0.0;
@@ -4737,7 +4669,7 @@ public Action BossTimer(Handle timer)
 		{
 			if(KSpreeTimer[client2]>0)
 			{
-				KSpreeTimer[client2]-=0.05;
+				KSpreeTimer[client2]-=0.1;
 			}
 		}
 	}
@@ -4747,6 +4679,117 @@ public Action BossTimer(Handle timer)
 		return Plugin_Stop;
 	}
 	return Plugin_Continue;
+}
+
+public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
+{
+	if(!Enabled || CheckRoundState() != FF2RoundState_RoundRunning) 	return Plugin_Continue;
+
+	//	This also check Replay, SourceTV players.
+	if(!IsValidClient(client) || !IsPlayerAlive(client))			return Plugin_Continue;
+
+	// 이 구문은 HUD 표기와 관련 없이 능력이나 내부 연산에만 사용됨.
+	if(IsBoss(client))
+		OnBossThink(client);
+/*
+	else
+		OnClientThink(client);
+*/
+
+	return Plugin_Continue;
+}
+
+void OnBossThink(int client)
+{
+	// BossTimer
+	if(!(FF2Flags[client] & FF2FLAG_USEBOSSTIMER))
+		return;
+
+	float tickTime = GetTickInterval();
+	int boss = GetBossIndex(client);
+
+	// TODO: "use_fixed_speed"
+	if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
+	{
+		if(TF2_GetClientTeam(client) == BossTeam)
+			SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.8*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
+		else
+			SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]);
+	}
+
+	if(BossHealth[boss]<=0 && IsPlayerAlive(client))  //Wat.  TODO:  Investigate
+	{
+		BossHealth[boss]=1;
+	}
+
+	SetClientGlow(client, -tickTime);
+
+	// 메인 보스의 분노 보정
+	if(TF2_GetClientTeam(client) == BossTeam)
+	{
+		int other=0, fast = ScoutsLeft(other);
+		fast -= other;
+		AddBossCharge(boss, 0, fast > 0 ? fast * tickTime : 0.0);
+
+		// stock
+		AddBossCharge(boss, 0, (tickTime * 0.1));
+	}
+
+	// 보스의 어빌리티 틱
+	KeyValues kv = GetCharacterKV(character[boss]);
+	kv.Rewind();
+	if(kv.JumpToKey("abilities"))
+	{
+		KeyValues abilityKv = new KeyValues("abilities");
+		abilityKv.Import(kv);
+
+		char ability[10];
+		abilityKv.GotoFirstSubKey();
+		do
+		{
+			char pluginName[64];
+			abilityKv.GetSectionName(pluginName, sizeof(pluginName));
+			abilityKv.GotoFirstSubKey();
+			do
+			{
+				char abilityName[64];
+				abilityKv.GetSectionName(abilityName, sizeof(abilityName));
+				int slot=abilityKv.GetNum("slot", 0);
+				int buttonmode=abilityKv.GetNum("buttonmode", 0);
+				if(slot<1) // We don't care about rage/life-loss abilities here
+				{
+					continue;
+				}
+
+				abilityKv.GetString("life", ability, sizeof(ability), "");
+				if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
+				{
+					UseAbility(boss, pluginName, abilityName, slot, buttonmode);
+				}
+				else // But these do
+				{
+					char temp[3];
+					ArrayList livesArray=CreateArray(sizeof(temp));
+					int count=ExplodeStringIntoArrayList(ability, " ", livesArray, sizeof(temp));
+					for(int n; n<count; n++)
+					{
+						livesArray.GetString(n, temp, sizeof(temp));
+						if(StringToInt(temp)==BossLives[boss])
+						{
+							UseAbility(boss, pluginName, abilityName, slot, buttonmode);
+							break;
+						}
+					}
+					delete livesArray;
+				}
+			}
+			while(abilityKv.GotoNextKey());
+			abilityKv.GoBack();
+		}
+		while(abilityKv.GotoNextKey());
+
+		delete abilityKv;
+	}
 }
 
 public Action Timer_BotRage(Handle timer, int bot)
@@ -5407,7 +5450,7 @@ public Action Timer_DrawGame(Handle timer)
 			hudDisplay=FF2HudDisplay.CreateDisplay("Game Timer", timeDisplay);
 			PlayerHudQueue[client].AddHud(hudDisplay, client);
 
-			PlayerHudQueue[client].ShowSyncHudQueueText(client, timeleftHUD);
+			PlayerHudQueue[client].ShowSyncHudQueueText(client, null, FF2HudChannel_Timer);
 			PlayerHudQueue[client].DeleteAllDisplay();
 		}
 	}
@@ -9117,7 +9160,7 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(2);  //Ready
 				Call_Finish();
-				float charge=100.0*0.05/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.0, slot);
+				float charge=100.0*GetTickInterval()/GetAbilityArgumentFloat(boss, pluginName, abilityName, "charge", 1.0, slot);
 				if(BossCharge[boss][slot]+charge<100.0)
 				{
 					BossCharge[boss][slot]+=charge;
@@ -9131,7 +9174,10 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 			{
 				Call_PushCell(1);  //Recharging
 				Call_Finish();
-				BossCharge[boss][slot]+=0.09;
+
+				BossCharge[boss][slot] += GetTickInterval();
+				if(BossCharge[boss][slot] > 0.0)
+					BossCharge[boss][slot] = 0.0;
 			}
 		}
 		else if(BossCharge[boss][slot]>0.3)
@@ -9155,7 +9201,10 @@ bool UseAbility(int boss, const char[] pluginName, const char[] abilityName, int
 		{
 			Call_PushCell(1);  //Recharging
 			Call_Finish();
-			BossCharge[boss][slot]+=0.09;
+
+			BossCharge[boss][slot] += GetTickInterval();
+			if(BossCharge[boss][slot] > 0.0)
+				BossCharge[boss][slot] = 0.0;
 		}
 		else
 		{

@@ -350,8 +350,10 @@ public Action:Timer_nowUcanReincarnate(Handle:hTimer,any:index)
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	int boss = FF2_GetBossIndex(client);
-	if(boss != -1 && (Timer_toReincarnate[boss] == INVALID_HANDLE || timeleft[boss] <= 0))
+	if(boss == -1)
 		return;
+
+	bool hasCharge = FF2_HasAbility(boss, THIS_PLUGIN_NAME, "charge_protectile");
 
 	char text[256];
 	// bool changed = false;
@@ -362,10 +364,31 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 
 	if(StrEqual(text, "Boss"))
 	{
-		Format(text, sizeof(text), "%t", "reincarnation_cooldown", timeleft[boss]);
+		if(Timer_toReincarnate[boss] != INVALID_HANDLE && timeleft[boss] > 0)
+		{
+			Format(text, sizeof(text), "%t", "reincarnation_cooldown", timeleft[boss]);
 
-		hudDisplay = FF2HudDisplay.CreateDisplay("reincarnation_cooldown", text);
-		hudQueue.AddHud(hudDisplay, client);
+			hudDisplay = FF2HudDisplay.CreateDisplay("reincarnation_cooldown", text);
+			hudQueue.AddHud(hudDisplay, client);
+		}
+	}
+	else if(StrEqual(text, "Boss Up Additional"))
+	{
+		if(hasCharge)
+		{
+			int slot = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, "charge_protectile", "slot");
+			float charge = FF2_GetBossCharge(boss, slot);
+
+			if(charge < 0.0)
+				Format(text, sizeof(text), "%t", "charge_cooldown", -RoundFloat(charge));
+			else if(charge == 100.0)
+				Format(text, sizeof(text), "%t", "charge_ready");
+			else
+				Format(text, sizeof(text), "%t", "charge_status", RoundFloat(charge)/*, buttonText*/);
+
+			hudDisplay = FF2HudDisplay.CreateDisplay("charge_status", text);
+			hudQueue.AddHud(hudDisplay, client);
+		}
 	}
 }
 
@@ -439,22 +462,6 @@ Charge_RocketSpawn(const String:ability_name[],index,slot,action)
 	new Float:charge=FF2_GetBossCharge(index,slot);
 	switch(action)
 	{
-		case 1:
-		{
-			SetHudTextParams(-1.0, 0.73, 0.08, 255, 255, 255, 255);
-			ShowSyncHudText(boss, chargeHUD, "%t","charge_cooldown",-RoundFloat(charge));
-		}
-		case 2:
-		{
-			SetHudTextParams(-1.0, 0.73, 0.08, 255, 255, 255, 255);
-			ShowSyncHudText(boss, chargeHUD, "%t","charge_status",RoundFloat(charge));
-
-			if(charge == 100.0)
-			{
-				SetHudTextParams(-1.0, 0.73, 0.08, 255, 255, 255, 255);
-				ShowSyncHudText(boss, chargeHUD, "%t","charge_ready");
-			}
-		}
 		case 3:
 		{
 			// FF2_SetBossCharge(index,0,zero_charge-10);

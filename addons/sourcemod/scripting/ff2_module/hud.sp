@@ -1,3 +1,6 @@
+#define MAX_HUD_INFO_LENGTH		80
+#define MAX_HUD_DISPLAY_LENGTH	128
+
 Handle OnCalledQueue;
 Handle OnDisplayHud, OnDisplayHudPost;
 
@@ -82,7 +85,7 @@ void HudInit()
 
 public int Native_FF2HudQueue_CreateHudQueue(Handle plugin, int numParams)
 {
-	char name[64];
+	char name[MAX_HUD_INFO_LENGTH];
 	GetNativeString(1, name, sizeof(name));
 
 	FF2HudQueue queueKv = view_as<FF2HudQueue>(new KeyValues("hud_queue", "queue name", name));
@@ -91,7 +94,7 @@ public int Native_FF2HudQueue_CreateHudQueue(Handle plugin, int numParams)
 
 public int Native_FF2HudQueue_PushDisplay(Handle plugin, int numParams)
 {
-	char hudId[128];
+	char hudId[MAX_HUD_DISPLAY_LENGTH];
 	int posId;
 	FF2HudQueue queue = GetNativeCell(1);
 	FF2HudDisplay display = GetNativeCell(2);
@@ -110,7 +113,7 @@ public int Native_FF2HudQueue_PushDisplay(Handle plugin, int numParams)
 public int Native_FF2HudQueue_GetName(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
-	char name[64];
+	char name[MAX_HUD_INFO_LENGTH];
 
 	queue.Rewind();
 	queue.GetString("queue name", name, sizeof(name));
@@ -121,7 +124,7 @@ public int Native_FF2HudQueue_GetName(Handle plugin, int numParams)
 public int Native_FF2HudQueue_SetName(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
-	char name[64];
+	char name[MAX_HUD_INFO_LENGTH];
 	GetNativeString(2, name, sizeof(name));
 
 	queue.Rewind();
@@ -224,7 +227,7 @@ public int Native_FF2HudConfig_GetConfigKeyValue(Handle plugin, int numParams)
 
 public int Native_FF2HudConfig_GetDefaultSettiing(Handle plugin, int numParams)
 {
-	char name[80];
+	char name[MAX_HUD_INFO_LENGTH];
 	kvHudConfigs.Rewind();
 	GetNativeString(1, name, sizeof(name));
 	kvHudConfigs.JumpToKey(name);
@@ -236,7 +239,7 @@ public int Native_FF2HudConfig_GetDefaultSettiing(Handle plugin, int numParams)
 
 public int Native_FF2HudDisplay_CreateDisplay(Handle plugin, int numParams)
 {
-	char info[64], display[64];
+	char info[MAX_HUD_INFO_LENGTH], display[MAX_HUD_DISPLAY_LENGTH];
 	GetNativeString(1, info, sizeof(info));
 	GetNativeString(2, display, sizeof(display));
 
@@ -249,7 +252,7 @@ public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numPar
 	FF2HudDisplay displayKv = GetNativeCell(1);
 	int client = GetNativeCell(2);
 	Handle sync = GetNativeCell(3);
-	char info[64], display[64];
+	char info[MAX_HUD_INFO_LENGTH], display[MAX_HUD_DISPLAY_LENGTH];
 
 	displayKv.Rewind();
 	displayKv.GetSectionName(info, sizeof(info));
@@ -268,9 +271,9 @@ public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numPar
 public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
-	int displayCount = 0, client = GetNativeCell(2), len = 0;
+	int displayCount = 0, client = GetNativeCell(2), totalLen = 0, len = 0;
 	Handle sync = GetNativeCell(3);
-	char text[300], info[80], display[128];
+	char text[512], info[MAX_HUD_INFO_LENGTH], display[MAX_HUD_DISPLAY_LENGTH];
 
 	Forward_OnCalledQueue(queue, client);
 	queue.Rewind();
@@ -278,39 +281,45 @@ public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)
 	{
 		do
 		{
-			displayCount++;
-
 			queue.GetSectionName(info, sizeof(info));
 			queue.GetString("display", display, sizeof(display));
+
 			ReAddPercentCharacter(display, sizeof(display), 4);
 
 			// TODO: 밑의 함수 고치기
 			Forward_OnDisplayHud(client, info, display);
 
-			if(displayCount > 1)
+			len = strlen(display);
+			if(len == 0)
+				continue;
+
+			if(displayCount > 0)
 			{
 				// ReAddPercentCharacter(display, sizeof(display), 2);
-				if(len > 60)
+				if(totalLen > MAX_HUD_DISPLAY_LENGTH)
 				{
 					Format(display, sizeof(display), "\n%s", display);
-					len = 0;
+					totalLen = 0;
 				}
 				else
 				{
 					Format(text, sizeof(text), "%s | ", text);
-					len += strlen(display);
+					totalLen += len;
 				}
 			}
 
 			Format(text, sizeof(text), "%s%s", text, display);
+			displayCount++;
 		}
 		while(queue.GotoNextKey());
 	}
 
+	if(displayCount == 0)
+		return 0;
 	if(sync != null)
-		FF2_ShowSyncHudText(client, sync, text);
-	else
-		FF2_ShowHudText(client, -1, text);
+		return FF2_ShowSyncHudText(client, sync, text);
+
+	return FF2_ShowHudText(client, GetNativeCell(4), text);
 }
 
 public void Forward_OnCalledQueue(FF2HudQueue hudQueue, int client)

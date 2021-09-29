@@ -225,6 +225,16 @@ enum
     HudValue_Last
 };
 
+enum // FF2 HUD Channels (0 - 5)
+{
+    FF2HudChannel_Timer = 0,
+    FF2HudChannel_Rage,
+    FF2HudChannel_UpAddtional,
+    FF2HudChannel_DownAddtional,
+    FF2HudChannel_Info,
+    FF2HudChannel_Other
+};
+
 methodmap FF2HudConfig {
     public static native int GetDefaultSettiing(const char[] name, const char[] info);
 }
@@ -256,7 +266,7 @@ methodmap FF2HudQueue < KeyValues
 
     public native int FindHud(const char[] hudId);
 
-    public native void ShowSyncHudQueueText(int client, Handle sync = null);
+    public native int ShowSyncHudQueueText(int client, Handle sync = null, int group = -1);
 }
 
 forward void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client);

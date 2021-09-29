@@ -594,14 +594,16 @@ stock void FF2_SetAmmo(int client, int weapon, int ammo=-1, int clip=-1)
  *
  * Uses the same params and return values as ShowSyncHudText
  */
-stock void FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any...)
+stock int FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any...)
 {
 	if(!(FF2_GetFF2Flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
 	{
 		char message[256];
 		VFormat(message, sizeof(message), buffer, 4);
-		ShowSyncHudText(client, sync, message);
+		return ShowSyncHudText(client, sync, message);
 	}
+
+    return -1;
 }
 
 /**
@@ -610,14 +612,18 @@ stock void FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any
  *
  * Uses the same params and return values as ShowHudText
  */
-stock void FF2_ShowHudText(int client, int channel, const char[] buffer, any...)
+stock int FF2_ShowHudText(int client, int channel, const char[] buffer, any...)
 {
-	if(!(FF2_GetFF2Flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
-	{
-		char message[256];
-		VFormat(message, sizeof(message), buffer, 4);
-		ShowHudText(client, channel, message);
-	}
+    if(!(FF2_GetFF2Flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
+    {
+        char message[256];
+        VFormat(message, sizeof(message), buffer, 4);
+
+        int finalChannel = ShowHudText(client, channel, message);
+        // PrintToServer("%N's %d (%s)", client, finalChannel, message);
+        return finalChannel;
+    }
+    return -1;
 }
 
 /**

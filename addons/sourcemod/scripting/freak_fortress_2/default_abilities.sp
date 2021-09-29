@@ -27,7 +27,7 @@ Handle OnWeighdown;
 
 // Handle gravityDatapack[MAXPLAYERS+1];
 
-Handle jumpHUD;
+Handle jumpHUD, teleportHUD;
 
 bool enableSuperDuperJump[MAXPLAYERS+1];
 float UberRageCount[MAXPLAYERS+1];
@@ -55,6 +55,7 @@ public void OnPluginStart()
 	cvarBaseJumperStun.AddChangeHook(CvarChange);
 
 	jumpHUD=CreateHudSynchronizer();
+	teleportHUD = CreateHudSynchronizer();
 
 	HookEvent("object_deflected", OnDeflect, EventHookMode_Pre);
 	HookEvent("teamplay_round_start", OnRoundStart);
@@ -160,7 +161,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 	if(StrEqual(abilityName, "weightdown", false))
 	{
-		Charge_WeighDown(boss, slot);
+		Charge_WeighDown(boss, slot, status);
 	}
 	else if(StrEqual(abilityName, "bravejump", false))
 	{
@@ -225,6 +226,101 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 		TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
 
 		TF2_StunPlayer(client, 2.0, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
+	}
+}
+
+public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
+{
+	int boss = FF2_GetBossIndex(client);
+
+	bool hasJump = FF2_HasAbility(boss, PLUGIN_NAME, "bravejump"),
+		hasTeleport = FF2_HasAbility(boss, PLUGIN_NAME, "teleport"),
+		hasBoth = hasJump && hasTeleport;
+
+	char text[512];
+	FF2HudDisplay hudDisplay = null;
+
+	SetGlobalTransTarget(client);
+	hudQueue.GetName(text, sizeof(text));
+
+	if(StrEqual(text, "Boss Down Additional"))
+	{
+		if(hasJump)
+		{
+			int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "bravejump", "slot");
+			float charge = FF2_GetBossCharge(boss, slot);
+
+			if(charge < 0.0)
+				Format(text, sizeof(text), "%t", "Super Jump Cooldown", -RoundFloat(charge));
+			else
+			{
+				if(enableSuperDuperJump[boss])
+				{
+					SetHudTextParams(-1.0, 0.88, 0.12, 255, 64, 64, 255);
+					Format(text, sizeof(text), "%t", "Super Duper Jump");
+				}
+				else
+				{
+					if((hasBoth && charge > 0.0) || !hasBoth)
+					{
+						SetHudTextParams(-1.0, 0.92, 0.12, 255, 255, 255, 255);
+
+						FF2_ShowHudText(client, FF2HudChannel_Info, "%t", "Super Jump Hint");
+						SetHudTextParams(-1.0, 0.88, 0.12, 255, 255, 255, 255);
+					}
+
+					char buttonText[32];
+					int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "bravejump", "buttonmode", 0);
+					Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+
+					// 분리
+					Format(text, sizeof(text), "%t", "Super Jump Charge", RoundFloat(charge), buttonText);
+				}
+			}
+
+			hudDisplay = FF2HudDisplay.CreateDisplay("Superjump", text);
+			hudQueue.AddHud(hudDisplay, client);
+		}
+
+		if(hasTeleport)
+		{
+			int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "teleport", "slot");
+			float charge = FF2_GetBossCharge(boss, slot);
+
+			if(charge < 0.0)
+				Format(text, sizeof(text), "%t", "Teleportation Cooldown", -RoundFloat(charge));
+			else
+			{
+				if(enableSuperDuperJump[boss])
+				{
+					SetHudTextParams(-1.0, 0.88, 0.12, 255, 64, 64, 255);
+					Format(text, sizeof(text), "%t", "Super Duper Jump");
+				}
+				else
+				{
+					if((hasBoth && charge > 0.0) || !hasBoth)
+					{
+						SetHudTextParams(-1.0, 0.96, 0.12, 255, 255, 255, 255);
+
+						Format(text, sizeof(text), "%t", "Teleportation Hint");
+						ReAddPercentCharacter(text, sizeof(text), 4);
+
+						FF2_ShowHudText(client, FF2HudChannel_Other, text);
+						SetHudTextParams(-1.0, 0.88, 0.12, 255, 255, 255, 255);
+					}
+
+					char buttonText[32];
+					int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "teleport", "buttonmode", 0);
+					Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+
+					// 분리
+					Format(text, sizeof(text), "%t", "Teleportation Charge", RoundFloat(charge), buttonText);
+				}
+			}
+
+			hudDisplay = FF2HudDisplay.CreateDisplay("Teleport", text);
+			hudQueue.AddHud(hudDisplay, client);
+		}
 	}
 }
 
@@ -295,7 +391,6 @@ public Action Timer_EnableSentry(Handle timer, int sentryid)
 
 void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 {
-	char message[128];
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge=FF2_GetBossCharge(boss, slot);
 	float multiplier=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "multiplier", 1.0);
@@ -303,29 +398,6 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 	SetGlobalTransTarget(client);
 	switch(status)
 	{
-		case 1:
-		{
-			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
-			FF2_ShowSyncHudText(client, jumpHUD, "%t", "Super Jump Cooldown", -RoundFloat(charge));
-		}
-		case 0, 2:
-		{
-			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
-			if(enableSuperDuperJump[boss])
-			{
-				SetHudTextParams(-1.0, 0.88, 0.15, 255, 64, 64, 255);
-				FF2_ShowSyncHudText(client, jumpHUD, "%t", "Super Duper Jump");
-			}
-			else
-			{
-				char buttonText[32];
-				int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "buttonmode", 0);
-				Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
-				Format(message, sizeof(message), "%t", "Super Jump Charge", RoundFloat(charge), buttonText);
-				ReAddPercentCharacter(message, sizeof(message), 2);
-				FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
-			}
-		}
 		case 3:
 		{
 			float angles[3];
@@ -421,28 +493,13 @@ void Charge_BraveJump(const char[] abilityName, int boss, int slot, int status)
 
 void Charge_Teleport(const char[] abilityName, int boss, int slot, int status)
 {
-	char message[128];
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge=FF2_GetBossCharge(boss, slot);
 
 	SetGlobalTransTarget(client);
-	SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 
 	switch(status)
 	{
-		case 1:
-		{
-			FF2_ShowSyncHudText(client, jumpHUD, "%t", "Teleportation Cooldown", -RoundFloat(charge));
-		}
-		case 0, 2:
-		{
-			char buttonText[32];
-			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "buttonmode", 0);
-			Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
-			Format(message, sizeof(message), "%t", "Teleportation Charge", RoundFloat(charge), buttonText);
-			ReAddPercentCharacter(message, sizeof(message), 2);
-			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
-		}
 		case 3:
 		{
 			float angles[3];
@@ -576,10 +633,10 @@ public Action Timer_StunBoss(Handle timer, int boss)
 	TF2_StunPlayer(client, (enableSuperDuperJump[boss] ? 4.0 : 2.0), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 }
 
-void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
+void Charge_WeighDown(int boss, int slot, int status)  //TODO: Create a HUD for this
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-	if(client<=0 || !(GetClientButtons(client) & IN_DUCK))
+	if(status == 1 || client<=0 || !(GetClientButtons(client) & IN_DUCK))
 	{
 		return;
 	}
@@ -621,7 +678,9 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this
 
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, angles);
 
-			FF2_SetBossCharge(boss, slot, 0.0);
+			float cooldown = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, "weightdown", "cooldown", 0.0);
+			if(cooldown > 0.0)
+				FF2_SetBossCharge(boss, slot, -cooldown);
 
 			/*
 						currentSpeed = GetVectorLength(velocity);
