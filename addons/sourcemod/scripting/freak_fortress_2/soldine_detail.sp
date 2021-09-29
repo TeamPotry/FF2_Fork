@@ -321,7 +321,7 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 
 public bool TraceDontHitMe(int entity, int contentsMask, any data)
 {
-    return true;
+    return entity == 0 || entity == data;
 }
 
 
