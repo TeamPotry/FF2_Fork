@@ -783,7 +783,7 @@ void UpdateSaleSprite(int client)
 
 stock int SpawnWeapon(int client, char[] name, int index, int level, int quality, char[] attribute)
 {
-	Handle weapon=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION);
+	Handle weapon=TF2Items_CreateItem(OVERRIDE_ALL|FORCE_GENERATION|PRESERVE_ATTRIBUTES);
 	TF2Items_SetClassname(weapon, name);
 	TF2Items_SetItemIndex(weapon, index);
 	TF2Items_SetLevel(weapon, level);
