@@ -19,7 +19,7 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
-// Handle g_SDKCallGetChargeMaxTime;
+Handle g_SDKCallGetEffectBarProgress;
 Handle g_SDKCallInitDroppedWeapon;
 Handle g_SDKCallPickupWeaponFromOther;
 
@@ -264,7 +264,7 @@ public void OnPluginStart()
 	GameData gamedata = new GameData("potry");
 	if (gamedata)
 	{
-		// g_SDKCallGetChargeMaxTime = PrepSDKCall_GetChargeMaxTime(gamedata);
+		g_SDKCallGetEffectBarProgress = PrepSDKCall_GetEffectBarProgress(gamedata);
 		g_SDKCallPickupWeaponFromOther = PrepSDKCall_PickupWeaponFromOther(gamedata);
 		g_SDKCallInitDroppedWeapon = PrepSDKCall_InitDroppedWeapon(gamedata);
 
@@ -487,8 +487,8 @@ public void OnMapStart()
 
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	float carteenCooltime = MVM_GetPlayerCarteenCooldown(client);
-	// float sapperMaxCooldown, sapperBegintime;
+	float carteenCooltime = MVM_GetPlayerCarteenCooldown(client),
+		sapperCharge;
 
 	if(!IsPlayerAlive(client))	return;
 
@@ -496,14 +496,14 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 	FF2HudDisplay hudDisplay = null;
 	hudQueue.GetName(text, sizeof(text));
 
-// 	int sapper = GetPlayerWeaponSlot(client, 1);
+ 	int sapper = GetPlayerWeaponSlot(client, 1);
 	bool hasCarteenCooldown = carteenCooltime > 0.0;
-/*
-	bool hasSapperCooldown = ((sapper != -1 && IsSapper(sapper)) && (sapperMaxCooldown = SDKCall_GetChargeMaxTime(sapper)) > 0.0
-			&& (GetGameTime() - ((sapperBegintime = GetEntPropFloat(sapper, Prop_Send, "m_flChargeBeginTime")) + sapperMaxCooldown)) < 0.0);
 
-	PrintToChatAll("hasSapper = %s, hasSapperCooldown = %s, sapperBegintime = %.1f, sapperMaxCooldown = %.1f", (sapper != -1 && IsSapper(sapper)) ? "true" : "false", hasSapperCooldown ? "true" : "false", sapperBegintime, sapperMaxCooldown);
-*/
+	bool hasSapperCooldown = ((sapper != -1 && IsSapper(sapper))
+		&& ((sapperCharge = GetEntPropFloat(sapper, Prop_Send, "m_flEffectBarRegenTime")) > 0.0));
+
+	// PrintToChatAll("hasSapper = %s, sapperCharge = %.3f", (sapper != -1 && IsSapper(sapper)) ? "true" : "false", sapperCharge);
+
 	if(StrEqual(text, "Player Additional"))
 	{
 		if(hasCarteenCooldown)
@@ -512,15 +512,15 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 			hudDisplay = FF2HudDisplay.CreateDisplay("Carteen Cooldown", text);
 			hudQueue.PushDisplay(hudDisplay);
 		}
-		/*
+
 		if(hasSapperCooldown)
 		{
-			Format(text, sizeof(text), "%t: %d%%", "Sapper Charge",
-				RoundFloat(GetGameTime() / (sapperBegintime + sapperMaxCooldown)));
+			sapperCharge -= GetGameTime();
+
+			Format(text, sizeof(text), "%t: %.1f", "Sapper Charge", sapperCharge);
 			hudDisplay = FF2HudDisplay.CreateDisplay("Sapper Charge", text);
 			hudQueue.PushDisplay(hudDisplay);
 		}
-		*/
 	}
 }
 
@@ -631,28 +631,27 @@ bool SDKCall_PickupWeaponFromOther(int player, int weapon)
 	return false;
 }
 
-/*
-Handle PrepSDKCall_GetChargeMaxTime(GameData gamedata)
+
+Handle PrepSDKCall_GetEffectBarProgress(GameData gamedata)
 {
 	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CTFWeaponSapper::GetChargeMaxTime");
+	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CTFWeaponBase::GetEffectBarProgress");
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 
 	Handle call = EndPrepSDKCall();
 	if (!call)
-		LogMessage("Failed to create SDK call: CTFWeaponSapper::GetChargeMaxTime");
+		LogMessage("Failed to create SDK call: CTFWeaponBase::GetEffectBarProgress");
 
 	return call;
 }
 
-float SDKCall_GetChargeMaxTime(int sapper)
+float SDKCall_GetEffectBarProgress(int weapon)
 {
-	if (g_SDKCallGetChargeMaxTime)
-		return SDKCall(g_SDKCallGetChargeMaxTime, sapper);
+	if (g_SDKCallGetEffectBarProgress)
+		return SDKCall(g_SDKCallGetEffectBarProgress, weapon);
 
 	return -1.0;
 }
-*/
 
 stock int SpawnWeapon(int client, char[] name, int index, int level, int quality, char[] attribute)
 {
@@ -762,7 +761,7 @@ stock bool IsBoss(int client)
 	return FF2_GetBossIndex(client) != -1;
 }
 
-/*
+
 stock bool IsSapper(int sapper)
 {
 	char classname[64];
@@ -770,4 +769,3 @@ stock bool IsSapper(int sapper)
 
 	return StrEqual(classname, "tf_weapon_builder") || StrEqual(classname, "tf_weapon_sapper");
 }
-*/
