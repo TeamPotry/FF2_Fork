@@ -5764,16 +5764,17 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							}
 						}
 
-						if(!(damagetype & DMG_CRIT) && damagecustom != TF_CUSTOM_HEADSHOT
-							|| TF2_IsPlayerInCondition(attacker, TFCond_Buffed))
-						{
-							float distance = GetVectorDistance(position, victimPosition);
-							if(distance>1800.0)
-								damagetype|=DMG_PREVENT_PHYSICS_FORCE;
+						float distance = GetVectorDistance(position, victimPosition);
+						if(distance > 1800.0)
+							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 
-							damage*=TF2_IsPlayerInCondition(attacker, TFCond_Buffed) ? 1.0 : 1.6;
-						}
-
+						// NO CRIT
+						static float damageAdjust = 1.6;
+						if(!(damagetype & DMG_CRIT) /*&& !TF2_IsPlayerInCondition(attacker, TFCond_Buffed)*/)
+							damage *= damageAdjust;
+						// MINI CRIT.. Just in case.
+						else if((damagetype & DMG_CRIT) && TF2_IsPlayerInCondition(attacker, TFCond_Buffed) && !TF2_IsPlayerCritBuffed(attacker))
+							damage *= damageAdjust;
 
 						return Plugin_Changed;
 					}
