@@ -2919,6 +2919,21 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+		case 426:	//Eviction Notice
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "851 ; 1.15 ; 1 ; 0.4 ; 6 ; 0.6 ; 737 ; 3.0 ; 191 ; -7.0", false);
+				// 851: 15% faster move speed on wearer
+				// 1: -60% damage penalty
+				// 6: +40% faster firing speed
+				// 737: On Hit: Gain a speed boost
+				// 191: -7 health/second
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
+
 /*
 		case 133, 444:  // Gunboats, Mantreads
 		{
@@ -3166,12 +3181,12 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_medigun"))  //Mediguns
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.75 ; 482 ; 2.0 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 4 ; 547 ; 0.75", false);
-			//10: +75% faster charge rate
+		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.5 ; 482 ; 2.0 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 2 ; 547 ; 0.75", false);
+			//10: +50% faster charge rate
 			//11: +50% overheal bonus, 482: overheal_expert
 			//144: Quick-fix speed/jump effects
 			//199: Deploys 25% faster
-			//314: Ubercharge lasts 4 seconds longer (aka 50% longer)
+			//314: Ubercharge lasts 2 seconds longer (aka 50% longer)
 			//547: Holsters 25% faster
 		if(itemOverride!=null)
 		{
