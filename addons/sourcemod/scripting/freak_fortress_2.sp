@@ -342,6 +342,7 @@ public void OnPluginStart()
 	HookEvent("object_deflected", OnObjectDeflected, EventHookMode_Pre);
 	HookEvent("deploy_buff_banner", OnDeployBackup);
 	HookEvent("player_healed", OnPlayerHealed);
+	HookEvent("medigun_shield_blocked_damage", OnMedigunBlockDamage);
 
 	HookUserMessage(GetUserMessageId("PlayerJarated"), OnJarate);  //Used to subtract rage when a boss is jarated (not through Sydney Sleeper)
 
@@ -5312,6 +5313,21 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 		Assist[healer] += healed/2;
 	}
 
+	return Plugin_Continue;
+}
+
+public Action OnMedigunBlockDamage(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if(TF2_GetClientTeam(client) == BossTeam)
+		return Plugin_Continue;
+
+	float damage = event.GetFloat("damage");
+	float currentCharge = GetEntPropFloat(client, Prop_Send, "m_flRageMeter");
+	int shieldLevel = TF2Attrib_HookValueInt(0, "generate_rage_on_heal", client),
+		shieldHp = 800 + (400 * (shieldLevel - 1));
+
+	SetEntPropFloat(client, Prop_Send, "m_flRageMeter", currentCharge - (damage / shieldHp * 100.0));
 	return Plugin_Continue;
 }
 
