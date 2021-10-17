@@ -161,7 +161,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 	if(StrEqual(abilityName, "weightdown", false))
 	{
-		Charge_WeighDown(boss, slot, status);
+		Charge_WeighDown(boss, slot);
 	}
 	else if(StrEqual(abilityName, "bravejump", false))
 	{
@@ -633,10 +633,10 @@ public Action Timer_StunBoss(Handle timer, int boss)
 	TF2_StunPlayer(client, (enableSuperDuperJump[boss] ? 4.0 : 2.0), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 }
 
-void Charge_WeighDown(int boss, int slot, int status)  //TODO: Create a HUD for this
+void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
-	if(status == 1 || client<=0 || !(GetClientButtons(client) & IN_DUCK))
+	if(FF2_GetBossCharge(boss, slot) < 0.0 || client<=0 || !(GetClientButtons(client) & IN_DUCK))
 	{
 		return;
 	}
@@ -644,8 +644,10 @@ void Charge_WeighDown(int boss, int slot, int status)  //TODO: Create a HUD for 
 	if(!(GetEntityFlags(client) & FL_ONGROUND))
 	{
 		float angles[3];
+		static float angleCap = 50.0;
+
 		GetClientEyeAngles(client, angles);
-		if(angles[0]>60.0)
+		if(angles[0] > angleCap)
 		{
 			Action action;
 			Call_StartForward(OnWeighdown);
@@ -656,32 +658,38 @@ void Charge_WeighDown(int boss, int slot, int status)  //TODO: Create a HUD for 
 				return;
 			}
 
-			float currentVelocity[3], velocity[3], cul = DegToRad(90.0 - angles[0]), currentSpeed, angleDiff;
-			float multiplier = 3500.0, speed = multiplier * (Cosine(cul * 2.0)) + Cosine(cul), ratio, actualRatio;
+			float multiplier = 3500.0, currentDownPower = -(fclamp(((90.0 - angles[0]) / angleCap), 0.0, 1.0) - 1.0);
+			float currentVelocity[3], currentSpeed, velocity[3], goalAngles[3], angleDiff;
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
-			GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-			GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
+			GetAngleVectors(angles, goalAngles, NULL_VECTOR, NULL_VECTOR);
 
-			currentSpeed = GetVectorLength(velocity);
-			GetVectorAngles(velocity, velocity);
-			GetAngleVectors(velocity, velocity, NULL_VECTOR, NULL_VECTOR);
-			// SubtractVectors(angles, velocity, velocity);
-			angleDiff = GetVectorDotProduct(velocity, angles) * 0.6; // 0.8 -> 딜레이 및 추진력
+			currentSpeed = GetVectorLength(currentVelocity);
+			if(currentSpeed > 0.0)
+			{
+				currentDownPower = fmin((currentDownPower - (currentSpeed / multiplier)), 0.0);
+			}
 
-			// PrintToChatAll("%.1f %.1f", speed, GetVectorDotProduct(velocity, angles));
-			// ratio = (((currentSpeed / speed) * (2.5 * ((currentSpeed - currentUpSpeed) / currentSpeed))) + 0.3) * GetVectorDotProduct(velocity, angles);
-			// NOTE: 속력을 받을 때를 늦춰야 한다면 GetVectorDotProduct가 점진적으로 값이 상승되도록 조정할 것
-			ratio = (((currentSpeed / speed) * (1.5 * (currentSpeed / speed))) + 0.3) * (angleDiff + 0.1);
-			actualRatio = (fmin(1.0, ratio) == 1.0) ? 1.0 : fmax(0.1, ratio);
-			ScaleVector(angles, (speed * actualRatio));
+			NormalizeVector(goalAngles, velocity);
+			NormalizeVector(currentVelocity, currentVelocity);
 
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, angles);
+			angleDiff = GetVectorDotProduct(velocity, currentVelocity);
+			currentDownPower = fmin(currentDownPower - (1.0 - angleDiff), 0.0);
 
-			float cooldown = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, "weightdown", "cooldown", 0.0);
+			// ??
+			ScaleVector(velocity, -(multiplier * (currentDownPower * (GetTickInterval() * 1.5))));
+			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
+			AddVectors(velocity, currentVelocity, velocity);
+
+			if(velocity[2] > multiplier * (currentDownPower / multiplier))
+				velocity[2] = 0.0; // ??
+
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+/*
+			float cooldown = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, "weightdown", "cooldown", 0.1);
 			if(cooldown > 0.0)
 				FF2_SetBossCharge(boss, slot, -cooldown);
-
+*/
 			/*
 						currentSpeed = GetVectorLength(velocity);
 						if(currentSpeed * Cosine(cul * 2.0) > speed)
@@ -694,6 +702,13 @@ void Charge_WeighDown(int boss, int slot, int status)  //TODO: Create a HUD for 
 						// ScaleVector(angles, (speed * (currentSpeed / speed)) * GetVectorDotProduct(velocity, angles));
 		}
 	}
+}
+
+stock float fclamp(float value, float min, float max)
+{
+	value = fmin(value, min);
+	value = fmax(value, max);
+	return value;
 }
 
 stock float fmax(float x, float y)
