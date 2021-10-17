@@ -543,13 +543,9 @@ public Action FF2_OnSpecialAttack(int attacker, int victimBoss, int weapon, cons
 
 public void FF2_OnWaveStarted(int wave)
 {
-	int boss;
-
 	for(int client = 1; client <= MaxClients; client++)
 	{
 		if(!IsClientInGame(client)) 		continue;
-
-		MVM_SetPlayerCurrency(client, MVM_GetPlayerCurrency(client) + 200);
 
 		if(IsBoss(client) && FF2_GetBossTeam() == TF2_GetClientTeam(client))
 		{
@@ -570,8 +566,9 @@ public void FF2_OnWaveStarted(int wave)
 
 			TF2Attrib_SetByDefIndex(client, 252, value);
 		}
-		else
+		else if(IsPlayerAlive(client))
 		{
+			MVM_SetPlayerCurrency(client, MVM_GetPlayerCurrency(client) + 200);
 			EmitSoundToClient(client, "mvm/mvm_money_pickup.wav");
 		}
 	}
