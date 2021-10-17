@@ -3061,11 +3061,23 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
-	}
 
+		case 46, 1145: // Bonk!
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "278 ; 2.0 ; 278 ; 0.5 ; 414 ; 8.0", false);
+			// 414: Marked-For-Death while active, and for short period after switching weapons (sec)
+			// 856: 3, gas passer meter style
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
+	}
+/*
 	if(!StrContains(classname, "tf_weapon_rocketpack"))  // Thermal Thruster
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "856 ; 1.0 ; 801 ; 18.0 ; 872 ; 1.0 ; 873 ; 1.0", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "856 ; 1.0 ; 801 ; 18.0 ; 872 ; 1.0 ; 873 ; 1.0", true);
 			//870: falling_impact_radius_pushback
 			//871: falling_impact_radius_stun
 			//872: thermal_thruster_air_launch
@@ -3077,6 +3089,8 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
+*/
+
 /*
 	if(!StrContains(classname, "tf_weapon_jar") && !StrEqual(classname, "tf_weapon_jar_gas"))  // exclude gas passer
 	{
@@ -3142,7 +3156,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		(!StrContains(classname, "tf_weapon_builder") || !StrContains(classname, "tf_weapon_sapper")))
 	// Sapper
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "278 ; 4.0");
+		Handle itemOverride=PrepareItemHandle(item, _, _, "278 ; 2.66");
 		// 278: (MVM) charge time increase
 
 		if(itemOverride!=null)
@@ -3208,10 +3222,10 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 	}
 
-/*
+
 	if(!StrContains(classname, "tf_weapon_flamethrower"))
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "841 ; 0 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8 ; 862 ; 0.6 ; 863 ; 0.1 ; 255 ; 2.0 ; 255; 0.5", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "841 ; 0.5 ; 843 ; 8.5 ; 865 ; 50 ; 844 ; 2450 ; 839 ; 2.8");
 		// 255: airblast push force
 		if(itemOverride!=null)
 		{
@@ -3219,7 +3233,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 			return Plugin_Changed;
 		}
 	}
-
+/*
 	if(!StrContains(classname, "tf_weapon_rocketlauncher_fireball"))
 	{
 		Handle itemOverride=PrepareItemHandle(item, _, _, "856 ; 1 ; 801 ; 0.8 ; 37 ; 0.2 ; 2062 ; 0.25 ; 2065 ; 1 ; 2063 ; 1 ; 255 ; 2.0 ; 255; 0.5", false);
@@ -4375,10 +4389,13 @@ public Action ClientTimer(Handle timer)
 			}
 
 			cond=TFCond_HalloweenCritCandy;
-			if(TF2_IsPlayerInCondition(client, TFCond_CritCola) && (playerclass==TFClass_Scout /*|| playerclass==TFClass_Heavy*/))
+			/*
+			if(TF2_IsPlayerInCondition(client, TFCond_CritCola) && (playerclass==TFClass_Scout ))
 			{
+				// || playerclass==TFClass_Heavy
 				TF2_AddCondition(client, cond, 0.3);
 			}
+			*/
 
 			int healer=-1;
 			for(int healtarget=1; healtarget<=MaxClients; healtarget++)
@@ -4870,11 +4887,15 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 				}
 				case TFCond_Bonked:
 				{
-					TF2_RemoveCondition(client, TFCond_Bonked);
-					TF2_AddCondition(client, TFCond_HalloweenQuickHeal, 2.0);
+					// TF2_RemoveCondition(client, TFCond_Bonked);
+					// TF2_AddCondition(client, TFCond_HalloweenQuickHeal, 2.0);
+					TF2_AddCondition(client, TFCond_MarkedForDeath, 8.0);
+
+					// reload
+					// TF2Attrib_AddCustomPlayerAttribute(client, "effect bar recharge rate increased", 100000.0, 8.0);
+					// TF2Attrib_AddCustomPlayerAttribute(client, "Reload time increased", 100000.0, 8.0);
 				}
 			}
-
 		}
 	}
 }
@@ -5836,13 +5857,19 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				switch(index)
 				{
-					case 37:
+					// TODO: Apply Attributes
+					case 37, 457:
 					{
-						if(damagecustom == TF_CUSTOM_AXTINGUISHER_BOOSTED)
+						if(TF2_IsPlayerInCondition(client, TFCond_OnFire))
 						{
-							damage *= 3.0;
-							return Plugin_Changed;
+							float time = TF2Util_GetPlayerBurnDuration(client);
+							damage *= 1.0 + (time / 8.0);
+							TF2_RemoveCondition(client, TFCond_OnFire);
 						}
+						else
+							damage *= 0.5;
+
+						return Plugin_Changed;
 					}
 					case 61, 1006:  //Ambassador, Festive Ambassador
 					{
@@ -6242,196 +6269,25 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				}
 			}
 		}
+/*
 		else
 		{
 			int index=(IsValidEntity(weapon) && weapon>MaxClients && attacker<=MaxClients ? GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") : -1);
 
 			switch(index)
 			{
-				case 307:
-				{
-					if(detonations[attacker]<allowedDetonations)
-					{
-						detonations[attacker]++;
-						PrintHintText(attacker, "%t", "Detonations Left", allowedDetonations-detonations[attacker]);
-						if(allowedDetonations-detonations[attacker])  //Don't reset their caber if they have 0 detonations left
-						{
-							SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
-							SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
-						}
-					}
-				}
+
 			}
 		}
+*/
 	}
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
-	if(!Enabled) return;
-
-	int damage=RoundFloat(damageFloat);
-
-	if(IsBoss(client))
-	{
-		int boss=GetBossIndex(client);
-
-		for(int lives=1; lives<BossLives[boss]; lives++)
-		{
-			if(BossHealth[boss]-damage<=BossHealthMax[boss]*lives)
-			{
-				SetEntityHealth(client, (BossHealth[boss]-damage)-BossHealthMax[boss]*(lives-1));  //Set the health early to avoid the boss dying from fire, etc.
-
-				Action action;
-				int bossLives=BossLives[boss];  //Used for the forward
-				Call_StartForward(OnLoseLife);
-				Call_PushCell(boss);
-				Call_PushCellRef(bossLives);
-				Call_PushCell(BossLivesMax[boss]);
-				Call_Finish(action);
-				if(action==Plugin_Stop || action==Plugin_Handled)  //Don't allow any damage to be taken and also don't let the life-loss go through
-				{
-					SetEntityHealth(client, BossHealth[boss]);
-					return;
-				}
-				else if(action==Plugin_Changed)
-				{
-					if(bossLives>BossLivesMax[boss])  //If the new amount of lives is greater than the max, set the max to the new amount
-					{
-						BossLivesMax[boss]=bossLives;
-					}
-					BossLives[boss]=lives=bossLives;
-				}
-
-				char ability[PLATFORM_MAX_PATH];  //FIXME: Create a new variable for the translation string later on
-				KeyValues kv = GetCharacterKV(character[boss]);
-				kv.Rewind();
-				if(kv.JumpToKey("abilities"))
-				{
-					kv.GotoFirstSubKey();
-					do
-					{
-						char pluginName[64];
-						kv.GetSectionName(pluginName, sizeof(pluginName));
-						kv.GotoFirstSubKey();
-						do
-						{
-							char abilityName[64];
-							kv.GetSectionName(abilityName, sizeof(abilityName));
-							if(kv.GetNum("slot")!=-1) // Only activate for life-loss abilities
-							{
-								continue;
-							}
-
-							kv.GetString("life", ability, 10, "");
-							if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
-							{
-								UseAbility(boss, pluginName, abilityName, -1);
-							}
-							else // But these do
-							{
-								char temp[3];
-								ArrayList livesArray=CreateArray(sizeof(temp));
-								int count=ExplodeStringIntoArrayList(ability, " ", livesArray, sizeof(temp));
-								for(int n; n<count; n++)
-								{
-									livesArray.GetString(n, temp, sizeof(temp));
-									if(StringToInt(temp)==BossLives[boss])
-									{
-										UseAbility(boss, pluginName, abilityName, -1);
-										break;
-									}
-								}
-								delete livesArray;
-							}
-						}
-						while(kv.GotoNextKey());
-						kv.GoBack();
-					}
-					while(kv.GotoNextKey());
-				}
-				BossLives[boss]=lives;
-
-				char bossName[64];
-				strcopy(ability, sizeof(ability), BossLives[boss]==1 ? "Boss with 1 Life Left" : "Boss with Multiple Lives Left");
-
-				for(int target=1; target<=MaxClients; target++)
-				{
-					if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
-					{
-						GetBossName(boss, bossName, sizeof(bossName), target);
-						PrintCenterText(target, "%t", ability, bossName, BossLives[boss]);
-					}
-				}
-
-				if(BossLives[boss]==1 && FindSound("last life", ability, sizeof(ability), boss))
-				{
-					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
-					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
-				}
-				else if(FindSound("next life", ability, sizeof(ability), boss))
-				{
-					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
-					EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
-				}
-
-				float duration = GetBossSkillDuration(boss, SkillName_LostLife);
-				BossSkillDuration[boss][SkillName_LostLife] = GetGameTime() + duration;
-
-				break;
-			}
-		}
-
-		BossHealth[boss]-=damage;
-
-		if(IsValidClient(attacker) && attacker!=client)
-		{
-			Damage[attacker]+=damage;
-			bool rage = true;
-
-			if(weapon > MaxClients && IsValidEntity(weapon))
-			{
-				switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
-				{
-					case 442, 588: // The Righteous Bison, The Pomson 6000
-					{
-						rage = false;
-					}
-				}
-			}
-
-			if(rage)
-				AddBossCharge(boss, 0, damage*100.0/BossRageDamage[boss]);
-		}
-
-		int[] healers=new int[MaxClients+1];
-		int healerCount = 0;
-		for(int target=1; target<=MaxClients; target++)
-		{
-			if(IsValidClient(target) && IsPlayerAlive(target) && (GetHealingTarget(target, true)==attacker))
-			{
-				healers[healerCount++] = target;
-			}
-		}
-
-		for(int target = 0; target < healerCount; target++)
-		{
-			if(IsValidClient(healers[target]) && IsPlayerAlive(healers[target]))
-			{
-				if(damage<10 || uberTarget[healers[target]]==attacker)
-				{
-					Assist[healers[target]]+=damage;
-				}
-				else
-				{
-					Assist[healers[target]]+=damage/(healerCount+1);
-				}
-			}
-		}
-
-		UpdateHealthBar(true);
-	}
+	// ha?
+	// if(!Enabled) return;
 }
 
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
@@ -6513,11 +6369,37 @@ stock void AssignTeam(int client, TFTeam team)
 
 public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname, bool& result)
 {
-	if(Enabled && IsBoss(client) && CheckRoundState()==FF2RoundState_RoundRunning && !TF2_IsPlayerCritBuffed(client) && !BossCrits)
+	if(!Enabled || CheckRoundState() != FF2RoundState_RoundRunning)
+		return Plugin_Continue;
+
+	if(IsBoss(client) || !TF2_IsPlayerCritBuffed(client) && !BossCrits)
 	{
 		result=false;
 		return Plugin_Changed;
 	}
+	else if(!IsBoss(client))
+	{
+		int index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+
+		switch(index)
+		{
+			case 307:
+			{
+				if(allowedDetonations > 0 && detonations[client] < allowedDetonations)
+				{
+					detonations[client]++;
+					PrintHintText(client, "%t", "Detonations Left", allowedDetonations-detonations[client]);
+				}
+
+				if(allowedDetonations == 0 || allowedDetonations - detonations[client] > 0)  //Don't reset their caber if they have 0 detonations left
+				{
+					SetEntProp(weapon, Prop_Send, "m_bBroken", 0);
+					SetEntProp(weapon, Prop_Send, "m_iDetonated", 0);
+				}
+			}
+		}
+	}
+
 	return Plugin_Continue;
 }
 
