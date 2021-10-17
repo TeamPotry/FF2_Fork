@@ -106,11 +106,12 @@ stock ArrayList GetBossArray(bool includeBlocked=false, bool includeAlive=false)
 	if(!includeAlive && array.Length > 0)
 	{
 		ArrayList bossArray = GetBossPlayers();
-		int index;
+		int index, boss;
 
 		for (int loop = 0; loop < bossArray.Length; loop++)
 		{
-			index = array.FindValue(FF2_GetBossIndex(bossArray.Get(loop)));
+			boss = FF2_GetBossIndex(bossArray.Get(loop));
+			index = array.FindValue(FF2_GetCharacterIndex(boss));
 			if(index != -1)
 			{
 				array.Erase(index);
