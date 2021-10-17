@@ -2261,14 +2261,15 @@ void EquipBoss(int boss)
 					continue;
 				}
 
-				kv.GetString("attributes", attributes, sizeof(attributes));
-
 				int weapon = -1;
+				kv.GetString("attributes", attributes, sizeof(attributes));
 
 				if(StrContains(classname, "tf_wearable") != -1)
 				{
 					bool demoshield = StrEqual(classname, "tf_wearable_demoshield");
 					weapon = demoshield ? TF2_SpawnDemoShield(index, 5, 101) : TF2_SpawnWearable(index, 5, 101);
+
+					TF2Attrib_RemoveAll(weapon); // This is not working on demoshield
 					TF2Util_EquipPlayerWearable(client, weapon);
 
 					int attributeCount = ExplodeString(attributes, ";", oneAttrib, sizeof(oneAttrib), sizeof(oneAttrib[]));
