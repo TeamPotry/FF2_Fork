@@ -126,7 +126,7 @@ void InvokeReflecter(int boss)
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
 	g_bReflecterForce[client] =
-		(GetEntProp(client, Prop_Send, "m_bDucked")) > 0 && (GetEntityFlags(client) & FL_ONGROUND) > 0;
+		(GetEntProp(client, Prop_Send, "m_bDucked")) > 0;
 
 	InitReflecter(client);
 }
@@ -156,11 +156,11 @@ void InitReflecter(int client)
 		SDKHook(client, SDKHook_PostThink, OnReflecterThink);
 		SDKHook(client, SDKHook_OnTakeDamageAlive, OnReflecterDamage);
 
-		TF2_AddCondition(client, TFCond_SmallBlastResist, TFCondDuration_Infinite);
+		TF2_AddCondition(client, TFCond_UberBlastResist, TFCondDuration_Infinite);
 
 		float pos[3];
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
-
+/*
 		int prop = CreateEntityByName("prop_dynamic");
 		if(IsValidEntity(prop))
 		{
@@ -189,7 +189,7 @@ void InitReflecter(int client)
 
 			g_hReflecterEffect[client] = prop;
 		}
-
+*/
 		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsClientInGame(target))
@@ -229,9 +229,15 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 {
 	if(FF2_GetRoundState() != 1 || (g_flReflecterHealth[client] <= 0.0 && !g_bReflecterForce[client]))  return Plugin_Continue;
 
+	float realDamage = damage;
+	if(damagetype & DMG_CRIT && TF2_IsPlayerInCondition(attacker, TFCond_Buffed) && !TF2_IsPlayerCritBuffed(attacker))
+		realDamage *= 1.35;
+	else if(damagetype & DMG_CRIT)
+		realDamage *= 3.0;
+
 	if(!(damagetype & (DMG_BULLET | DMG_BUCKSHOT)))
 	{
-		g_flReflecterHealth[client] -= damage * 2;
+		g_flReflecterHealth[client] -= realDamage;
 		return Plugin_Continue;
 	}
 
@@ -244,14 +250,18 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 
 		FF2_AddBossCharge(boss, 0, drainCharge);
 	}
+	else
+	{
+		g_flReflecterHealth[client] -= realDamage;
+	}
 
 	float playerPos[3], effectPos[3], angles[3], targetPos[3];
-	GetEntityCenterPosition(client, playerPos);
+	playerPos = WorldSpaceCenter(client);
 
 	if(IsValidEntity(inflictor))
-		GetEntityCenterPosition(inflictor, targetPos);
+		targetPos = WorldSpaceCenter(inflictor);
 	else
-		GetEntityCenterPosition(attacker, targetPos);
+		targetPos = WorldSpaceCenter(attacker);
 
 	SubtractVectors(playerPos, damagePosition, effectPos);
 	NormalizeVector(effectPos, angles);
@@ -268,27 +278,26 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 	SubtractVectors(targetPos, effectPos, angles);
 
 	float distance = GetVectorDistance(targetPos, effectPos);
-	AddRandomDegree(angles, distance * 0.08);
+	AddRandomDegree(angles, distance * 0.06);
 
 	float distToTarget = GetVectorLength(angles);
 	float traceAngles[3];
 	GetVectorAngles(angles, traceAngles);
 	traceAngles[0] = AngleNormalize(traceAngles[0]);
 	traceAngles[1] = AngleNormalize(traceAngles[1]);
-	// GetAngleVectors(traceAngles, traceAngles, NULL_VECTOR, NULL_VECTOR);
 
 	// PrintToChatAll("angles: %.1f %.1f %.1f", traceAngles[0], traceAngles[1], traceAngles[2]);
-	// Not working ㅁㄴㅇㄹ
-	// FX_Tracer(effectPos, traceAngles, "bullet_pistol_tracer01_blue_crit");
-
 	NormalizeVector(angles, angles);
-	// damagetype &= ~(DMG_CRIT);
-
-	int currentWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 
 #if defined _MVM_included
 	SetMannVsMachineMode(false);
 #endif
+
+	// realDamage *= 1.0 / TF2Attrib_HookValueFloat(1.0, "mult_dmg", client);
+	if(damagetype & DMG_CRIT && TF2_IsPlayerCritBuffed(attacker))
+		damage /= 3.0;
+	else if(damagetype & DMG_CRIT && TF2_IsPlayerInCondition(attacker, TFCond_Buffed))
+		damage /= 1.35;
 
 	FireBullet(client, client, effectPos, angles, damage, distToTarget * 500, damagetype, "bullet_pistol_tracer01_blue_crit");
 
@@ -296,22 +305,19 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 	ResetMannVsMachineMode();
 #endif
 
-	g_flReflecterHealth[client] -= damage;
-
 	DispatchParticleEffect(effectPos, angles, "deflect_fx", 0, 1);
 	PlayReflectSound(client, effectPos);
 
 	if(g_flReflecterHealth[client] > 0.0)
 	{
+		damage = 0.0;
+
 		float speed = GetVectorLength(damageForce);
-		if(speed > 200.0)
-			ScaleVector(damageForce, 200.0 / speed);
+		if(speed > 100.0)
+			ScaleVector(damageForce, 100.0 / speed);
 
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, damageForce);
 	}
-
-
-	damage = 0.0;
 	return g_flReflecterHealth[client] > 0.0 ? Plugin_Changed : Plugin_Continue;
 }
 
@@ -322,11 +328,11 @@ public void OnReflecterThink(int client)
 		SDKUnhook(client, SDKHook_PostThink, OnReflecterThink);
 		SDKUnhook(client, SDKHook_OnTakeDamageAlive, OnReflecterDamage);
 
-		TF2_RemoveCondition(client, TFCond_SmallBlastResist);
-
+		TF2_RemoveCondition(client, TFCond_UberBlastResist);
+/*
 		if(IsValidEntity(g_hReflecterEffect[client]))
 			RemoveEntity(g_hReflecterEffect[client]);
-
+*/
 		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsClientInGame(target))
@@ -347,7 +353,7 @@ public void OnReflecterThink(int client)
 	FF2_SetClientGlow(client, GetTickInterval() * 0.5);
 
 	float playerPos[3], pos[3], endPos[3], velocity[3], speed;
-	GetEntityCenterPosition(client, playerPos);
+	playerPos = WorldSpaceCenter(client);
 
 	int projectile = -1, owner;
 
@@ -370,11 +376,7 @@ public void OnReflecterThink(int client)
 
 		if(g_flReflecterHealth[client] <= 0.0 && g_bReflecterForce[client])
 		{
-			float drainCharge = (80.0 * 100.0 / FF2_GetBossRageDamage(boss));
-			if(FF2_GetBossCharge(client, 0) < drainCharge)
-				break;
-
-			FF2_AddBossCharge(boss, 0, drainCharge * -1.0);
+			break;
 		}
 
 		if(!IsValidEntity(owner))
@@ -413,11 +415,11 @@ public void OnReflecterThink(int client)
 			continue;
 		}
 
-		GetEntityCenterPosition(owner, endPos);
+		endPos = WorldSpaceCenter(owner);
 		SubtractVectors(pos, endPos, endPos);
 
 		float distance = GetVectorDistance(pos, endPos);
-		AddRandomDegree(endPos, distance * 0.2);
+		AddRandomDegree(endPos, distance * 0.1);
 
 		float actualAngles[3];
 		GetVectorAngles(endPos, actualAngles);
@@ -493,10 +495,11 @@ stock void FireBullet(int m_pAttacker, int m_pDamager, float m_vecSrc[3], float 
 		}
 
 		float endpos[3]; TR_GetEndPosition(endpos, trace);
-		float multiplier = (100.0 / GetVectorDistance(m_vecSrc, endpos)) + 0.3;
+		/*
+		float multiplier = (800.0 / GetVectorDistance(m_vecSrc, endpos)) + 0.3;
 		if(multiplier > 1.0)
 			multiplier = 1.0;
-
+		*/
 		SDKHooks_TakeDamage(ent, m_pAttacker, m_pDamager, m_flDamage, nDamageType, m_pAttacker, CalculateBulletDamageForce(m_vecDirShooting, 1.0), endpos);
 
 		// Sentryguns are perfectly accurate, but this doesn't look good for tracers.
@@ -585,6 +588,25 @@ public bool AimTargetFilter(int entity, int contentsMask, any iExclude)
 	}
 
 	return false;
+}
+
+// https://github.com/Pelipoika/The-unfinished-and-abandoned/blob/master/CSGO_SentryGun.sp
+stock float[] GetAbsOrigin(int client)
+{
+	float v[3];
+	GetEntPropVector(client, Prop_Data, "m_vecAbsOrigin", v);
+	return v;
+}
+
+stock float[] WorldSpaceCenter(int ent)
+{
+	float v[3]; v = GetAbsOrigin(ent);
+
+	float max[3];
+	GetEntPropVector(ent, Prop_Data, "m_vecMaxs", max);
+	v[2] += max[2] / 2;
+
+	return v;
 }
 
 //Thanks Chaosxk
@@ -875,14 +897,9 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 	}
 }
 
-public void GetEntityCenterPosition(int ent, float pos[3])
+stock bool TF2_IsPlayerCritBuffed(int client)
 {
-	float vecMins[3], vecMaxs[3];
-	GetEntPropVector(ent, Prop_Send, "m_vecOrigin", pos);
-	GetEntPropVector(ent, Prop_Send, "m_vecMins", vecMins);
-	GetEntPropVector(ent, Prop_Send, "m_vecMaxs", vecMaxs);
-
-	pos[2] += (vecMaxs[2] - vecMins[2]) * 0.5;
+	return (TF2_IsPlayerInCondition(client, TFCond_Kritzkrieged) || TF2_IsPlayerInCondition(client, TFCond_HalloweenCritCandy) || TF2_IsPlayerInCondition(client, view_as<TFCond>(34)) || TF2_IsPlayerInCondition(client, view_as<TFCond>(35)) || TF2_IsPlayerInCondition(client, TFCond_CritOnFirstBlood) || TF2_IsPlayerInCondition(client, TFCond_CritOnWin) || TF2_IsPlayerInCondition(client, TFCond_CritOnFlagCapture) || TF2_IsPlayerInCondition(client, TFCond_CritOnKill) || TF2_IsPlayerInCondition(client, TFCond_CritMmmph));
 }
 
 public ArrayList GetAlivePlayers(int target)
