@@ -8,6 +8,7 @@
 #include <freak_fortress_2>
 #include <ff2_potry>
 #include <tf2attributes>
+#include <tf2utils>
 
 #define PLUGIN_NAME "superhot detail"
 #define PLUGIN_VERSION 	"20210814"
@@ -32,6 +33,7 @@ enum
 Handle g_SDKCallGiveAmmo;
 Handle g_SDKCallGetMaxAmmo;
 
+bool g_bRageBlock[MAXPLAYERS+1];
 bool g_bOneOfUs[MAXPLAYERS+1];
 
 public void OnPluginStart()
@@ -59,7 +61,7 @@ public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abi
 {
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
-	if(g_bOneOfUs[client])
+	if(g_bRageBlock[client] || g_bOneOfUs[client])
 		return Plugin_Handled;
 
 	if(FF2_HasAbility(boss, PLUGIN_NAME, HOTSWITCH_NAME, slot)
@@ -138,7 +140,7 @@ public void HotSwitch_Init(int boss, const char[] abilityName, int slot, int typ
 	dp.WriteFloat(targetPos[2]);
 	dp.Reset();
 
-	g_bOneOfUs[target] = true;
+	g_bRageBlock[target] = true;
 
 	switch(type)
 	{
@@ -152,10 +154,16 @@ public void HotSwitch_Init(int boss, const char[] abilityName, int slot, int typ
 		}
 		case Skill_OneOfUs:
 		{
+			dp = new DataPack();
+			CreateDataTimer(aimTime, HotSwitch_Item, dp, TIMER_FLAG_NO_MAPCHANGE);
+			dp.WriteCell(client);
+			dp.WriteCell(target);
+			dp.Reset();
+
 			if(!IsBoss(target))
 			{
 				dp = new DataPack();
-				CreateDataTimer(aimTime, OneOfUs_Boss, dp, TIMER_FLAG_NO_MAPCHANGE);
+				CreateDataTimer(aimTime + 0.1, OneOfUs_Boss, dp, TIMER_FLAG_NO_MAPCHANGE);
 				dp.WriteCell(client);
 				dp.WriteCell(target);
 				dp.Reset();
@@ -196,80 +204,148 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 		|| !IsPlayerAlive(client) || !IsPlayerAlive(target))
 			return Plugin_Continue;
 
+	TF2_SetPlayerClass(client, TF2_GetPlayerClass(target), false, false);
+
 	char classname[64];
-	int index, weapon = GetPlayerWeaponSlot(target, TFWeaponSlot_Primary);
-	if(!IsValidEntity(weapon))
-		return Plugin_Continue;
-
-	// ArrayList array = new ArrayList();
-	// ArrayStack stack = new ArrayStack(), attribStack = new ArrayStack();
-	char attributes[256];
-	int attribDefIndexs[20], attribDefCount, clip, count = 0;
-	float attribDefAttribs[20];
-	index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-	clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
-	GetEntityClassname(weapon, classname, sizeof(classname));
-	attribDefCount = TF2Attrib_ListDefIndices(weapon, attribDefIndexs, sizeof(attribDefIndexs));
-
-	Address address;
-	for(int loop = 0; loop < attribDefCount; loop++)
+	for(int slot = TFWeaponSlot_Item2; slot >= TFWeaponSlot_Primary; slot--)
 	{
-		// if(IsBanned(attribDefIndexs[loop]))
-			// continue;
+		if(slot == TFWeaponSlot_Melee
+			// 엔지니어 필터링
+			|| (TF2_GetPlayerClass(target) == TFClass_Engineer && (slot == 3 || slot == 4 || slot == 5))
+			)
+			continue;
 
-		address = TF2Attrib_GetByDefIndex(weapon, attribDefIndexs[loop]);
-		if(address != Address_Null)
+		int index, beforeWeapon = GetPlayerWeaponSlot(target, slot), weapon;
+		if(!IsValidEntity(beforeWeapon))
+			continue;
+
+		// ArrayList array = new ArrayList();
+		// ArrayStack stack = new ArrayStack(), attribStack = new ArrayStack();
+		char attributes[256];
+		int attribDefIndexs[20], attribDefCount, clip, count = 0;
+		float attribDefAttribs[20];
+		index = GetEntProp(beforeWeapon, Prop_Send, "m_iItemDefinitionIndex");
+		GetEntityClassname(beforeWeapon, classname, sizeof(classname));
+		attribDefCount = TF2Attrib_ListDefIndices(beforeWeapon, attribDefIndexs, sizeof(attribDefIndexs));
+
+		// PrintToServer("slot: %d, %s", slot, classname);
+		Address address;
+		for(int loop = 0; loop < attribDefCount; loop++)
 		{
+			// if(IsBanned(attribDefIndexs[loop]))
+				// continue;
+
+			address = TF2Attrib_GetByDefIndex(beforeWeapon, attribDefIndexs[loop]);
+			if(address != Address_Null)
+			{
+				attribDefAttribs[loop] = TF2Attrib_GetValue(address);
+
+				if(count == 0)
+					Format(attributes, sizeof(attributes), "%d ; %.1f", attribDefIndexs[loop], attribDefAttribs[loop]);
+				else
+					Format(attributes, sizeof(attributes), "%s ; %d ; %.1f", attributes, attribDefIndexs[loop], attribDefAttribs[loop]);
+				// stack.Push(attribDefIndexs[loop]);
+				// attribStack.Push(attribDefAttribs[loop]);
+
+				count++;
+			}
+		}
+
+		TF2_RemoveWeaponSlot(client, slot);
+		weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
+
+		if(StrEqual(classname, "tf_weapon_spellbook"))
+		{
+			SetEntProp(weapon, Prop_Send, "m_iSpellCharges", GetEntProp(beforeWeapon, Prop_Send, "m_iSpellCharges"));
+			SetEntProp(weapon, Prop_Send, "m_iSelectedSpellIndex", GetEntProp(beforeWeapon, Prop_Send, "m_iSelectedSpellIndex"));
+		}
+
+		/*
+			NOTE: 용의 격노는 현재 작동되지 않음
+			일부 클라이언트의 경우, 한번에 능력치를 적용하면 크래쉬가 생기는 현상이 있어
+			한 프레임에 능력치 하나씩 밀어넣는 구조로 변경됨.
+		*/
+		// 기본 화염방사기 지급
+/*
+		if(index == 1178)
+		{
+			PrintCenterText(client, "THIS IS BUG. I WILL FIX THIS AS SOON.");
+			weapon = SpawnWeapon(client, "tf_weapon_flamethrower", 208, 101, 0, "");
+		}
+		else
+			weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
+*/
+		// weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
+		// TF2Attrib_RemoveAll(weapon);
+
+		// array.Push(weapon);
+		// array.Push(stack);
+		// array.Push(attribStack);
+
+		// RequestFrame(AddAttribs, array);
+
+		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
+
+		if(HasEntProp(weapon, Prop_Data, "m_iClip1"))
+		{
+			clip = GetEntProp(weapon, Prop_Data, "m_iClip1");
+			SetEntProp(weapon, Prop_Data, "m_iClip1", clip);
+			int ammoType = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
+			if(ammoType != -1)
+			{
+				int maxAmmo = SDKCall_GetMaxAmmo(client, ammoType, view_as<int>(TF2_GetPlayerClass(target)));
+				// int ammo = GetEntProp(target, Prop_Data, "m_iAmmo", _, ammoType);
+				SetEntProp(client, Prop_Data, "m_iAmmo",
+					maxAmmo, _, ammoType);
+			}
+		}
+
+		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+1.0);
+		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime()+1.0);
+		SetEntPropFloat(client, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+1.0);
+	}
+
+	// FIXME: TF2Util_GetPlayerWearableCount always return 0.
+	int wearableCount = TF2Util_GetPlayerWearableCount(client);
+	// PrintToServer("wearableCount: %d", wearableCount);
+	for(int slot = 0; slot < wearableCount; slot++)
+	{
+		int index, weapon = TF2Util_GetPlayerWearable(target, slot);
+		if(!IsValidEntity(weapon))
+			continue;
+
+		int attribDefIndexs[20], attribDefCount, count = 0;
+		float attribDefAttribs[20];
+		Address address;
+
+		index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		GetEntityClassname(weapon, classname, sizeof(classname));
+		attribDefCount = TF2Attrib_ListDefIndices(weapon, attribDefIndexs, sizeof(attribDefIndexs));
+
+		for(int loop = 0; loop < attribDefCount; loop++)
+		{
+			address = TF2Attrib_GetByDefIndex(weapon, attribDefIndexs[loop]);
 			attribDefAttribs[loop] = TF2Attrib_GetValue(address);
+		}
 
-			if(count == 0)
-				Format(attributes, sizeof(attributes), "%d ; %.1f", attribDefIndexs[loop], attribDefAttribs[loop]);
-			else
-				Format(attributes, sizeof(attributes), "%s ; %d ; %.1f", attributes, attribDefIndexs[loop], attribDefAttribs[loop]);
-			// stack.Push(attribDefIndexs[loop]);
-			// attribStack.Push(attribDefAttribs[loop]);
+		// PrintToServer("%s", classname);
+		if(StrEqual(classname, "tf_wearable_demoshield"))
+		{
+			weapon = TF2_SpawnDemoShield(index);
+		}
+		else // tf_wearable
+		{
+			TF2Util_EquipPlayerWearable(client, weapon);
+			weapon = GetWearableSlotOfIndex(client, index);
+		}
 
-			count++;
+		for(int loop = 0; loop < attribDefCount; loop++)
+		{
+			TF2Attrib_SetByDefIndex(weapon, attribDefIndexs[loop], attribDefAttribs[loop]);
 		}
 	}
 
-	TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-
-	/*
-		NOTE: 용의 격노는 현재 작동되지 않음
-		일부 클라이언트의 경우, 한번에 능력치를 적용하면 크래쉬가 생기는 현상이 있어
-		한 프레임에 능력치 하나씩 밀어넣는 구조로 변경됨.
-	*/
-	// 기본 화염방사기 지급
-
-	if(index == 1178)
-	{
-		PrintCenterText(client, "THIS IS BUG. I WILL FIX THIS AS SOON.");
-		weapon = SpawnWeapon(client, "tf_weapon_flamethrower", 208, 101, 0, "");
-	}
-	else
-		weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
-
-	// weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
-	// TF2Attrib_RemoveAll(weapon);
-
-	// array.Push(weapon);
-	// array.Push(stack);
-	// array.Push(attribStack);
-
-	// RequestFrame(AddAttribs, array);
-
-	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
-	SetEntProp(weapon, Prop_Data, "m_iClip1", clip);
-	int ammoType = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
-	int maxAmmo = SDKCall_GetMaxAmmo(target, ammoType, view_as<int>(TF2_GetPlayerClass(target)));
-	SetEntProp(client, Prop_Data, "m_iAmmo", maxAmmo, _, ammoType);
-
-	SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime()+1.0);
-	SetEntPropFloat(client, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+1.0);
-
-	g_bOneOfUs[target] = false;
+	g_bRageBlock[target] = false;
 	return Plugin_Continue;
 }
 
@@ -336,13 +412,18 @@ public Action OneOfUs_Boss(Handle timer, DataPack data)
 	FF2_SetBossMaxLives(bossindex, 1);
 	FF2_SetBossRageDamage(bossindex, 9999999);
 
+	// FF2_MakePlayerToBoss가 리스폰 취급이므로 필요함.
+	g_bRageBlock[target] = true;
 	PrintCenterText(target, "%T", "One Of Us", target);
+
+	// Permanent Rage block
+	g_bOneOfUs[target] = true;
 	return Plugin_Continue;
 }
 
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	if(!g_bOneOfUs[client])		return;
+	if(!g_bRageBlock[client] && !g_bOneOfUs[client])		return;
 
 	char text[128] = "SUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOT";
 	FF2HudDisplay hudDisplay = null;
@@ -355,12 +436,14 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
 	int client=GetClientOfUserId(event.GetInt("userid"));
+	g_bRageBlock[client] = false;
 	g_bOneOfUs[client] = false;
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
 	int client=GetClientOfUserId(event.GetInt("userid"));
+	g_bRageBlock[client] = false;
 	g_bOneOfUs[client] = false;
 }
 
@@ -381,7 +464,7 @@ Handle PrepSDKCall_GiveAmmo(GameData gamedata)
 
 	return call;
 }
-
+/*
 int SDKCall_GiveAmmo(int player, int iCount, int iAmmoIndex, bool bSuppressSound)
 {
 	if (g_SDKCallGiveAmmo)
@@ -389,7 +472,7 @@ int SDKCall_GiveAmmo(int player, int iCount, int iAmmoIndex, bool bSuppressSound
 
 	return -1;
 }
-
+*/
 Handle PrepSDKCall_GetMaxAmmo(GameData gamedata)
 {
 	StartPrepSDKCall(SDKCall_Player);
@@ -459,6 +542,11 @@ stock int SpawnWeapon(int client, char[] name, int index, int level, int quality
 	CloseHandle(weapon);
 	EquipPlayerWeapon(client, entity);
 	return entity;
+}
+
+stock int min(int a, int b)
+{
+	return a < b ? a : b;
 }
 
 stock int GetCharacterIndexOfBoss(int boss)
@@ -576,6 +664,57 @@ stock void LookatTarget(int client, int target)
 	//
 	// PrintToChatAll("%N, NOW: %.1f, %.1f, %.1f", client, angles[0], angles[1], angles[2]);
 }
+
+/**
+ * From https://github.com/nosoop/stocksoup/blob/master/tf/econ.inc
+ * Creates a wearable DemoShield entity.
+ *
+ * Wearables spawned via this method and equipped on human players are not visible to other
+ * human players due to economy rules.  You're on your own there.
+ *
+ * If defindex is set to DEFINDEX_UNDEFINED, the item is not initialized, and no quality or
+ * level is applied.
+ *
+ * @param defindex		Wearable definition index.
+ * @param quality		Wearable quality.
+ * @param level			Wearable level.
+ */
+stock int TF2_SpawnDemoShield(int defindex = -1, int quality = 6, int level = 1) {
+	int wearable = CreateEntityByName("tf_wearable_demoshield");
+
+	if (IsValidEntity(wearable)) {
+		SetEntProp(wearable, Prop_Send, "m_iItemDefinitionIndex", defindex);
+
+		if (defindex != -1) {
+			// using defindex of a valid item
+			SetEntProp(wearable, Prop_Send, "m_bInitialized", 1);
+
+			SetEntProp(wearable, Prop_Send, "m_iEntityLevel", level);
+
+			// Something about m_iEntityQuality doesn't play nice with SetEntProp.
+			SetEntData(wearable, FindSendPropInfo("CTFWearable", "m_iEntityQuality"), quality);
+		}
+
+		// Spawn.
+		DispatchSpawn(wearable);
+	}
+	return wearable;
+}
+
+stock int GetWearableSlotOfIndex(int client, int defindex)
+{
+	int wearableCount = TF2Util_GetPlayerWearableCount(client), index, wearable;
+
+	for(int slot = 0; slot < wearableCount; slot++)
+	{
+		wearable = TF2Util_GetPlayerWearable(client, slot);
+		if((index = GetEntProp(wearable, Prop_Send, "m_iItemDefinitionIndex")) == defindex)
+			return wearable;
+	}
+
+	return -1;
+}
+
 
 stock void ForcePlayerViewAngles(iClient, float vAng[3]) // TODO: Base this off of the info_player_teamspawn under you.
 {
