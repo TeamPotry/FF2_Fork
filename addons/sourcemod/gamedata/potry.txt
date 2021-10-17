@@ -90,14 +90,19 @@
 				"linux"		"@_Z19PhysCallbackImpulseP14IPhysicsObjectRK6VectorS3_"
 				"windows"	" "
 			}
-			"TE_FireBullets"
+			"TestEntityPosition"
 			{
-				"linux"		"@_Z14TE_FireBulletsiRK6VectorRK6QAngleiiifb"
+				"linux"		"@_ZL18TestEntityPositionP11CBasePlayer"
 				"windows"	" "
 			}
-			"CBaseEntity::ApplyLocalAngularVelocityImpulse"
+			"FindPassableSpace"
 			{
-				"linux"		"@_ZN11CBaseEntity32ApplyLocalAngularVelocityImpulseERK6Vector"
+				"linux"		"@_ZL17FindPassableSpaceP11CBasePlayerRK6VectorfRS1_"
+				"windows"	" "
+			}
+			"CBaseEntity::SetAbsOrigin"
+			{
+				"linux"		"@_ZN11CBaseEntity12SetAbsOriginERK6Vector"
 				"windows"	" "
 			}
 		}
