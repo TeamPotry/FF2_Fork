@@ -1016,7 +1016,8 @@ public Action SentryBusting(Handle timer, any bClient)
         }
     }
     EmitSoundToAll(HSB_EXPLODE, bClient);
-    AttachParticle(bClient, "fluidSmokeExpl_ring_mvm");
+    // AttachParticle(bClient, "fluidSmokeExpl_ring_mvm");
+    AttachParticle(bClient, "cinefx_goldrush");
     SDKUnhook(bClient, SDKHook_OnTakeDamage, BlockDamage);
     if(TF2_IsPlayerInCondition(bClient, TFCond_Taunting))
         TF2_RemoveCondition(bClient,TFCond_Taunting);
