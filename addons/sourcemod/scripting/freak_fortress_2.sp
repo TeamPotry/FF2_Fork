@@ -63,8 +63,8 @@ bool steamtools;
 #endif
 bool mannvsmann = false;
 
-float Stabbed[MAXPLAYERS+1];
-float Marketed[MAXPLAYERS+1];
+int Stabbed[MAXPLAYERS+1];
+int Marketed[MAXPLAYERS+1];
 float KSpreeTimer[MAXPLAYERS+1];
 int KSpreeCount[MAXPLAYERS+1];
 float GlowTimer[MAXPLAYERS+1];
@@ -5223,8 +5223,8 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 		BossHealth[boss]=0;
 		UpdateHealthBar(true);
 
-		Stabbed[boss]=0.0;
-		Marketed[boss]=0.0;
+		Stabbed[boss]=0;
+		Marketed[boss]=0;
 	}
 
 	if(TF2_GetPlayerClass(client)==TFClass_Engineer && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
@@ -6115,6 +6115,10 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					if(SpecialAttackToBoss(attacker, boss, weapon, "backstab", damage) == Plugin_Handled)
 						return Plugin_Handled;
 
+					if(Stabbed[boss]<3)
+					{
+						Stabbed[boss]++;
+					}
 					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
@@ -6184,11 +6188,6 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
 						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
-					}
-
-					if(Stabbed[boss]<3)
-					{
-						Stabbed[boss]++;
 					}
 					return Plugin_Changed;
 				}
