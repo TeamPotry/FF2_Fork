@@ -1892,6 +1892,9 @@ public Action StartBossTimer(Handle timer)
 			isBossAlive=true;
 			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
 
+			BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(playing))*(float(playing)-1.0), 1.0341)+2046.0));
+			BossHealth[boss]=BossHealthLast[boss]=BossHealthMax[boss]*BossLivesMax[boss];
+
 			// 초기 쿨타임
 			for(int slot = 1; slot < 8; slot++)
 			{
@@ -1922,6 +1925,9 @@ public Action StartBossTimer(Handle timer)
 
 	CheckAlivePlayers(null);
 	StartingPlayers = RedAlivePlayers;
+
+	if(timeType == FF2Timer_WaveTimer)
+		CorrectionBossHealth();
 
 	CreateTimer(0.1, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, StartRound, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -2052,7 +2058,6 @@ public Action StartRound(Handle timer)
 	UpdateHealthBar(true);
 
 	CreateTimer(6.5, Timer_StartDrawGame, _, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(6.6, Timer_CorrectionBossHealth, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Handled;
 }
@@ -2094,11 +2099,8 @@ public Action Timer_StartDrawGame(Handle timer)
 	CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action Timer_CorrectionBossHealth(Handle timer)
+void CorrectionBossHealth()
 {
-	if(timeType != FF2Timer_WaveTimer)
-		return Plugin_Continue;
-
 	int correctionWave = maxWave / 2, boss;
 	float ratio = Pow(1.05, float(correctionWave)) - 1.0;
 
@@ -2115,7 +2117,7 @@ public Action Timer_CorrectionBossHealth(Handle timer)
 	}
 
 	CPrintToChatAll("{olive}[FF2]{default} %t", "Wave Correction Boss Health", RoundFloat(ratio * 100.0));
-	return Plugin_Continue;
+	return;
 }
 
 public Action Timer_NextBossPanel(Handle timer)
