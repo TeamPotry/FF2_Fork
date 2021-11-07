@@ -91,6 +91,14 @@ void Rage_New_Weapon(int boss, const char[] abilityName, int slot)
 		return;
 	}
 
+	int pda = GetPlayerWeaponSlot(client, TFWeaponSlot_PDA);
+	if(IsValidEntity(pda) && HasEntProp(pda, Prop_Send, "m_hObjectBeingBuilt"))
+	{
+		int ent = GetEntPropEnt(pda, Prop_Send, "m_hObjectBeingBuilt");
+		if(IsValidEntity(ent))
+			RemoveEntity(ent);
+	}
+
 	char classname[64], attributes[256], model[PLATFORM_MAX_PATH];
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "classname", classname, sizeof(classname), "", slot);
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "attributes", attributes, sizeof(attributes), "", slot);
