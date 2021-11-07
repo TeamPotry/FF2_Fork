@@ -40,7 +40,7 @@ public Action DPSTimer(Handle timer)
 
     for(int client = 1; client < MaxClients; client++)
     {
-        g_flPlayerDPS[client][g_Count] = 1.0 < g_flPlayerDPS[client][g_Count] ? g_flPlayerDPS[client][g_Count] / 5.0 : 0.0;
+        g_flPlayerDPS[client][g_Count] = 1.0 < g_flPlayerDPS[client][g_Count] ? g_flPlayerDPS[client][g_Count] * 0.9 : 0.0;
     }
 }
 
