@@ -364,7 +364,7 @@ public void OnEntitySpawned(int entity)
     SetEntityRenderMode(entity, RENDER_TRANSCOLOR);
     SetEntityRenderColor(entity, 255, 255, 255, 0);
 
-    int particle = AttachParticle(entity, "eyeboss_doorway_vortex", _, true);
+    int particle = AttachParticle(entity, "spell_teleport_black", _, true);
     CTFBlackHole blackhole = CTFBlackHole.Create(owner, particle);
 
     blackhole.AttachedIndex = entity;
