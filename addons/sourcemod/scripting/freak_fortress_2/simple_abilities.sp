@@ -11,12 +11,12 @@
 #include <stocksoup/sdkports/util>
 
 #define PLUGIN_NAME "simple abilities"
-#define PLUGIN_VERSION 	"20210827"
+#define PLUGIN_VERSION 	"20211008"
 
 public Plugin myinfo=
 {
 	name="Freak Fortress 2: Simple Abilities",
-	author="Nopied",
+	author="Nopied◎",
 	description="FF2?",
 	version=PLUGIN_VERSION,
 };
@@ -32,6 +32,7 @@ public Plugin myinfo=
 #define REPLACE_BUTTONS_NAME				"replace buttons"
 #define REMOVE_EMPTY_ABILITY_NAME			"remove weapon when empty"
 #define CHANGE_FIRE_DURATION				"change fire duration"
+#define SIMPLE_HINT_NAME					"simple hint"
 
 #define HIDEHUD_FLAGS			0b101101001010
 /*
@@ -70,7 +71,7 @@ enum
 
 public void OnPluginStart()
 {
-	LoadTranslations("ff2_simple_abilities.phrases");
+	LoadTranslations("ff2_extra_abilities.phrases");
 
 	HookEvent("arena_round_start", Event_RoundStart);
 	HookEvent("teamplay_round_active", Event_RoundStart); // for non-arena maps
@@ -338,13 +339,14 @@ stock int GetSlotOfWeapon(int client, int weapon)
 
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	if(g_flWeaponDisabledTime[client] > GetGameTime())
-	{
-		char text[128];
-		FF2HudDisplay hudDisplay = null;
+	char text[128];
+	FF2HudDisplay hudDisplay = null;
+	int boss = FF2_GetBossIndex(client);
 
-		hudQueue.GetName(text, sizeof(text));
-		if(StrEqual(text, "Player Additional"))
+	hudQueue.GetName(text, sizeof(text));
+	if(StrEqual(text, "Player Additional"))
+	{
+		if(g_flWeaponDisabledTime[client] > GetGameTime())
 		{
 			int remainTime = RoundFloat(g_flWeaponDisabledTime[client] - GetGameTime());
 			Format(text, sizeof(text), "%T", "Weapon Disabled Time", client, remainTime);
@@ -352,7 +354,23 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 			hudQueue.PushDisplay(hudDisplay);
 		}
 	}
+	else if(StrEqual(text, "Boss Down Additional"))
+	{
+		if(FF2_HasAbility(boss, PLUGIN_NAME, SIMPLE_HINT_NAME))
+		{
+			char languageId[12];
+			GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
+			Format(languageId, sizeof(languageId), "hint %s", languageId);
 
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, SIMPLE_HINT_NAME, languageId, text, sizeof(text));
+			if(text[0] == '\0')
+				// "hint" is for server's language.
+				FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, SIMPLE_HINT_NAME, "hint", text, sizeof(text));
+
+			hudDisplay = FF2HudDisplay.CreateDisplay(SIMPLE_HINT_NAME, text);
+			hudQueue.PushDisplay(hudDisplay);
+		}
+	}
 }
 
 void InvokeScreenFade(int boss)
