@@ -584,6 +584,14 @@ public Action MVM_OnTouchedUpgradeStation(int upgradeStation, int client)
 	return Plugin_Continue;
 }
 
+public Action MVM_OnTouchedMoney(int money, int client)
+{
+	if(FF2_GetBossTeam() == TF2_GetClientTeam(client))
+		return Plugin_Handled;
+
+	return Plugin_Changed;
+}
+
 Handle PrepSDKCall_InitDroppedWeapon(GameData gamedata)
 {
 	StartPrepSDKCall(SDKCall_Entity);
