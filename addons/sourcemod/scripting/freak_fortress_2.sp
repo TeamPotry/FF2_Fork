@@ -4010,7 +4010,7 @@ public void OnClientPostAdminCheck(int client)
 {
 	// TODO: Hook these inside of EnableFF2() or somewhere instead
 	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive);
-	SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
+	// SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
 
 	FF2Flags[client]=0;
 	Damage[client]=0;
@@ -5592,13 +5592,176 @@ public Action Timer_DrawGame(Handle timer)
 	return Plugin_Continue;
 }
 
-public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)  //TODO: Can this be removed?
+public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
-	if(Enabled && CheckRoundState()==FF2RoundState_RoundRunning && event.GetBool("minicrit") && event.GetBool("allseecrit"))
+	if(!Enabled || CheckRoundState()!=FF2RoundState_RoundRunning)
+		return Plugin_Continue;
+
+	//TODO: Can this be removed?
+	Debug("allseecrit removed");
+	event.SetBool("allseecrit", false);
+
+	int client = GetClientOfUserId(GetEventInt(event, "userid")),
+		attacker = GetClientOfUserId(GetEventInt(event, "attacker")),
+		damage = GetEventInt(event, "damageamount"),
+		boss = GetBossIndex(client);
+
+	if(!IsBoss(client)) 	return Plugin_Continue;
+
+	for(int lives=1; lives<BossLives[boss]; lives++)
 	{
-		Debug("allseecrit removed");
-		event.SetBool("allseecrit", false);
+		if(BossHealth[boss]-damage<=BossHealthMax[boss]*lives)
+		{
+			SetEntityHealth(client, (BossHealth[boss]-damage)-BossHealthMax[boss]*(lives-1));  //Set the health early to avoid the boss dying from fire, etc.
+
+			Action action;
+			int bossLives=BossLives[boss];  //Used for the forward
+			Call_StartForward(OnLoseLife);
+			Call_PushCell(boss);
+			Call_PushCellRef(bossLives);
+			Call_PushCell(BossLivesMax[boss]);
+			Call_Finish(action);
+			if(action==Plugin_Stop || action==Plugin_Handled)  //Don't allow any damage to be taken and also don't let the life-loss go through
+			{
+				SetEntityHealth(client, BossHealth[boss]);
+				return Plugin_Continue;
+			}
+			else if(action==Plugin_Changed)
+			{
+				if(bossLives>BossLivesMax[boss])  //If the new amount of lives is greater than the max, set the max to the new amount
+				{
+					BossLivesMax[boss]=bossLives;
+				}
+				BossLives[boss]=lives=bossLives;
+			}
+
+			char ability[PLATFORM_MAX_PATH];  //FIXME: Create a new variable for the translation string later on
+			KeyValues kv = GetCharacterKV(character[boss]);
+			kv.Rewind();
+			if(kv.JumpToKey("abilities"))
+			{
+				kv.GotoFirstSubKey();
+				do
+				{
+					char pluginName[64];
+					kv.GetSectionName(pluginName, sizeof(pluginName));
+					kv.GotoFirstSubKey();
+					do
+					{
+						char abilityName[64];
+						kv.GetSectionName(abilityName, sizeof(abilityName));
+						if(kv.GetNum("slot")!=-1) // Only activate for life-loss abilities
+						{
+							continue;
+						}
+
+						kv.GetString("life", ability, 10, "");
+						if(!ability[0]) // Just a regular ability that doesn't care what life the boss is on
+						{
+							UseAbility(boss, pluginName, abilityName, -1);
+						}
+						else // But these do
+						{
+							char temp[3];
+							ArrayList livesArray=CreateArray(sizeof(temp));
+							int count=ExplodeStringIntoArrayList(ability, " ", livesArray, sizeof(temp));
+							for(int n; n<count; n++)
+							{
+								livesArray.GetString(n, temp, sizeof(temp));
+								if(StringToInt(temp)==BossLives[boss])
+								{
+									UseAbility(boss, pluginName, abilityName, -1);
+									break;
+								}
+							}
+							delete livesArray;
+						}
+					}
+					while(kv.GotoNextKey());
+					kv.GoBack();
+				}
+				while(kv.GotoNextKey());
+			}
+			BossLives[boss]=lives;
+
+			char bossName[64];
+			strcopy(ability, sizeof(ability), BossLives[boss]==1 ? "Boss with 1 Life Left" : "Boss with Multiple Lives Left");
+
+			for(int target=1; target<=MaxClients; target++)
+			{
+				if(IsValidClient(target) && !(FF2Flags[target] & FF2FLAG_HUDDISABLED))
+				{
+					GetBossName(boss, bossName, sizeof(bossName), target);
+					PrintCenterText(target, "%t", ability, bossName, BossLives[boss]);
+				}
+			}
+
+			if(BossLives[boss]==1 && FindSound("last life", ability, sizeof(ability), boss))
+			{
+				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
+				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
+			}
+			else if(FindSound("next life", ability, sizeof(ability), boss))
+			{
+				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
+				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
+			}
+
+			float duration = GetBossSkillDuration(boss, SkillName_LostLife);
+			BossSkillDuration[boss][SkillName_LostLife] = GetGameTime() + duration;
+
+			break;
+		}
 	}
+
+	BossHealth[boss]-=damage;
+
+	if(IsValidClient(attacker) && attacker!=client)
+	{
+		Damage[attacker]+=damage;
+		bool rage = true;
+/*
+		if(weapon > MaxClients && IsValidEntity(weapon))
+		{
+			switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+			{
+				case 442, 588: // The Righteous Bison, The Pomson 6000
+				{
+					rage = false;
+				}
+			}
+		}
+*/
+		if(rage)
+			AddBossCharge(boss, 0, damage*100.0/BossRageDamage[boss]);
+	}
+
+	int[] healers=new int[MaxClients+1];
+	int healerCount = 0;
+	for(int target=1; target<=MaxClients; target++)
+	{
+		if(IsValidClient(target) && IsPlayerAlive(target) && (GetHealingTarget(target, true)==attacker))
+		{
+			healers[healerCount++] = target;
+		}
+	}
+
+	for(int target = 0; target < healerCount; target++)
+	{
+		if(IsValidClient(healers[target]) && IsPlayerAlive(healers[target]))
+		{
+			if(damage<10 || uberTarget[healers[target]]==attacker)
+			{
+				Assist[healers[target]]+=damage;
+			}
+			else
+			{
+				Assist[healers[target]]+=damage/(healerCount+1);
+			}
+		}
+	}
+
+	UpdateHealthBar(true);
 	return Plugin_Continue;
 }
 
@@ -6285,10 +6448,17 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
 
-public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
+public void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
 	// ha?
-	// if(!Enabled) return;
+	/*
+	if(!Enabled || CheckRoundState() != FF2RoundState_RoundRunning) return;
+
+	if(victim > MaxClients)
+	{
+		Assist[attacker] += RoundFloat(damageFloat);
+	}
+	*/
 }
 
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
