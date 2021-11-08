@@ -228,16 +228,17 @@ void PlayProjectileReflectSound(int projectile, float pos[3])
 public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if(FF2_GetRoundState() != 1 || (g_flReflecterHealth[client] <= 0.0 && !g_bReflecterForce[client]))  return Plugin_Continue;
-
+/*
+	PrintToServer("damage: %.1f", damage);
 	float realDamage = damage;
 	if(damagetype & DMG_CRIT && TF2_IsPlayerInCondition(attacker, TFCond_Buffed) && !TF2_IsPlayerCritBuffed(attacker))
 		realDamage *= 1.35;
 	else if(damagetype & DMG_CRIT)
 		realDamage *= 3.0;
-
+*/
 	if(!(damagetype & (DMG_BULLET | DMG_BUCKSHOT)))
 	{
-		g_flReflecterHealth[client] -= realDamage;
+		g_flReflecterHealth[client] -= damage;
 		return Plugin_Continue;
 	}
 
@@ -252,7 +253,7 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 	}
 	else
 	{
-		g_flReflecterHealth[client] -= realDamage;
+		g_flReflecterHealth[client] -= damage;
 	}
 
 	float playerPos[3], effectPos[3], angles[3], targetPos[3];
@@ -611,7 +612,8 @@ stock float[] WorldSpaceCenter(int ent)
 
 //Thanks Chaosxk
 //https://github.com/xcalvinsz/zeustracerbullets/blob/master/addons/sourcemod/scripting/zeustracers.sp
-void TE_DispatchEffect(const char[] particle, const float pos[3], const float endpos[3], const float angles[3] = NULL_VECTOR, int attachment = -1)
+//https://github.com/Source-Python-Dev-Team/Source.Python/blob/master/addons/source-python/data/source-python/effects/orangebox/CTEEffectDispatch.ini
+void TE_DispatchEffect(const char[] particle, const float pos[3], const float endpos[3], const float angles[3] = NULL_VECTOR, int parent = -1, int attachment = -1)
 {
 	TE_Start("EffectDispatch");
 	TE_WriteVector("m_vStart[0]", pos);
@@ -620,6 +622,10 @@ void TE_DispatchEffect(const char[] particle, const float pos[3], const float en
 	TE_WriteNum("m_nHitBox", GetParticleEffectIndex(particle));
 	TE_WriteNum("m_iEffectName", GetEffectIndex("ParticleEffect"));
 
+	if(parent != -1)
+	{
+		TE_WriteNum("entindex", parent);
+	}
 	if(attachment != -1)
 	{
 		TE_WriteNum("m_nAttachmentIndex", attachment);
@@ -863,15 +869,17 @@ stock int AttachParticle(int entity, char[] particleType, float offset=0.0, bool
 	return particle;
 }
 
-stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, int time=1)
+stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, int time=1, int controlpoint=0)
 {
     int particle = CreateEntityByName("info_particle_system");
 
-	char temp[64], targetName[64];
+	char temp[64], targetName[64], cpName[64];
 	if (IsValidEdict(particle))
 	{
 		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
-		DispatchKeyValue(particle, "targetname", "tf2particle");
+
+		Format(targetName, sizeof(targetName), "tf2particle%i", particle);
+		DispatchKeyValue(particle, "targetname", targetName);
 		DispatchKeyValue(particle, "effect_name", particleType);
 		DispatchSpawn(particle);
 
@@ -880,6 +888,22 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 
 		AcceptEntityInput(particle, "AddOutput");
 		AcceptEntityInput(particle, "FireUser1");
+
+		// Only one???
+		if(controlpoint > 0)
+		{
+			int cpParticle = CreateEntityByName("info_particle_system");
+			if (IsValidEdict(cpParticle))
+			{
+				Format(cpName, sizeof(cpName), "tf2particle%i", cpParticle);
+				DispatchKeyValue(cpParticle, "targetname", cpName);
+
+				SetVariantString(targetName);
+				AcceptEntityInput(cpParticle, "SetParent", particle, particle, 0);
+
+				 DispatchKeyValue(particle, "cpoint1", cpName);
+			}
+		}
 
 		if(parent > 0)
 		{
