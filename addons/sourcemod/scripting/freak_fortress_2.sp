@@ -2888,7 +2888,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}
 		case 305, 1079:  //Crusader's Crossbow, Festive Crusader's Crossbow
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.2 ; 17 ; 0.05");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "2 ; 1.2 ; 17 ; 0.08");
 				//2: +20% damage
 				//17: +5% uber on hit
 			if(itemOverride!=null)
@@ -3186,8 +3186,8 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_syringegun_medic"))  //Syringe guns
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "17 ; 0.02 ; 144 ; 1", false);
-			//17: 2% uber on hit
+		Handle itemOverride=PrepareItemHandle(item, _, _, "17 ; 0.03 ; 144 ; 1", false);
+			//17: 3% uber on hit
 			//144: Sets weapon mode - *possibly* the overdose speed effect
 
 		if(itemOverride!=null)
@@ -6003,9 +6003,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
 						{
-							damage=(Pow(float(BossHealthMax[boss]), 0.34074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
-							if(damage < 300.0)
-								damage = 300.0; // x3
+							damage=(Pow(float(BossHealthMax[boss]), 0.54074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
+							if(damage < 750.0)
+								damage = 750.0; // x3
 
 							damagetype|=DMG_CRIT;
 
@@ -6109,8 +6109,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				{
 					// damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
 					damage = BossHealth[boss] * 0.06;
-					if(damage < 900.0)
-						damage = 900.0; // x3
+					if(damage < 1500.0)
+						damage = 1500.0; // x3
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
 
