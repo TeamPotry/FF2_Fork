@@ -364,13 +364,15 @@ void Rage_StunSentry(const char[] abilityName, int boss)
 	float bossPosition[3], sentryPosition[3];
 	GetEntPropVector(GetClientOfUserId(FF2_GetBossUserId(boss)), Prop_Send, "m_vecOrigin", bossPosition);
 	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 7.0);
-	int distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName);
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss)),
+		distance=FF2_GetBossRageDistance(boss, PLUGIN_NAME, abilityName);
 
 	int sentry;
 	while((sentry=FindEntityByClassname(sentry, "obj_sentrygun"))!=-1)
 	{
 		GetEntPropVector(sentry, Prop_Send, "m_vecOrigin", sentryPosition);
-		if(GetVectorDistance(bossPosition, sentryPosition)<=distance)
+		if(GetVectorDistance(bossPosition, sentryPosition)<=distance
+			&& GetEntProp(sentry, Prop_Send, "m_iTeamNum") != GetClientTeam(client))
 		{
 			SetEntProp(sentry, Prop_Send, "m_bDisabled", 1);
 			CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(sentry, "yikes_fx", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
@@ -644,7 +646,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 	if(!(GetEntityFlags(client) & FL_ONGROUND))
 	{
 		float angles[3];
-		static float angleCap = 50.0;
+		static float angleCap = 60.0;
 
 		GetClientEyeAngles(client, angles);
 		if(angles[0] > angleCap)
@@ -658,7 +660,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 				return;
 			}
 
-			float multiplier = 3500.0, currentDownPower = -(fclamp(((90.0 - angles[0]) / angleCap), 0.0, 1.0) - 1.0);
+			float multiplier = 4000.0, currentDownPower = -(fclamp(((90.0 - angles[0]) / angleCap), 0.0, 1.0) - 1.0);
 			float currentVelocity[3], currentSpeed, velocity[3], goalAngles[3], angleDiff;
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
@@ -677,7 +679,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 			currentDownPower = fmin(currentDownPower - (1.0 - angleDiff), 0.0);
 
 			// ??
-			ScaleVector(velocity, -(multiplier * (currentDownPower * (GetTickInterval() * 1.5))));
+			ScaleVector(velocity, -(multiplier * (currentDownPower * (GetTickInterval() * 1.0))));
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
 			AddVectors(velocity, currentVelocity, velocity);
 
