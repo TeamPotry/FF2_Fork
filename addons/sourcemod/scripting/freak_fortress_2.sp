@@ -5793,6 +5793,20 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			if(bossKv.GetNum("enable selfdamage", 0) > 0 && attacker > 0)
 			{
 				// Debug("selfdamage");
+				bool noSelfDmg = TF2Attrib_HookValueInt(0, "no_self_blast_dmg", attacker) > 0;
+				if(noSelfDmg)
+				{
+					damage=0.0;
+					return Plugin_Changed;
+				}
+
+				float blastDmgRatio = TF2Attrib_HookValueFloat(1.0, "blast_dmg_to_self", attacker);
+				if((damagetype & DMG_BLAST) && blastDmgRatio != 1.0)
+				{
+					damage *= blastDmgRatio;
+					return Plugin_Changed;
+				}
+
 				return Plugin_Continue;
 			}
 
