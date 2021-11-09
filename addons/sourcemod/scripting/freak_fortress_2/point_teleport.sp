@@ -5,6 +5,7 @@
 #include <sdkhooks>
 #include <tf2_stocks>
 // #include <morecolors>
+#include <tf2utils>
 #include <freak_fortress_2>
 #include <ff2_potry>
 #include <stocksoup/sdkports/util>
@@ -12,7 +13,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME "pointing abilities"
-#define PLUGIN_VERSION "20210820"
+#define PLUGIN_VERSION "20211001"
 
 public Plugin myinfo=
 {
@@ -27,6 +28,10 @@ public Plugin myinfo=
 #define	MAX_EDICT_BITS		12
 #define	MAX_EDICTS			(1 << MAX_EDICT_BITS)
 
+Handle g_SDKCallTestEntityPosition;
+Handle g_SDKCallFindPassableSpace;
+Handle g_SDKCallSetAbsOrigin;
+
 int g_iBeamModel, g_iHaloModel;
 float g_flTeleportDistance[MAXPLAYERS+1];
 
@@ -36,6 +41,7 @@ enum
     Portal_Size,
 	Portal_LifeTime,
 	Portal_BreakableIndex,
+	Portal_InDuck,
 
 	Portal_EntranceParticleIndex,
 	Portal_EntranceParticleName, // MAX 64
@@ -138,6 +144,14 @@ methodmap CTFPortal < ArrayList {
 		}
 		public set(float time) {
 			this.Set(Portal_SoundNextLoopTime, time);
+		}
+	}
+	property bool Ducked {
+		public get() {
+			return this.Get(Portal_InDuck);
+		}
+		public set(bool ducked) {
+			this.Set(Portal_InDuck, ducked);
 		}
 	}
 
@@ -271,19 +285,54 @@ methodmap CTFPortal < ArrayList {
 		this.SetString(Portal_EnterExitSoundPath, path);
 	}
 
+	public void DispatchTPEffect(float pos[3], float endPos[3])
+	{
+		float angles[3];
+
+		SubtractVectors(pos, endPos, angles);
+		GetVectorAngles(angles, angles);
+		angles[0] = AngleNormalize(angles[0]);
+		angles[1] = AngleNormalize(angles[1]);
+
+		TE_DispatchEffect("merasmus_tp", endPos, endPos, angles);
+		TE_SendToAll();
+
+		TE_DispatchEffect("merasmus_tp_bits", endPos, endPos, angles);
+		TE_SendToAll();
+
+		TE_DispatchEffect("merasmus_tp_flash03", endPos, endPos, angles);
+		TE_SendToAll();
+
+		TE_DispatchEffect("merasmus_zap", pos, endPos, angles);
+		TE_SendToAll();
+
+		TE_DispatchEffect("merasmus_zap_beam03", pos, endPos, angles);
+		TE_SendToAll();
+
+		TE_DispatchEffect("merasmus_zap_beam_bits", pos, endPos, angles);
+		TE_SendToAll();
+	}
+
 	public void Open()
 	{
-		float pos[3], endPos[3];
+		float pos[3], endPos[3], angles[3];
 		char entrancePaticleName[64], exitPaticleName[64];
 
 		this.GetEntrancePosition(pos);
 		this.GetExitPosition(endPos);
 
+		SubtractVectors(pos, endPos, angles);
+		GetVectorAngles(angles, angles);
+		angles[0] = AngleNormalize(angles[0]);
+		angles[1] = AngleNormalize(angles[1]);
+
 		this.GetEntranceParticleName(entrancePaticleName, sizeof(entrancePaticleName));
 		this.GetExitParticleName(exitPaticleName, sizeof(exitPaticleName));
 
 		this.EntranceParticleIndex = SpawnParticle(pos, entrancePaticleName);
+		SDKCall_SetAbsOrigin(this.EntranceParticleIndex, pos);
 		this.ExitParticleIndex = SpawnParticle(endPos, exitPaticleName);
+		SDKCall_SetAbsOrigin(this.ExitParticleIndex, endPos);
 
 		char sound[PLATFORM_MAX_PATH];
 		this.GetOpenSound(sound, PLATFORM_MAX_PATH);
@@ -303,7 +352,7 @@ methodmap CTFPortal < ArrayList {
 			vecMin[loop] = pos[loop] + this.Size * -0.5;
 			vecMax[loop] = pos[loop] + this.Size * 0.5;
 		}
-
+/*
 		int func = CreateEntityByName("func_breakable");
 		if(IsValidEntity(func))
 		{
@@ -325,12 +374,19 @@ methodmap CTFPortal < ArrayList {
 			SDKHook(func, SDKHook_OnTakeDamage, Portal_OnTakeDamage);
 		}
 		PrintToServer("func: %d", func);
-
+*/
 		this.SoundNextLoopTime = GetGameTime();
 
-		int colors[4] = {255, 255, 255, 255};
-		TE_SetupBeamPoints(pos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, this.LifeTime - GetGameTime(), 30.0, 100.0, 10, 0.0, colors, 100);
+		int colors[4];
+		if(!this.Ducked)
+			colors = {255, 255, 255, 255};
+		else
+			colors = {255, 60, 60, 255};
+
+		TE_SetupBeamPoints(pos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, this.LifeTime - GetGameTime(), 2.0, 100.0, 10, 0.0, colors, 100);
 		TE_SendToAll();
+
+		DispatchParticleEffect(pos, angles, "bombonomicon_spell_trail", _, RoundFloat(this.LifeTime - GetGameTime()), this.ExitParticleIndex);
 
 		RequestFrame(Portal_Update, this);
 	}
@@ -342,7 +398,7 @@ methodmap CTFPortal < ArrayList {
 
 		RemoveEntity(entrancePaticle);
 		RemoveEntity(exitPaticle);
-		RemoveEntity(this.BreakableIndex);
+		// RemoveEntity(this.BreakableIndex);
 
 		delete this;
 	}
@@ -381,23 +437,34 @@ public void Portal_Update(CTFPortal portal)
 
 	bool enter = false;
 	int target = GetEntityInSpot(pos, portal.Size);
-	if(IsValidClient(target))
+	if(IsValidClient(target) && !TF2_IsPlayerInCondition(target, TFCond_Dazed)
+		&& (!portal.Ducked || (portal.Ducked && GetEntProp(target, Prop_Send, "m_bDucked") > 0)))
 	{
 		enter = true;
 		portal.GetLaunchAngles(angles);
 		// GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
 		ScaleVector(angles, portal.LaunchPower);
 
-		TryTeleport(target, pos, exitPos);
+		float currentPos[3];
+		GetClientAbsOrigin(target, currentPos);
+
+		SDKCall_SetAbsOrigin(target, exitPos);
 		TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, angles);
 
 		int colors[4] = {255, 255, 255, 255};
 		UTIL_ScreenFade(target, colors, 0.1, 0.3, FFADE_IN);
 	}
-	else if(IsValidEntity(target))
+	else if(!IsValidClient(target) && IsValidEntity(target))
 	{
+		enter = true;
 		GetEntPropVector(target, Prop_Data, "m_vecVelocity", angles);
 		float speed = GetVectorLength(angles);
+		if(speed <= 0.0)
+		{
+			GetEntPropVector(target, Prop_Send, "m_vInitialVelocity", angles);
+			speed = GetVectorLength(angles);
+		}
+
 		float tempAngles[3];
 
 		portal.GetLaunchAngles(angles);
@@ -412,6 +479,8 @@ public void Portal_Update(CTFPortal portal)
 	portal.GetExitPosition(exitPos);
 	if(enter)
 	{
+		portal.DispatchTPEffect(pos, exitPos);
+
 		portal.GetEnterEntranceSound(sound, PLATFORM_MAX_PATH);
 		for(int client=1; client<=MaxClients; client++)
 		{
@@ -478,6 +547,20 @@ public void OnPluginStart()
 
 	LoadTranslations("ff2_point_teleport.phrases");
 	FF2_RegisterSubplugin(PLUGIN_NAME);
+
+	GameData gamedata = new GameData("potry");
+	if (gamedata)
+	{
+		g_SDKCallTestEntityPosition = PrepSDKCall_TestEntityPosition(gamedata);
+		g_SDKCallFindPassableSpace = PrepSDKCall_FindPassableSpace(gamedata);
+		g_SDKCallSetAbsOrigin = PrepSDKCall_SetAbsOrigin(gamedata);
+
+		delete gamedata;
+	}
+	else
+	{
+		SetFailState("Could not find potry gamedata");
+	}
 }
 
 public void OnMapStart()
@@ -500,7 +583,14 @@ public void OnMapStart()
 	}
 	delete gameConfig;
 
-	return;
+	PrecacheEffect("ParticleEffect");
+	PrecacheParticleEffect("bombonomicon_spell_trail");
+	PrecacheParticleEffect("merasmus_tp");
+	PrecacheParticleEffect("merasmus_tp_bits");
+	PrecacheParticleEffect("merasmus_tp_flash03");
+	PrecacheParticleEffect("merasmus_zap");
+	PrecacheParticleEffect("merasmus_zap_beam03");
+	PrecacheParticleEffect("merasmus_zap_beam_bits");
 }
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
@@ -552,7 +642,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 			}
 
 			char buttonText[32];
-			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "teleport", "buttonmode", 0);
+			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "point teleport", "buttonmode", 0);
 			Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
 
 			// 분리
@@ -572,16 +662,44 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 
 	int colors[4] = {255, 255, 255, 255};
 	float currentPos[3], pos[3], angles[3], endPos[3];
+	float fwd[3], right[3], up[3];
 	float maxDistance = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "max distance", 3000.0, slot);
 	g_flTeleportDistance[client] = maxDistance * (charge * 0.01);
 
-	GetClientEyePosition(client, pos);
-	GetEntPropVector(client, Prop_Data, "m_vecOrigin", currentPos);
+	GetClientAbsOrigin(client, currentPos);
 	GetClientEyeAngles(client, angles);
 
-	pos[2] -= 15.0;
+	TF2Util_GetPlayerShootPosition(client, pos);
+	GetAngleVectors(angles, NULL_VECTOR, right, up);
+
+	float sum[3];
+	ScaleVector(up, -15.0);
+	ScaleVector(right, 15.0);
+	AddVectors(up, right, sum);
+	AddVectors(pos, sum, pos);
+
 	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
-	GetEndPos(pos, angles, g_flTeleportDistance[client], endPos);
+	GetEndPos(client, pos, angles, g_flTeleportDistance[client], endPos);
+	ScaleVector(angles, g_flTeleportDistance[client]);
+
+	SubtractVectors(endPos, pos, angles);
+	GetVectorAngles(angles, angles);
+	GetAngleVectors(angles, fwd, NULL_VECTOR, NULL_VECTOR);
+	NormalizeVector(fwd, fwd);
+
+	if(charge > 0.0)
+	{
+		float vecMin[3], vecMax[3];
+		GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
+		GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
+
+		// PrintToServer("tempAngles: %.1f %.1f %.1f", fwd[0], fwd[1], fwd[2]);
+		// PrintToServer("before endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
+
+		AdjustPositionOppositeDirected(client, pos, endPos, fwd, vecMin, vecMax, endPos);
+		// PrintToServer("endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
+	}
+
 
 	SetGlobalTransTarget(client);
 	switch(status)
@@ -612,20 +730,41 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 		}
 		case 3:
 		{
-			if(charge <= 10.0)
+			if(charge <= 10.0 || GetVectorDistance(pos, endPos) < 84.0)
 			{
 				ResetBossCharge(boss, slot);
 				return;
 			}
 
-			SetEntProp(client, Prop_Send, "m_bDucked", 1);
-			SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
+			TeleportEntity(client, endPos, NULL_VECTOR, NULL_VECTOR);
+			// SDKCall_SetAbsOrigin(client, endPos);
 
-			if(!TryTeleport(client, pos, endPos) || IsPlayerStuck(client))
+			if(!SDKCall_TestEntityPosition(client))
 			{
+				PrintToServer("Stuck endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
+
 				TeleportEntity(client, currentPos, NULL_VECTOR, NULL_VECTOR);
 				ResetBossCharge(boss, slot);
 				return;
+
+
+				// AdjustPositionOppositeDirected(client, endPos, fwd, vecMin, vecMax, endPos);
+
+				// TeleportEntity(client, endPos, NULL_VECTOR, NULL_VECTOR);
+				// SDKCall_SetAbsOrigin(client, endPos);
+/*
+				if(!SDKCall_TestEntityPosition(client))
+				{
+					float tempDir[3];
+					TE_SetupArmorRicochet(endPos, tempDir);
+					TE_SendToAll();
+
+					// 꼈어..
+					TeleportEntity(client, currentPos, NULL_VECTOR, NULL_VECTOR);
+					// SDKCall_SetAbsOrigin(client, currentPos);
+
+				}
+*/
 			}
 
 			float size = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "size", 75.0, slot),
@@ -667,6 +806,7 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			portal.Size = size;
 			portal.LifeTime = lifeTime;
 			portal.LaunchPower = launchPower;
+			portal.Ducked = GetEntProp(client, Prop_Send, "m_bDucked") > 0;
 			portal.SoundLoopTime = soundLoopTime;
 
 			portal.SetEntranceParticleName(entrancePaticleName);
@@ -688,7 +828,11 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			ScaleVector(angles, launchPower);
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, angles);
 
+			SetEntProp(client, Prop_Send, "m_bDucked", 1);
+			SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
+
 			portal.Open();
+			portal.DispatchTPEffect(pos, endPos); // 보스가 이미 통과함
 
 			UTIL_ScreenFade(client, colors, 0.1, 0.3, FFADE_IN);
 
@@ -706,23 +850,179 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 	}
 }
 
-public void GetEndPos(float pos[3], float angles[3], float distance, float endPos[3])
+public bool AdjustPositionOppositeDirected(int ent, float center[3], float pos[3], float dir[3], float vecMin[3], float vecMax[3], float result[3])
 {
-	float tempAngle[3];
-	tempAngle[0] = angles[0];
-	tempAngle[1] = angles[1] - 20.0;
-	tempAngle[2] = angles[2];
+	// 바라보는 방향의 기준으로 중심 꼭짓점을 정함
+	// 우선 방향의 X와 Z ([0], [1]) 중에서 절댓값이 큰 쪽을 저장하여 연산의 우선순위를 정함
+	// x < 0.0: [0]은 반드시 max 좌표 사용, z < 0.0: [1]은 반드시 max 좌표 사용
+	// ㄴ 이를 이용해 시작 꼭짓점 값을 알아내고 방향에 따른 연산 순서를 다르게 할 것
 
-	GetAngleVectors(tempAngle, tempAngle, NULL_VECTOR, NULL_VECTOR);
+	// TODO: QVector의 인덱스 확인
+	float currentPos[3]; // Ha.
+	currentPos = VectorCopy(pos);
 
-	ScaleVector(angles, distance);
-	ScaleVector(tempAngle, 30.0);
+	bool IsMax[3]; // IsCenterMax
+	{
+		for(int loop = 0; loop < 2; loop++)
+			IsMax[loop] = dir[loop] < 0.0;
+		IsMax[2] = false; // This is only used when checking Y.
+	}
+	int rank[2];
+	{
+		// 3차원 대응?
+		if(FloatAbs(dir[0]) > FloatAbs(dir[1]))
+			rank[0] = 0, rank[1] = 1;
+		else
+			rank[0] = 1, rank[1] = 0;
+	}
 
-	AddVectors(pos, tempAngle, pos);
-	AddVectors(pos, angles, endPos);
+	float testStartPos[3], testEndPos[3], temp[3];
 
-	TR_TraceRayFilter(pos, endPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything);
-	TR_GetEndPosition(endPos);
+	// 전체 보정 루프
+	for(int loop = 0; loop < 3; loop++)
+	{
+		// 아랫쪽 바운딩 박스 보정
+		{
+			// X축 확인
+			GetPositionWithHull(rank[0], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
+			AdjustPositionBySingleRay(ent, rank[0], currentPos, testStartPos, testEndPos, currentPos);
+
+			// Z축 확인
+			GetPositionWithHull(rank[1], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
+			AdjustPositionBySingleRay(ent, rank[1], currentPos, testStartPos, testEndPos, currentPos);
+		}
+
+		// 중간의 Y축 검증
+		// 아랫쪽의 바운드 박스 보정 후
+		{
+			IsMax[2] = currentPos[2] < pos[2];
+			float y = IsMax[2] ? vecMin[2] : vecMax[2];
+
+			FloatToVector(testStartPos, currentPos[0] + vecMin[0], currentPos[1] + vecMin[1], currentPos[2]
+				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
+			FloatToVector(testEndPos, currentPos[0] + vecMin[0], currentPos[1] + vecMin[1], currentPos[2]
+				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
+
+			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
+			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
+			{
+				TR_GetEndPosition(temp);
+				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
+			}
+
+			FloatToVector(testStartPos, currentPos[0] + vecMax[0], currentPos[1] + vecMin[1], currentPos[2]
+				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
+			FloatToVector(testEndPos, currentPos[0] + vecMax[0], currentPos[1] + vecMin[1], currentPos[2]
+				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
+
+			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
+			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
+			{
+				TR_GetEndPosition(temp);
+				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
+			}
+
+			FloatToVector(testStartPos, currentPos[0] + vecMin[0], currentPos[1] + vecMax[1], currentPos[2]
+				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
+			FloatToVector(testEndPos, currentPos[0] + vecMin[0], currentPos[1] + vecMax[1], currentPos[2]
+				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
+
+			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
+			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
+			{
+				TR_GetEndPosition(temp);
+				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
+			}
+
+			FloatToVector(testStartPos, currentPos[0] + vecMax[0], currentPos[1] + vecMax[1], currentPos[2]
+				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
+			FloatToVector(testEndPos, currentPos[0] + vecMax[0], currentPos[1] + vecMax[1], currentPos[2]
+				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
+
+			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
+			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
+			{
+				TR_GetEndPosition(temp);
+				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
+			}
+		}
+
+		// 윗쪽 바운딩 박스 보정
+		{
+			IsMax[2] = true;
+			// X축 확인
+			GetPositionWithHull(rank[0], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
+			AdjustPositionBySingleRay(ent, rank[0], currentPos, testStartPos, testEndPos, currentPos);
+
+			// Z축 확인
+			GetPositionWithHull(rank[1], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
+			AdjustPositionBySingleRay(ent, rank[1], currentPos, testStartPos, testEndPos, currentPos);
+		}
+/*
+		TR_TraceRayFilter(center, currentPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything, ent);
+		if(TR_DidHit())
+		{
+			TR_GetEndPosition(currentPos);
+		}
+*/
+	}
+
+	result = VectorCopy(currentPos);
+}
+
+// This only support for [0], [1]
+public void GetPositionWithHull(int currentIndex, bool IsMax[3], float currentPos[3], float vecMin[3], float vecMax[3], float startPos[3], float endPos[3])
+{
+	for(int search = 0; search < 3; search++)
+	{
+		if(search == currentIndex)
+		{
+			startPos[search] = IsMax[search] ? currentPos[search] + vecMax[search] : currentPos[search] + vecMin[search];
+			endPos[search] = IsMax[search] ? currentPos[search] + vecMin[search] : currentPos[search] + vecMax[search];
+		}
+		else
+		{
+			startPos[search] = IsMax[search] ? currentPos[search] + vecMax[search] : currentPos[search] + vecMin[search];
+			endPos[search] = IsMax[search] ? currentPos[search] + vecMax[search] : currentPos[search] + vecMin[search];
+		}
+	}
+}
+
+public bool AdjustPositionBySingleRay(int ent, int index, float currentPos[3], float startPos[3], float endPos[3], float result[3])
+{
+	float temp[3];
+	TR_TraceRayFilter(startPos, endPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
+
+	if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
+	{
+		TR_GetEndPosition(temp);
+		result[index] = currentPos[index] - (endPos[index] - temp[index]);
+
+		// PrintToServer("AdjustPositionBySingleRay: index: %d\n currentPos: %.5f\n endPos: %.5f\n temp: %.5f", index, currentPos[index], endPos[index], temp[index]);
+		return true;
+	}
+	return false;
+}
+
+public void GetEndPos(int client, float pos[3], float angles[3], float distance, float endPos[3])
+{
+	float tempAngles[3];
+
+	tempAngles = angles;
+	ScaleVector(tempAngles, distance);
+	AddVectors(pos, tempAngles, endPos);
+
+	TR_TraceRayFilter(pos, endPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything, client);
+	if(TR_DidHit())
+	{
+		TR_GetEndPosition(endPos);
+
+		tempAngles = angles;
+
+		ScaleVector(tempAngles, -40.0); // 얇은 벽의 경우, 벽 너머에 트레이싱됨
+
+		AddVectors(endPos, tempAngles, endPos);
+	}
 }
 
 ///////////////////////////
@@ -747,6 +1047,168 @@ stock int SpawnParticle(float pos[3], char[] particleType, float offset=0.0)
 	ActivateEntity(particle);
 	AcceptEntityInput(particle, "start");
 	return particle;
+}
+
+int GetParticleEffectIndex(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("ParticleEffectNames");
+
+	int iIndex = FindStringIndex(table, sEffectName);
+
+	if (iIndex != INVALID_STRING_INDEX)
+		return iIndex;
+
+	return 0;
+}
+
+int GetEffectIndex(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("EffectDispatch");
+
+	int iIndex = FindStringIndex(table, sEffectName);
+
+	if (iIndex != INVALID_STRING_INDEX)
+		return iIndex;
+
+	return 0;
+}
+
+void PrecacheEffect(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("EffectDispatch");
+
+	bool save = LockStringTables(false);
+	AddToStringTable(table, sEffectName);
+	LockStringTables(save);
+}
+
+void PrecacheParticleEffect(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("ParticleEffectNames");
+
+	bool save = LockStringTables(false);
+	AddToStringTable(table, sEffectName);
+	LockStringTables(save);
+}
+
+void TE_DispatchEffect(const char[] particle, const float pos[3], const float endpos[3], const float angles[3] = NULL_VECTOR, int parent = -1, int attachment = -1)
+{
+	TE_Start("EffectDispatch");
+	TE_WriteVector("m_vStart[0]", pos);
+	TE_WriteVector("m_vOrigin[0]", endpos);
+	TE_WriteVector("m_vAngles", angles);
+	TE_WriteNum("m_nHitBox", GetParticleEffectIndex(particle));
+	TE_WriteNum("m_iEffectName", GetEffectIndex("ParticleEffect"));
+
+	if(parent != -1)
+	{
+		TE_WriteNum("entindex", parent);
+	}
+	if(attachment != -1)
+	{
+		TE_WriteNum("m_nAttachmentIndex", attachment);
+	}
+}
+
+stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, int time=1, int controlpoint=0)
+{
+    int particle = CreateEntityByName("info_particle_system");
+
+	char temp[64], targetName[64];
+	if (IsValidEdict(particle))
+	{
+		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
+
+		Format(targetName, sizeof(targetName), "tf2particle%i", particle);
+		DispatchKeyValue(particle, "targetname", targetName);
+		DispatchKeyValue(particle, "effect_name", particleType);
+
+		// Only one???
+		if(controlpoint > 0)
+		{
+			// TODO: This shit does not work.
+			int cpParticle = CreateEntityByName("info_particle_system");
+			if (IsValidEdict(cpParticle))
+			{
+				char cpName[64], cpTargetName[64];
+				Format(cpTargetName, sizeof(cpTargetName), "target%i", controlpoint);
+				DispatchKeyValue(controlpoint, "targetname", cpTargetName);
+				DispatchKeyValue(cpParticle, "parentname", cpTargetName);
+
+				Format(cpName, sizeof(cpName), "tf2particle%i", cpParticle);
+				DispatchKeyValue(cpParticle, "targetname", cpName);
+
+				DispatchKeyValue(particle, "cpoint1", cpName);
+
+				float cpPos[3];
+				GetEntPropVector(controlpoint, Prop_Data, "m_vecOrigin", cpPos);
+				TeleportEntity(cpParticle, cpPos, angles, NULL_VECTOR);
+/*
+				// SetVariantString(cpTargetName);
+				SetVariantString("!activator");
+				AcceptEntityInput(cpParticle, "SetParent", controlpoint, cpParticle);
+
+				SetVariantString("flag");
+				AcceptEntityInput(cpParticle, "SetParentAttachment", controlpoint, cpParticle);
+*/
+			}
+			// SetEntPropEnt(particle, Prop_Send, "m_hControlPointEnts", controlpoint, 1);
+			// SetEntProp(particle, Prop_Send, "m_iControlPointParents", controlpoint, 1);
+		}
+
+		DispatchSpawn(particle);
+		ActivateEntity(particle);
+
+		if(parent > 0)
+		{
+			Format(targetName, sizeof(targetName), "target%i", parent);
+			DispatchKeyValue(parent, "targetname", targetName);
+			SetVariantString(targetName);
+
+			AcceptEntityInput(particle, "SetParent", particle, particle, 0);
+			SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", parent);
+		}
+
+		Format(temp, sizeof(temp), "OnUser1 !self:kill::%i:1", time);
+		SetVariantString(temp);
+
+		AcceptEntityInput(particle, "AddOutput");
+		AcceptEntityInput(particle, "FireUser1");
+
+		DispatchKeyValueVector(particle, "angles", angles);
+		AcceptEntityInput(particle, "start");
+	}
+}
+
+stock float AngleNormalize(float angle)
+{
+	angle = fmodf(angle, 360.0);
+	if (angle > 180)
+	{
+		angle -= 360;
+	}
+	if (angle < -180)
+	{
+		angle += 360;
+	}
+	return angle;
+}
+
+stock float fmodf(float num, float denom)
+{
+	return num - denom * RoundToFloor(num / denom);
 }
 
 // bool g_bTouched[MAXPLAYERS+1];
@@ -777,6 +1239,11 @@ int GetEntityInSpot(float pos[3], float size)
 	return -1;
 }
 
+public void FloatToVector(float vector[3], float x, float z, float y)
+{
+	vector[0] = x, vector[1] = z, vector[2] = y;
+}
+
 //Copied from Chdata's Fixed Friendly Fire
 stock bool IsPlayerStuck(int ent)
 {
@@ -794,7 +1261,7 @@ public bool TraceRayPlayerOnly(int iEntity, int iMask, any iData)
 {
     return (IsValidClient(iEntity) && IsValidClient(iData) && iEntity != iData);
 }
-
+/*
 // Copied from sarysa's code.
 bool ResizeTraceFailed;
 public bool TryTeleport(int clientIdx, float startPos[3], float endPos[3])
@@ -815,12 +1282,12 @@ public bool TryTeleport(int clientIdx, float startPos[3], float endPos[3])
 	{
 		return false;
 	}
-/*
+
 	if (distance > 1500.0)
 		constrainDistance(startPos, endPos, distance, 1500.0);
 	else // shave just a tiny bit off the end position so our point isn't directly on top of a wall
 		constrainDistance(startPos, endPos, distance, distance - 1.0);
-*/
+
 	constrainDistance(startPos, endPos, distance, distance - 1.0);
 
 	// now for the tests. I go 1 extra on the standard mins/maxs on purpose.
@@ -1065,7 +1532,91 @@ bool Resize_TestSquare(const float bossOrigin[3], float xmin, float xmax, float 
 
 	return true;
 }
+*/
+Handle PrepSDKCall_TestEntityPosition(GameData gamedata)
+{
+	StartPrepSDKCall(SDKCall_Static);
+	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "TestEntityPosition");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
 
+	Handle call = EndPrepSDKCall();
+	if (!call)
+		LogMessage("Failed to create SDK call: TestEntityPosition");
+
+	return call;
+}
+
+Handle PrepSDKCall_FindPassableSpace(GameData gamedata)
+{
+	StartPrepSDKCall(SDKCall_Static);
+	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "FindPassableSpace");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
+	PrepSDKCall_AddParameter(SDKType_Float, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+
+	Handle call = EndPrepSDKCall();
+	if (!call)
+		LogMessage("Failed to create SDK call: FindPassableSpace");
+
+	return call;
+}
+
+Handle PrepSDKCall_SetAbsOrigin(GameData gamedata)
+{
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::SetAbsOrigin");
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
+
+	Handle call = EndPrepSDKCall();
+	if (!call)
+		LogMessage("Failed to create SDK call: CBaseEntity::SetAbsOrigin");
+
+	return call;
+}
+
+public bool SDKCall_TestEntityPosition(int entity)
+{
+	if (g_SDKCallTestEntityPosition)
+		return SDKCall(g_SDKCallTestEntityPosition, entity);
+
+	return false;
+}
+
+public bool SDKCall_FindPassableSpace(int entity, float direction[3], float step, float oldorigin[3])
+{
+	if (g_SDKCallFindPassableSpace)
+		return SDKCall(g_SDKCallFindPassableSpace, entity, direction, step, oldorigin);
+
+	return false;
+}
+
+public void SDKCall_SetAbsOrigin(int entity, float absOrigin[3])
+{
+	if (g_SDKCallSetAbsOrigin)
+		SDKCall(g_SDKCallSetAbsOrigin, entity, absOrigin);
+}
+
+float[] VectorCopy(float source[3])
+{
+	float dest[3];
+	dest[0] = source[0];
+	dest[1] = source[1];
+	dest[2] = source[2];
+
+	return dest;
+}
+
+public void VectorMA(float start[3], float scale, float direction[3], float dest[3])
+{
+	dest[0] = start[0] + (scale * direction[0]);
+	dest[1] = start[1] + (scale * direction[1]);
+	dest[2] = start[2] + (scale * direction[2]);
+}
+
+/*
 bool Resize_OneTrace(const float startPos[3], const float endPos[3])
 {
 	static float result[3];
@@ -1082,10 +1633,10 @@ bool Resize_OneTrace(const float startPos[3], const float endPos[3])
 
 	return true;
 }
-
-public bool TraceAnything(int entity, int contentsMask)
+*/
+public bool TraceAnything(int entity, int contentsMask, any data)
 {
-    return false;
+    return entity == 0 || entity != data;
 }
 
 public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCount)
