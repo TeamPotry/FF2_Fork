@@ -5862,11 +5862,13 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 			if(shield[client] && damage)
 			{
+				float volume = fmin(damage / 100.0, 1.0) * 0.7;
+
 				if(GetEntProp(shield[client], Prop_Send, "m_iItemDefinitionIndex")==57)
 				{
 					if(GetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", TFWeaponSlot_Secondary)>=100.0)
 					{
-						PlayShieldBreakSound(client, attacker, position);
+						PlayShieldBreakSound(client, position, volume);
 						SetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", 0.0, TFWeaponSlot_Secondary);
 						return Plugin_Handled;
 					}
@@ -5875,7 +5877,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				else
 				{
 					// RemoveShield(client, attacker, position);
-					PlayShieldBreakSound(client, attacker, position);
+					PlayShieldBreakSound(client, position, volume);
 					float charge = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") - damage;
 					SetEntPropFloat(client, Prop_Send, "m_flChargeMeter",
 						charge > 0.0 ? charge : 0.0);
@@ -8511,7 +8513,7 @@ public Action Command_Say(int client, int args)
 stock void RemoveShield(int client, int attacker, float position[3])
 {
 	TF2_RemoveWearable(client, shield[client]);
-	PlayShieldBreakSound(client, attacker, position);
+	PlayShieldBreakSound(client, position);
 	TF2_AddCondition(client, TFCond_Bonked, 0.1); // Shows "MISS!" upon breaking shield
 	shield[client]=0;
 }

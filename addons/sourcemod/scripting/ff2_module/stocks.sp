@@ -204,12 +204,26 @@ stock int FindEntityByClassname2(int startEnt, const char[] classname)
 	return FindEntityByClassname(startEnt, classname);
 }
 
-stock void PlayShieldBreakSound(int client, int attacker, float position[3])
+stock void PlayShieldBreakSound(int client, float position[3], float volume = 0.7)
 {
-	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-	EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-	EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	// EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	// EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+	// EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+    for(int target = 1; target <= MaxClients; target++)
+    {
+        if(IsClientInGame(target))
+            EmitSoundToClient(target, "player/spy_shield_break.wav", _, _, _, _, volume, _, _, position, _, false);
+    }
+}
+
+stock float fmax(float x, float y)
+{
+	return x < y ? y : x;
+}
+
+stock float fmin(float x, float y)
+{
+	return x > y ? y : x;
 }
 
 stock void DoOverlay(int client, const char[] overlay)
