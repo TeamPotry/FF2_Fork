@@ -2,7 +2,7 @@
 {
     "Wave Started"
     {
-        "en"	"WAVE STARTED! Players earned money, Bosses gained their knockback resist!"
+        "en"	"WAVE STARTED! Survivors earned money, Bosses gained their knockback resist!"
     }
     "Carteen Cooldown"
     {

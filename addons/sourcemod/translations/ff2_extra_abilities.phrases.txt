@@ -1,5 +1,16 @@
 "Phrases"
 {
+    "Weapon Disabled"
+    {
+        "#format"   "{1:d}"
+        "en"        "This weapon has been disabled for {1} seconds!"
+    }
+    "Weapon Disabled Time"
+    {
+        "#format"   "{1:d}"
+        "en"        "Weapon Recover: In {1}sec"
+    }
+
     "Reflecter Health"
     {
         "#format"   "{1:d}"
@@ -8,5 +19,11 @@
     "Reflecter By Force"
     {
         "en"        "PRESS DUCK to use Reflecter"
+    }
+
+    "Sentry Count"
+    {
+        "#format"   "{1:d},{2:d}"
+        "en"        "Current Sentry Count: {1} / {2}"
     }
 }
