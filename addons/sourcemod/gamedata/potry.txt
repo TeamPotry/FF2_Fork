@@ -105,6 +105,11 @@
 				"linux"		"@_ZN11CBaseEntity12SetAbsOriginERK6Vector"
 				"windows"	" "
 			}
+			"CTFWeaponBuilder::Deploy"
+			{
+				"linux"		"@_ZN16CTFWeaponBuilder6DeployEv"
+				"windows"	" "
+			}
 		}
 		"Functions"
 		{
