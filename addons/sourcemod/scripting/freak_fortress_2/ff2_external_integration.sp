@@ -35,8 +35,13 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
+int Goombaed[MAXPLAYERS+1];
+
 public void OnPluginStart()
 {
+	HookEvent("arena_round_start", Event_RoundStart);
+	HookEvent("teamplay_round_active", Event_RoundStart); // for non-arena maps
+
 	cvarGoomba=CreateConVar("ff2_goomba", "1", "Allow FF2 to integrate with Goomba Stomp?", _, true, 0.0, true, 1.0);
 	cvarGoombaDamage=CreateConVar("ff2_goomba_damage", "0.02", "How much the Goomba damage should be multiplied by", _, true, 0.0, true, 1.0);
 	cvarGoombaRebound=CreateConVar("ff2_goomba_rebound", "300.0", "How high players should rebound after a Goomba stomp", _, true, 0.0);
@@ -50,6 +55,14 @@ public void OnPluginStart()
 	if(KvText != null)
 		delete KvText;
 	KvText = LoadSpecialAttackText();
+}
+
+public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		Goombaed[client] = 0;
+	}
 }
 
 public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &damageBonus, float &JumpPower)
@@ -69,21 +82,28 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 			return Plugin_Handled;
 		}
 		*/
+		float velocity[3];
 		int boss = FF2_GetBossIndex(attacker);
+
+		GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", velocity);
+		float speed = GetVectorLength(velocity);
 		if(boss != -1 && FF2_GetBossIndex(victim) == -1)
 		{
-			float velocity[3];
-			GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", velocity);
-
 			damageBonus = 0.0;
-			damageMultiplier =  GetVectorLength(velocity) / 1200.0;
+			damageMultiplier = speed / 1200.0;
 			return Plugin_Changed;
 		}
 
 		if(FF2_GetBossIndex(victim) != -1)
 		{
-			damageMultiplier=cvarGoombaDamage.FloatValue;
-			JumpPower=cvarGoombaRebound.FloatValue;
+			float powerMultiplier = speed / 200.0;
+			if(powerMultiplier < 1.0)
+				powerMultiplier = 1.0;
+			else if(powerMultiplier > 6.0)
+				powerMultiplier = 6.0;
+
+			damageMultiplier = cvarGoombaDamage.FloatValue * powerMultiplier;
+			JumpPower = speed * 0.7;
 
 			return Plugin_Changed;
 		}
@@ -99,6 +119,8 @@ public int OnStompPost(int attacker, int victim, float damageMultiplier, float d
 	{
 		PrintCenterText(victim, "%t", "Boss Got Goomba Stomped");
 		PrintCenterText(attacker, "%t", "Human Goomba Stomped");
+
+		CreateKillStreak(attacker, victim, -1, 444, ++Goombaed[attacker]);
 
 		int adddmg = RoundFloat(FindConVar("goomba_dmg_add").FloatValue);
 		if(boss != -1)

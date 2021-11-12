@@ -5940,6 +5940,24 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					//TODO
 				}*/
 
+				if(IsValidEntity(weapon))
+				{
+					static int kStreakCount;
+					kStreakCount += RoundFloat(damage);
+					if(kStreakCount >= 250)
+					{
+						SetEntProp(attacker, Prop_Send, "m_nStreaks", GetEntProp(attacker, Prop_Send, "m_nStreaks") + 1);
+						switch(GetEntProp(attacker, Prop_Send, "m_nStreaks"))
+						{
+							case 5, 10, 15, 20, 25, 50, 75, 100, 150, 200, 250, 500, 750, 1000:
+							{
+								CreateKillStreak(attacker, client, weapon, index, GetEntProp(attacker, Prop_Send, "m_nStreaks"));
+							}
+						}
+						kStreakCount = 0;
+					}
+				}
+
 				//Sniper rifles aren't handled by the switch/case because of the amount of reskins there are
 				if(StrContains(classname, "tf_weapon_sniperrifle")!=-1)
 				{
@@ -6200,6 +6218,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 								Marketed[client]++;
 							}
 
+							CreateKillStreak(attacker, client, weapon, index, Marketed[client]);
+
 							PrintHintText(attacker, "%t", "Market Gardener");  //You just market-gardened the boss!
 							PrintHintText(client, "%t", "Market Gardened");  //You just got market-gardened!
 
@@ -6304,6 +6324,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						Stabbed[boss]++;
 					}
+					CreateKillStreak(attacker, client, weapon, index, Stabbed[boss]);
+
 					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);

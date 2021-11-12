@@ -290,6 +290,58 @@ public Action ResetTimer(Handle timer, ArrayList pack)
     delete pack;
 }
 
+stock void CreateKillStreak(int attacker, int target, int weapon, int defIndex, int streak)
+{
+    Event streakEvent = CreateEvent("player_death", true);
+    streakEvent.SetInt("attacker", GetClientUserId(attacker));
+    streakEvent.SetInt("userid", GetClientUserId(target));
+    streakEvent.SetInt("weapon_def_index", defIndex);
+
+    // TF_DEATHFLAG_DEADRINGER
+    streakEvent.SetInt("death_flags", (1 << 5));
+
+    streakEvent.SetInt("kill_streak_wep", GetEntProp(attacker, Prop_Send, "m_nStreaks"));
+    streakEvent.SetInt("kill_streak_total", GetEntProp(attacker, Prop_Send, "m_nStreaks"));
+
+    for(int client = 1; client <= MaxClients; client++)
+    {
+        if(!IsClientInGame(client) || target == client)
+            continue;
+
+        streakEvent.FireToClient(client);
+    }
+    delete streakEvent;
+}
+
+stock int ShowGameText(int team, float time, char[] buffer, any ...)
+{
+    int ent = CreateEntityByName("game_text_tf");
+    if(IsValidEntity(ent))
+    {
+        char message[512], temp[128];
+        VFormat(message, sizeof(message), buffer, 2);
+        IntToString(team, temp, 4);
+
+        DispatchKeyValue(ent, "message", message);
+        DispatchKeyValue(ent, "display_to_team", temp);
+        DispatchKeyValue(ent, "icon", "ico_notify_sixty_seconds");
+        DispatchKeyValue(ent,"targetname", "game_text1");
+        DispatchKeyValue(ent,"background", "0");
+
+        DispatchSpawn(ent);
+
+        Format(temp, sizeof(temp), "OnUser1 !self:kill::%.1f:1", time);
+		SetVariantString(temp);
+
+		AcceptEntityInput(ent, "AddOutput");
+		AcceptEntityInput(ent, "FireUser1");
+
+        AcceptEntityInput(ent, "Display", ent, ent);
+        return ent;
+    }
+    return -1;
+}
+
 public SharedPlugin __pl_ff2_potry=
 {
 	name="ff2_potry",
