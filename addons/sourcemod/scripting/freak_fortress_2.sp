@@ -4747,7 +4747,7 @@ void OnBossThink(int client)
 	// TODO: "use_fixed_speed"
 	if(!TF2_IsPlayerInCondition(client, TFCond_Charging))
 	{
-		if(TF2_GetClientTeam(client) == BossTeam)
+		if(TF2_GetClientTeam(client) == BossTeam && BossLivesMax[boss] * BossHealthMax[boss] > BossHealth[boss])
 			SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]+0.8*(100-BossHealth[boss]*100/BossLivesMax[boss]/BossHealthMax[boss]));
 		else
 			SetEntPropFloat(client, Prop_Data, "m_flMaxspeed", BossSpeed[boss]);
