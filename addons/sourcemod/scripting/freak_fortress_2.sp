@@ -1880,6 +1880,9 @@ public Action StartResponseTimer(Handle timer)
 
 public Action StartBossTimer(Handle timer)
 {
+	CheckAlivePlayers(null);
+	StartingPlayers = RedAlivePlayers;
+
 	CreateTimer(0.1, Timer_Move, _, TIMER_FLAG_NO_MAPCHANGE);
 	bool isBossAlive;
 
@@ -1892,7 +1895,7 @@ public Action StartBossTimer(Handle timer)
 			isBossAlive=true;
 			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
 
-			BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(playing))*(float(playing)-1.0), 1.0341)+2046.0));
+			BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(RedAlivePlayers))*(float(RedAlivePlayers)-1.0), 1.0341)+2046.0));
 			BossHealth[boss]=BossHealthLast[boss]=BossHealthMax[boss]*BossLivesMax[boss];
 
 			// 초기 쿨타임
@@ -1922,9 +1925,6 @@ public Action StartBossTimer(Handle timer)
 			CreateTimer(0.15, MakeNotBoss, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);  //TODO:  Is this needed?
 		}
 	}
-
-	CheckAlivePlayers(null);
-	StartingPlayers = RedAlivePlayers;
 
 	if(timeType == FF2Timer_WaveTimer)
 		CorrectionBossHealth();
@@ -2383,7 +2383,7 @@ public Action MakeBoss(Handle timer, int boss)
 	KeyValues kv=GetCharacterKV(character[boss]);
 	kv.Rewind();
 
-	BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(playing))*(float(playing)-1.0), 1.0341)+2046.0));
+	BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(RedAlivePlayers))*(float(RedAlivePlayers)-1.0), 1.0341)+2046.0));
 	BossLivesMax[boss]=BossLives[boss]=ParseFormula(boss, "lives", 1);
 	BossHealth[boss]=BossHealthLast[boss]=BossHealthMax[boss]*BossLivesMax[boss];
 	BossRageDamage[boss]=ParseFormula(boss, "rage damage", 1900);
@@ -6854,7 +6854,7 @@ stock int ParseFormula(int boss, const char[] key, int defaultValue)
 
 				if(StrEqual(variable, "players", false))
 				{
-					Operate(sumArray, bracket, float(playing), _operator);
+					Operate(sumArray, bracket, float(RedAlivePlayers), _operator);
 				}
 				else if(StrEqual(variable, "health", false))
 				{
