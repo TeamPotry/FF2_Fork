@@ -64,7 +64,7 @@ Rage_Model(const String:ability_name[], boss)
 	}
 
 	if(duration > 0.0)
-		g_hModelChangeTimer[client] = CreateTimer(duration, RestoreModel, client);
+		g_hModelChangeTimer[client] = CreateTimer(duration, RestoreModel, client, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 void DeleteAllModelChangeTimer(bool force = false)
