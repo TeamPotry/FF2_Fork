@@ -14,11 +14,11 @@
 				"linux"		"@_ZN18CTFWeaponBaseMelee11OnEntityHitEP11CBaseEntityP15CTakeDamageInfo"
 				"windows"	" "
 			}
-            "CTFPlayer::GiveAmmo"
-            {
-                "linux"		"@_ZN9CTFPlayer8GiveAmmoEiib"
-                "windows"	" "
-            }
+			"CTFPlayer::GiveAmmo"
+			{
+			    "linux"		"@_ZN9CTFPlayer8GiveAmmoEiib"
+			    "windows"	" "
+			}
 			"CTFWeaponBase::GetEffectBarProgress"
 			{
 				"linux"		"@_ZN13CTFWeaponBase20GetEffectBarProgressEv"
@@ -41,8 +41,8 @@
 			}
 			"CTFPlayer::TeamFortress_SetSpeed()"
 			{
-				"linux"			"@_ZN9CTFPlayer21TeamFortress_SetSpeedEv"
-				"windows"		"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x1C\x53"
+				"linux"		"@_ZN9CTFPlayer21TeamFortress_SetSpeedEv"
+				"windows"	"\x55\x8B\xEC\xA1\x2A\x2A\x2A\x2A\x83\xEC\x1C\x53"
 			}
 			"CTFDroppedWeapon::InitDroppedWeapon"
 			{
@@ -75,19 +75,9 @@
 				"linux"		"@_ZN11CBaseEntity14SetAbsVelocityERK6Vector"
 				"windows"	" "
 			}
-			"CBaseEntity::VPhysicsGetObjectList"
-			{
-				"linux"		"@_ZN11CBaseEntity21VPhysicsGetObjectListEPP14IPhysicsObjecti"
-				"windows"	" "
-			}
 			"CBaseEntity::GetVelocity"
 			{
 				"linux"		"@_ZN11CBaseEntity11GetVelocityEP6VectorS1_"
-				"windows"	" "
-			}
-			"PhysCallbackImpulse"
-			{
-				"linux"		"@_Z19PhysCallbackImpulseP14IPhysicsObjectRK6VectorS3_"
 				"windows"	" "
 			}
 			"TestEntityPosition"
@@ -95,9 +85,9 @@
 				"linux"		"@_ZL18TestEntityPositionP11CBasePlayer"
 				"windows"	" "
 			}
-			"FindPassableSpace"
+			"CTFWeaponBase::GetProjectileFireSetup"
 			{
-				"linux"		"@_ZL17FindPassableSpaceP11CBasePlayerRK6VectorfRS1_"
+				"linux"		"@_ZN13CTFWeaponBase22GetProjectileFireSetupEP9CTFPlayer6VectorPS2_P6QAnglebf"
 				"windows"	" "
 			}
 			"CBaseEntity::SetAbsOrigin"
@@ -261,10 +251,44 @@
 
 			"CTFParticleCannon::FireChargedShot"
 			{
-				"signature"	"CTFParticleCannon::FireChargedShot"
-				"callconv"	"thiscall"
-				"return"	"void"
-				"this"		"entity"
+				"signature"		"CTFParticleCannon::FireChargedShot"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"entity"
+			}
+			"CTFWeaponBase::GetProjectileFireSetup"
+			{
+				"signature"		"CTFWeaponBase::GetProjectileFireSetup"
+				"callconv"		"thiscall"
+				"return"		"void"
+				"this"			"entity"
+				"arguments"
+				{
+					"pPlayer"
+					{
+						"type"	"cbaseentity"
+					}
+					"vecOffset"
+					{
+						"type"	"vectorptr"
+					}
+					"vecSrc"
+					{
+						"type"	"vectorptr"
+					}
+					"angForward"
+					{
+						"type"	"vectorptr"
+					}
+					"bHitTeammates"
+					{
+						"type"	"bool"
+					}
+					"flEndDist"
+					{
+						"type"	"float"
+					}
+				}
 			}
 		}
     }
