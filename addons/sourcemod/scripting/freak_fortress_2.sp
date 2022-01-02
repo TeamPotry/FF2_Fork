@@ -3461,63 +3461,79 @@ public Action CheckItems(Handle timer, int userid)
 		return Plugin_Continue;
 	}
 
-	weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
-	if(IsValidEntity(weapon))
+	for(int slot = TFWeaponSlot_Primary; slot <= TFWeaponSlot_Melee; slot++)
 	{
-		index=GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		switch(index)
+		weapon = GetPlayerWeaponSlot(client, slot);
+		if(IsValidEntity(weapon))
 		{
-			case 41:  //Natascha
+			index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+			switch(index)
 			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-				SpawnWeapon(client, "tf_weapon_minigun", 15);
+				case 41:  //Natascha
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+					SpawnWeapon(client, "tf_weapon_minigun", 15);
+				}
+				case 237:  //Rocket Jumper
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+					SpawnWeapon(client, "tf_weapon_rocketlauncher", 18, 1, 0, "114 ; 1");
+						//114: Mini-crits targets launched airborne by explosions, grapple hooks or enemy attacks
+					FF2_SetAmmo(client, weapon, 20);
+				}
+				case 402:  //Bazaar Bargain
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+					SpawnWeapon(client, "tf_weapon_sniperrifle", 14);
+				}
+
+				case 265:  //Stickybomb Jumper
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+					SpawnWeapon(client, "tf_weapon_pipebomblauncher", 20);
+					FF2_SetAmmo(client, weapon, 24);
+				}
+
+				// 긴급 픽스 (소스모드 1.11 교체 후 에너지 링 버그 해소하고 제거할 것)
+				// 소도둑, 정의의 들소, 폼슨 교체
+				/*
+				case 441:
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+					SpawnWeapon(client, "tf_weapon_rocketlauncher", 205);
+					FF2_SetAmmo(client, weapon, 20);
+				}
+				case 442:
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
+					SpawnWeapon(client, "tf_weapon_shotgun_soldier", 199);
+					FF2_SetAmmo(client, weapon, 36);
+				}
+
+				case 588:
+				{
+					TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
+					SpawnWeapon(client, "tf_weapon_shotgun_primary", 199);
+					FF2_SetAmmo(client, weapon, 36);
+				}
+				*/
 			}
-			case 237:  //Rocket Jumper
+
+			if(TF2_GetPlayerClass(client) == TFClass_Medic)
 			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-				SpawnWeapon(client, "tf_weapon_rocketlauncher", 18, 1, 0, "114 ; 1");
-					//114: Mini-crits targets launched airborne by explosions, grapple hooks or enemy attacks
-				FF2_SetAmmo(client, weapon, 20);
-			}
-			case 402:  //Bazaar Bargain
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Primary);
-				SpawnWeapon(client, "tf_weapon_sniperrifle", 14);
+				if(GetIndexOfWeaponSlot(client, TFWeaponSlot_Melee) == 142)  //Gunslinger (Randomizer, etc. compatability)
+				{
+					SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
+					SetEntityRenderColor(weapon, 255, 255, 255, 75);
+				}
 			}
 		}
-	}
-	else
-	{
-		civilianCheck[client]++;
+		else
+		{
+			civilianCheck[client]++;
+		}
 	}
 
-	weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary);
-	if(IsValidEntity(weapon))
-	{
-		index=GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		switch(index)
-		{
-			case 265:  //Stickybomb Jumper
-			{
-				TF2_RemoveWeaponSlot(client, TFWeaponSlot_Secondary);
-				SpawnWeapon(client, "tf_weapon_pipebomblauncher", 20);
-				FF2_SetAmmo(client, weapon, 24);
-			}
-		}
-
-		if(TF2_GetPlayerClass(client)==TFClass_Medic)
-		{
-			if(GetIndexOfWeaponSlot(client, TFWeaponSlot_Melee)==142)  //Gunslinger (Randomizer, etc. compatability)
-			{
-				SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
-				SetEntityRenderColor(weapon, 255, 255, 255, 75);
-			}
-		}
-	}
-	else
-	{
-		civilianCheck[client]++;
-	}
 
 	int playerBack=FindPlayerBack(client, 57);  //Razorback
 	shield[client]=IsValidEntity(playerBack) ? playerBack : 0;
