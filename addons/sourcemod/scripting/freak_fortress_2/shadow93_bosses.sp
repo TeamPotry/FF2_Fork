@@ -149,7 +149,7 @@ public void OnPluginStart()
 // A B I L I T I E S
 public void FF2_OnAbility(int boss, const char[] plugin_name, const char[] ability_name, int slot, int status)
 {
-	if(FF2_GetRoundState()==1 && livebosses)
+	if(FF2_GetRoundState() == 1)
 	{
 		int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 		if(!strcmp(ability_name, BOSSRAGE))
