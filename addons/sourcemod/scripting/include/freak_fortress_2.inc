@@ -596,12 +596,12 @@ stock void FF2_SetAmmo(int client, int weapon, int ammo=-1, int clip=-1)
  */
 stock int FF2_ShowSyncHudText(int client, Handle sync, const char[] buffer, any...)
 {
-	if(!(FF2_GetFF2Flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
-	{
-		char message[256];
-		VFormat(message, sizeof(message), buffer, 4);
-		return ShowSyncHudText(client, sync, message);
-	}
+    if(!(FF2_GetFF2Flags(client) & FF2FLAG_HUDDISABLED) && !(GetClientButtons(client) & IN_SCORE))
+    {
+        char message[256];
+        VFormat(message, sizeof(message), buffer, 4);
+        return ShowSyncHudText(client, sync, message);
+    }
 
     return -1;
 }

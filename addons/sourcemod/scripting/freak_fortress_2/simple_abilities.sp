@@ -10,8 +10,8 @@
 #include <ff2_potry>
 #include <stocksoup/sdkports/util>
 
-#define PLUGIN_NAME "simple abilities"
-#define PLUGIN_VERSION 	"20211008"
+#define PLUGIN_NAME 	"simple abilities"
+#define PLUGIN_VERSION 	"20211113"
 
 public Plugin myinfo=
 {
@@ -33,6 +33,18 @@ public Plugin myinfo=
 #define REMOVE_EMPTY_ABILITY_NAME			"remove weapon when empty"
 #define CHANGE_FIRE_DURATION				"change fire duration"
 #define SIMPLE_HINT_NAME					"simple hint"
+
+#define ADDITIONAL_HEALTH_NAME							"additional health"
+// slot must be more than 0.
+#define ADDITIONAL_HEALTH_DRAIN_RATE					"drain rate"
+#define ADDITIONAL_HEALTH_ON_KILL						"on kill"
+#define ON_KILL_ADDITIONAL_HEALTH_STUN_DURATION			"on kill stun duration"
+#define ON_KILL_ADDITIONAL_HEALTH_IN_DURATION			"on kill duration multiplier"
+
+#define ADD_ADDITIONAL_HEALTH_NAME						"add additional health"
+
+#define PAINIS_NOTICE							"painis notice"
+#define PAINIS_EAT_NOTICE						"painis eat sound"
 
 #define HIDEHUD_FLAGS			0b101101001010
 /*
@@ -61,6 +73,9 @@ int g_hDisabledWeapon[MAXPLAYERS+1];
 int g_hDisabledWeaponSlot[MAXPLAYERS+1];
 float g_flWeaponDisabledTime[MAXPLAYERS+1];
 
+int g_iCurrentAdditionalHealth[MAXPLAYERS+1];
+float g_flAdditionalHealthMultiplierDuration[MAXPLAYERS+1];
+
 enum
 {
 	Effect_OtherTeam = 0,
@@ -76,11 +91,84 @@ public void OnPluginStart()
 	HookEvent("arena_round_start", Event_RoundStart);
 	HookEvent("teamplay_round_active", Event_RoundStart); // for non-arena maps
 
+	HookEvent("player_hurt", OnPlayerHurt, EventHookMode_Post);
+	HookEvent("player_death", OnPlayerDeath, EventHookMode_Post);
+
 	FF2_RegisterSubplugin(PLUGIN_NAME);
+}
+
+public void OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid")),
+		// attacker = GetClientOfUserId(event.GetInt("attacker")),
+		damage = event.GetInt("damageamount"),
+		boss = FF2_GetBossIndex(client);
+
+	if(FF2_HasAbility(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME)
+		&& g_iCurrentAdditionalHealth[client] > 0)
+	{
+		g_iCurrentAdditionalHealth[client] -= damage;
+	}
+}
+
+public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid")), attacker = GetClientOfUserId(event.GetInt("attacker"));
+
+	if((event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) > 0
+		|| attacker == 0 || attacker == client)
+		return;
+
+	int boss = FF2_GetBossIndex(attacker);
+	if(FF2_HasAbility(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME))
+	{
+		int max = FF2_GetAbilityArgument(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ADDITIONAL_HEALTH_ON_KILL, 0);
+		if(max > 0)
+		{
+			int addHealth = FF2_GetClientDamage(client) / 2;
+			if(addHealth > max)
+				addHealth = max;
+			else if(addHealth <= 100)
+				addHealth = 100;
+
+			if(g_flAdditionalHealthMultiplierDuration[attacker] > GetGameTime())
+				// *= operator doesn't work with float this time.
+				addHealth = RoundFloat(addHealth * FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ON_KILL_ADDITIONAL_HEALTH_IN_DURATION, 1.0));
+
+			AddAdditionalHealth(boss, addHealth);
+
+			float stunDuration =
+				FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ON_KILL_ADDITIONAL_HEALTH_STUN_DURATION, 0.0);
+			if(stunDuration > 0.0)
+				TF2_StunPlayer(attacker, stunDuration, 0.0, TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_THIRDPERSON|TF_STUNFLAG_NOSOUNDOREFFECT);
+
+			// This was supposed for painis detail.
+			if(FF2_GetAbilityArgument(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, PAINIS_NOTICE, 0) > 0)
+			{
+				char bossName[64], sound[PLATFORM_MAX_PATH];
+				KeyValues bossKv = FF2_GetBossKV(boss);
+				FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, PAINIS_EAT_NOTICE, sound, PLATFORM_MAX_PATH, "");
+
+				for(int target = 1; target <= MaxClients; target++)
+				{
+					if(IsClientInGame(target))
+					{
+						GetCharacterName(bossKv, bossName, sizeof(bossName), target);
+						CPrintToChat(target, "{olive}[FF2]{default} %T", "Eaten by Painis", target, bossName, client, addHealth);
+
+						if(sound[0] != '\0')
+							EmitSoundToAll(sound, attacker, 0, 140, 0, 0.6);
+					}
+				}
+			}
+		}
+	}
 }
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 {
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+
 	if(StrEqual(CLIP_ADD_NAME, abilityName))
 	{
 		SetWeaponClip(boss);
@@ -120,6 +208,61 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	{
 		InvokeInsertAttributes(boss, slot);
 	}
+
+	if(StrEqual(ADDITIONAL_HEALTH_NAME, abilityName))
+	{
+		if(g_iCurrentAdditionalHealth[client] > 0)
+		{
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ADDITIONAL_HEALTH_DRAIN_RATE, 40.0);
+			int drainHealth = RoundFloat(GetTickInterval() * multiplier);
+
+			g_iCurrentAdditionalHealth[client] -= drainHealth;
+			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) - drainHealth);
+		}
+	}
+
+	if(StrEqual(ADD_ADDITIONAL_HEALTH_NAME, abilityName))
+	{
+		int addhealth = FF2_GetAbilityArgument(boss, PLUGIN_NAME, ADD_ADDITIONAL_HEALTH_NAME, "add health", 2000);
+		AddAdditionalHealth(boss, addhealth);
+
+		float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADD_ADDITIONAL_HEALTH_NAME, "duration", 10.0);
+		g_flAdditionalHealthMultiplierDuration[client] = GetGameTime() + duration;
+	}
+}
+
+void AddAdditionalHealth(int boss, int addhealth)
+{
+	int health = FF2_GetBossHealth(boss);
+	FF2_SetBossHealth(boss, health + addhealth);
+
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+	if(g_iCurrentAdditionalHealth[client] > 0)
+		g_iCurrentAdditionalHealth[client] += addhealth;
+	else
+		g_iCurrentAdditionalHealth[client] = addhealth;
+}
+
+public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
+{
+	int currentSpot;
+	characterKv.GetSectionSymbol(currentSpot);
+	characterKv.Rewind();
+
+	if(client > 0)
+	{
+		char language[8];
+		GetLanguageInfo(GetClientLanguage(client), language, sizeof(language));
+		if(characterKv.JumpToKey("name_lang"))
+		{
+			characterKv.GetString(language, bossName, size, "");
+			if(bossName[0] != '\0')
+				return;
+		}
+		characterKv.Rewind();
+	}
+	characterKv.GetString("name", bossName, size);
+	characterKv.JumpToKeySymbol(currentSpot);
 }
 
 void InvokeInsertAttributes(int boss, int slot)
@@ -351,6 +494,16 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 			int remainTime = RoundFloat(g_flWeaponDisabledTime[client] - GetGameTime());
 			Format(text, sizeof(text), "%T", "Weapon Disabled Time", client, remainTime);
 			hudDisplay = FF2HudDisplay.CreateDisplay("Weapon Disabled Time", text);
+			hudQueue.PushDisplay(hudDisplay);
+		}
+	}
+	else if(StrEqual(text, "Boss"))
+	{
+		if(FF2_HasAbility(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME)
+			&& g_iCurrentAdditionalHealth[client] > 0)
+		{
+			Format(text, sizeof(text), "%T", "Extra HP", client, g_iCurrentAdditionalHealth[client]);
+			hudDisplay = FF2HudDisplay.CreateDisplay("Extra HP", text);
 			hudQueue.PushDisplay(hudDisplay);
 		}
 	}
@@ -617,5 +770,8 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 
 		g_hDisabledWeapon[client] = -1;
 		g_flWeaponDisabledTime[client] = 0.0;
+
+		g_iCurrentAdditionalHealth[client] = 0;
+		g_flAdditionalHealthMultiplierDuration[client] = 0.0;
 	}
 }

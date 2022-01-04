@@ -145,9 +145,10 @@ public ArrayList GetAlivePlayers(bool includeBoss)
 	for(int client = 1; client <= MaxClients; client++)
 	{
 		if(IsClientInGame(client) && IsPlayerAlive(client)
-			&& (!includeBoss && FF2_GetBossIndex(client) == -1))
+		&& (!includeBoss && FF2_GetBossIndex(client) == -1))
 		{
-		    array.Push(client);
+			PrintToServer("Pushed %N", client);
+			array.Push(client);
 		}
 	}
 

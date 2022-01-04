@@ -26,4 +26,16 @@
         "#format"   "{1:d},{2:d}"
         "en"        "Current Sentry Count: {1} / {2}"
     }
+
+    "Eaten by Painis"
+    {
+        "#format"   "{1:s},{2:N},{3:i}"
+        "en"        "{green}{1}{default} ate {red}{2}{default}. (+{3}HP)"
+    }
+
+    "Extra HP"
+    {
+        "#format"   "{1:i}"
+        "en"        "Extra HP: {1}"
+    }
 }

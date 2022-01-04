@@ -31,7 +31,7 @@ enum
 *   @param boss      Boss's index
 *   @return         Boss's character index
 */
-native FF2_GetCharacterIndex(int boss);
+native int FF2_GetCharacterIndex(int boss);
 
 /**
  * Add Boss's charge.
@@ -79,6 +79,14 @@ native int FF2_GetRoundTime();
  * @noreturn
  */
 native void FF2_SetRoundTime(float time);
+
+/**
+ * Get assist of this client
+ *
+ * @param client 	Client's index
+ * @return          client's assist
+ */
+native int FF2_GetClientAssist(int client);
 
 /**
  * Sets assist by this client
@@ -276,7 +284,7 @@ forward void FF2_OnDisplayHud_Post(const int client, const char[] info, const ch
 stock void ResetBossCharge(int boss, int slot)
 {
     ArrayList pack = new ArrayList();
-    CreateTimer(0.001, ResetTimer, pack);
+    CreateTimer(0.001, ResetTimer, pack); // Wait.. Why is this needed?
 
     pack.Push(boss);
     pack.Push(slot);

@@ -26,4 +26,16 @@
         "#format"   "{1:d},{2:d}"
         "ko"        "센트리 갯수: {1} / {2}"
     }
+
+    "Eaten by Painis"
+    {
+        "#format"   "{1:s},{2:N},{3:i}"
+        "ko"        "{green}{1}{default}(이)가 {red}{2}{default}님을 먹었습니다. (+{3}HP)"
+    }
+
+    "Extra HP"
+    {
+        "#format"   "{1:i}"
+        "ko"        "추가 체력: {1}"
+    }
 }
