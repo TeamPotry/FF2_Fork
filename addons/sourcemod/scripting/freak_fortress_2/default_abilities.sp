@@ -7,6 +7,7 @@
 #include <morecolors>
 #include <freak_fortress_2>
 #include <ff2_potry>
+#include <tf2utils>
 
 #pragma newdecls required
 
@@ -66,6 +67,12 @@ public void OnPluginStart()
 	AutoExecConfig(true, "default_abilities", "sourcemod/freak_fortress_2");
 
 	FF2_RegisterSubplugin(PLUGIN_NAME);
+}
+
+public void OnMapStart()
+{
+    PrecacheEffect("ParticleEffect");
+	PrecacheParticleEffect("passtime_air_blast");
 }
 
 public void OnConfigsExecuted()
@@ -661,7 +668,7 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 			}
 
 			float multiplier = 4000.0, currentDownPower = -(fclamp(((90.0 - angles[0]) / angleCap), 0.0, 1.0) - 1.0);
-			float currentVelocity[3], currentSpeed, velocity[3], goalAngles[3], angleDiff;
+			float currentVelocity[3], currentSpeed, velocity[3], goalAngles[3], angleDiff, pos[3];
 
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
 			GetAngleVectors(angles, goalAngles, NULL_VECTOR, NULL_VECTOR);
@@ -679,7 +686,15 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 			currentDownPower = fmin(currentDownPower - (1.0 - angleDiff), 0.0);
 
 			// ??
-			ScaleVector(velocity, -(multiplier * (currentDownPower * (GetTickInterval() * 1.0))));
+			float duration = currentDownPower * -1.0;
+			// PrintToChatAll("currentDownPower: %.1f, duration: %.1f", currentDownPower, duration);
+			if(TF2Util_GetPlayerConditionDuration(client, TFCond_Dazed) < duration)
+			{
+				TF2_StunPlayer(client, duration, 0.5,
+					TF_STUNFLAG_SLOWDOWN|TF_STUNFLAG_NOSOUNDOREFFECT);
+			}
+
+			ScaleVector(velocity, -(multiplier * (currentDownPower * (GetTickInterval() * 2.0))));
 			GetEntPropVector(client, Prop_Data, "m_vecVelocity", currentVelocity);
 			AddVectors(velocity, currentVelocity, velocity);
 
@@ -687,6 +702,17 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 				velocity[2] = 0.0; // ??
 
 			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+
+			// Effect
+			GetClientEyePosition(client, pos);
+			float speed = GetVectorLength(velocity), effectEndPos[3];
+			NormalizeVector(goalAngles, effectEndPos);
+			ScaleVector(effectEndPos, speed * 0.6);
+
+			AddVectors(pos, effectEndPos, effectEndPos);
+			TE_DispatchEffect("passtime_air_blast", effectEndPos, effectEndPos);
+			TE_SendToAll();
+
 /*
 			float cooldown = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, "weightdown", "cooldown", 0.1);
 			if(cooldown > 0.0)
@@ -833,4 +859,77 @@ public Action FF2_OnTriggerHurt(int boss, int triggerhurt, float& damage)
 	}
 	*/
 	return Plugin_Continue;
+}
+
+void PrecacheEffect(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("EffectDispatch");
+
+	bool save = LockStringTables(false);
+	AddToStringTable(table, sEffectName);
+	LockStringTables(save);
+}
+
+void PrecacheParticleEffect(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("ParticleEffectNames");
+
+	bool save = LockStringTables(false);
+	AddToStringTable(table, sEffectName);
+	LockStringTables(save);
+}
+
+void TE_DispatchEffect(const char[] particle, const float pos[3], const float endpos[3], const float angles[3] = NULL_VECTOR, int parent = -1, int attachment = -1)
+{
+	TE_Start("EffectDispatch");
+	TE_WriteVector("m_vStart[0]", pos);
+	TE_WriteVector("m_vOrigin[0]", endpos);
+	TE_WriteVector("m_vAngles", angles);
+	TE_WriteNum("m_nHitBox", GetParticleEffectIndex(particle));
+	TE_WriteNum("m_iEffectName", GetEffectIndex("ParticleEffect"));
+
+	if(parent != -1)
+	{
+		TE_WriteNum("entindex", parent);
+	}
+	if(attachment != -1)
+	{
+		TE_WriteNum("m_nAttachmentIndex", attachment);
+	}
+}
+
+int GetParticleEffectIndex(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("ParticleEffectNames");
+
+	int iIndex = FindStringIndex(table, sEffectName);
+
+	if (iIndex != INVALID_STRING_INDEX)
+		return iIndex;
+
+	return 0;
+}
+
+int GetEffectIndex(const char[] sEffectName)
+{
+	static int table = INVALID_STRING_TABLE;
+
+	if (table == INVALID_STRING_TABLE)
+		table = FindStringTable("EffectDispatch");
+
+	int iIndex = FindStringIndex(table, sEffectName);
+
+	if (iIndex != INVALID_STRING_INDEX)
+		return iIndex;
+
+	return 0;
 }
