@@ -76,6 +76,7 @@ public void OnMapStart()
 	PrecacheParticleEffect("impact_dirt");
 	PrecacheParticleEffect("blood_impact_heavy");
 	PrecacheParticleEffect("deflect_fx");
+	PrecacheParticleEffect("pyro_blast");
 }
 
 public Action OnPlayerSpawnOrDead(Event event, const char[] name, bool dontBroadcast)
@@ -287,6 +288,7 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 
 	DispatchParticleEffect(effectPos, angles, "deflect_fx", 0, 1);
 	PlayReflectSound(client, effectPos);
+	DispatchReflectEffect(effectPos, effectPos, angles);
 
 	if(g_flReflecterHealth[client] > 0.0)
 	{
@@ -295,6 +297,10 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 		float speed = GetVectorLength(damageForce);
 		if(speed > 100.0)
 			ScaleVector(damageForce, 100.0 / speed);
+
+		float velocity[3];
+		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+		AddVectors(damageForce, velocity, damageForce);
 
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, damageForce);
 	}
@@ -414,6 +420,7 @@ public void OnReflecterThink(int client)
 
 		DispatchParticleEffect(pos, actualAngles, "deflect_fx", projectile, 1);
 		PlayProjectileReflectSound(projectile, pos);
+		DispatchReflectEffect(pos, pos, actualAngles);
 
 		SetEntPropEnt(projectile, Prop_Send, "m_hOwnerEntity", client);
 		SetEntProp(projectile, Prop_Send, "m_iTeamNum", GetClientTeam(client));
@@ -444,6 +451,12 @@ public void AddRandomDegree(float angles[3], float random)
     {
         angles[loop] += GetRandomFloat(random * -0.5, random * 0.5);
     }
+}
+
+stock void DispatchReflectEffect(float startpos[3], float endpos[3], float angles[3])
+{
+	TE_DispatchEffect("pyro_blast", startpos, endpos, angles);
+	TE_SendToAll();
 }
 
 // https://github.com/Pelipoika/The-unfinished-and-abandoned/blob/master/CSGO_SentryGun.sp
@@ -491,6 +504,7 @@ stock void FireBullet(int m_pAttacker, int m_pDamager, float m_vecSrc[3], float 
 
 		// Bullet tracer
 		TE_DispatchEffect(tracerEffect, endpos, m_vecSrc, NULL_VECTOR);
+		// TE_WriteFloat("m_flRadius", 20.0);
 		TE_SendToAll();
 
 		float vecNormal[3];	TR_GetPlaneNormal(trace, vecNormal);
