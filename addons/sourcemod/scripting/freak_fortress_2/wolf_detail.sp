@@ -148,48 +148,22 @@ void InvokeReflecterRage(int boss)
 
 void InitReflecter(int client)
 {
-	if((g_flReflecterHealth[client] > 0.0 || g_bReflecterForce[client])
-		&& !g_bReflecter[client])
+	bool able = g_flReflecterHealth[client] > 0.0 || g_bReflecterForce[client];
+	if(able && !g_bReflecter[client])
     {
 		g_bReflecter[client] = true;
 
 		SDKHook(client, SDKHook_PostThink, OnReflecterThink);
 		SDKHook(client, SDKHook_OnTakeDamageAlive, OnReflecterDamage);
 
-		TF2_AddCondition(client, TFCond_UberBlastResist, TFCondDuration_Infinite);
+		if(g_flReflecterHealth[client] > 0.0)
+			TF2_AddCondition(client, TFCond_UberBlastResist, TFCondDuration_Infinite);
+		else
+			TF2_AddCondition(client, TFCond_UberBulletResist, TFCondDuration_Infinite);
 
 		float pos[3];
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
-/*
-		int prop = CreateEntityByName("prop_dynamic");
-		if(IsValidEntity(prop))
-		{
-			// FIXME: THIS THINGS DOSE NOT WORK.
-			DispatchKeyValue(prop, "model", "models/effects/resist_shield/resist_shield.mdl");
-			DispatchKeyValue(prop, "solid", "6");
 
-			DispatchSpawn(prop);
-
-			TeleportEntity(prop, pos, NULL_VECTOR, NULL_VECTOR);
-			// SetEntPropVector(prop, Prop_Send, "m_vecOrigin", pos);
-			SetEntPropEnt(prop, Prop_Send, "m_hOwnerEntity", client);
-
-			ActivateEntity(prop);
-
-			// SetEntProp(prop, Prop_Send, "m_nSkin", 6);
-			// SetEntProp(prop, Prop_Send, "m_CollisionGroup", 0);
-			// SetEntProp(prop, Prop_Send, "m_nSolidType", 0);
-			// SetEntProp(prop, Prop_Send, "m_usSolidFlags", 0x0004);
-
-			SetVariantString("!activator");
-			AcceptEntityInput(prop, "SetParent", client);
-
-			// AcceptEntityInput(prop, "TurnOn");
-			// DispatchKeyValue(prop, "HoldAnimation", "1");
-
-			g_hReflecterEffect[client] = prop;
-		}
-*/
 		for(int target=1; target<=MaxClients; target++)
 		{
 			if(IsClientInGame(target))
@@ -198,6 +172,11 @@ void InitReflecter(int client)
 			}
 		}
     }
+	else if(g_bReflecter[client] && g_flReflecterHealth[client] > 0.0)
+	{
+		TF2_RemoveCondition(client, TFCond_UberBulletResist);
+		TF2_AddCondition(client, TFCond_UberBlastResist, TFCondDuration_Infinite);
+	}
 }
 
 void PlayReflectSound(int ent, float pos[3])
@@ -330,6 +309,7 @@ public void OnReflecterThink(int client)
 		SDKUnhook(client, SDKHook_OnTakeDamageAlive, OnReflecterDamage);
 
 		TF2_RemoveCondition(client, TFCond_UberBlastResist);
+		TF2_RemoveCondition(client, TFCond_UberBulletResist);
 /*
 		if(IsValidEntity(g_hReflecterEffect[client]))
 			RemoveEntity(g_hReflecterEffect[client]);
@@ -694,9 +674,14 @@ public MRESReturn DHookCallback_FireChargedShot_Post(int weapon)
     {
         int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DELETE_AFTER_CHARGE_NAME, "replace slot", -1);
         if(slot > -1)
-            SetEntPropEnt(owner, Prop_Send, "m_hActiveWeapon", GetPlayerWeaponSlot(owner, slot));
+		{
+			int replaceWeapon = GetPlayerWeaponSlot(owner, slot);
 
-        RemoveEntity(weapon);
+			if(IsValidEntity(replaceWeapon))
+				SetEntPropEnt(owner, Prop_Send, "m_hActiveWeapon", replaceWeapon);
+		}
+
+		RemoveEntity(weapon);
     }
     return MRES_Ignored;
 }
