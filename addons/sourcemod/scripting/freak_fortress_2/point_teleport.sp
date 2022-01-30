@@ -658,18 +658,23 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 {
 	// char message[128];
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
-	float charge = FF2_GetBossCharge(boss, slot);
-
 	int colors[4] = {255, 255, 255, 255};
-	float currentPos[3], pos[3], angles[3], endPos[3];
-	float fwd[3], right[3], up[3];
+
+	float charge = FF2_GetBossCharge(boss, slot);
+	float currentPos[3], pos[3], eyePos[3], angles[3], endPos[3], fwd[3], right[3], up[3];
+	float vecMin[3], vecMax[3], normal[3];
+
+	GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
+	GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
+
 	float maxDistance = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "max distance", 3000.0, slot);
 	g_flTeleportDistance[client] = maxDistance * (charge * 0.01);
 
 	GetClientAbsOrigin(client, currentPos);
 	GetClientEyeAngles(client, angles);
 
-	TF2Util_GetPlayerShootPosition(client, pos);
+	GetClientEyePosition(client, pos);
+	GetClientEyePosition(client, eyePos);
 	GetAngleVectors(angles, NULL_VECTOR, right, up);
 
 	float sum[3];
@@ -679,7 +684,7 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 	AddVectors(pos, sum, pos);
 
 	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
-	GetEndPos(client, pos, angles, g_flTeleportDistance[client], endPos);
+	GetEndPos(client, pos, eyePos, angles, g_flTeleportDistance[client], endPos, normal, vecMin, vecMax);
 	ScaleVector(angles, g_flTeleportDistance[client]);
 
 	SubtractVectors(endPos, pos, angles);
@@ -689,14 +694,10 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 
 	if(charge > 0.0)
 	{
-		float vecMin[3], vecMax[3];
-		GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
-		GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
-
 		// PrintToServer("tempAngles: %.1f %.1f %.1f", fwd[0], fwd[1], fwd[2]);
 		// PrintToServer("before endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
 
-		AdjustPositionOppositeDirected(client, pos, endPos, fwd, vecMin, vecMax, endPos);
+		AdjustPositionOppositeDirected(client, endPos, eyePos, normal, vecMin, vecMax, endPos);
 		// PrintToServer("endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
 	}
 
@@ -724,6 +725,9 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
 */
 			if(charge <= 10.0)	return;
+
+			if(IsStockInPosition(client, endPos, vecMin, vecMax))
+				colors = {255, 20, 20, 255};
 
 			TE_SetupBeamPoints(pos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 0.1, 10.0, 30.0, 0, 0.0, colors, 10);
 			TE_SendToClient(client);
@@ -850,27 +854,39 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 	}
 }
 
-public bool AdjustPositionOppositeDirected(int ent, float center[3], float pos[3], float dir[3], float vecMin[3], float vecMax[3], float result[3])
+public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3], float normal[3], float vecMin[3], float vecMax[3], float result[3])
 {
+	// 여기서 쓰인 모든 매개변수들은 백터
+	// 백터: https://developer.valvesoftware.com/wiki/Vector
+
 	// 바라보는 방향의 기준으로 중심 꼭짓점을 정함
 	// 우선 방향의 X와 Z ([0], [1]) 중에서 절댓값이 큰 쪽을 저장하여 연산의 우선순위를 정함
 	// x < 0.0: [0]은 반드시 max 좌표 사용, z < 0.0: [1]은 반드시 max 좌표 사용
 	// ㄴ 이를 이용해 시작 꼭짓점 값을 알아내고 방향에 따른 연산 순서를 다르게 할 것
 
-	// TODO: QVector의 인덱스 확인
+	/*
+		Vector의 인덱스
+
+		X +forward/-backward
+		Y +left/-right
+		Z +up/-down
+
+		예외 케이스: x: +, z: -
+	*/
 	float currentPos[3]; // Ha.
 	currentPos = VectorCopy(pos);
 
 	bool IsMax[3]; // IsCenterMax
 	{
 		for(int loop = 0; loop < 2; loop++)
-			IsMax[loop] = dir[loop] < 0.0;
+			IsMax[loop] = normal[loop] > 0.0;
+
 		IsMax[2] = false; // This is only used when checking Y.
 	}
 	int rank[2];
 	{
 		// 3차원 대응?
-		if(FloatAbs(dir[0]) > FloatAbs(dir[1]))
+		if(FloatAbs(normal[0]) > FloatAbs(normal[1]))
 			rank[0] = 0, rank[1] = 1;
 		else
 			rank[0] = 1, rank[1] = 0;
@@ -895,8 +911,8 @@ public bool AdjustPositionOppositeDirected(int ent, float center[3], float pos[3
 		// 중간의 Y축 검증
 		// 아랫쪽의 바운드 박스 보정 후
 		{
-			IsMax[2] = currentPos[2] < pos[2];
-			float y = IsMax[2] ? vecMin[2] : vecMax[2];
+			IsMax[2] = currentPos[2] < from[2];
+			float y = IsMax[2] ? vecMax[2] : vecMin[2];
 
 			FloatToVector(testStartPos, currentPos[0] + vecMin[0], currentPos[1] + vecMin[1], currentPos[2]
 				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
@@ -1004,7 +1020,7 @@ public bool AdjustPositionBySingleRay(int ent, int index, float currentPos[3], f
 	return false;
 }
 
-public void GetEndPos(int client, float pos[3], float angles[3], float distance, float endPos[3])
+public void GetEndPos(int client, float pos[3], float from[3], float angles[3], float distance, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
 {
 	float tempAngles[3];
 
@@ -1013,16 +1029,80 @@ public void GetEndPos(int client, float pos[3], float angles[3], float distance,
 	AddVectors(pos, tempAngles, endPos);
 
 	TR_TraceRayFilter(pos, endPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything, client);
-	if(TR_DidHit())
-	{
-		TR_GetEndPosition(endPos);
+	TR_GetEndPosition(endPos);
 
+	TR_GetPlaneNormal(null, normal);
+	int flags = TR_GetSurfaceFlags();
+	// PrintToChatAll("flags: %d, angles: %.5f %.5f %.5f", flags, angles[0], angles[1], angles[2]);
+	// PrintToChatAll("normal: %.5f %.5f %.5f", normal[0], normal[1], normal[2]);
+/*
+	PrintToChatAll("DidHit: %s, endPos: %.5f %.5f %.5f",
+		TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
+*/
+/*
 		tempAngles = angles;
+		NormalizeVector(tempAngles, tempAngles);
+		// 얇은 벽의 경우, 벽 너머에 트레이싱됨
+		// 일단 단순 연산으로 간격을 넓힘 (Y축만)
 
-		ScaleVector(tempAngles, -40.0); // 얇은 벽의 경우, 벽 너머에 트레이싱됨
+		tempAngles[0] = 0.0, tempAngles[1] = 0.0;
+		ScaleVector(tempAngles, -5.0);
 
-		AddVectors(endPos, tempAngles, endPos);
+		AddVectors(edndPos, twempAngles, endPos);
+*/
+	for(int loop = 0; loop < 2; loop++)
+	{
+		// 선형 트레이스는 기본적으로 닿은 자리가 벽 안쪽이므로
+		// 값이 0인 부분에 대해서도 뒤쪽으로 값을 땡겨야함
+		float ratio = -(FloatAbs(normal[loop]) - 1.0);
+		endPos[loop] += (normal[loop] > 0.0 ? vecMax[loop] : vecMin[loop]) * ratio;
 	}
+
+	if(normal[2] < 0.0)
+	{
+		float ratio = -(FloatAbs(normal[2]) - 1.0);
+		endPos[2] -= vecMax[2] * ratio;
+	}
+
+
+/*
+	// 벽에 충돌되었지만 위에 충돌할 경우
+	if(flags == 1152)
+	// 스카이박스 충돌의 경우 이후 좌표보정에 포함되지 않으므로 미리 안끼게 해둬야 함
+	endPos[2] -= vecMax[2] + 1.0;
+
+	float dir[3];
+	NormalizeVector(angles, dir);
+
+	bool IsMax[3]; // IsCenterMax
+	{
+
+		IsMax[0] = dir[0] < 0.0;
+
+		// Y +left/-right 라서 반대로 적용?
+		IsMax[1] = dir[1] > 0.0;
+
+		IsMax[2] = false; // This is only used when checking Y.
+	}
+	int rank[2];
+	{
+		// 3차원 대응?
+		if(FloatAbs(dir[0]) > FloatAbs(dir[1]))
+			rank[0] = 0, rank[1] = 1;
+		else
+			rank[0] = 1, rank[1] = 0;
+	}
+
+	float tempStartPos[3], tempEndPos[3];
+
+	// 첫번째 축 확인
+	GetPositionWithHull(rank[0], IsMax, endPos, vecMin, vecMax, tempStartPos, tempEndPos);
+	AdjustPositionBySingleRay(client, rank[0], endPos, tempStartPos, tempEndPos, endPos);
+
+	// 2번째 축 확인
+	GetPositionWithHull(rank[1], IsMax, endPos, vecMin, vecMax, tempStartPos, tempEndPos);
+	AdjustPositionBySingleRay(client, rank[1], endPos, tempStartPos, tempEndPos, endPos);
+*/
 }
 
 ///////////////////////////
@@ -1637,6 +1717,12 @@ bool Resize_OneTrace(const float startPos[3], const float endPos[3])
 public bool TraceAnything(int entity, int contentsMask, any data)
 {
     return entity == 0 || entity != data;
+}
+
+stock bool IsStockInPosition(int ent, float pos[3], float vecMin[3], float vecMax[3])
+{
+	TR_TraceHullFilter(pos, pos, vecMin, vecMax, MASK_SOLID, TraceAnything, ent);
+	return TR_DidHit();
 }
 
 public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCount)
