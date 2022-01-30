@@ -707,10 +707,12 @@ void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
 			GetClientEyePosition(client, pos);
 			float speed = GetVectorLength(velocity), effectEndPos[3];
 			NormalizeVector(goalAngles, effectEndPos);
+
+			effectEndPos[2] *= 0.65;
 			ScaleVector(effectEndPos, speed * 0.6);
 
 			AddVectors(pos, effectEndPos, effectEndPos);
-			TE_DispatchEffect("passtime_air_blast", effectEndPos, effectEndPos);
+			TE_DispatchEffect("passtime_air_blast", effectEndPos, effectEndPos, goalAngles);
 			TE_SendToAll();
 
 /*
