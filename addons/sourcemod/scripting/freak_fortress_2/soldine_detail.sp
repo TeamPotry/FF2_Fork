@@ -39,7 +39,7 @@ enum
 	Hole_Owner,
     Hole_Index,
     Hole_Power,
-    Hole_AttachedIndex,
+    Hole_AttachedRef,
 	Hole_InitTime,
 	Hole_Duration,
 
@@ -82,12 +82,12 @@ methodmap CTFBlackHole < ArrayList {
 			this.Set(Hole_Power, power);
 		}
 	}
-    property int AttachedIndex {
+    property int AttachedRef {
 		public get() {
-			return this.Get(Hole_AttachedIndex);
+			return this.Get(Hole_AttachedRef);
 		}
 		public set(int index) {
-			this.Set(Hole_AttachedIndex, index);
+			this.Set(Hole_AttachedRef, index);
 		}
 	}
 	property float InitTime {
@@ -209,22 +209,32 @@ public void BlackHole_Init_Update(CTFBlackHole hole)
     }
 
     float pos[3];
+	int attachedIndex = EntRefToEntIndex(hole.AttachedRef);
     // 중간에 벽에 충돌해서 없어졌거나 시간이 다 되어서 오픈되거나
-    if(!IsValidEntity(hole.AttachedIndex) || hole.InitTime < GetGameTime())
+
+	hole.GetUpdatePosition(pos);
+
+    if(hole.InitTime < GetGameTime())
     {
-        hole.GetUpdatePosition(pos);
         hole.Index = SpawnParticle(pos, "eyeboss_tp_vortex");
 
         hole.Open();
 
-        if(IsValidEntity(hole.AttachedIndex))
-            RemoveEntity(hole.AttachedIndex);
+        if(IsValidEntity(attachedIndex))
+            RemoveEntity(attachedIndex);
 
         return;
     }
-
-    GetEntPropVector(hole.AttachedIndex, Prop_Send, "m_vecOrigin", pos);
-    hole.SetUpdatePosition(pos);
+	else if(IsValidEntity(attachedIndex))
+	{
+		GetEntPropVector(attachedIndex, Prop_Send, "m_vecOrigin", pos);
+	    hole.SetUpdatePosition(pos);
+	}
+	else
+	{
+		int particle = SpawnParticle(pos, "eyeboss_doorway_vortex");
+		hole.AttachedRef = EntIndexToEntRef(particle);
+	}
 
     RequestFrame(BlackHole_Init_Update, hole);
 }
@@ -367,7 +377,7 @@ public void OnEntitySpawned(int entity)
     int particle = AttachParticle(entity, "spell_teleport_black", _, true);
     CTFBlackHole blackhole = CTFBlackHole.Create(owner, particle);
 
-    blackhole.AttachedIndex = entity;
+    blackhole.AttachedRef = EntIndexToEntRef(entity);
     blackhole.InitTime = g_flInitTime[owner] + GetGameTime();
     blackhole.Duration = g_flDuration[owner];
     blackhole.Power = g_flPower[owner];
