@@ -39,10 +39,12 @@ public MRESReturn DHookCallback_OnEntityHit_Post(int weapon, DHookParam params)
             if(TF2_IsPlayerInCondition(ent, TFCond_Dazed))
             {
                 bool buffed = TF2Attrib_HookValueInt(0, "speed_buff_ally", owner) > 0;
-
+                TF2_RemoveCondition(ent, TFCond_Dazed);
+/*
                 // TODO: configurable
                 TF2Util_SetPlayerConditionDuration(ent, TFCond_Dazed,
                     TF2Util_GetPlayerConditionDuration(ent, TFCond_Dazed) - (buffed ? 4.0 : 2.0));
+*/
                 Assist[owner] += buffed ? 400 : 200;
             }
         }
