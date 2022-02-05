@@ -61,19 +61,20 @@ public void OnPluginStart()
 public void OnMapStart()
 {
     PrecacheEffect("ParticleEffect");
-	PrecacheParticleEffect("dxhr_sniper_rail_blue");
+    PrecacheParticleEffect("dxhr_sniper_rail_blue");
     PrecacheParticleEffect("teleported_blue");
     PrecacheParticleEffect("teleportedin_blue");
 
     char classname[10], path[PLATFORM_MAX_PATH];
-	for (TFClassType loop = TFClass_Scout; loop <= TFClass_Engineer; loop++)
-	{
-		TF2_GetNameOfClass(loop, classname, sizeof(classname));
-		Format(path, sizeof(path), "models/bots/%s/bot_%s.mdl", classname, classname);
-		PrecacheModel(path, true);
-	}
+    for (TFClassType loop = TFClass_Scout; loop <= TFClass_Engineer; loop++)
+    {
+        TF2_GetNameOfClass(loop, classname, sizeof(classname));
+        Format(path, sizeof(path), "models/bots/%s/bot_%s.mdl", classname, classname);
+        PrecacheModel(path, true);
+    }
 }
 
+/*
 static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallback callbackPre = INVALID_FUNCTION, DHookCallback callbackPost = INVALID_FUNCTION)
 {
 	DynamicDetour detour = DynamicDetour.FromConf(gamedata, name);
@@ -90,6 +91,7 @@ static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallb
 		LogError("Failed to create detour setup handle for %s", name);
 	}
 }
+*/
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
@@ -109,16 +111,16 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	int client=GetClientOfUserId(event.GetInt("userid"));
+    int client=GetClientOfUserId(event.GetInt("userid"));
     TFTeam bossTeam = FF2_GetBossTeam();
 
     if(g_iRobotOwnerIndex[client]!=-1)  //Switch clones back to the other team after they die
-	{
-		g_iRobotOwnerIndex[client]=-1;
-		FF2_SetFF2Flags(client, FF2_GetFF2Flags(client) & ~FF2FLAG_CLASSTIMERDISABLED);
-		TF2_ChangeClientTeam(client, bossTeam == TFTeam_Blue ? TFTeam_Red : TFTeam_Blue);
-	}
-	return Plugin_Continue;
+    {
+        g_iRobotOwnerIndex[client]=-1;
+        FF2_SetFF2Flags(client, FF2_GetFF2Flags(client) & ~FF2FLAG_CLASSTIMERDISABLED);
+        TF2_ChangeClientTeam(client, bossTeam == TFTeam_Blue ? TFTeam_Red : TFTeam_Blue);
+    }
+    return Plugin_Continue;
 }
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
@@ -257,9 +259,9 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
             }
 
             SetEntProp(sentry, Prop_Send, "m_bCarried", 1);
-    		SetEntProp(sentry, Prop_Send, "m_bPlacing", 1);
-    		SetEntProp(sentry, Prop_Send, "m_bCarryDeploy", 0);
-    		SetEntProp(sentry, Prop_Send, "m_iDesiredBuildRotations", 0);
+            SetEntProp(sentry, Prop_Send, "m_bPlacing", 1);
+            SetEntProp(sentry, Prop_Send, "m_bCarryDeploy", 0);
+            SetEntProp(sentry, Prop_Send, "m_iDesiredBuildRotations", 0);
             SetEntProp(sentry, Prop_Send, "m_iUpgradeLevel", 1);
 
             SetEntPropEnt(pda, Prop_Send, "m_hObjectBeingBuilt", sentry);
@@ -321,11 +323,11 @@ public void OnSentryMinionQueue(int sentryRef)
         g_iRobotOwnerIndex[target] = owner;
         int classRandom = GetRandomInt(0, 7);
 
+        FF2_SetFF2Flags(target, FF2_GetFF2Flags(target)|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_CLASSTIMERDISABLED);
+
         TF2_ChangeClientTeam(target, TF2_GetClientTeam(owner));
         TF2_SetPlayerClass(target, classes[classRandom], false, false);
         TF2_RespawnPlayer(target);
-
-        FF2_SetFF2Flags(target, FF2_GetFF2Flags(target)|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_CLASSTIMERDISABLED);
 
         #if defined _MVM_included
         	ResetMannVsMachineMode();
@@ -362,32 +364,32 @@ public void OnSentryMinionQueue(int sentryRef)
         GetRobotModelPath(classes[classRandom], model, PLATFORM_MAX_PATH);
 
         DataPack data;
-		CreateDataTimer(0.1, Timer_MakeRobotMinion, data, TIMER_FLAG_NO_MAPCHANGE);
-		data.WriteCell(GetClientUserId(target));
+        CreateDataTimer(0.1, Timer_MakeRobotMinion, data, TIMER_FLAG_NO_MAPCHANGE);
+        data.WriteCell(GetClientUserId(target));
         data.WriteCell(classes[classRandom]);
-		data.WriteString(model);
+        data.WriteString(model);
     }
 }
 
 public Action Timer_MakeRobotMinion(Handle timer, DataPack pack)
 {
-	pack.Reset();
-	int client=GetClientOfUserId(pack.ReadCell());
+    pack.Reset();
+    int client=GetClientOfUserId(pack.ReadCell());
     TFClassType class = pack.ReadCell();
-	if(client && IsClientInGame(client) && IsPlayerAlive(client))
-	{
+    if(client && IsClientInGame(client) && IsPlayerAlive(client))
+    {
         TF2Attrib_RemoveAll(client);
         TF2_RemoveAllWeapons(client);
-		TF2_RemoveAllWearables(client);
+        TF2_RemoveAllWearables(client);
 
         SwitchToDefalutWeapon(client, class);
 
-		char model[PLATFORM_MAX_PATH];
-		pack.ReadString(model, PLATFORM_MAX_PATH);
-		SetVariantString(model);
-		AcceptEntityInput(client, "SetCustomModel");
-		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-	}
+        char model[PLATFORM_MAX_PATH];
+        pack.ReadString(model, PLATFORM_MAX_PATH);
+        SetVariantString(model);
+        AcceptEntityInput(client, "SetCustomModel");
+        SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
+    }
 }
 
 public void GetRobotModelPath(TFClassType class, char[] path, int buffer)
@@ -555,7 +557,9 @@ int GetMinionTarget(int owner)
 {
     for(int client = 1; client <= MaxClients; client++)
     {
-        if(!IsClientInGame(client) || IsPlayerAlive(client) || TF2_GetClientTeam(client) <= TFTeam_Spectator
+        if(!IsClientInGame(client) || IsPlayerAlive(client)
+            || TF2_GetClientTeam(client) <= TFTeam_Spectator
+            || FF2_GetBossIndex(client) != -1
             || client == owner)
             continue;
 
@@ -567,23 +571,23 @@ int GetMinionTarget(int owner)
 
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
-	int boss = FF2_GetBossIndex(client);
-	if(!FF2_HasAbility(boss, PLUGIN_NAME, INSTANT_BUILDING_NAME))  return;
+    int boss = FF2_GetBossIndex(client);
+    if(!FF2_HasAbility(boss, PLUGIN_NAME, INSTANT_BUILDING_NAME))  return;
 
-	char text[128];
-	FF2HudDisplay hudDisplay = null;
+    char text[128];
+    FF2HudDisplay hudDisplay = null;
 
-	SetGlobalTransTarget(client);
-	hudQueue.GetName(text, sizeof(text));
+    SetGlobalTransTarget(client);
+    hudQueue.GetName(text, sizeof(text));
 
-	if(StrEqual(text, "Boss"))
-	{
+    if(StrEqual(text, "Boss"))
+    {
         int maxCount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, INSTANT_BUILDING_NAME, "sentry max count", 10);
-		Format(text, sizeof(text), "%t", "Sentry Count", GetSentryCount(client), maxCount);
+        Format(text, sizeof(text), "%t", "Sentry Count", GetSentryCount(client), maxCount);
 
-		hudDisplay = FF2HudDisplay.CreateDisplay("Sentry Count", text);
-		hudQueue.AddHud(hudDisplay, client);
-	}
+        hudDisplay = FF2HudDisplay.CreateDisplay("Sentry Count", text);
+        hudQueue.AddHud(hudDisplay, client);
+    }
 }
 
 stock int GetFurthestSentry(int client)
@@ -778,9 +782,9 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 {
     int particle = CreateEntityByName("info_particle_system");
 
-	char temp[64], targetName[64];
-	if (IsValidEdict(particle))
-	{
+    char temp[64], targetName[64];
+    if (IsValidEdict(particle))
+    {
 		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
 
 		Format(targetName, sizeof(targetName), "tf2particle%i", particle);
@@ -940,13 +944,13 @@ stock int TF2_BuildSentry(int builder, float fOrigin[3], float fAngle[3], int le
 Handle PrepSDKCall_SentryDeploy(GameData gamedata)
 {
     StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CTFWeaponBuilder::Deploy");
+    PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CTFWeaponBuilder::Deploy");
 
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CTFWeaponBuilder::Deploy");
+    Handle call = EndPrepSDKCall();
+    if (!call)
+        LogMessage("Failed to create SDK call: CTFWeaponBuilder::Deploy");
 
-	return call;
+    return call;
 }
 
 void SDKCall_SentryDeploy(int pda)
