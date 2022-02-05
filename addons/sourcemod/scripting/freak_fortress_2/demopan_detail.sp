@@ -13,9 +13,10 @@ public Plugin myinfo=
 	version="2(1.0)",
 };
 
-#define THIS_PLUGIN_NAME "demopan_detail"
+#define THIS_PLUGIN_NAME 		"demopan_detail"
 
-#define AIR_CHARGE_ABILITY "air charge"
+#define AIR_CHARGE_ABILITY 		"air charge"
+#define FORCE_CHARGE_ABILITY 	"force charge"
 
 public void OnPluginStart()
 {
@@ -42,6 +43,16 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVel
 {
 	int boss = FF2_GetBossIndex(client);
 	if(!IsPlayerAlive(client) || boss == -1) return Plugin_Continue;
+
+	// force charge
+	if(!TF2_IsPlayerInCondition(client, TFCond_Charging)
+	&& !TF2_IsPlayerInCondition(client, TFCond_Dazed)
+	&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY)
+	&& (buttons & (IN_ATTACK2|IN_RELOAD)) > 0 // IN_RELOAD should be in Post function.
+ 	&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 10.0)
+	{
+		TF2_AddCondition(client, TFCond_Charging, -1.0, client);
+	}
 
 	// Air charge
 	if(TF2_IsPlayerInCondition(client, TFCond_Charging)
