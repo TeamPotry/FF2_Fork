@@ -507,20 +507,26 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 			hudQueue.PushDisplay(hudDisplay);
 		}
 	}
-	else if(StrEqual(text, "Boss Down Additional"))
+
+	if(FF2_HasAbility(boss, PLUGIN_NAME, SIMPLE_HINT_NAME))
 	{
-		if(FF2_HasAbility(boss, PLUGIN_NAME, SIMPLE_HINT_NAME))
+		char phrase[64], languageId[8], display[128];
+		GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
+
+		//
+		Format(phrase, sizeof(phrase), "hint %s: %s", text, languageId);
+		FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, SIMPLE_HINT_NAME, phrase, display, sizeof(display));
+
+		if(display[0] == '\0')
 		{
-			char languageId[12];
-			GetLanguageInfo(GetClientLanguage(client), languageId, sizeof(languageId));
-			Format(languageId, sizeof(languageId), "hint %s", languageId);
+			Format(phrase, sizeof(phrase), "hint %s", text, phrase);
+			// "hint [Phrase Name]" is for server's language.
+			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, SIMPLE_HINT_NAME, phrase, display, sizeof(display));
+		}
 
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, SIMPLE_HINT_NAME, languageId, text, sizeof(text));
-			if(text[0] == '\0')
-				// "hint" is for server's language.
-				FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, SIMPLE_HINT_NAME, "hint", text, sizeof(text));
-
-			hudDisplay = FF2HudDisplay.CreateDisplay(SIMPLE_HINT_NAME, text);
+		if(display[0] != '\0')
+		{
+			hudDisplay = FF2HudDisplay.CreateDisplay(SIMPLE_HINT_NAME, display);
 			hudQueue.PushDisplay(hudDisplay);
 		}
 	}
