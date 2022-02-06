@@ -181,6 +181,10 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 	if(StrEqual(REGENERATE_ABILITY_NAME, abilityName))
 	{
+		// 스파이일 경우, 이 컨디션 안지우면 끝까지 남음
+		TF2_RemovePlayerDisguise(client);
+		TF2_RemoveCondition(client, TFCond_Cloaked);
+
 		FF2_EquipBoss(boss);
 	}
 
