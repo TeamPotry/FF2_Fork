@@ -12,4 +12,8 @@
     {
         "ko"    "전자 교란기 충전"
     }
+    "Current Extra Jumps"
+    {
+        "ko"    "추가 점프"
+    }
 }

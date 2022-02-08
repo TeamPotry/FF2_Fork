@@ -12,4 +12,8 @@
     {
         "en"    "Sapper Charge"
     }
+    "Current Extra Jumps"
+    {
+        "en"    "Extra Jumps"
+    }
 }
