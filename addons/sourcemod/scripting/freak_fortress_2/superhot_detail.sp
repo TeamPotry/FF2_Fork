@@ -11,7 +11,7 @@
 #include <tf2utils>
 
 #define PLUGIN_NAME "superhot detail"
-#define PLUGIN_VERSION 	"20210814"
+#define PLUGIN_VERSION 	"20220206"
 
 public Plugin myinfo=
 {
@@ -232,9 +232,6 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 		Address address;
 		for(int loop = 0; loop < attribDefCount; loop++)
 		{
-			// if(IsBanned(attribDefIndexs[loop]))
-				// continue;
-
 			address = TF2Attrib_GetByDefIndex(beforeWeapon, attribDefIndexs[loop]);
 			if(address != Address_Null)
 			{
@@ -244,8 +241,6 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 					Format(attributes, sizeof(attributes), "%d ; %.1f", attribDefIndexs[loop], attribDefAttribs[loop]);
 				else
 					Format(attributes, sizeof(attributes), "%s ; %d ; %.1f", attributes, attribDefIndexs[loop], attribDefAttribs[loop]);
-				// stack.Push(attribDefIndexs[loop]);
-				// attribStack.Push(attribDefAttribs[loop]);
 
 				count++;
 			}
@@ -260,29 +255,6 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 			SetEntProp(weapon, Prop_Send, "m_iSelectedSpellIndex", GetEntProp(beforeWeapon, Prop_Send, "m_iSelectedSpellIndex"));
 		}
 
-		/*
-			NOTE: 용의 격노는 현재 작동되지 않음
-			일부 클라이언트의 경우, 한번에 능력치를 적용하면 크래쉬가 생기는 현상이 있어
-			한 프레임에 능력치 하나씩 밀어넣는 구조로 변경됨.
-		*/
-		// 기본 화염방사기 지급
-/*
-		if(index == 1178)
-		{
-			PrintCenterText(client, "THIS IS BUG. I WILL FIX THIS AS SOON.");
-			weapon = SpawnWeapon(client, "tf_weapon_flamethrower", 208, 101, 0, "");
-		}
-		else
-			weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
-*/
-		// weapon = SpawnWeapon(client, classname, index, 101, 0, attributes);
-		// TF2Attrib_RemoveAll(weapon);
-
-		// array.Push(weapon);
-		// array.Push(stack);
-		// array.Push(attribStack);
-
-		// RequestFrame(AddAttribs, array);
 
 		SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 
@@ -349,18 +321,6 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 	return Plugin_Continue;
 }
 
-stock bool IsBanned(int index)
-{
-	switch(index)
-	{
-		case 719, 731:
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 public void AddAttribs(ArrayList array)
 {
 	int weapon = array.Get(0);
@@ -425,7 +385,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	if(!g_bRageBlock[client] && !g_bOneOfUs[client])		return;
 
-	char text[128] = "SUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOT";
+	static char text[128] = "SUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOTSUPERHOT";
 	FF2HudDisplay hudDisplay = null;
 
 	hudQueue.DeleteAllDisplay();
