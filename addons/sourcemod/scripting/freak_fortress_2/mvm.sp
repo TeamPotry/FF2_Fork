@@ -493,7 +493,7 @@ public MRESReturn DHookCallback_CanAirDash_Pre(int client, DHookReturn ret)
 	// ?? 근데 아래 코드 적용하니까 이번엔 제대로 작동되네 뭐지?
 	// 아 airDash 다 쓴 경우에만 인수분해 점프가 제대로 막힘
 	// MRES_Ignored 반환 이후, 점프 횟수가 모든 점프 횟수와 합산되는 문제가 있어 강제 조정
-	if(airDash <= 0 && currentDash > defaultDashCount)
+	if(airDash <= 0 && currentDash >= defaultDashCount)
 	{
 		ret.Value = false;
 		return MRES_Supercede;
