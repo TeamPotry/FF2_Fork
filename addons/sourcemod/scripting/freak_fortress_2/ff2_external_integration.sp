@@ -96,7 +96,7 @@ public Action OnStomp(int attacker, int victim, float &damageMultiplier, float &
 
 		if(FF2_GetBossIndex(victim) != -1)
 		{
-			float powerMultiplier = speed / 200.0;
+			float powerMultiplier = speed / 150.0;
 			if(powerMultiplier < 1.0)
 				powerMultiplier = 1.0;
 			else if(powerMultiplier > 6.0)
