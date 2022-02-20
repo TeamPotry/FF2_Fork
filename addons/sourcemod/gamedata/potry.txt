@@ -96,6 +96,48 @@
 				"linux"		"@_ZN11CBaseEntity12SetAbsOriginERK6Vector"
 				"windows"	" "
 			}
+			"CBaseEntity::MyNextBotPointer"
+			{
+				"library"	"server"
+				"linux"		"@_ZN11CBaseEntity16MyNextBotPointerEv"
+				"windows"	" "
+			}
+			"INextBot::GetLocomotionInterface"
+			{
+				"library"	"server"
+				"linux"		"@_ZNK8INextBot22GetLocomotionInterfaceEv"
+				"windows"	" "
+			}
+			"CTFBaseBossLocomotion::GetStepHeight"
+			{
+				"library"	"server"
+				"linux"		"@_ZNK21CTFBaseBossLocomotion13GetStepHeightEv"
+				"windows"	" "
+			}
+			"CTFBaseBoss::GetCurrencyValue"
+			{
+				"linux"		"@_ZN11CTFBaseBoss16GetCurrencyValueEv"
+				"windows"	" "
+			}
+			"CBaseAnimating::StudioFrameAdvance"
+			{
+				"library"	"server"
+				"linux"		"@_ZN14CBaseAnimating18StudioFrameAdvanceEv"
+				"windows"	" "
+			}
+			"CBaseAnimatingOverlay::AllocateLayer"
+			{
+				"library"	"server"
+				"linux"		"@_ZN21CBaseAnimatingOverlay13AllocateLayerEi"
+				"windows"	" "
+			}
+			"CBaseAnimating::ResetSequence"
+			{
+				"library"	"server"
+				"linux"		"@_ZN14CBaseAnimating13ResetSequenceEi"
+				"windows"	" "
+			}
+
 			"CTFWeaponBuilder::Deploy"
 			{
 				"linux"		"@_ZN16CTFWeaponBuilder6DeployEv"
@@ -297,6 +339,20 @@
 				"callconv"		"thiscall"
 				"return"		"bool"
 				"this"			"entity"
+			}
+			"CTFBaseBoss::GetCurrencyValue"
+			{
+				"signature"		"CTFBaseBoss::GetCurrencyValue"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"entity"
+			}
+			"CTFBaseBossLocomotion::GetStepHeight"
+			{
+				"signature"		"CTFBaseBossLocomotion::GetStepHeight"
+				"callconv"		"thiscall"
+				"return"		"float"
+				"this"			"address"
 			}
 		}
     }
