@@ -19,11 +19,16 @@ jobs:
     # if: needs.local_check.outputs.status == 'success'
     
     steps:
-      - id: 32bitlib
-        name: Setup 32-bit library
+      - name: Setup 32-bit library
         run: |
           apt-get update
           sudo apt-get install -y lib32z1 lib32stdc++6
+          
+      - name: Setup SourceMod
+        run: |
+          wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
+          tar -xzf $(cat sourcemod-latest-linux)
+          pwd
           
       - name: Setup Source
         uses: actions/checkout@master
@@ -55,8 +60,8 @@ jobs:
 
         # Support freak_fortress_2/*.sp soon.
 
-      - name: Upload plugin artifact
-        uses: actions/upload-artifact@master
-        with:
-          name: Plugin
-          path: addons/sourcemod/scripting/build
+ #     - name: Upload plugin artifact
+ #       uses: actions/upload-artifact@master
+ #       with:
+ #         name: Plugin
+ #         path: addons/sourcemod/scripting/build
