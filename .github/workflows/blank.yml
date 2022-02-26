@@ -23,7 +23,8 @@ jobs:
         run: |
           apt-get update
           sudo apt-get install -y lib32z1 lib32stdc++6
-          
+        
+        # leave this at first. This will reset all of the files.
       - name: Setup Source
         uses: actions/checkout@master
           
