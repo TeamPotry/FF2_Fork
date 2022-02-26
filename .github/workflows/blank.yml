@@ -15,8 +15,6 @@ jobs:
 
     name: SM version ${{ matrix.sm-version }}
     
-    # needs: local_check
-    # if: needs.local_check.outputs.status == 'success'
     
     steps:
       - name: Setup 32-bit library
@@ -32,10 +30,6 @@ jobs:
         run: |
           wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
           tar -xzf $(cat sourcemod-latest-linux)
-          pwd
-          ls
-          cd ./addons/sourcemod/scripting
-          ls
 
       - name: Setup Include
         working-directory: addons/sourcemod/scripting
@@ -56,8 +50,6 @@ jobs:
       - name: Compile
         working-directory: addons/sourcemod/scripting
         run: |
-         pwd
-         ls
          chmod +x spcomp
          mkdir compiled compiled/freak_fortress_2
          ./compile.sh freak_fortress_2.sp 
