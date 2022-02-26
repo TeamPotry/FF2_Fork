@@ -2,23 +2,29 @@ name: CI
 
 on: [push, pull_request]
 
-jobs:
-  build:
+env:
+  LINT_PROCEED: false
+
+
+jobs:     
+  build: 
     runs-on: ubuntu-latest
     strategy:
       matrix:
         sm-version: [ '1.10' ]
 
     name: SM version ${{ matrix.sm-version }}
+    
+    # needs: local_check
+    # if: needs.local_check.outputs.status == 'success'
+    
     steps:
-      - name: Setup SourceMod
+      - id: 32bitlib
+        name: Setup 32-bit library
         run: |
-         apt-get update
-         sudo apt-get install -y lib32z1 lib32stdc++6
-         wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
-         tar -xzf $(cat sourcemod-latest-linux)
-         pwd
-
+          apt-get update
+          sudo apt-get install -y lib32z1 lib32stdc++6
+          
       - name: Setup Source
         uses: actions/checkout@master
 
