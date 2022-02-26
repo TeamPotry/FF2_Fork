@@ -44,20 +44,18 @@ jobs:
           wget "https://raw.githubusercontent.com/nosoop/sourcemod-tf2wearables/master/addons/sourcemod/scripting/include/tf2wearables.inc" -P include
           wget "https://raw.githubusercontent.com/peace-maker/DHooks2/dynhooks/sourcemod_files/scripting/include/dhooks.inc" -P include
           wget "https://raw.githubusercontent.com/Nopied/MannVsMann/master/addons/sourcemod/scripting/include/mannvsmann.inc" -P include
-        # wget "https://raw.githubusercontent.com/TeamPotry/FF2_boss_selection/master/addons/sourcemod/scripting/include/ff2_boss_selection.inc" -P include
-        # wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/medigun_patch.inc" -P include
+          wget "https://raw.githubusercontent.com/TeamPotry/FF2_boss_selection/master/addons/sourcemod/scripting/include/ff2_boss_selection.inc" -P include
+          wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/medigun_patch.inc" -P include
           
       - name: Compile
         working-directory: addons/sourcemod/scripting
         run: |
          chmod +x spcomp
          mkdir compiled compiled/freak_fortress_2
-         ./compile.sh freak_fortress_2.sp 
-
-        # Support freak_fortress_2/*.sp soon.
+         ./compile.sh freak_fortress_2.sp freak_fortress_2/*.sp
 
  #     - name: Upload plugin artifact
  #       uses: actions/upload-artifact@master
  #       with:
  #         name: Plugin
- #         path: addons/sourcemod/scripting/build
+ #         path: addons/sourcemod/scripting/compiled
