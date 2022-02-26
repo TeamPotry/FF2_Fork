@@ -189,7 +189,7 @@ void Charge_TFCondition(const char[] ability_name, int boss, int slot, int actio
 {
 	char VictimCond[768], BossCond[768];
 	float charge = FF2_GetBossCharge(boss,slot), bCharge = FF2_GetBossCharge(boss,0);
-	float rCost = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, ability_name, "cost", slot);
+	float rCost = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, ability_name, "cost", 0.0, slot);
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	// int override=FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, ability_name, 11);
 
@@ -228,8 +228,8 @@ void Charge_TFCondition(const char[] ability_name, int boss, int slot, int actio
 				}
 
 				// Conditions
-				FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, ability_name, "boss_conditions", BossCond, sizeof(BossCond), slot); // client TFConds
-				FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, ability_name, "player_conditions", VictimCond, sizeof(VictimCond), slot); // victim TFConds
+				FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, ability_name, "boss_conditions", BossCond, sizeof(BossCond), "", slot); // client TFConds
+				FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, ability_name, "player_conditions", VictimCond, sizeof(VictimCond), "", slot); // victim TFConds
 
 				if(BossCond[0]!='\0')
 				{
