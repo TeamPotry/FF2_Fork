@@ -25,6 +25,9 @@ jobs:
           apt-get update
           sudo apt-get install -y lib32z1 lib32stdc++6
           
+      - name: Setup Source
+        uses: actions/checkout@master
+          
       - name: Setup SourceMod
         run: |
           wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
@@ -33,9 +36,6 @@ jobs:
           ls
           cd ./addons/sourcemod/scripting
           ls
-          
-      - name: Setup Source
-        uses: actions/checkout@master
 
       - name: Setup Include
         working-directory: addons/sourcemod/scripting
