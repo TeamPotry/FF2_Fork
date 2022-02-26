@@ -30,6 +30,7 @@ jobs:
           wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
           tar -xzf $(cat sourcemod-latest-linux)
           pwd
+          ls
           
       - name: Setup Source
         uses: actions/checkout@master
