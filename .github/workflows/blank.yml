@@ -13,9 +13,11 @@ jobs:
     steps:
       - name: Setup SourceMod
         run: |
-         sudo apt-get install -y lib32z1
+         apt-get update
+         sudo apt-get install -y lib32z1 lib32stdc++6
          wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
          tar -xzf $(cat sourcemod-latest-linux)
+         pwd
 
       - name: Setup Source
         uses: actions/checkout@master
@@ -32,6 +34,9 @@ jobs:
           wget "https://raw.githubusercontent.com/nosoop/SM-TFUtils/master/scripting/include/tf2utils.inc" -P include
           wget "https://raw.githubusercontent.com/nosoop/sourcemod-tf2wearables/master/addons/sourcemod/scripting/include/tf2wearables.inc" -P include
           wget "https://raw.githubusercontent.com/peace-maker/DHooks2/dynhooks/sourcemod_files/scripting/include/dhooks.inc" -P include
+          wget "https://raw.githubusercontent.com/Nopied/MannVsMann/master/addons/sourcemod/scripting/include/mannvsmann.inc" -P include
+        # wget "https://raw.githubusercontent.com/TeamPotry/FF2_boss_selection/master/addons/sourcemod/scripting/include/ff2_boss_selection.inc" -P include
+        # wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/medigun_patch.inc" -P include
           
       - name: Compile
         working-directory: addons/sourcemod/scripting
@@ -39,9 +44,10 @@ jobs:
          pwd
          ls
          chmod +x spcomp
-         chmod +x spcomp64
          mkdir compiled compiled/freak_fortress_2
-         ./compile.sh freak_fortress_2.sp freak_fortress_2/*.sp
+         ./compile.sh freak_fortress_2.sp 
+
+        # Support freak_fortress_2/*.sp soon.
 
       - name: Upload plugin artifact
         uses: actions/upload-artifact@master
