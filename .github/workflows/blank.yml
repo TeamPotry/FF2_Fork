@@ -31,6 +31,8 @@ jobs:
           tar -xzf $(cat sourcemod-latest-linux)
           pwd
           ls
+          cd ./addons/sourcemod/scripting
+          ls
           
       - name: Setup Source
         uses: actions/checkout@master
