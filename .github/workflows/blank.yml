@@ -7,14 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sm-version: [ '1.10.x' ]
+        sm-version: [ '1.10' ]
 
     name: SM version ${{ matrix.sm-version }}
     steps:
       - name: Setup SourceMod
-        uses: rumblefrog/setup-sp@master
-        with:
-          version: ${{ matrix.sm-version }}
+        run: |
+         sudo apt-get install -y lib32z1
+         wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
+         tar -xzf $(cat sourcemod-latest-linux)
 
       - name: Setup Source
         uses: actions/checkout@master
@@ -35,9 +36,12 @@ jobs:
       - name: Compile
         working-directory: addons/sourcemod/scripting
         run: |
-          mkdir -p build/freak_fortress_2
-
-          spcomp -iinclude freak_fortress_2.sp -o build/freak_fortress_2.smx
+         pwd
+         ls
+         chmod +x spcomp
+         chmod +x spcomp64
+         mkdir compiled compiled/freak_fortress_2
+         ./compile.sh freak_fortress_2.sp freak_fortress_2/*.sp
 
       - name: Upload plugin artifact
         uses: actions/upload-artifact@master
