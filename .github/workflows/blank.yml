@@ -6,28 +6,28 @@ env:
   LINT_PROCEED: false
 
 
-jobs:     
-  build: 
+jobs:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         sm-version: [ '1.10' ]
 
     name: SM version ${{ matrix.sm-version }}
-    
-    
+
+
     steps:
       - name: Setup 32-bit library
-        # This is for local 
+        # This is for local
         continue-on-error: true
         run: |
           apt-get update
           sudo apt-get install -y lib32z1 lib32stdc++6
-        
+
         # leave this at first. This will reset all of the files.
       - name: Setup Source
         uses: actions/checkout@master
-          
+
       - name: Setup SourceMod
         run: |
           wget --input-file=http://sourcemod.net/smdrop/${{ matrix.sm-version }}/sourcemod-latest-linux
@@ -48,7 +48,8 @@ jobs:
           wget "https://raw.githubusercontent.com/Nopied/MannVsMann/master/addons/sourcemod/scripting/include/mannvsmann.inc" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/FF2_boss_selection/master/addons/sourcemod/scripting/include/ff2_boss_selection.inc" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/medigun_patch.inc" -P include
-          
+          wget "https://forums.alliedmods.net/attachment.php?attachmentid=164494&d=1501170745" -O include/CBaseAnimatingOverlay.inc
+
       - name: Compile
         working-directory: addons/sourcemod/scripting
         run: |
