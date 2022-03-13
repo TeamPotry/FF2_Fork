@@ -47,6 +47,6 @@ jobs:
 
       - name: Upload plugin artifact
         uses: actions/upload-artifact@master
-          with:
-            name: Plugin
-            path: addons/sourcemod/scripting/compiled
+        with:
+          name: Plugins
+          path: addons/sourcemod/scripting/compiled
