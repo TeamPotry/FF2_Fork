@@ -164,6 +164,7 @@ void OnRushTick(int client)
         // GetClientEyePosition(client, slashCenterPos);
         slashCenterPos = WorldSpaceCenter(client);
         GetClientEyeAngles(client, velocity);
+
         // avoid movement logic
         velocity[0] = min(-3.62, velocity[0]);
         GetAngleVectors(velocity, velocity, NULL_VECTOR, NULL_VECTOR);
@@ -171,11 +172,29 @@ void OnRushTick(int client)
         speed /= stateTime;
         ScaleVector(velocity, speed);
 
-        // PrintToChatAll("g_iRushState = %i, speed = %.1f", g_iRushState[client], speed);
-        // FIXME: 벽에 박으면 움직임이 비정상적으로 튐
-        // 다음 틱의 좌표를 파악하고 벽에 박으면 틱을 종료하도록 변경할 것
         TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 
+/*
+        // FIXME: 벽에 박으면 움직임이 비정상적으로 튐
+
+        float currentPos[3], goalPos[3];
+        GetEntPropVector(client, Prop_Data, "m_vecOrigin", currentPos);
+        AddVectors(currentPos, velocity, goalPos);
+
+        TR_TraceRayFilter(currentPos, goalPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceWorld, client);
+        if(TR_DidHit())
+        {
+            TR_GetEndPosition(goalPos);
+            SubtractVectors(goalPos, currentPos, goalPos);
+            TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, goalPos);
+        }
+        else
+        {
+            // PrintToChatAll("g_iRushState = %i, speed = %.1f", g_iRushState[client], speed);
+            // 다음 틱의 좌표를 파악하고 벽에 박으면 틱을 종료하도록 변경할 것
+            TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+        }
+*/
         // TODO: 근처 플레이어 피격판정과 파티클 효과
         int team = GetClientTeam(client);
 
@@ -250,6 +269,11 @@ float GetRushStateTime(int boss, int rushState)
 public bool TraceAnything(int entity, int contentsMask, any data)
 {
     return entity == 0 || entity != data;
+}
+
+public bool TraceWorld(int entity, int contentsMask, any data)
+{
+    return entity == 0;
 }
 
 bool IsValidTarget(int target)
