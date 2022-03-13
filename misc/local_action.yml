@@ -11,7 +11,14 @@ jobs:
 
     name: SM version ${{ matrix.sm-version }}
 
+
     steps:
+        # This is for local
+      - name: Setup 32-bit library
+        run: |
+          apt-get update
+          sudo apt-get install -y lib32z1 lib32stdc++6
+
         # leave this at first. This will reset all of the files.
       - name: Setup Source
         uses: actions/checkout@master
@@ -44,9 +51,3 @@ jobs:
          chmod +x spcomp
          mkdir compiled compiled/freak_fortress_2
          ./compile.sh freak_fortress_2.sp freak_fortress_2/*.sp
-
-      - name: Upload plugin artifact
-        uses: actions/upload-artifact@master
-          with:
-            name: Plugin
-            path: addons/sourcemod/scripting/compiled
