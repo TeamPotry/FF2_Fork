@@ -53,8 +53,13 @@ enum
     Rush_Rest
 };
 
+#define MAXIMUM_RUSH_TARGET_COUNT 10
+
 int g_iRushState[MAXPLAYERS+1];
 float g_flRushStateTime[MAXPLAYERS+1];
+
+int g_hRushTargetList[MAXPLAYERS+1][MAXIMUM_RUSH_TARGET_COUNT];
+int g_iRushTargetCount[MAXPLAYERS+1];
 
 #if defined _ff2_potry_included
 	public void OnPluginStart()
@@ -89,6 +94,33 @@ public void OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
     InitRushState(client);
 }
 
+bool PushRushTarget(int client, int target)
+{
+    if(g_iRushTargetCount[client] >= MAXIMUM_RUSH_TARGET_COUNT)  return false;
+
+    int index = g_iRushTargetCount[client]++;
+
+    for(int loop = 0; loop < index; loop++)
+    {
+        if(g_hRushTargetList[client][loop] == target)
+        {
+            return false;
+        }
+    }
+    g_hRushTargetList[client][index] = target;
+    return true;
+}
+
+void InitRushTargetList(int client)
+{
+    for(int loop = 0; loop < MAXIMUM_RUSH_TARGET_COUNT; loop++)
+    {
+        g_hRushTargetList[client][loop] = 0;
+    }
+
+    g_iRushTargetCount[client] = 0;
+}
+
 #if defined _ff2_potry_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 #else
@@ -119,6 +151,7 @@ void TriggerRush(int boss, int status)
     TF2_AddCondition(client, TFCond_HalloweenKartNoTurn, stopTime);
     SetEntityGravity(client, 0.0);
 
+    InitRushTargetList(client);
     OnRushTick(client);
 }
 
@@ -137,7 +170,23 @@ void OnRushTick(int client)
         if(g_iRushState[client] == Rush_Rest)
         {
             InitRushState(client);
+
             // TODO: 슬래쉬 범위 내에 있던 모든 적에게 피격 판정
+            // 일정 시간 뒤에 피격되게 할 것
+            float damage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DAMAGE, 106.0),
+            victimPos[3];
+
+            int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+            for(int loop = 0; loop < g_iRushTargetCount[client]; loop++)
+            {
+                int target = g_hRushTargetList[client][loop];
+
+                if(IsValidTarget(target)) {
+                    GetClientEyePosition(target, victimPos);
+                    SDKHooks_TakeDamage(target, client, client, damage, DMG_SLASH|DMG_VEHICLE, weapon, victimPos);
+                }
+            }
 
             TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, zeroVec);
             SetEntityGravity(client, 1.0);
@@ -155,13 +204,9 @@ void OnRushTick(int client)
     {
         float speed = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DISTANCE, 1200.0),
             range = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_RANGE, 106.0),
-            damage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DAMAGE, 106.0),
             velocity[3],
             slashCenterPos[3], targetCenterPos[3], betweenAngles[3], testPos[3];
 
-        int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-
-        // GetClientEyePosition(client, slashCenterPos);
         slashCenterPos = WorldSpaceCenter(client);
         GetClientEyeAngles(client, velocity);
 
@@ -204,13 +249,14 @@ void OnRushTick(int client)
                 // PrintToChatAll("%N, %.1f %.1f %.1f", target, testPos[0], testPos[1], testPos[2]);
                 if(TR_GetEntityIndex() != target)   continue;
 
-                NormalizeVector(betweenAngles, betweenAngles);
-                ScaleVector(betweenAngles, damage * 8.0);
+                // NormalizeVector(betweenAngles, betweenAngles);
+                // ScaleVector(betweenAngles, damage * 8.0);
 
                 // TODO: 범위 내의 적에게 파티클 효과
                 // TODO: 딜레이 후 피격 판정 (밑 구문 옮기기)
                 // 지금은 프레임 당 판정이라 연타로 들어갈거임 (일괄 적용으로 바꿀 것)
-                SDKHooks_TakeDamage(target, client, client, damage, DMG_SLASH|DMG_VEHICLE, weapon, testPos, betweenAngles);
+
+                PushRushTarget(client, target);
             }
         }
     }
