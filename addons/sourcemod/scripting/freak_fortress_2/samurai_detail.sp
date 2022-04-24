@@ -16,6 +16,8 @@
         #define RUSH_READY_TIME    	      "ready time"
 		#define RUSH_SLASH_TIME    	      "slash time"
 		#define RUSH_REST_TIME     	      "rest time"
+        #define RUSH_DELAY_TIME     	  "delay time"
+
 
 		#define RUSH_SLASH_DISTANCE	      "slash distance"
 		#define RUSH_SLASH_RANGE          "slash range"
@@ -55,7 +57,8 @@ enum
     Rush_Inactive = 0,
     Rush_Ready,
     Rush_Slash,
-    Rush_Rest
+    Rush_Rest,
+    Rush_DelayDamage
 };
 
 #define MAXIMUM_RUSH_TARGET_COUNT 10
@@ -210,10 +213,11 @@ void OnRushTick(int client)
 
         if(g_iRushState[client] == Rush_Rest)
         {
-            InitRushState(client);
-
-            // TODO: 슬래쉬 범위 내에 있던 모든 적에게 피격 판정
-            // 일정 시간 뒤에 피격되게 할 것
+            TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, zeroVec);
+            SetEntityGravity(client, 1.0);
+        }
+        else if (g_iRushState[client] == Rush_DelayDamage)
+        {
             float damage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DAMAGE, 106.0),
             victimPos[3];
 
@@ -223,7 +227,8 @@ void OnRushTick(int client)
             {
                 int target = g_hRushTargetList[client][loop];
 
-                if(IsValidTarget(target)) {
+                if(IsValidTarget(target))
+                {
                     GetClientEyePosition(target, victimPos);
                     SDKHooks_TakeDamage(target, client, client, damage, DMG_SLASH|DMG_VEHICLE, weapon, victimPos);
 
@@ -232,15 +237,10 @@ void OnRushTick(int client)
                 }
             }
 
-            TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, zeroVec);
-            SetEntityGravity(client, 1.0);
-
             return;
         }
-        else
-        {
-            g_flRushStateTime[client] = GetGameTime() + GetRushStateTime(boss, g_iRushState[client]);
-        }
+
+        g_flRushStateTime[client] = GetGameTime() + GetRushStateTime(boss, g_iRushState[client]);
     }
 
     float stateTime = GetRushStateTime(boss, g_iRushState[client]);
@@ -332,7 +332,7 @@ float GetRushStateTime(int boss, int rushState)
     {
         case Rush_Ready:
         {
-            return FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_READY_TIME, 0.15);
+            return FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_READY_TIME, 0.4);
         }
         case Rush_Slash:
         {
@@ -341,6 +341,10 @@ float GetRushStateTime(int boss, int rushState)
         case Rush_Rest:
         {
             return FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_REST_TIME, 0.5);
+        }
+        case Rush_DelayDamage:
+        {
+            return FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_DELAY_TIME, 5.0);
         }
     }
 
