@@ -12,26 +12,30 @@
 #if defined _ff2_potry_included
     #define THIS_PLUGIN_NAME   "samurai detail"
 
-	#define RUSH               		"rush"
-        #define RUSH_READY_TIME    	"ready time"
-		#define RUSH_SLASH_TIME    	"slash time"
-		#define RUSH_REST_TIME     	"rest time"
+	#define RUSH               		      "rush"
+        #define RUSH_READY_TIME    	      "ready time"
+		#define RUSH_SLASH_TIME    	      "slash time"
+		#define RUSH_REST_TIME     	      "rest time"
 
-		#define RUSH_SLASH_DISTANCE	"slash distance"
-		#define RUSH_SLASH_RANGE	"slash range"
-		#define RUSH_SLASH_DAMAGE	"slash damage"
+		#define RUSH_SLASH_DISTANCE	      "slash distance"
+		#define RUSH_SLASH_RANGE          "slash range"
+		#define RUSH_SLASH_DAMAGE         "slash damage"
+
+        #define RUSH_EFFECT_REMAIN_TIME   "effect remain time"
 #else
     #include <freak_fortress_2_subplugin>
     #define THIS_PLUGIN_NAME   this_plugin_name
 
 	#define RUSH                   	"rush"
-        #define RUSH_READY_TIME    	1
-		#define RUSH_SLASH_TIME    	2
-		#define RUSH_REST_TIME     	3
+        #define RUSH_READY_TIME           1
+		#define RUSH_SLASH_TIME    	      2
+		#define RUSH_REST_TIME     	      3
 
-		#define RUSH_SLASH_DISTANCE	4
-		#define RUSH_SLASH_RANGE	5
-		#define RUSH_SLASH_DAMAGE	6
+		#define RUSH_SLASH_DISTANCE	      4
+		#define RUSH_SLASH_RANGE	      5
+		#define RUSH_SLASH_DAMAGE	      6
+
+        #define RUSH_EFFECT_REMAIN_TIME   7
 #endif
 
 #define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
@@ -43,7 +47,7 @@ public Plugin myinfo=
 	name="Freak Fortress 2: Samurai Abilities",
 	author="Nopied◎",
 	description="FF2: Special abilities",
-	version="20220306",
+	version="20220421",
 };
 
 enum
@@ -172,7 +176,7 @@ void TriggerRush(int boss, int status)
     GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
 
-    // avoid movement logic
+    // TODO: avoid movement logic
     eyeAngles[0] = min(-3.62, eyeAngles[0]);
     GetAngleVectors(eyeAngles, eyeAngles, NULL_VECTOR, NULL_VECTOR);
     ScaleVector(eyeAngles, speed);
@@ -251,9 +255,10 @@ void OnRushTick(int client)
         slashCenterPos = WorldSpaceCenter(client);
         GetClientEyeAngles(client, velocity);
 
-        // avoid movement logic
+        // TODO: avoid movement logic
         velocity[0] = min(-3.62, velocity[0]);
         GetAngleVectors(velocity, velocity, NULL_VECTOR, NULL_VECTOR);
+        // SetEntProp(client, Prop_Send, "m_bJumping", 1);
 
         speed /= stateTime;
         ScaleVector(velocity, speed);
