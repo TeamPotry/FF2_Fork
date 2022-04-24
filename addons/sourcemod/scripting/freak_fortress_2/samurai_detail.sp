@@ -7,6 +7,7 @@
 #include <tf2_stocks>
 
 #include <freak_fortress_2>
+#include <ff2_stocks>
 #tryinclude <ff2_potry>
 #if defined _ff2_potry_included
     #define THIS_PLUGIN_NAME   "samurai detail"
@@ -86,6 +87,13 @@ public void OnMapStart()
     {
         InitRushState(client);
     }
+
+    FF2_PrecacheEffect();
+    FF2_PrecacheParticleEffect("sniper_dxhr_rail_noise");
+    FF2_PrecacheParticleEffect("blood_bread_biting2");
+    FF2_PrecacheParticleEffect("blood_spray_red_01");
+    FF2_PrecacheParticleEffect("env_sawblood");
+    FF2_PrecacheParticleEffect("blood_decap_fountain");
 }
 
 public void OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -153,6 +161,35 @@ void TriggerRush(int boss, int status)
 
     InitRushTargetList(client);
     OnRushTick(client);
+
+    float speed = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DISTANCE, 1200.0),
+        effectTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_EFFECT_REMAIN_TIME, 1.0);
+
+    float playerPos[3], eyeAngles[3], effectPos[3], zeroVec[3];
+    float vecMin[3], vecMax[3];
+
+    GetClientEyeAngles(client, eyeAngles);
+    GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
+	GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
+
+    // avoid movement logic
+    eyeAngles[0] = min(-3.62, eyeAngles[0]);
+    GetAngleVectors(eyeAngles, eyeAngles, NULL_VECTOR, NULL_VECTOR);
+    ScaleVector(eyeAngles, speed);
+
+    for(int loop = 0; loop < 5; loop++)
+    {
+        playerPos = WorldSpaceCenter(client);
+
+        for(int axis = 0; axis < 3; axis++)
+        {
+            playerPos[axis] += GetRandomFloat(vecMin[axis], vecMax[axis]);
+        }
+
+        AddVectors(playerPos, eyeAngles, effectPos);
+        TE_DispatchEffect("sniper_dxhr_rail_noise", playerPos, effectPos);
+        TE_SendToAll();
+    }
 }
 
 void OnRushTick(int client)
@@ -185,6 +222,9 @@ void OnRushTick(int client)
                 if(IsValidTarget(target)) {
                     GetClientEyePosition(target, victimPos);
                     SDKHooks_TakeDamage(target, client, client, damage, DMG_SLASH|DMG_VEHICLE, weapon, victimPos);
+
+                    DispatchParticleEffect(victimPos, NULL_VECTOR, "env_sawblood", target, 3.0);
+                    DispatchParticleEffect(victimPos, NULL_VECTOR, "blood_decap_fountain", target, 3.0);
                 }
             }
 
@@ -205,7 +245,8 @@ void OnRushTick(int client)
         float speed = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DISTANCE, 1200.0),
             range = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_RANGE, 106.0),
             velocity[3],
-            slashCenterPos[3], targetCenterPos[3], betweenAngles[3], testPos[3];
+            slashCenterPos[3], targetCenterPos[3], betweenAngles[3], testPos[3],
+            targetHeadPos[3];
 
         slashCenterPos = WorldSpaceCenter(client);
         GetClientEyeAngles(client, velocity);
@@ -230,6 +271,12 @@ void OnRushTick(int client)
         	"obj_teleporter"
         };
 
+        float stopTime = 0.0,
+            effectTime = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_EFFECT_REMAIN_TIME, 1.0);
+
+        for(int loop = Rush_Slash; loop <= Rush_Rest; loop++)
+            stopTime += GetRushStateTime(boss, loop);
+
         for(int loop = 0; loop < sizeof(slashTargetClassnames); loop++)
         {
             int target = -1;
@@ -238,6 +285,7 @@ void OnRushTick(int client)
                 if(loop == 0 && !IsValidTarget(target))                 continue;
                 if(GetEntProp(target, Prop_Send, "m_iTeamNum") == team) continue;
 
+                GetClientEyePosition(target, targetHeadPos);
                 targetCenterPos = WorldSpaceCenter(target);
                 SubtractVectors(targetCenterPos, slashCenterPos, betweenAngles);
                 NormalizeVector(betweenAngles, betweenAngles);
@@ -257,6 +305,9 @@ void OnRushTick(int client)
                 // 지금은 프레임 당 판정이라 연타로 들어갈거임 (일괄 적용으로 바꿀 것)
 
                 PushRushTarget(client, target);
+
+                DispatchParticleEffect(targetHeadPos, NULL_VECTOR, "blood_bread_biting2", target, stopTime + effectTime);
+                DispatchParticleEffect(targetHeadPos, NULL_VECTOR, "blood_spray_red_01", target, stopTime + effectTime);
             }
         }
     }
@@ -325,4 +376,74 @@ stock float[] WorldSpaceCenter(int ent)
 	v[2] += max[2] / 2;
 
 	return v;
+}
+
+stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, float time=1.0, int controlpoint=0)
+{
+    int particle = CreateEntityByName("info_particle_system");
+
+	char temp[64], targetName[64];
+	if (IsValidEdict(particle))
+	{
+		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
+
+		Format(targetName, sizeof(targetName), "tf2particle%i", particle);
+		DispatchKeyValue(particle, "targetname", targetName);
+		DispatchKeyValue(particle, "effect_name", particleType);
+
+		// Only one???
+		if(controlpoint > 0)
+		{
+			// TODO: This shit does not work.
+			int cpParticle = CreateEntityByName("info_particle_system");
+			if (IsValidEdict(cpParticle))
+			{
+				char cpName[64], cpTargetName[64];
+				Format(cpTargetName, sizeof(cpTargetName), "target%i", controlpoint);
+				DispatchKeyValue(controlpoint, "targetname", cpTargetName);
+				DispatchKeyValue(cpParticle, "parentname", cpTargetName);
+
+				Format(cpName, sizeof(cpName), "tf2particle%i", cpParticle);
+				DispatchKeyValue(cpParticle, "targetname", cpName);
+
+				DispatchKeyValue(particle, "cpoint1", cpName);
+
+				float cpPos[3];
+				GetEntPropVector(controlpoint, Prop_Data, "m_vecOrigin", cpPos);
+				TeleportEntity(cpParticle, cpPos, angles, NULL_VECTOR);
+/*
+				// SetVariantString(cpTargetName);
+				SetVariantString("!activator");
+				AcceptEntityInput(cpParticle, "SetParent", controlpoint, cpParticle);
+
+				SetVariantString("flag");
+				AcceptEntityInput(cpParticle, "SetParentAttachment", controlpoint, cpParticle);
+*/
+			}
+			// SetEntPropEnt(particle, Prop_Send, "m_hControlPointEnts", controlpoint, 1);
+			// SetEntProp(particle, Prop_Send, "m_iControlPointParents", controlpoint, 1);
+		}
+
+		DispatchSpawn(particle);
+		ActivateEntity(particle);
+
+		if(parent > 0)
+		{
+			Format(targetName, sizeof(targetName), "target%i", parent);
+			DispatchKeyValue(parent, "targetname", targetName);
+			SetVariantString(targetName);
+
+			AcceptEntityInput(particle, "SetParent", particle, particle, 0);
+			SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", parent);
+		}
+
+		Format(temp, sizeof(temp), "OnUser1 !self:kill::%.1f:1", time);
+		SetVariantString(temp);
+
+		AcceptEntityInput(particle, "AddOutput");
+		AcceptEntityInput(particle, "FireUser1");
+
+		DispatchKeyValueVector(particle, "angles", angles);
+		AcceptEntityInput(particle, "start");
+	}
 }
