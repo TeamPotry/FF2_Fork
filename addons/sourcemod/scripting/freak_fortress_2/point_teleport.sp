@@ -654,53 +654,21 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 	}
 }
 
+// Look at this mess..
+float lastStartPos[MAXPLAYERS+1][3], lastEndPos[MAXPLAYERS+1][3], lastAngles[MAXPLAYERS+1][3];
+float lastTime[MAXPLAYERS+1];
 void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 {
 	// char message[128];
-	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	int colors[4] = {255, 255, 255, 255};
+	// 이전 프레림에서 테스트가 끝난 지점을 이용 (실제 레이저의 끝지점)
 
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge = FF2_GetBossCharge(boss, slot);
-	float currentPos[3], pos[3], eyePos[3], angles[3], endPos[3], fwd[3], right[3], up[3];
-	float vecMin[3], vecMax[3], normal[3];
 
+	float vecMin[3], vecMax[3];
 	GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
-
-	float maxDistance = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "max distance", 3000.0, slot);
-	g_flTeleportDistance[client] = maxDistance * (charge * 0.01);
-
-	GetClientAbsOrigin(client, currentPos);
-	GetClientEyeAngles(client, angles);
-
-	GetClientEyePosition(client, pos);
-	GetClientEyePosition(client, eyePos);
-	GetAngleVectors(angles, NULL_VECTOR, right, up);
-
-	float sum[3];
-	ScaleVector(up, -15.0);
-	ScaleVector(right, 15.0);
-	AddVectors(up, right, sum);
-	AddVectors(pos, sum, pos);
-
-	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
-	GetEndPos(client, pos, eyePos, angles, g_flTeleportDistance[client], endPos, normal, vecMin, vecMax);
-	ScaleVector(angles, g_flTeleportDistance[client]);
-
-	SubtractVectors(endPos, pos, angles);
-	GetVectorAngles(angles, angles);
-	GetAngleVectors(angles, fwd, NULL_VECTOR, NULL_VECTOR);
-	NormalizeVector(fwd, fwd);
-
-	if(charge > 0.0)
-	{
-		// PrintToServer("tempAngles: %.1f %.1f %.1f", fwd[0], fwd[1], fwd[2]);
-		// PrintToServer("before endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
-
-		AdjustPositionOppositeDirected(client, endPos, eyePos, normal, vecMin, vecMax, endPos);
-		// PrintToServer("endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
-	}
-
 
 	SetGlobalTransTarget(client);
 	switch(status)
@@ -726,51 +694,74 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 */
 			if(charge <= 10.0)	return;
 
-			if(IsStockInPosition(client, endPos, vecMin, vecMax))
-				colors = {255, 20, 20, 255};
+			float eyePos[3], currentPos[3], endPos[3];
+			float normal[3], effectPos[3], fwd[3];
 
-			TE_SetupBeamPoints(pos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 0.1, 10.0, 30.0, 0, 0.0, colors, 10);
+			GetClientEyePosition(client, eyePos);
+			GetEntPropVector(client, Prop_Data, "m_vecOrigin", currentPos);
+
+			float maxDistance = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "max distance", 3000.0, slot);
+			g_flTeleportDistance[client] = maxDistance * (charge * 0.01);
+
+			float angles[3];
+			GetClientEyeAngles(client, angles);
+
+			// Effect Position
+			{
+				float right[3], up[3], sum[3];
+				GetAngleVectors(angles, fwd, right, up);
+
+				ScaleVector(up, -15.0);
+				ScaleVector(right, 15.0);
+				AddVectors(up, right, sum);
+				AddVectors(eyePos, sum, effectPos);
+			}
+
+			GetEndPos(client, eyePos, fwd, g_flTeleportDistance[client], endPos, normal, vecMin, vecMax);
+
+			bool stuck = IsStockInPosition(client, endPos, vecMin, vecMax);
+			if(stuck)
+				colors = {255, 20, 20, 255};
+			else
+				colors = {255, 255, 255, 255};
+
+			TE_SetupBeamPoints(effectPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 0.1, 10.0, 30.0, 0, 0.0, colors, 10);
 			TE_SendToClient(client);
+
+			lastStartPos[client] = VectorCopy(currentPos);
+			if(!stuck)
+			{
+				lastEndPos[client] = VectorCopy(endPos);
+				lastAngles[client] = VectorCopy(fwd);
+				lastTime[client] = GetEngineTime();
+			}
 		}
 		case 3:
 		{
-			if(charge <= 10.0 || GetVectorDistance(pos, endPos) < 84.0)
+			// PrintToChatAll("lastStartPos: %.1f %.1f %.1f", lastStartPos[client][0], lastStartPos[client][1], lastStartPos[client][2]);
+			// PrintToChatAll("lastEndPos: %.1f %.1f %.1f", lastEndPos[client][0], lastEndPos[client][1], lastEndPos[client][2]);
+
+			bool stuck = IsStockInPosition(client, lastEndPos[client], vecMin, vecMax);
+			if(charge <= 10.0 || GetVectorDistance(lastStartPos[client], lastEndPos[client]) < 84.0
+				|| (stuck || GetEngineTime() - lastTime[client] > 0.5))
 			{
 				ResetBossCharge(boss, slot);
 				return;
 			}
 
-			TeleportEntity(client, endPos, NULL_VECTOR, NULL_VECTOR);
+			TeleportEntity(client, lastEndPos[client], NULL_VECTOR, NULL_VECTOR);
 			// SDKCall_SetAbsOrigin(client, endPos);
-
+/*
 			if(!SDKCall_TestEntityPosition(client))
 			{
-				PrintToServer("Stuck endPos: %.1f %.1f %.1f", endPos[0], endPos[1], endPos[2]);
+				PrintToServer("Stuck endPos: %.1f %.1f %.1f", lastEndPos[client][0], lastEndPos[client][1], lastEndPos[client][2]);
 
-				TeleportEntity(client, currentPos, NULL_VECTOR, NULL_VECTOR);
+				// TeleportEntity(client, lastStartPos[client], NULL_VECTOR, NULL_VECTOR);
 				ResetBossCharge(boss, slot);
 				return;
-
-
-				// AdjustPositionOppositeDirected(client, endPos, fwd, vecMin, vecMax, endPos);
-
-				// TeleportEntity(client, endPos, NULL_VECTOR, NULL_VECTOR);
-				// SDKCall_SetAbsOrigin(client, endPos);
-/*
-				if(!SDKCall_TestEntityPosition(client))
-				{
-					float tempDir[3];
-					TE_SetupArmorRicochet(endPos, tempDir);
-					TE_SendToAll();
-
-					// 꼈어..
-					TeleportEntity(client, currentPos, NULL_VECTOR, NULL_VECTOR);
-					// SDKCall_SetAbsOrigin(client, currentPos);
-
-				}
-*/
 			}
-
+*/
+			float fwd[3];
 			float size = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "size", 75.0, slot),
 				lifeTime = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "life time", 15.0, slot),
 				launchPower = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "launch power", 600.0, slot),
@@ -792,16 +783,16 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			{
 				if(FF2_CheckSoundFlags(client, FF2SOUND_MUTEVOICE))
 				{
-					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, endPos);
-					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, endPos);
+					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, lastEndPos[client]);
+					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, lastEndPos[client]);
 				}
 
 				for(int target=1; target<=MaxClients; target++)
 				{
 					if(IsClientInGame(target) && target!=client && FF2_CheckSoundFlags(target, FF2SOUND_MUTEVOICE))
 					{
-						EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, endPos);
-						EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, endPos);
+						EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, lastEndPos[client]);
+						EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, lastEndPos[client]);
 					}
 				}
 			}
@@ -816,12 +807,12 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			portal.SetEntranceParticleName(entrancePaticleName);
 			portal.SetExitParticleName(exitPaticleName);
 
-			GetClientEyeAngles(client, angles);
-			GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
+			GetClientEyeAngles(client, lastAngles[client]);
+			GetAngleVectors(lastAngles[client], fwd, NULL_VECTOR, NULL_VECTOR);
 
-			portal.SetLaunchAngles(angles);
-			portal.SetEntrancePosition(pos);
-			portal.SetExitPosition(endPos);
+			portal.SetLaunchAngles(fwd);
+			portal.SetEntrancePosition(lastStartPos[client]);
+			portal.SetExitPosition(lastEndPos[client]);
 
 			portal.SetOpenSound(openSound);
 			portal.SetLoopSound(loopSound);
@@ -829,14 +820,14 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 			portal.SetEnterEntranceSound(enterEntranceSound);
 			portal.SetEnterExitSound(enterExitSound);
 
-			ScaleVector(angles, launchPower);
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, angles);
+			ScaleVector(fwd, launchPower);
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fwd);
 
 			SetEntProp(client, Prop_Send, "m_bDucked", 1);
 			SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
 
 			portal.Open();
-			portal.DispatchTPEffect(pos, endPos); // 보스가 이미 통과함
+			portal.DispatchTPEffect(lastStartPos[client], lastEndPos[client]); // 보스가 이미 통과함
 
 			UTIL_ScreenFade(client, colors, 0.1, 0.3, FFADE_IN);
 
@@ -873,30 +864,97 @@ public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3],
 
 		예외 케이스: x: +, z: -
 	*/
-	float currentPos[3]; // Ha.
+	float currentPos[3], angles[3], wallDir[3];
 	currentPos = VectorCopy(pos);
+
+	SubtractVectors(currentPos, from, angles);
+	NormalizeVector(angles, angles);
+
+	wallDir = normal[0] != 0.0 || normal[1] != 0.0 ?
+		VectorCopy(normal) : VectorCopy(angles);
+
+	// angles[0] = AngleNormalize(angles[0]);
+	// angles[1] = AngleNormalize(angles[1]);
 
 	bool IsMax[3]; // IsCenterMax
 	{
 		for(int loop = 0; loop < 2; loop++)
-			IsMax[loop] = normal[loop] > 0.0;
-
+		{
+			IsMax[loop] = wallDir[loop] > 0.0;
+		}
 		IsMax[2] = false; // This is only used when checking Y.
 	}
 	int rank[2];
 	{
-		// 3차원 대응?
-		if(FloatAbs(normal[0]) > FloatAbs(normal[1]))
+		if(FloatAbs(wallDir[0]) > FloatAbs(wallDir[1]))
 			rank[0] = 0, rank[1] = 1;
 		else
 			rank[0] = 1, rank[1] = 0;
 	}
 
 	float testStartPos[3], testEndPos[3], temp[3];
+	float testPos[2][2][3]; // [2][2][3];
+	// float testDown_left[3], testDown_right[3], testUp_left[3], testUp_right[3];
+	int tries = 1;
 
 	// 전체 보정 루프
-	for(int loop = 0; loop < 3; loop++)
+	while(tries > 0)
 	{
+		// TODO: 임시
+		bool stuck = IsStockInPosition(ent, currentPos, vecMin, vecMax);
+		if(tries == 3 || !stuck)	break;
+
+		// float axis = wallDir[rank[0]] > 0.0 ? vecMax[rank[0]] : vecMin[rank[0]];
+		float axis = wallDir[rank[0]] > 0.0 ? vecMin[rank[0]] : vecMax[rank[0]];
+		for(int loop = 0; loop < 2; loop++)
+		{
+			testPos[0][loop] = VectorCopy(currentPos);
+			testPos[1][loop] = VectorCopy(currentPos);
+
+			testPos[0][loop][rank[0]] += axis;
+			testPos[1][loop][rank[0]] += axis;
+
+			testPos[1][loop][2] += vecMax[2];
+
+			testPos[0][loop][rank[1]] += vecMax[rank[1]];
+			testPos[0][loop][rank[1]] += vecMin[rank[1]];
+
+			testPos[1][loop][rank[1]] += vecMax[rank[1]];
+			testPos[1][loop][rank[1]] += vecMin[rank[1]];
+
+			// TEST
+			// 특정 각도 이상 넘어가는 경우?
+
+			// -0.14198 0.21859 0.96542
+			// 0.46305 0.21040 0.86099
+			// 0.50937 -0.18331 0.84079
+/*
+			testPos[0][loop][rank[1]] += vecMin[rank[1]];
+			testPos[0][loop][rank[1]] += vecMax[rank[1]];
+
+			testPos[1][loop][rank[1]] += vecMin[rank[1]];
+			testPos[1][loop][rank[1]] += vecMax[rank[1]];
+*/
+		}
+
+		for(int i = 0; i < 2; i++)
+		{
+			for(int z = 0; z < 2; z++)
+			{
+				AdjustPositionBySingleRay(ent, currentPos, currentPos, testPos[i][z], currentPos);
+
+				stuck = IsStockInPosition(ent, currentPos, vecMin, vecMax);
+				if(!stuck)	break;
+			}
+
+			if(!stuck)	break;
+		}
+
+		if(!stuck) break;
+
+
+/*
+
 		// 아랫쪽 바운딩 박스 보정
 		{
 			// X축 확인
@@ -974,6 +1032,7 @@ public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3],
 			GetPositionWithHull(rank[1], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
 			AdjustPositionBySingleRay(ent, rank[1], currentPos, testStartPos, testEndPos, currentPos);
 		}
+*/
 /*
 		TR_TraceRayFilter(center, currentPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything, ent);
 		if(TR_DidHit())
@@ -981,6 +1040,7 @@ public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3],
 			TR_GetEndPosition(currentPos);
 		}
 */
+		tries++;
 	}
 
 	result = VectorCopy(currentPos);
@@ -1004,23 +1064,21 @@ public void GetPositionWithHull(int currentIndex, bool IsMax[3], float currentPo
 	}
 }
 
-public bool AdjustPositionBySingleRay(int ent, int index, float currentPos[3], float startPos[3], float endPos[3], float result[3])
+public void AdjustPositionBySingleRay(int ent, float currentPos[3], float startPos[3], float endPos[3], float result[3])
 {
 	float temp[3];
-	TR_TraceRayFilter(startPos, endPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
+	TR_TraceRayFilter(startPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, ent);
+	TR_GetEndPosition(temp);
 
-	if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
-	{
-		TR_GetEndPosition(temp);
+	static int colors[4] = {0, 255, 0, 255};
+	TE_SetupBeamPoints(currentPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
+	TE_SendToClient(ent);
+
+	for(int index = 0; index < 3; index++)
 		result[index] = currentPos[index] - (endPos[index] - temp[index]);
-
-		// PrintToServer("AdjustPositionBySingleRay: index: %d\n currentPos: %.5f\n endPos: %.5f\n temp: %.5f", index, currentPos[index], endPos[index], temp[index]);
-		return true;
-	}
-	return false;
 }
 
-public void GetEndPos(int client, float pos[3], float from[3], float angles[3], float distance, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
+public void GetEndPos(int client, float pos[3], float angles[3], float distance, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
 {
 	float tempAngles[3];
 
@@ -1028,81 +1086,33 @@ public void GetEndPos(int client, float pos[3], float from[3], float angles[3], 
 	ScaleVector(tempAngles, distance);
 	AddVectors(pos, tempAngles, endPos);
 
-	TR_TraceRayFilter(pos, endPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything, client);
+	TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
 	TR_GetEndPosition(endPos);
 
 	TR_GetPlaneNormal(null, normal);
-	int flags = TR_GetSurfaceFlags();
-	// PrintToChatAll("flags: %d, angles: %.5f %.5f %.5f", flags, angles[0], angles[1], angles[2]);
-	// PrintToChatAll("normal: %.5f %.5f %.5f", normal[0], normal[1], normal[2]);
-/*
+	PrintToChatAll("angles: %.5f %.5f %.5f", angles[0], angles[1], angles[2]);
+	PrintToChatAll("normal: %.5f %.5f %.5f", normal[0], normal[1], normal[2]);
 	PrintToChatAll("DidHit: %s, endPos: %.5f %.5f %.5f",
 		TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
-*/
-/*
-		tempAngles = angles;
-		NormalizeVector(tempAngles, tempAngles);
-		// 얇은 벽의 경우, 벽 너머에 트레이싱됨
-		// 일단 단순 연산으로 간격을 넓힘 (Y축만)
 
-		tempAngles[0] = 0.0, tempAngles[1] = 0.0;
-		ScaleVector(tempAngles, -5.0);
-
-		AddVectors(edndPos, twempAngles, endPos);
-*/
+	// 좌표 보정 함수로 들어가기 전에 벽에 안들어간 트레이스를 밖으로 빼냄
 	for(int loop = 0; loop < 2; loop++)
 	{
-		// 선형 트레이스는 기본적으로 닿은 자리가 벽 안쪽이므로
-		// 값이 0인 부분에 대해서도 뒤쪽으로 값을 땡겨야함
-		float ratio = -(FloatAbs(normal[loop]) - 1.0);
-		endPos[loop] += (normal[loop] > 0.0 ? vecMax[loop] : vecMin[loop]) * ratio;
+		if(normal[loop] != 0.0)
+			// 충돌 지점이 우선 벽 안이라서 최소한의 거리는 뒤로 뺴야할 필요가 있음
+			endPos[loop] += normal[loop] >= 0.0 ? 5.0 : -5.0;
 	}
 
-	if(normal[2] < 0.0)
-	{
-		float ratio = -(FloatAbs(normal[2]) - 1.0);
-		endPos[2] -= vecMax[2] * ratio;
-	}
+	// 바닥 면은 다른 벽과 다르게 0.0 값이면 수평이므로 위로 올려야 됨.
 
+	if(normal[2] != 0.0)
+		endPos[2] += normal[2] >= 0.0 ? 5.0 : -5.0;
 
-/*
-	// 벽에 충돌되었지만 위에 충돌할 경우
-	if(flags == 1152)
-	// 스카이박스 충돌의 경우 이후 좌표보정에 포함되지 않으므로 미리 안끼게 해둬야 함
-	endPos[2] -= vecMax[2] + 1.0;
+	float tempEndPos[3];
+	// 좌표 보정!
+	AdjustPositionOppositeDirected(client, endPos, pos, normal, vecMin, vecMax, tempEndPos);
 
-	float dir[3];
-	NormalizeVector(angles, dir);
-
-	bool IsMax[3]; // IsCenterMax
-	{
-
-		IsMax[0] = dir[0] < 0.0;
-
-		// Y +left/-right 라서 반대로 적용?
-		IsMax[1] = dir[1] > 0.0;
-
-		IsMax[2] = false; // This is only used when checking Y.
-	}
-	int rank[2];
-	{
-		// 3차원 대응?
-		if(FloatAbs(dir[0]) > FloatAbs(dir[1]))
-			rank[0] = 0, rank[1] = 1;
-		else
-			rank[0] = 1, rank[1] = 0;
-	}
-
-	float tempStartPos[3], tempEndPos[3];
-
-	// 첫번째 축 확인
-	GetPositionWithHull(rank[0], IsMax, endPos, vecMin, vecMax, tempStartPos, tempEndPos);
-	AdjustPositionBySingleRay(client, rank[0], endPos, tempStartPos, tempEndPos, endPos);
-
-	// 2번째 축 확인
-	GetPositionWithHull(rank[1], IsMax, endPos, vecMin, vecMax, tempStartPos, tempEndPos);
-	AdjustPositionBySingleRay(client, rank[1], endPos, tempStartPos, tempEndPos, endPos);
-*/
+	endPos = VectorCopy(tempEndPos);
 }
 
 ///////////////////////////
