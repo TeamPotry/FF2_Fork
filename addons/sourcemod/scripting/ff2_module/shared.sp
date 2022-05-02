@@ -26,6 +26,9 @@
 #define HUDS_CONFIG "hud_setting.cfg"
 #define CHANGELOG "changelog.txt"
 
+bool Enabled=true;
+bool Enabled2=true;
+
 TFTeam OtherTeam=TFTeam_Red;
 TFTeam BossTeam=TFTeam_Blue;
 int playing;
@@ -101,71 +104,19 @@ enum Operators
 	Operator_Exponent,
 };
 
-static const char g_QueryColumn[][] = {
-	"steam_id",
-	"setting_id",
-	"value",
-	"last_saved_time"
-};
 
-static const KvDataTypes g_iQueryColumnDataType[] = {
-	KvData_String,
-	KvData_String,
-	KvData_String,
-	KvData_String
-};
+Handle PreAbility;
+Handle OnAbility;
+Handle OnTriggerHurt;
+Handle OnBossSelected;
+Handle OnAddQueuePoints;
+Handle OnLoadCharacterSet;
+Handle OnLoseLife;
+Handle OnAlivePlayersChanged;
+Handle OnParseUnknownVariable;
 
-static const char g_HudQueryColumn[][] = {
-	"steam_id",
-	"hud_id",
-	"setting_value",
-	"last_saved_time"
-};
-
-static const KvDataTypes g_iHudQueryColumnDataType[] = {
-	KvData_String,
-	KvData_String,
-	KvData_Int,
-	KvData_String
-};
-
-static const char g_MusicQueryColumn[][] = {
-	"steam_id",
-	"music_id",
-	"setting_value",
-	"last_saved_time"
-};
-
-static const KvDataTypes g_iMusicQueryColumnDataType[] = {
-	KvData_String,
-	KvData_String,
-	KvData_Int,
-	KvData_String
-};
-
-public void DBS_OnLoadData(DBSData data)
-{
-	KeyValues tabledata = DBSData.CreateTableData(FF2_DB_PLAYERDATA_TABLENAME);
-	for(int loop = 0; loop < sizeof(g_QueryColumn); loop++)
-	{
-		DBSData.PushTableData(tabledata, g_QueryColumn[loop], g_iQueryColumnDataType[loop]);
-	}
-	data.Add(FF2DATABASE_CONFIG_NAME, tabledata);
-	delete tabledata;
-
-	tabledata = DBSData.CreateTableData(FF2_DB_PLAYER_HUDDATA_TABLENAME);
-	for(int loop = 0; loop < sizeof(g_HudQueryColumn); loop++)
-	{
-		DBSData.PushTableData(tabledata, g_HudQueryColumn[loop], g_iHudQueryColumnDataType[loop]);
-	}
-	data.Add(FF2DATABASE_CONFIG_NAME, tabledata);
-	delete tabledata;
-
-	tabledata = DBSData.CreateTableData(FF2_DB_PLAYER_MUSICDATA_TABLENAME);
-	for(int loop = 0; loop < sizeof(g_MusicQueryColumn); loop++)
-	{
-		DBSData.PushTableData(tabledata, g_MusicQueryColumn[loop], g_iMusicQueryColumnDataType[loop]);
-	}
-	data.Add(FF2DATABASE_CONFIG_NAME, tabledata);
-	delete tabledata;
-}
+// ff2_potry.inc
+Handle OnWaveStarted;
+Handle OnPlayBoss;
+Handle OnSpecialAttack;
+Handle OnSpecialAttack_Post;
