@@ -3265,10 +3265,8 @@ public Action CheckItems(Handle timer, int userid)
 		TF2Attrib_RemoveByDefIndex(client, 58);
 	}
 
-	TF2Attrib_SetByDefIndex(client, 112, 0.15); // NOTE: 무한탄약
+	TF2Attrib_SetByDefIndex(client, 112, 0.05); // NOTE: 무한탄약
 	TF2Attrib_SetByDefIndex(client, 113, 30.0); // NOTE: 무한금속
-	TF2Attrib_SetByDefIndex(client, 250, 3.0); // NOTE: 추가 점프
-
 	TF2Attrib_RemoveByDefIndex(client, 252); // NOTE: 보스 넉백 저항
 
 	int entity=-1;

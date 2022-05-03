@@ -277,7 +277,6 @@ public void OnPluginStart()
 		CreateDynamicDetour(gamedata, "CTFDroppedWeapon::InitDroppedWeapon", DHookCallback_InitDroppedWeapon_Pre, DHookCallback_InitDroppedWeapon_Post);
 		// CreateDynamicDetour(gamedata, "CTFPlayer::CanPickupDroppedWeapon", DHookCallback_CanPickupDroppedWeapon_Post);
 		CreateDynamicDetour(gamedata, "CTFPlayer::PickupWeaponFromOther", DHookCallback_PickupWeaponFromOther_Pre, DHookCallback_PickupWeaponFromOther_Post);
-		CreateDynamicDetour(gamedata, "CTFPlayer::CanAirDash", DHookCallback_CanAirDash_Pre);
 
 		delete gamedata;
 	}
@@ -472,51 +471,6 @@ public MRESReturn DHookCallback_PickupWeaponFromOther_Post(int client, DHookRetu
 	return MRES_Handled;
 }
 
-public MRESReturn DHookCallback_CanAirDash_Pre(int client, DHookReturn ret)
-{
-	Address address = TF2Attrib_GetByDefIndex(client, 250);
-
-	int airDash = 0;
-	if(address != Address_Null)
-	{
-		airDash = RoundFloat(TF2Attrib_GetValue(address));
-		TF2Attrib_SetByDefIndex(client, 250, 0.0);
-	}
-
-	int jumpCount = TF2_GetPlayerClass(client) == TFClass_Scout ? 1 : 0,
-		defaultDashCount = TF2Attrib_HookValueInt(jumpCount, "air_dash_count", client);
-
-	int currentDash = GetEntProp(client, Prop_Send, "m_iAirDash");
-
-	// FIXME: 인수분해 같이 원래 무기를 들어야만 추가점프가 가능한 무기가 들지 않아도 효과가 적용됨
-	// 실험적으로 일단 이대로 적용해보지만 TF2Attrib_HookValueInt가 아닌 다른 방식으로 원래 추가점프 횟수를 알아내야 함.
-	// ?? 근데 아래 코드 적용하니까 이번엔 제대로 작동되네 뭐지?
-	// 아 airDash 다 쓴 경우에만 인수분해 점프가 제대로 막힘
-	// MRES_Ignored 반환 이후, 점프 횟수가 모든 점프 횟수와 합산되는 문제가 있어 강제 조정
-	if(airDash <= 0 && currentDash >= defaultDashCount)
-	{
-		ret.Value = false;
-		return MRES_Supercede;
-	}
-
-
-	// PrintToChatAll("currentDash: %d, defaultDashCount: %d", currentDash, defaultDashCount);
-	if(airDash > 0 && currentDash >= defaultDashCount)
-	{
-		ret.Value = true;
-		TF2Attrib_SetByDefIndex(client, 250, float(airDash - 1));
-		SetEntProp(client, Prop_Send, "m_iAirDash", currentDash - 1);
-
-		return MRES_Supercede;
-	}
-	else if(address != Address_Null)
-	{
-		TF2Attrib_SetByDefIndex(client, 250, float(airDash));
-	}
-
-	return MRES_Ignored;
-}
-
 public void OnMapStart()
 {
 	PrecacheSound("mvm/mvm_money_pickup.wav");
@@ -548,16 +502,6 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 	bool hasSapperCooldown = ((sapper != -1 && IsSapper(sapper))
 		&& ((sapperCharge = GetEntPropFloat(sapper, Prop_Send, "m_flEffectBarRegenTime")) > 0.0));
 
-	int remainJumpCount = 0;
-	{
-		Address address = TF2Attrib_GetByDefIndex(client, 250);
-		if(address != Address_Null)
-		{
-			remainJumpCount = RoundFloat(TF2Attrib_GetValue(address));
-		}
-	}
-
-
 	// PrintToChatAll("hasSapper = %s, sapperCharge = %.3f", (sapper != -1 && IsSapper(sapper)) ? "true" : "false", sapperCharge);
 
 	if(StrEqual(text, "Player Additional"))
@@ -575,13 +519,6 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 
 			Format(text, sizeof(text), "%t: %.1f", "Sapper Charge", sapperCharge);
 			hudDisplay = FF2HudDisplay.CreateDisplay("Sapper Charge", text);
-			hudQueue.PushDisplay(hudDisplay);
-		}
-
-		if(remainJumpCount > 0)
-		{
-			Format(text, sizeof(text), "%t: %i", "Current Extra Jumps", remainJumpCount);
-			hudDisplay = FF2HudDisplay.CreateDisplay("Current Extra Jumps", text);
 			hudQueue.PushDisplay(hudDisplay);
 		}
 	}
