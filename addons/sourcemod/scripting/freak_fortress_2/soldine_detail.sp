@@ -301,7 +301,7 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 			continue;
         // PrintToServer("%d", target);
 
-        float targetPos[3], angles[3], velocity[3];
+        float targetPos[3], targetAngles[3], velocity[3];
         GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPos);
         GetEntPropVector(target, Prop_Data, "m_vecVelocity", velocity);
 
@@ -311,19 +311,20 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
         TR_TraceRayFilter(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceDontHitMe, target);
         if(TR_GetEntityIndex() != target)       continue;
 
-        SubtractVectors(pos, targetPos, angles);
-    	GetVectorAngles(angles, angles);
-        GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
+        SubtractVectors(pos, targetPos, targetAngles);
+    	GetVectorAngles(targetAngles, targetAngles);
+        GetAngleVectors(targetAngles, targetAngles, NULL_VECTOR, NULL_VECTOR);
 
         // 포탈에 근접한 경우 속도를 줄여 오히려 발을 묶기
-        bool over = target <= MaxClients && hole.Power - 100 < realPower;
-        ScaleVector(angles, over ? 200.0 : realPower);
+		// TODO: 투사체와 플레이어 구분
+		// 투사체: 단순 합연산
+		// 플레이어의 경우: 이동키와 이동속도를 이용한 저항계수를 연산에 추가
+        bool over = target <= MaxClients && hole.Power - 50.0 < realPower;
+        ScaleVector(targetAngles, over ? 100.0 : realPower);
 
-        AddVectors(angles, velocity, velocity);
+        AddVectors(targetAngles, velocity, velocity);
 
-        // PrintToServer("%.1f %.1f %.1f", angles[0], angles[1], angles[2]);
-        TeleportEntity(target, NULL_VECTOR, NULL_VECTOR,
-            !over && GetVectorLength(velocity) > GetVectorLength(angles) ? velocity : angles);
+        TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, targetAngles);
     }
 
     RequestFrame(BlackHole_Open_Update, hole);
