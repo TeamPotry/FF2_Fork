@@ -154,21 +154,6 @@ static bool executed;
 
 int changeGamemode;
 
-enum
-{
-	SkillName_Rage = 0,
-	SkillName_200Rage,
-	SkillName_LostLife,
-
-	SkillName_MaxCounts
-}
-
-static const char g_strSkillNameKey[][] = {
-	"rage",
-	"200 rage",
-	"lost life"
-};
-
 //Handle kvWeaponSpecials;
 
 public Plugin myinfo=
