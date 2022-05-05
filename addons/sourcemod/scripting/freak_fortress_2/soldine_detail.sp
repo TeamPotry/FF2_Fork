@@ -280,10 +280,11 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
         if(!IsValidEntity(target))
             continue;
 
+		bool isPlayer = false;
 		GetEntityClassname(target, classname, sizeof(classname));
-        if(target <= MaxClients
-            && (!IsPlayerAlive(target) || GetClientTeam(hole.Owner) == GetClientTeam(target)))
-            continue;
+        if((isPlayer = target <= MaxClients)
+			&& (!IsPlayerAlive(target) || GetClientTeam(hole.Owner) == GetClientTeam(target)))
+			continue;
 
         if(!HasEntProp(target, Prop_Send, "m_vecOrigin")
             || !HasEntProp(target, Prop_Data, "m_vecVelocity"))
@@ -319,7 +320,7 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 		// TODO: 투사체와 플레이어 구분
 		// 투사체: 단순 합연산
 		// 플레이어의 경우: 이동키와 이동속도를 이용한 저항계수를 연산에 추가
-        bool over = target <= MaxClients && hole.Power - 50.0 < realPower;
+        bool over = isPlayer && hole.Power - 50.0 < realPower;
         ScaleVector(targetAngles, over ? 100.0 : realPower);
 
         AddVectors(targetAngles, velocity, velocity);
