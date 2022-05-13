@@ -113,12 +113,6 @@ enum
 	SkillName_MaxCounts
 }
 
-static const char g_strSkillNameKey[][] = {
-	"rage",
-	"200 rage",
-	"lost life"
-};
-
 
 Handle PreAbility;
 Handle OnAbility;

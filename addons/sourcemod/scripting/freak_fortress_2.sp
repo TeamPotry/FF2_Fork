@@ -156,6 +156,12 @@ int changeGamemode;
 
 //Handle kvWeaponSpecials;
 
+static const char g_strSkillNameKey[][] = {
+	"rage",
+	"200 rage",
+	"lost life"
+};
+
 public Plugin myinfo=
 {
 	name="Freak Fortress 2",
