@@ -111,7 +111,7 @@ enum
 	SkillName_LostLife,
 
 	SkillName_MaxCounts
-}
+};
 
 
 Handle PreAbility;

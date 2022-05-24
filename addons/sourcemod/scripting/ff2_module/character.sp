@@ -1,3 +1,18 @@
+public int GetCharacterIndex(int boss)
+{
+	return character[boss];
+}
+
+public KeyValues GetCharacterKV(int characterIndex)
+{
+	if(characterIndex >= 0 && characterIndex < bossesArray.Length)
+	{
+		return view_as<KeyValues>(bossesArray.Get(characterIndex));
+	}
+	return null;
+}
+
+
 public void FindCharacters()
 {
 	char config[PLATFORM_MAX_PATH], charset[42];
@@ -494,3 +509,5 @@ void FindCompanion(int boss, int players, bool[] omit)
 	}
 	playersNeeded=3;  //Reset the amount of players needed back to 3 after we're done
 }
+
+#include "ff2_module/character_native.sp"
