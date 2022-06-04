@@ -17,8 +17,6 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 
 #include <sourcemod>
 #include <clientprefs>
-#include <freak_fortress_2>
-#include <ff2_potry>
 
 #undef REQUIRE_EXTENSIONS
 #tryinclude <steamtools>
@@ -40,6 +38,9 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <tf2utils>
 #include <tf2wearables>
 #include <unixtime_sourcemod>
+
+#include <freak_fortress_2>
+#include <ff2_potry>
 
 #include <stocksoup/tf/monster_resource>
 #include <stocksoup/tf/econ>
