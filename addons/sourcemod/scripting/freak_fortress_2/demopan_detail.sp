@@ -18,6 +18,8 @@ public Plugin myinfo=
 #define AIR_CHARGE_ABILITY 		"air charge"
 #define FORCE_CHARGE_ABILITY 	"force charge"
 
+float g_flChargeRemain[MAXPLAYERS+1];
+
 public void OnPluginStart()
 {
 	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
@@ -45,13 +47,16 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVel
 	if(!IsPlayerAlive(client) || boss == -1) return Plugin_Continue;
 
 	// force charge
-	if(!TF2_IsPlayerInCondition(client, TFCond_Charging)
-	&& !TF2_IsPlayerInCondition(client, TFCond_Dazed)
-	&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY)
-	&& (buttons & (IN_ATTACK2|IN_RELOAD)) > 0 // IN_RELOAD should be in Post function.
- 	&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 10.0)
+
+	if(FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY))
 	{
-		TF2_AddCondition(client, TFCond_Charging, -1.0, client);
+		if(!TF2_IsPlayerInCondition(client, TFCond_Charging)
+			&& !TF2_IsPlayerInCondition(client, TFCond_Dazed)
+			&& (buttons & (IN_ATTACK2|IN_RELOAD)) > 0 // IN_RELOAD should be in Post function.
+			&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 30.0)
+			TF2_AddCondition(client, TFCond_Charging, -1.0, client);
+
+		g_flChargeRemain[client] = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
 	}
 
 	// Air charge
@@ -73,6 +78,16 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVel
 	}
 
 	return Plugin_Continue;
+}
+
+public void TF2_OnConditionRemoved(int client, TFCond cond)
+{
+	int boss = FF2_GetBossIndex(client);
+	if(boss != -1 && cond == TFCond_Charging
+		&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY))
+	{
+		SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", g_flChargeRemain[client]);
+	}
 }
 
 stock bool IsBoss(int client)
