@@ -136,6 +136,16 @@ void InitRushTargetList(int client)
     g_iRushTargetCount[client] = 0;
 }
 
+public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
+{
+    if(IsPlayerAlive(client) && g_flRushStateTime[client] > GetGameTime())
+    {
+        SetEntPropEnt(client, Prop_Send, "m_hGroundEntity", -1);
+    }
+
+    return Plugin_Continue;
+}
+
 #if defined _ff2_potry_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 #else
@@ -163,8 +173,17 @@ void TriggerRush(int boss, int status)
     for(int loop = Rush_Ready; loop <= Rush_Rest; loop++)
         stopTime += GetRushStateTime(boss, loop);
 
-    TF2_AddCondition(client, TFCond_HalloweenKartNoTurn, stopTime);
-    SetEntityGravity(client, 0.0);
+    TF2_AddCondition(client, TFCond_HalloweenKartNoTurn, stopTime); // TODO: 커스터마이징
+    SetEntityMoveType(client, MOVETYPE_NONE);
+
+    // TODO: 특정 프레임에 고정
+    int animationProp = PlayAnimation(client, "Melee_Swing", _, stopTime, true);
+
+    // FIXME: 모델 문제로 각도가 이상하게 꺾여서 여기서 강제로 고정
+    float animationAngles[3];
+    GetEntPropVector(animationProp, Prop_Data, "m_angRotation", animationAngles);
+    animationAngles[1] += 90.0;
+    TeleportEntity(animationProp, NULL_VECTOR, animationAngles, NULL_VECTOR);
 
     InitRushTargetList(client);
     OnRushTick(client);
@@ -179,8 +198,7 @@ void TriggerRush(int boss, int status)
     GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
 
-    // TODO: avoid movement logic
-    eyeAngles[0] = min(-3.62, eyeAngles[0]);
+    // eyeAngles[0] = min(-3.62, eyeAngles[0]);
     GetAngleVectors(eyeAngles, eyeAngles, NULL_VECTOR, NULL_VECTOR);
     ScaleVector(eyeAngles, speed);
 
@@ -211,33 +229,39 @@ void OnRushTick(int client)
     {
         g_iRushState[client]++;
 
-        if(g_iRushState[client] == Rush_Rest)
+        switch(g_iRushState[client])
         {
-            TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, zeroVec);
-            SetEntityGravity(client, 1.0);
-        }
-        else if (g_iRushState[client] == Rush_DelayDamage)
-        {
-            float damage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DAMAGE, 106.0),
-            victimPos[3];
-
-            int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-
-            for(int loop = 0; loop < g_iRushTargetCount[client]; loop++)
+            case Rush_Slash:
             {
-                int target = g_hRushTargetList[client][loop];
-
-                if(IsValidTarget(target))
-                {
-                    GetClientEyePosition(target, victimPos);
-                    SDKHooks_TakeDamage(target, client, client, damage, DMG_SLASH|DMG_VEHICLE, weapon, victimPos);
-
-                    DispatchParticleEffect(victimPos, NULL_VECTOR, "env_sawblood", target, 3.0);
-                    DispatchParticleEffect(victimPos, NULL_VECTOR, "blood_decap_fountain", target, 3.0);
-                }
+                SetEntityMoveType(client, MOVETYPE_WALK);
             }
+            case Rush_Rest:
+            {
+                TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, zeroVec);
+            }
+            case Rush_DelayDamage:
+            {
+                float damage = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, RUSH, RUSH_SLASH_DAMAGE, 106.0),
+                victimPos[3];
 
-            return;
+                int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+
+                for(int loop = 0; loop < g_iRushTargetCount[client]; loop++)
+                {
+                    int target = g_hRushTargetList[client][loop];
+
+                    if(IsValidTarget(target))
+                    {
+                        GetClientEyePosition(target, victimPos);
+                        SDKHooks_TakeDamage(target, client, client, damage, DMG_SLASH|DMG_VEHICLE, weapon, victimPos);
+
+                        DispatchParticleEffect(victimPos, NULL_VECTOR, "env_sawblood", target, 3.0);
+                        DispatchParticleEffect(victimPos, NULL_VECTOR, "blood_decap_fountain", target, 3.0);
+                    }
+                }
+
+                return;
+            }
         }
 
         g_flRushStateTime[client] = GetGameTime() + GetRushStateTime(boss, g_iRushState[client]);
@@ -254,11 +278,7 @@ void OnRushTick(int client)
 
         slashCenterPos = WorldSpaceCenter(client);
         GetClientEyeAngles(client, velocity);
-
-        // TODO: avoid movement logic
-        velocity[0] = min(-3.62, velocity[0]);
         GetAngleVectors(velocity, velocity, NULL_VECTOR, NULL_VECTOR);
-        // SetEntProp(client, Prop_Send, "m_bJumping", 1);
 
         speed /= stateTime;
         ScaleVector(velocity, speed);
@@ -304,10 +324,6 @@ void OnRushTick(int client)
 
                 // NormalizeVector(betweenAngles, betweenAngles);
                 // ScaleVector(betweenAngles, damage * 8.0);
-
-                // TODO: 범위 내의 적에게 파티클 효과
-                // TODO: 딜레이 후 피격 판정 (밑 구문 옮기기)
-                // 지금은 프레임 당 판정이라 연타로 들어갈거임 (일괄 적용으로 바꿀 것)
 
                 PushRushTarget(client, target);
 
