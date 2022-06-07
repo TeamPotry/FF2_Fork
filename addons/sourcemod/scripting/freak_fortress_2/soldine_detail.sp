@@ -7,9 +7,10 @@
 #include <tf2_stocks>
 #include <freak_fortress_2>
 #include <ff2_potry>
+#include <ff2_stocks>
 
 #define PLUGIN_NAME "soldine detail"
-#define PLUGIN_VERSION 	"20210827"
+#define PLUGIN_VERSION 	"20220607"
 
 #define	MAX_EDICT_BITS		12
 #define	MAX_EDICTS			(1 << MAX_EDICT_BITS)
@@ -282,50 +283,63 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 
 		bool isPlayer = false;
 		GetEntityClassname(target, classname, sizeof(classname));
+
         if((isPlayer = target <= MaxClients)
 			&& (!IsPlayerAlive(target) || GetClientTeam(hole.Owner) == GetClientTeam(target)))
 			continue;
 
-        if(!HasEntProp(target, Prop_Send, "m_vecOrigin")
-            || !HasEntProp(target, Prop_Data, "m_vecVelocity"))
-            continue;
-
-		bool isObject = target > MaxClients
+		// 오브젝트 필터링
+		bool isObject = !isPlayer
 			&& (StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_sentrygun"));
 		if(isObject)
 			SetEntityMoveType(target, MOVETYPE_FLYGRAVITY);
 
-		if(target > MaxClients
+		// 투사체, 떨어진 무기 필터링
+		if(!isPlayer
 			&& (!isObject
 				&& StrContains(classname, "tf_projectile") == -1
 					&& StrContains(classname, "tf_dropped_weapon") == -1))
 			continue;
-        // PrintToServer("%d", target);
 
         float targetPos[3], targetAngles[3], velocity[3];
         GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPos);
         GetEntPropVector(target, Prop_Data, "m_vecVelocity", velocity);
-
+/*
+		// 중력의 영향을 받는 투사체는 m_vInitialVelocity에 속도가 저장됨
+		// 아래 조건문은 움직이지 않는 오브젝트에도 적용될 수 있으나 반환값은 어차피 둘 다 0임.
+		if(GetVectorLength(velocity) <= 0.0
+			&& HasEntProp(target, Prop_Send, "m_vInitialVelocity"))
+		{
+			GetEntPropVector(target, Prop_Send, "m_vInitialVelocity", velocity);
+		}
+*/
         float realPower = hole.Power - GetVectorDistance(pos, targetPos);
         if(realPower <= 0.0)    continue;
 
-        TR_TraceRayFilter(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceDontHitMe, target);
-        if(TR_GetEntityIndex() != target)       continue;
+        // TR_TraceRayFilter(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceDontHitMe, target);
+        // if(TR_GetEntityIndex() != target)       continue;
 
         SubtractVectors(pos, targetPos, targetAngles);
-    	GetVectorAngles(targetAngles, targetAngles);
-        GetAngleVectors(targetAngles, targetAngles, NULL_VECTOR, NULL_VECTOR);
+		NormalizeVector(targetAngles, targetAngles);
 
         // 포탈에 근접한 경우 속도를 줄여 오히려 발을 묶기
-		// TODO: 투사체와 플레이어 구분
-		// 투사체: 단순 합연산
-		// 플레이어의 경우: 이동키와 이동속도를 이용한 저항계수를 연산에 추가
-        bool over = isPlayer && hole.Power - 50.0 < realPower;
-        ScaleVector(targetAngles, over ? 100.0 : realPower);
+		if(isPlayer)
+		{
+			SetEntPropEnt(target, Prop_Send, "m_hGroundEntity", -1);
 
-        AddVectors(targetAngles, velocity, velocity);
+			realPower *= 0.12;	// 플레이어 무게 표현
+		}
 
-        TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, targetAngles);
+        ScaleVector(targetAngles, realPower);
+        AddVectors(targetAngles, velocity, targetAngles);
+		TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, targetAngles);
+
+		float effectPos[3];
+		ScaleVector(targetAngles, GetTickInterval() * 3.0);
+		AddVectors(targetPos, targetAngles, effectPos);
+
+		TE_DispatchEffect("sniper_dxhr_rail_noise", targetPos, effectPos);
+        TE_SendToAll();
     }
 
     RequestFrame(BlackHole_Open_Update, hole);
@@ -355,6 +369,14 @@ public void OnPluginStart()
 {
 	FF2_RegisterSubplugin(PLUGIN_NAME);
 }
+
+/*
+public void OnMapStart()
+{
+    FF2_PrecacheEffect();
+    FF2_PrecacheParticleEffect("sniper_dxhr_rail_noise");
+}
+*/
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
