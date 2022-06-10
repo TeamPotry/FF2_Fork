@@ -25,6 +25,9 @@ public Plugin myinfo=
 
 #define BLACKHOLE_NAME      "blackhole"
 
+#define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
+#define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
+
 char g_strBlackHoleClassname[MAXPLAYERS+1][64];
 char g_strBlackHoleSoundOpenPath[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 char g_strBlackHoleSoundLoopPath[MAXPLAYERS+1][PLATFORM_MAX_PATH];
@@ -43,6 +46,7 @@ enum
     Hole_AttachedRef,
 	Hole_InitTime,
 	Hole_Duration,
+	Hole_ParticleNextUpdateTime,
 
 	Hole_OpenSoundPath,
 	Hole_SoundLoopPath,
@@ -105,6 +109,14 @@ methodmap CTFBlackHole < ArrayList {
 		}
 		public set(float duration) {
 			this.Set(Hole_Duration, duration);
+		}
+	}
+	property float ParticleNextUpdateTime {
+		public get() {
+			return this.Get(Hole_ParticleNextUpdateTime);
+		}
+		public set(float time) {
+			this.Set(Hole_ParticleNextUpdateTime, time);
 		}
 	}
     property float SoundLoopTime {
@@ -175,6 +187,7 @@ methodmap CTFBlackHole < ArrayList {
     {
         // PrintToServer("this.Duration: %.1f", this.Duration);
         this.Duration = g_flDuration[this.Owner] + GetGameTime();
+		this.ParticleNextUpdateTime = GetGameTime();
 
         float pos[3];
         char sound[PLATFORM_MAX_PATH];
@@ -248,7 +261,7 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
         return;
     }
 
-    float pos[3];
+    float pos[3], tickInterval = GetTickInterval();
     char sound[PLATFORM_MAX_PATH];
     hole.GetUpdatePosition(pos);
 
@@ -334,13 +347,22 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
         AddVectors(targetAngles, velocity, targetAngles);
 		TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, targetAngles);
 
-		float effectPos[3];
-		ScaleVector(targetAngles, GetTickInterval() * 3.0);
-		AddVectors(targetPos, targetAngles, effectPos);
+		// FIXME: CAUSES OVERFLOW
+		/*
+		if(realPower > 30.0 && hole.ParticleNextUpdateTime < GetGameTime())
+		{
+			float effectPos[3];
+			ScaleVector(targetAngles, tickInterval * 32.0);
+			AddVectors(targetPos, targetAngles, effectPos);
 
-		TE_DispatchEffect("sniper_dxhr_rail_noise", targetPos, effectPos);
-        TE_SendToAll();
+			TE_DispatchEffect("sniper_dxhr_rail_noise", targetPos, effectPos);
+	        TE_SendToAll();
+		}
+		*/
     }
+
+	if(hole.ParticleNextUpdateTime < GetGameTime())
+		hole.ParticleNextUpdateTime += tickInterval * 32.0;
 
     RequestFrame(BlackHole_Open_Update, hole);
 }
