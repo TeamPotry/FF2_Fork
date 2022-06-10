@@ -30,6 +30,10 @@ public Plugin myinfo=
 #define REFLECTER_NAME                  "reflect"
 #define REFLECTER_BY_FORCE_NAME         "turn on reflect by force"
 
+#define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
+#define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
+#define mclamp(%1,%2,%3)        min(max(%1,%2),%3)
+
 Handle g_SDKCallGetVelocity;
 Handle g_SDKCallSetAbsVelocity;
 // Handle g_SDKCallFireBullets;
@@ -292,16 +296,15 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 
 	if(g_flReflecterHealth[client] > 0.0)
 	{
-		damage = 0.0;
-
-		float speed = GetVectorLength(damageForce);
-		if(speed > 100.0)
-			ScaleVector(damageForce, 100.0 / speed);
+		float speed = GetVectorLength(damageForce),
+			maxSpeed = max(damage, 100.0);
+		ScaleVector(damageForce, maxSpeed / speed);
 
 		float velocity[3];
 		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 		AddVectors(damageForce, velocity, damageForce);
 
+		damage = 0.0;
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, damageForce);
 	}
 	return g_flReflecterHealth[client] > 0.0 ? Plugin_Changed : Plugin_Continue;
