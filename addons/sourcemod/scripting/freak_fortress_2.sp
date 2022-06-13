@@ -5481,24 +5481,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 	GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
 	if(IsBoss(attacker))
 	{
-		if(damagecustom == TF_CUSTOM_BACKSTAB && IsBoss(client))
+		if(damagecustom == TF_CUSTOM_BACKSTAB)
 		{
-			int boss=GetBossIndex(client);
+			damage = GetMeleeDamage(weapon, TFClass_Spy);
 
-			// 보스가 메인 보스를 백스탭 할 경우, 약화된 데미지 공식 사용
-			// TODO: 동등한 보스의 위치(메인, 인간팀)의 경우를 고려해야 함
-			if(GetBossIndex(attacker) != 0)
-				damage=(BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.05-Stabbed[boss]/180));
-			else
-				damage=BossHealth[boss]*1.1; // 즉사 처리
+			damagetype ^= DMG_CRIT|DMG_RADIUS_MAX;
+			damagecustom = 0;
 
-			damagetype|=DMG_CRIT;
-			damagecustom=0;
-
-			if(SpecialAttackToBoss(attacker, boss, weapon, "boss_backstab", damage) == Plugin_Handled)
-				return Plugin_Handled;
-
-			bChanged=true;
+			bChanged = true;
 		}
 		if(IsValidClient(client) && !IsBoss(client) && !TF2_IsPlayerInCondition(client, TFCond_Bonked))
 		{

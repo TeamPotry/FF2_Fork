@@ -523,6 +523,21 @@ stock void RandomlyDisguise(int client)	//Original code was mecha's, but the ori
 	}
 }
 
+float GetMeleeDamage(int weapon, TFClassType class = TFClass_Unknown)
+{
+    // FIXME: Yeah. a Hardcoded stuff.
+    // Change g_MeleeDamage to In-game function that can get actual damage.
+    // NOTE: ANNND this only multiplies mult_dmg for now.
+    static float g_MeleeDamage = 65.0;
+    static float g_WeakMeleeDamage = 35.0;
+
+    float damage = (class == TFClass_Scout || class == TFClass_Spy) ? g_WeakMeleeDamage
+        : g_MeleeDamage;
+
+    float multiplier = TF2Attrib_HookValueFloat(1.0, "mult_dmg", weapon);
+    return damage * multiplier * 1.13793; // THIS 1.13793 I DO NOT KNOW
+}
+
 /**
  * From https://github.com/nosoop/stocksoup/blob/master/tf/econ.inc
  * Creates a wearable DemoShield entity.
