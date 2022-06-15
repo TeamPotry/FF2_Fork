@@ -70,6 +70,7 @@ bool mannvsmann = false;
 
 int Stabbed[MAXPLAYERS+1];
 int Marketed[MAXPLAYERS+1];
+int ComboPunchCount[MAXPLAYERS+1];
 float KSpreeTimer[MAXPLAYERS+1];
 int KSpreeCount[MAXPLAYERS+1];
 float GlowTimer[MAXPLAYERS+1];
@@ -4889,6 +4890,7 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 
 		Stabbed[boss]=0;
 		Marketed[boss]=0;
+		ComboPunchCount[boss]=0;
 	}
 
 	if(TF2_GetPlayerClass(client)==TFClass_Engineer && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
@@ -5751,6 +5753,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 
 							SpecialAttackToBoss(attacker, boss, weapon, "combo_punch", damage);
+							CreateKillStreak(attacker, client, "robot_arm_combo_kill", ++ComboPunchCount[attacker]);
 
 							return Plugin_Changed;
 						}
