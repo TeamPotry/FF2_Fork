@@ -3,5 +3,5 @@ sourcemod/scripting/freak_fortress_2/ff2_ragemodel.sp
 sourcemod/scripting/freak_fortress_2/shulk_detail.sp
 
 TODO.txt
-batch/
+bin/
 plugins/

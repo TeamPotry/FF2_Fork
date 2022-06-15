@@ -1,0 +1,5 @@
+{
+    "sourcepawn.SourcemodHome": "/sourcemod_lib/include",
+    "sourcepawn.SpcompPath": "/sourcemod_lib/spcomp",
+    "sourcepawn.outputDirectoryPath": "/workspaces/FF2_Fork/bin/"
+}
