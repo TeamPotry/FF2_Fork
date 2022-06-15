@@ -5594,19 +5594,20 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(IsValidEntity(weapon))
 				{
-					static int kStreakCount;
-					kStreakCount += RoundFloat(damage);
-					if(kStreakCount >= 250)
+					static int kStreakDamage;
+					kStreakDamage += RoundFloat(damage);
+					if(kStreakDamage >= 250)
 					{
-						SetEntProp(attacker, Prop_Send, "m_nStreaks", GetEntProp(attacker, Prop_Send, "m_nStreaks") + 1);
-						switch(GetEntProp(attacker, Prop_Send, "m_nStreaks"))
+						int playerStreaks = GetEntProp(attacker, Prop_Send, "m_nStreaks");
+						SetEntProp(attacker, Prop_Send, "m_nStreaks", ++playerStreaks);
+						switch(playerStreaks)
 						{
 							case 5, 10, 15, 20, 25, 50, 75, 100, 150, 200, 250, 500, 750, 1000:
 							{
-								CreateKillStreak(attacker, client, weapon, index, GetEntProp(attacker, Prop_Send, "m_nStreaks"));
+								CreateKillStreak(attacker, client, "world", playerStreaks);
 							}
 						}
-						kStreakCount = 0;
+						kStreakDamage = 0;
 					}
 				}
 
@@ -5870,7 +5871,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 								Marketed[client]++;
 							}
 
-							CreateKillStreak(attacker, client, weapon, index, Marketed[client]);
+							CreateKillStreak(attacker, client, "market_gardener", Marketed[client]);
 
 							PrintHintText(attacker, "%t", "Market Gardener");  //You just market-gardened the boss!
 							PrintHintText(client, "%t", "Market Gardened");  //You just got market-gardened!
@@ -5976,7 +5977,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						Stabbed[boss]++;
 					}
-					CreateKillStreak(attacker, client, weapon, index, Stabbed[boss]);
+					CreateKillStreak(attacker, client, "backstab", Stabbed[boss]);
 
 					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);

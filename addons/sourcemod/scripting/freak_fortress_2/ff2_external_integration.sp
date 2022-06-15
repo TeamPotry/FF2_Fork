@@ -120,7 +120,7 @@ public int OnStompPost(int attacker, int victim, float damageMultiplier, float d
 		PrintCenterText(victim, "%t", "Boss Got Goomba Stomped");
 		PrintCenterText(attacker, "%t", "Human Goomba Stomped");
 
-		CreateKillStreak(attacker, victim, -1, 444, ++Goombaed[attacker]);
+		CreateKillStreak(attacker, victim, "mantreads", ++Goombaed[attacker]);
 
 		int adddmg = RoundFloat(FindConVar("goomba_dmg_add").FloatValue);
 		if(boss != -1)

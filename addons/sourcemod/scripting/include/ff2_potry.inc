@@ -298,18 +298,32 @@ public Action ResetTimer(Handle timer, ArrayList pack)
     delete pack;
 }
 
-stock void CreateKillStreak(int attacker, int target, int weapon, int defIndex, int streak)
+stock void CreateKillStreak(int attacker, int target, const char[] name, int streak)
 {
     Event streakEvent = CreateEvent("player_death", true);
     streakEvent.SetInt("attacker", GetClientUserId(attacker));
     streakEvent.SetInt("userid", GetClientUserId(target));
-    streakEvent.SetInt("weapon_def_index", defIndex);
+
+    streakEvent.SetString("weapon", name);
+/*
+    if(IsValidEntity(weapon))
+    {
+        // char classname[32];
+        // GetEntityClassname(weapon, classname, sizeof(classname));
+
+        // streakEvent.SetString("weapon_logclassname", name);
+        // streakEvent.SetInt("weaponid", TF2Util_GetWeaponID(weapon));
+        // streakEvent.SetInt("weapon_def_index", GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+    }
+*/
+    // if(customkill > 0)
+        // streakEvent.SetInt("customkill", customkill);
 
     // TF_DEATHFLAG_DEADRINGER
     streakEvent.SetInt("death_flags", (1 << 5));
 
-    streakEvent.SetInt("kill_streak_wep", GetEntProp(attacker, Prop_Send, "m_nStreaks"));
-    streakEvent.SetInt("kill_streak_total", GetEntProp(attacker, Prop_Send, "m_nStreaks"));
+    streakEvent.SetInt("kill_streak_wep", streak);
+    streakEvent.SetInt("kill_streak_total", streak);
 
     for(int client = 1; client <= MaxClients; client++)
     {
