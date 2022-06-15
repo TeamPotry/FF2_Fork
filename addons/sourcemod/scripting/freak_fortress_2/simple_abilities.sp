@@ -74,7 +74,8 @@ int g_hDisabledWeaponSlot[MAXPLAYERS+1];
 float g_flWeaponDisabledTime[MAXPLAYERS+1];
 
 int g_iCurrentAdditionalHealth[MAXPLAYERS+1];
-float g_flAdditionalHealthMultiplierDuration[MAXPLAYERS+1];
+float g_flCurrentAdditionalHealthDecimal[MAXPLAYERS+1];
+float g_flAdditionalHealthMaximumDuration[MAXPLAYERS+1];
 
 enum
 {
@@ -126,14 +127,11 @@ public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcas
 		if(max > 0)
 		{
 			int addHealth = FF2_GetClientDamage(client) / 2;
-			if(addHealth > max)
+			if(g_flAdditionalHealthMaximumDuration[attacker] > GetGameTime()
+				|| addHealth > max)
 				addHealth = max;
 			else if(addHealth <= 100)
 				addHealth = 100;
-
-			if(g_flAdditionalHealthMultiplierDuration[attacker] > GetGameTime())
-				// *= operator doesn't work with float this time.
-				addHealth = RoundFloat(addHealth * FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ON_KILL_ADDITIONAL_HEALTH_IN_DURATION, 1.0));
 
 			AddAdditionalHealth(boss, addHealth);
 
@@ -217,11 +215,18 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	{
 		if(g_iCurrentAdditionalHealth[client] > 0)
 		{
-			float multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ADDITIONAL_HEALTH_DRAIN_RATE, 40.0);
-			int drainHealth = RoundFloat(GetTickInterval() * multiplier);
+			float multiplier = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ADDITIONAL_HEALTH_DRAIN_RATE, 40.0),
+				drainHealth = GetTickInterval() * multiplier;
 
-			g_iCurrentAdditionalHealth[client] -= drainHealth;
-			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) - drainHealth);
+			g_flCurrentAdditionalHealthDecimal[client] += drainHealth;
+			if(g_flCurrentAdditionalHealthDecimal[client] > 1.0)
+			{
+				int integerValue = RoundFloat(g_flCurrentAdditionalHealthDecimal[client]);
+				g_flCurrentAdditionalHealthDecimal[client] -= integerValue;
+				g_iCurrentAdditionalHealth[client] -= integerValue;
+
+				FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) - integerValue);
+			}
 		}
 	}
 
@@ -231,7 +236,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 		AddAdditionalHealth(boss, addhealth);
 
 		float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADD_ADDITIONAL_HEALTH_NAME, "duration", 10.0);
-		g_flAdditionalHealthMultiplierDuration[client] = GetGameTime() + duration;
+		g_flAdditionalHealthMaximumDuration[client] = GetGameTime() + duration;
 	}
 }
 
@@ -782,6 +787,27 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 		g_flWeaponDisabledTime[client] = 0.0;
 
 		g_iCurrentAdditionalHealth[client] = 0;
-		g_flAdditionalHealthMultiplierDuration[client] = 0.0;
+		g_flCurrentAdditionalHealthDecimal[client] = 0.0;
+		g_flAdditionalHealthMaximumDuration[client] = 0.0;
 	}
+}
+
+float[] GetNormalAngles(float normal[3])
+{
+	float angles[3], axisNormal;
+
+	for(int loop = 0; loop < 2; loop++)
+	{
+		axisNormal = FloatAbs(normal[loop]);
+		if(axisNormal > 0.0)
+			//return RadToDeg(axisNormal)*10.0*0.1;
+			angles[loop] = axisNormal * 90.0;
+	}
+
+	return angles;
+}
+
+public bool TraceAnything(int entity, int contentsMask, any data)
+{
+    return entity == 0 || entity != data;
 }
