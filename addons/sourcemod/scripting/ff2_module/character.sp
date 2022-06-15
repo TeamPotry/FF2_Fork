@@ -387,7 +387,7 @@ public bool PickCharacter(int boss, int companion)
 		kv.Rewind();
 		kv.GetString("companion", companionName, sizeof(companionName), "=Failed companion name=");
 
-		int characterIndex;
+		int characterIndex = 0;
 		while(characterIndex < bossesArray.Length)  //Loop through all the bosses to find the companion we're looking for
 		{
 			kv = GetCharacterKV(characterIndex);
@@ -395,23 +395,21 @@ public bool PickCharacter(int boss, int companion)
 			kv.GetString("name", bossName, sizeof(bossName), "=Failed name=");
 			if(StrEqual(bossName, companionName, false))
 			{
-				character[companion]=characterIndex;
+				character[companion] = characterIndex;
 				break;
 			}
 
 			kv.GetString("filename", bossName, sizeof(bossName), "=Failed name=");
 			if(StrEqual(bossName, companionName, false))
 			{
-				character[companion]=characterIndex;
+				character[companion] = characterIndex;
 				break;
 			}
 			characterIndex++;
 		}
 
 		if(characterIndex == bossesArray.Length)  //Companion not found
-		{
 			return false;
-		}
 	}
 
 	//All of the following uses `companion` because it will always be the boss index we want
@@ -484,17 +482,17 @@ public bool PickCharacter(int boss, int companion)
 
 void FindCompanion(int boss, int players, bool[] omit)
 {
-	static int playersNeeded=3;
+	static int playersNeeded = 3;
 	char companionName[64];
 	KeyValues kv = GetCharacterKV(character[boss]);
 	kv.Rewind();
 	kv.GetString("companion", companionName, sizeof(companionName));
-	if(playersNeeded<players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
+	if(playersNeeded < players && strlen(companionName))  //Only continue if we have enough players and if the boss has a companion
 	{
-		int companion=RandomlySelectClient(false, omit);
+		int companion = RandomlySelectClient(false, omit);
 
-		Boss[companion]=companion;  //Woo boss indexes!
-		omit[companion]=true;
+		Boss[companion] = companion;  //Woo boss indexes!
+		omit[companion] = true;
 		if(PickCharacter(boss, companion))  //TODO: This is a bit misleading
 		{
 			playersNeeded++;
@@ -503,11 +501,11 @@ void FindCompanion(int boss, int players, bool[] omit)
 		else  //Can't find the companion's character, so just play without the companion
 		{
 			LogError("[FF2 Bosses] Could not find boss %s!", companionName);
-			Boss[companion]=0;
-			omit[companion]=false;
+			Boss[companion] = 0;
+			omit[companion] = false;
 		}
 	}
-	playersNeeded=3;  //Reset the amount of players needed back to 3 after we're done
+	playersNeeded = 3;  //Reset the amount of players needed back to 3 after we're done
 }
 
 #include "ff2_module/character_native.sp"
