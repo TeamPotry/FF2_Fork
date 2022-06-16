@@ -5998,17 +5998,17 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 				}
 
+				
+
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					// damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
-					damage = BossHealth[boss] * 0.06;
+					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", attacker) > 0;
+					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
+					// damage = BossHealth[boss] * 0.06;
 					if(damage < 1500.0)
 						damage = 1500.0; // x3
 					damagetype|=DMG_CRIT;
 					damagecustom=0;
-
-					if(SpecialAttackToBoss(attacker, boss, weapon, "backstab", damage) == Plugin_Handled)
-						return Plugin_Handled;
 
 					if(Stabbed[boss]<3)
 					{
@@ -6016,13 +6016,24 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 					CreateKillStreak(attacker, client, "backstab", Stabbed[boss]);
 
-					EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-					EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-					EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
-					EmitSoundToClient(attacker, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
-					EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
-					EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
-					EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+					if(!isSlient)
+					{
+						EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+						EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+						EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
+						EmitSoundToClient(attacker, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
+						EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+						EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+						EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
+					}
+					else
+					{
+						damage *= 0.4;
+					}
+					
+					if(SpecialAttackToBoss(attacker, boss, weapon, "backstab", damage) == Plugin_Handled)
+						return Plugin_Handled;
+
 					SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+2.0);
 					SetEntPropFloat(attacker, Prop_Send, "m_flNextAttack", GetGameTime()+2.0);
 					SetEntPropFloat(attacker, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+2.0);
