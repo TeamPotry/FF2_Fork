@@ -2703,9 +2703,11 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 		case 997: // The Rescue Ranger (구조대원)
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "287 ; 0.8 ; 4351 ; 0.9");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "97 ; 0.75 ; 148 ; 1.3");
+			// 97: reload time
 			//287: sentry damage
 			// 4351: (hidden) sentry ammo
+			// 148:  building_cost_reduction
 			if(itemOverride!=null)
 			{
 				item=itemOverride;
@@ -2819,10 +2821,12 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_pda_engineer_build"))  // Construction PDA
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 4.00 ; 276 ; 1.0 ; 4351 ; 0.4 ; 287 ; 0.8", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "345 ; 4.00 ; 148 ; 0.7692 ; 469 ; 100 ; 4351 ; 0.4 ; 287 ; 0.8", false);
 			//345: engy dispenser radius increased
 			//276: bidirectional_teleport
 			//287: sentry damage
+			// 469: Use metal to pick up your targeted building from long range
+			// 148:  building_cost_reduction
 			// 4351: (hidden) sentry ammo
 			// 4354: (hidden) teleporter charge rate
 
