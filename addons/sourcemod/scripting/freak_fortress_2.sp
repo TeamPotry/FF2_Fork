@@ -4874,8 +4874,24 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 	else
 	{
 		int boss=GetBossIndex(client);
-		if(boss==-1 || (event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
+		if((event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) > 0)
 		{
+			// NOTE: This is for avoid instant death bug.
+			// DO NOT BROADCAST TO THE CLIENT WHO CAUSES THIS BUG.
+			// .. And this might not only boss player. it also happens when obtains dead ringer during the round.
+			if(boss != -1)
+			{
+				dontBroadcast = true;
+
+				for(int target = 1; target <= MaxClients; target++)
+				{
+					if(IsClientInGame(target) && client != target)
+						event.FireToClient(target);
+				}
+
+				return Plugin_Changed;
+			}
+
 			return Plugin_Continue;
 		}
 
