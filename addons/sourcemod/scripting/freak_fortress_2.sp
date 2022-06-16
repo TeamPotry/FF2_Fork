@@ -77,6 +77,8 @@ float GlowTimer[MAXPLAYERS+1];
 int shortname[MAXPLAYERS+1];
 bool emitRageSound[MAXPLAYERS+1];
 
+float RocketJumpPosition[MAXPLAYERS+1][3];
+
 int timeType;
 float timeleft, maxTime;
 int maxWave, currentWave;
@@ -4544,6 +4546,7 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 				case TFCond_BlastJumping:
 				{
 					FF2Flags[client]|=FF2FLAG_BLAST_JUMPING;
+					GetEntPropVector(client, Prop_Send, "m_vecOrigin", RocketJumpPosition[client]);
 				}
 				case TFCond_RestrictToMelee:
 				{
@@ -5877,9 +5880,20 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
 						{
 							damage=(Pow(float(BossHealthMax[boss]), 0.54074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
-							if(damage < 750.0)
-								damage = 750.0; // x3
+							if(damage < 500.0)
+								damage = 500.0; // x3
 
+							float velocity[3]; // TODO: move this when anything use this in OnTakeDamage
+							GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", velocity);
+
+							float score = FloatAbs(velocity[2]);
+							if(velocity[2] < 0.0)
+								score *= 0.65;
+
+							float distance = GetVectorDistance(position, RocketJumpPosition[attacker]);
+							score = score > distance ? score : distance;
+
+							damage += score;
 							damagetype|=DMG_CRIT;
 
 							if(SpecialAttackToBoss(attacker, boss, weapon, "market_garden", damage) == Plugin_Handled)
@@ -5890,7 +5904,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 								Marketed[client]++;
 							}
 
-							CreateKillStreak(attacker, client, "market_gardener", Marketed[client]);
+							CreateKillStreak(attacker, client, "market_gardener", RoundFloat(score));
 
 							PrintHintText(attacker, "%t", "Market Gardener");  //You just market-gardened the boss!
 							PrintHintText(client, "%t", "Market Gardened");  //You just got market-gardened!
