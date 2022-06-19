@@ -16,6 +16,9 @@ bool g_bDEVmode = false;
 
 public void OnPluginStart()
 {
+	RegAdminCmd("ff2_devmode", Cmd_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
+	RegAdminCmd("ff2_disable_timer", Cmd_DisableTimer, ADMFLAG_CHEATS, "WOW! NO TIMER!");
+	RegAdminCmd("ff2_change_boss", Cmd_ChangeBoss, ADMFLAG_CHEATS, "WOW! CHANGE USER's BOSS!");
 	RegAdminCmd("ff2_ability", Cmd_UseAbility, ADMFLAG_CHEATS, "WOW! TRIGGER BOSS's ABILITIES!");
 	RegAdminCmd("ff2_export", Cmd_ExportBoss, ADMFLAG_CHEATS, "WOW! EXPORT BOSS's CONFIG!");
 
@@ -25,7 +28,7 @@ public void OnPluginStart()
 	LoadTranslations("common.phrases");
 }
 
-public Action Command_DevMode(int client, int args)
+public Action Cmd_DevMode(int client, int args)
 {
     CPrintToChatAll("{olive}[FF2]{default} DEVMode: %s", !g_bDEVmode ? "ON" : "OFF");
     g_bDEVmode = !g_bDEVmode;
@@ -33,19 +36,17 @@ public Action Command_DevMode(int client, int args)
     return Plugin_Handled;
 }
 
-public Action Command_DisableTimer(int client, int args)
+public Action Cmd_DisableTimer(int client, int args)
 {
 	CPrintToChatAll("{olive}[FF2]{default} Disabled Timer.");
 	FF2_SetRoundTime(-1.0); // 라운드 타이머 끄기
 	return Plugin_Handled;
 }
 
-public Action ChangeBossCmd(int client, int args)
+public Action Cmd_ChangeBoss(int client, int args)
 {
 	if(!FF2_IsFF2Enabled())
-	{
 		return Plugin_Continue;
-	}
 
 	char pattern[MAX_TARGET_LENGTH];
 	GetCmdArg(1, pattern, sizeof(pattern));
