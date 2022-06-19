@@ -339,7 +339,7 @@ public void OnReflecterThink(int client)
 
 	// PrintToServer("%.1f + %.1f", FF2_GetClientGlow(client), GetTickInterval());
 	// TODO: 리플렉터 모델 작동되면 삭제
-	int boss = FF2_GetBossIndex(client);
+	// int boss = FF2_GetBossIndex(client);
 	FF2_SetClientGlow(client, GetTickInterval() * 0.5);
 
 	float playerPos[3], pos[3], endPos[3], velocity[3], speed;
@@ -685,12 +685,12 @@ void PrecacheEffect(const char[] sEffectName)
 
 public MRESReturn DHookCallback_FireChargedShot_Post(int weapon)
 {
-    int owner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity"),
-        boss = FF2_GetBossIndex(owner);
-    if(boss != -1 && FF2_HasAbility(boss, PLUGIN_NAME, DELETE_AFTER_CHARGE_NAME))
-    {
-        int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DELETE_AFTER_CHARGE_NAME, "replace slot", -1);
-        if(slot > -1)
+	int owner = GetEntPropEnt(weapon, Prop_Send, "m_hOwnerEntity"),
+		boss = FF2_GetBossIndex(owner);
+	if(boss != -1 && FF2_HasAbility(boss, PLUGIN_NAME, DELETE_AFTER_CHARGE_NAME))
+	{
+		int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DELETE_AFTER_CHARGE_NAME, "replace slot", -1);
+		if(slot > -1)
 		{
 			int replaceWeapon = GetPlayerWeaponSlot(owner, slot);
 
@@ -699,8 +699,8 @@ public MRESReturn DHookCallback_FireChargedShot_Post(int weapon)
 		}
 
 		RemoveEntity(weapon);
-    }
-    return MRES_Ignored;
+	}
+	return MRES_Ignored;
 }
 
 static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallback callbackPre = INVALID_FUNCTION, DHookCallback callbackPost = INVALID_FUNCTION)
@@ -873,7 +873,7 @@ stock int AttachParticle(int entity, char[] particleType, float offset=0.0, bool
 
 stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, int time=1, int controlpoint=0)
 {
-    int particle = CreateEntityByName("info_particle_system");
+	int particle = CreateEntityByName("info_particle_system");
 
 	char temp[64], targetName[64], cpName[64];
 	if (IsValidEdict(particle))
@@ -903,7 +903,7 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 				SetVariantString(targetName);
 				AcceptEntityInput(cpParticle, "SetParent", particle, particle, 0);
 
-				 DispatchKeyValue(particle, "cpoint1", cpName);
+				DispatchKeyValue(particle, "cpoint1", cpName);
 			}
 		}
 
