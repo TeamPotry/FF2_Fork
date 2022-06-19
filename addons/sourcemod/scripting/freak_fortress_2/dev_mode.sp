@@ -16,9 +16,8 @@ bool g_bDEVmode = false;
 
 public void OnPluginStart()
 {
-	RegAdminCmd("ff2_devmode", Command_DevMode, ADMFLAG_CHEATS, "WOW! INFINITE RAGE!");
-	RegAdminCmd("ff2_disable_timer", Command_DisableTimer, ADMFLAG_CHEATS, "WOW! NO TIMER!");
-	RegAdminCmd("ff2_change_boss", ChangeBossCmd, ADMFLAG_CHEATS, "WOW! CHANGE USER's BOSS!");
+	RegAdminCmd("ff2_ability", Cmd_UseAbility, ADMFLAG_CHEATS, "WOW! TRIGGER BOSS's ABILITIES!");
+	RegAdminCmd("ff2_export", Cmd_ExportBoss, ADMFLAG_CHEATS, "WOW! EXPORT BOSS's CONFIG!");
 
 	HookEvent("teamplay_round_start", OnRoundStart);
 
@@ -113,6 +112,120 @@ public int ChangeBossMenuHandler(Menu menu, MenuAction action, int client, int i
 		}
 	}
 	return 0;
+}
+
+public Action Cmd_UseAbility(int client, int args)
+{
+	if(!FF2_IsFF2Enabled() || args != 2)
+		return Plugin_Continue;
+
+	char pattern[MAX_TARGET_LENGTH];
+	GetCmdArg(1, pattern, sizeof(pattern));
+
+	char targetName[MAX_TARGET_LENGTH];
+	int targets[MAXPLAYERS+1], targetCount;
+	bool targetNounIsMultiLanguage;
+
+	targetCount = ProcessTargetString(pattern, client, targets, MAXPLAYERS+1, 0, targetName, sizeof(targetName), targetNounIsMultiLanguage);
+	if(targetCount <= 0)
+		return Plugin_Continue;
+
+	char slotStr[4], pluginName[64], abilityName[64];
+	GetCmdArg(2, slotStr, sizeof(slotStr));
+
+	int boss,
+		slot = StringToInt(slotStr);
+	KeyValues kv, bossKv;
+	for(int loop = 0; loop <= targetCount; loop++)
+	{
+		boss = FF2_GetBossIndex(targets[loop]);
+		if(boss == -1)		continue;
+
+		kv = FF2_GetBossKV(boss);
+		kv.Rewind();
+		if(!kv.JumpToKey("abilities"))
+			continue;
+
+		bossKv = new KeyValues("abilities");
+		bossKv.Import(kv);
+		bossKv.GotoFirstSubKey();
+		do
+		{
+			bossKv.GetSectionName(pluginName, sizeof(pluginName));
+
+			bossKv.GotoFirstSubKey();
+			do
+			{
+				bossKv.GetSectionName(abilityName, sizeof(abilityName));
+
+				int currentSlot = bossKv.GetNum("slot", 0),
+					buttonMode = bossKv.GetNum("buttonmode", 0);
+
+				if(currentSlot != slot)		continue;
+				
+				FF2_UseAbility(boss, pluginName, abilityName, slot, buttonMode);
+				CPrintToChat(client, "{olive}[FF2]{default} Activated %N's (%s - %s)", targets[loop], pluginName, abilityName);
+			}
+			while(bossKv.GotoNextKey());
+			bossKv.GoBack();
+		}
+		while(bossKv.GotoNextKey());
+
+		delete bossKv;
+	}
+	
+	return Plugin_Continue;
+}
+
+public Action Cmd_ExportBoss(int client, int argc)
+{
+	if(!FF2_IsFF2Enabled())
+		return Plugin_Continue;
+
+	char pattern[MAX_TARGET_LENGTH];
+	GetCmdArg(1, pattern, sizeof(pattern));
+
+	char targetName[MAX_TARGET_LENGTH];
+	int targets[MAXPLAYERS+1], targetCount;
+	bool targetNounIsMultiLanguage;
+
+	targetCount = ProcessTargetString(pattern, client, targets, MAXPLAYERS+1, 0, targetName, sizeof(targetName), targetNounIsMultiLanguage);
+	if(targetCount <= 0)
+		return Plugin_Continue;
+
+	char bossName[64], path[PLATFORM_MAX_PATH];
+	int boss, currentTime[2];
+	KeyValues kv, bossKv;
+
+	GetTime(currentTime);
+	for(int loop = 0; loop <= targetCount; loop++)
+	{
+		boss = FF2_GetBossIndex(targets[loop]);
+		if(boss == -1)		continue;
+
+		kv = FF2_GetBossKV(boss);
+		kv.Rewind();
+		kv.GetSectionName(bossName, sizeof(bossName));
+
+		bossKv = new KeyValues(bossName);
+		bossKv.Import(kv);
+
+		// int exportLen = bossKv.ExportLength;
+		// char[] exportStr = new char[exportLen + 1];
+		
+		// bossKv.GetString("filename", bossName, sizeof(bossName));
+
+
+		BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "data/ff2_dumps/%i%i.cfg", currentTime[0], currentTime[1]);
+		bossKv.ExportToFile(path);
+
+		LogMessage("[FF2] %N's boss config export (%s)", targets[loop], path);
+		CPrintToChat(client, "{olive}[FF2]{default} Exported %N's boss config! (%s)", targets[loop], path);
+
+		delete bossKv;
+	}
+
+	return Plugin_Continue;
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontbroad)
