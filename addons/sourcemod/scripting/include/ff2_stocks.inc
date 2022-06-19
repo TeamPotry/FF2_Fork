@@ -131,7 +131,7 @@ public void OnAnimationDone(const char[] output, int caller, int activator, floa
 	if(IsValidEntity(caller))
 	{
 		int owner = GetEntPropEnt(caller, Prop_Send, "m_hOwnerEntity");
-        CreateTimer(delay + 2.8, Timer_EnableModel, owner, TIMER_FLAG_NO_MAPCHANGE); // 0.8?
+		CreateTimer(delay + 2.8, Timer_EnableModel, owner, TIMER_FLAG_NO_MAPCHANGE); // 0.8?
 	}
 }
 
