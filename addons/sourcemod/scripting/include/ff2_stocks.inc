@@ -128,11 +128,11 @@ stock int PlayAnimation(int entity, char[] anim, float stopDelay = -1.0, float k
 
 public void OnAnimationDone(const char[] output, int caller, int activator, float delay)
 {
-	if(IsValidEntity(caller))
-	{
-		int owner = GetEntPropEnt(caller, Prop_Send, "m_hOwnerEntity");
-		CreateTimer(delay + 2.8, Timer_EnableModel, owner, TIMER_FLAG_NO_MAPCHANGE); // 0.8?
-	}
+    if(IsValidEntity(caller))
+    {
+        int owner = GetEntPropEnt(caller, Prop_Send, "m_hOwnerEntity");
+        CreateTimer(delay + 2.8, Timer_EnableModel, owner, TIMER_FLAG_NO_MAPCHANGE); // 0.8?
+    }
 }
 
 public Action Timer_EnableModel(Handle timer, int owner)

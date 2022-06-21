@@ -4459,10 +4459,11 @@ void OnBossThink(int client)
 			{
 				char abilityName[64];
 				abilityKv.GetSectionName(abilityName, sizeof(abilityName));
-				int slot=abilityKv.GetNum("slot", 0);
-				int buttonmode=abilityKv.GetNum("buttonmode", 0);
-				if(slot<1) // We don't care about rage/life-loss abilities here
+				int slot = abilityKv.GetNum("slot", 0),
+					buttonmode = abilityKv.GetNum("buttonmode", 0);
+				if(slot < 1)
 				{
+					// We don't care about rage/life-loss abilities here
 					continue;
 				}
 
