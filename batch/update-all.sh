@@ -16,7 +16,7 @@ sudo wget "http://www.doctormckay.com/download/scripting/include/morecolors.inc"
 sudo wget "https://raw.githubusercontent.com/asherkin/TF2Items/master/pawn/tf2items.inc" -P include
 sudo wget "https://raw.githubusercontent.com/nosoop/tf2attributes/master/scripting/include/tf2attributes.inc" -O include/tf2attributes.inc
 sudo wget "https://raw.githubusercontent.com/TeamPotry/tutorial_text/master/addons/sourcemod/scripting/include/tutorial_text.inc" -P include
-sudo wget "https://raw.githubusercontent.com/TeamPotry/SourceMod-DBSimple/master/include/db_simple.inc" -P include
+sudo wget "https://raw.githubusercontent.com/TeamPotry/DB-Simple/master/addons/sourcemod/scripting/include/db_simple.inc" -P include
 sudo wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/unixtime_sourcemod.inc" -P include
 sudo wget "https://raw.githubusercontent.com/nosoop/SM-TFUtils/master/scripting/include/tf2utils.inc" -P include
 sudo wget "https://raw.githubusercontent.com/nosoop/sourcemod-tf2wearables/master/addons/sourcemod/scripting/include/tf2wearables.inc" -P include

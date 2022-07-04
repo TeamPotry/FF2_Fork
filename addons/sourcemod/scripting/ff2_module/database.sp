@@ -11,11 +11,11 @@ static const char g_QueryColumn[][] = {
 	"last_saved_time"
 };
 
-static const KvDataTypes g_iQueryColumnDataType[] = {
-	KvData_String,
-	KvData_String,
-	KvData_String,
-	KvData_String
+static const DBSDataTypes g_iQueryColumnDataType[] = {
+	DBSData_String,
+	DBSData_String,
+	DBSData_String,
+	DBSData_String
 };
 
 static const char g_HudQueryColumn[][] = {
@@ -25,11 +25,11 @@ static const char g_HudQueryColumn[][] = {
 	"last_saved_time"
 };
 
-static const KvDataTypes g_iHudQueryColumnDataType[] = {
-	KvData_String,
-	KvData_String,
-	KvData_Int,
-	KvData_String
+static const DBSDataTypes g_iHudQueryColumnDataType[] = {
+	DBSData_String,
+	DBSData_String,
+	DBSData_Int,
+	DBSData_String
 };
 
 static const char g_MusicQueryColumn[][] = {
@@ -39,11 +39,11 @@ static const char g_MusicQueryColumn[][] = {
 	"last_saved_time"
 };
 
-static const KvDataTypes g_iMusicQueryColumnDataType[] = {
-	KvData_String,
-	KvData_String,
-	KvData_Int,
-	KvData_String
+static const DBSDataTypes g_iMusicQueryColumnDataType[] = {
+	DBSData_String,
+	DBSData_String,
+	DBSData_Int,
+	DBSData_String
 };
 
 public void DBS_OnLoadData(DBSData data)
