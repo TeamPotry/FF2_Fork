@@ -53,10 +53,10 @@ native void FF2_AddBossCharge(int boss, int slot, float charge);
  * @param type              KvData_Int, KvData_Float is supported, otherwise error occured
  *
  */
-native any FF2_GetSettingData(int client, const char[] settingId, KvDataTypes type);
+native any FF2_GetSettingData(int client, const char[] settingId, DBSDataTypes type);
 native void FF2_GetSettingStringData(int client, const char[] settingId, char[] value, int buffer);
 
-native void FF2_SetSettingData(int client, const char[] settingId, any value, KvDataTypes type);
+native void FF2_SetSettingData(int client, const char[] settingId, any value, DBSDataTypes type);
 native void FF2_SetSettingStringData(int client, const char[] settingId, char[] value);
 /**
  * Get timer's type.

@@ -2,6 +2,7 @@
 #include <tf2_stocks>
 #include <freak_fortress_2>
 #include <ff2_potry>
+#include <db_simple>
 
 public Plugin myinfo=
 {
@@ -43,7 +44,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 			index = GetRandomInt(0, clientCount - 1);
 			random = clientArray.Get(index);
 
-			if(FF2_GetQueuePoints(random) < 0 || FF2_GetSettingData(random, "human_team_boss_play", KvData_Int) == 1)
+			if(FF2_GetQueuePoints(random) < 0 || FF2_GetSettingData(random, "human_team_boss_play", DBSData_Int) == 1)
 			{	// 제외
 				clientArray.Erase(index);
 				continue;

@@ -130,6 +130,78 @@ stock ArrayList CreateChancesArray(int client)
     return chancesArray;
 }
 
+bool CheckRule(int client, const char[] bossName, const char[] rules)
+{
+    // "a && (b && (c) || d) && e"
+    //  0     1     2     1     0
+    enum 
+    {
+        Token_Type = 0,
+        Token_BracketLevel,
+        Token_Variable
+    };
+    ArrayList tokenArray = new ArrayList(),
+                tokenInfo;
+
+    char token[64], currentCharacter[2];
+
+    int length = strlen(rules),
+        start = -1, end, // for token
+        bracketLevel = 0;
+
+    bool isName, escape = false;
+    
+    for(int loop = 0; loop < length; loop++)
+    {
+        isName = false;
+        currentCharacter[0] = rules[loop];
+
+        switch(currentCharacter[0])
+        {
+            case ' ', '\t':
+                continue;
+
+            case '(':
+            {
+                bracketLevel++;
+            }
+
+            case ')':
+            {
+                bracketLevel--;
+            }
+
+            case '\0': // end of string
+            {
+                if(bracketLevel > 0)
+                    ThrowError("[FF2] ''%s'' has an unbalanced parentheses at rule (%s)", bossName, rules);
+            }
+
+            default:
+            {
+                isName = true;   
+            }
+        }
+
+        if(isName)
+        {
+            if(start >= 0)  end = loop;
+            else            start = loop;
+        }
+        else 
+        {
+            start = -1;
+
+            strcopy(token, end - start + 2, rules[start]); // NULL 문자 확인
+            PrintToChatAll(token);
+        }
+    }
+
+    delete tokenArray;
+    
+    return false;
+}
+
 public bool GetWeaponHint(int client, int weapon, char[] text, int buffer)
 {
     int index = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");

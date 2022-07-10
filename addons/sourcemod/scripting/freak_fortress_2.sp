@@ -1590,24 +1590,24 @@ public Action StartBossTimer(Handle timer)
 	return Plugin_Continue;
 }
 
-public any GetSettingData(int client, const char[] settingId, KvDataTypes type)
+public any GetSettingData(int client, const char[] settingId, DBSDataTypes type)
 {
 	char data[128];
 	GetSettingStringData(client, settingId, data, 128);
 
 	switch(type)
 	{
-		case KvData_Int:
+		case DBSData_Int:
 		{
 			return data[0] != '\0' ? StringToInt(data) : 0;
 		}
-		case KvData_Float:
+		case DBSData_Float:
 		{
 			return data[0] != '\0' ? StringToFloat(data) : 0.0;
 		}
 		default:
 		{
-			ThrowError("KvData_Int, KvData_Float supported!");
+			ThrowError("only DBSData_Int, DBSData_Float supported!");
 		}
 	}
 
@@ -1619,7 +1619,7 @@ public any Native_GetSettingData(Handle plugin, int numParams)
 	int client = GetNativeCell(1);
 	char settingId[128];
 	GetNativeString(2, settingId, sizeof(settingId));
-	KvDataTypes type = GetNativeCell(3);
+	DBSDataTypes type = GetNativeCell(3);
 
 	return GetSettingData(client, settingId, type);
 }
@@ -1641,7 +1641,7 @@ public int Native_GetSettingStringData(Handle plugin, int numParams)
 	return 0; // ??
 }
 
-public void SetSettingData(int client, const char[] settingId, any value, KvDataTypes type)
+public void SetSettingData(int client, const char[] settingId, any value, DBSDataTypes type)
 {
 	// (DBSPlayerData.GetClientData(client)).SetData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, settingId, "value", value);
 	char data[128];
@@ -1670,7 +1670,7 @@ public any Native_SetSettingData(Handle plugin, int numParams)
 	int client = GetNativeCell(1);
 	char settingId[128];
 	GetNativeString(2, settingId, sizeof(settingId));
-	KvDataTypes type = GetNativeCell(4);
+	DBSDataTypes type = GetNativeCell(4);
 
 	SetSettingData(client, settingId, GetNativeCellRef(3), type);
 }
@@ -3690,7 +3690,7 @@ public void OnClientPostAdminCheck(int client)
 
 	if(!IsFakeClient(client))
 	{
-		muteSound[client]=GetSettingData(client, "sound_mute_flag", KvData_Int);
+		muteSound[client]=GetSettingData(client, "sound_mute_flag", DBSData_Int);
 	}
 
 	if(playBGM[0])
@@ -6956,7 +6956,7 @@ public Action TurnToZeroPanel(int client, int target)
 
 int GetClientClassInfoCookie(int client)
 {
-	return GetSettingData(client, "class_info_view", KvData_Int);
+	return GetSettingData(client, "class_info_view", DBSData_Int);
 }
 
 int GetClientQueuePoints(int client)

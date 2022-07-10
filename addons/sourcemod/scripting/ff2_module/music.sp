@@ -415,7 +415,7 @@ public void SetSoundFlags(int client, int soundFlags)
 	}
 
 	muteSound[client] |= soundFlags;
-	SetSettingData(client, "sound_mute_flag", muteSound[client], KvData_Int);
+	SetSettingData(client, "sound_mute_flag", muteSound[client], DBSData_Int);
 }
 
 public void ClearSoundFlags(int client, int soundFlags)
@@ -426,7 +426,7 @@ public void ClearSoundFlags(int client, int soundFlags)
 	}
 
 	muteSound[client]&=~soundFlags;
-	SetSettingData(client, "sound_mute_flag", muteSound[client], KvData_Int);
+	SetSettingData(client, "sound_mute_flag", muteSound[client], DBSData_Int);
 }
 
 stock bool GetMusicSetting(int client, char[] musicId)

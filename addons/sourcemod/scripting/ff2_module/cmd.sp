@@ -196,7 +196,7 @@ public Action HumanTeamBossMenu(int client, int args)
 		Menu menu=new Menu(HumanTeamBossMenu_Handler);
 
 		SetGlobalTransTarget(client);
-		int currentSetting = GetSettingData(client, "human_team_boss_play", KvData_Int);
+		int currentSetting = GetSettingData(client, "human_team_boss_play", DBSData_Int);
 
 		Format(text, sizeof(text), "%t", "Advance Menu Title");
 		Format(text, sizeof(text), "%s > %t\n", text, "Human Team Boss Setting Title");
