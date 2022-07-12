@@ -23,7 +23,7 @@ public void GetHudSettingString(int value, char[] statusString, int buffer)
 
 stock ArrayList CreateChancesArray(int client)
 {
-    char config[64], ruleName[80], tempRuleName[80], value[120];
+    char config[64], rules[256], tempRuleName[80], value[120];
     ArrayList chancesArray = new ArrayList();
     KeyValues bossKv;
     Action action;
@@ -56,8 +56,12 @@ stock ArrayList CreateChancesArray(int client)
 
             bossKv.Rewind();
             if(bossKv.GetNum("hidden", 0) > 0) continue;
-            else if(bossKv.JumpToKey("require") && bossKv.JumpToKey("playable") && bossKv.GotoFirstSubKey(false))
+
+            else if(bossKv.JumpToKey("require"))
             {
+                bossKv.GetString("playable", rules, sizeof(rules), "");
+                CheckRule(client, realIndex, config, tempChance, rules);
+                /*
                 do
                 {
                     bossKv.GetSectionName(ruleName, sizeof(ruleName));
@@ -112,6 +116,7 @@ stock ArrayList CreateChancesArray(int client)
                     changed = action == Plugin_Changed;
                 }
                 while(bossKv.GotoNextKey(false));
+                */
             }
 
             if(checked)
@@ -130,48 +135,60 @@ stock ArrayList CreateChancesArray(int client)
     return chancesArray;
 }
 
-bool CheckRule(int client, const char[] bossName, const char[] rules)
+public bool CheckRule(int client, int characterIndex,  const char[] bossName, int &chance, const char[] rules)
 {
-    // "a && (b && (c) || d) && e"
-    //  0     1     2     1     0
+    // "a && (b && c || d) && e"
+    //  0     1    2    1     0
     enum 
     {
         Token_Type = 0,
         Token_BracketLevel,
         Token_Variable
     };
+
+    enum
+    {
+        LogicalOperator_None = -1,
+        LogicalOperator_And = 0,
+        LogicalOperator_Or    
+    };
+
     ArrayList tokenArray = new ArrayList(),
                 tokenInfo;
 
     char token[64], currentCharacter[2];
-
     int length = strlen(rules),
-        start = -1, end, // for token
-        bracketLevel = 0;
-
-    bool isName, escape = false;
+        bracketLevel = 0, highestBracketLevel = 0,
+        pushedTokenCount = 0;
+    bool isName, isDelayed;
     
     for(int loop = 0; loop < length; loop++)
     {
         isName = false;
+        isDelayed = false;
         currentCharacter[0] = rules[loop];
+
+        // PrintToChatAll("%c", currentCharacter[0]);
 
         switch(currentCharacter[0])
         {
             case ' ', '\t':
-                continue;
+                isName = false; // for sure
 
             case '(':
             {
+                highestBracketLevel++;
                 bracketLevel++;
             }
-
             case ')':
             {
                 bracketLevel--;
+                isDelayed = strlen(token) > 0;
+                // PrintToChatAll("%d, %s", loop, currentCharacter);
             }
+                
 
-            case '\0': // end of string
+            case '\0': // unexpected end.
             {
                 if(bracketLevel > 0)
                     ThrowError("[FF2] ''%s'' has an unbalanced parentheses at rule (%s)", bossName, rules);
@@ -179,27 +196,167 @@ bool CheckRule(int client, const char[] bossName, const char[] rules)
 
             default:
             {
-                isName = true;   
+                isName = true;
+                StrCat(token, sizeof(token), currentCharacter);
             }
         }
+        
+        // TODO: 테스트
+        // PrintToChatAll("%c, isName: %s, Is token empty: %s", currentCharacter[0],
+        //     isName ? "true" : "false", token[0] != '\0' ? "true" : "false");
+        // PrintToChatAll("%d, current: %s", bracketLevel, token);
 
-        if(isName)
+        if((loop == length - (bracketLevel + 1) || !isName) 
+            && token[0] != '\0')
         {
-            if(start >= 0)  end = loop;
-            else            start = loop;
-        }
-        else 
-        {
-            start = -1;
+            // PrintToChatAll("%d, %s", bracketLevel, token);
 
-            strcopy(token, end - start + 2, rules[start]); // NULL 문자 확인
-            PrintToChatAll(token);
+            tokenInfo = new ArrayList(64);
+
+            int logicalType = LogicalOperator_None;
+            if(!strcmp(token, "&&"))
+                logicalType = LogicalOperator_And;
+            else if(!strcmp(token, "||"))
+                logicalType = LogicalOperator_Or;
+
+            tokenInfo.Push(logicalType);
+            tokenInfo.Push(isDelayed ? bracketLevel + 1 : bracketLevel);
+
+            tokenInfo.PushString(token);
+/*
+            switch(logicalType)
+            {
+                case LogicalOperator_And, LogicalOperator_Or:
+                {
+                    IntToString(pushedTokenCount, token, sizeof(token));
+                    tokenInfo.PushString(token);
+                }
+
+                default:    
+                    tokenInfo.PushString(token);
+            }
+*/
+            tokenArray.Push(tokenInfo);
+
+            // Add into TokenInfo and flush.
+            token = "";
+            pushedTokenCount++;
         }
     }
 
+    int tokenCount = tokenArray.Length;
+    // TODO: Optimize this sort
+    ArrayList testArray,
+        sortedTokenArray = new ArrayList();
+    int searchBracketLevel = highestBracketLevel;
+    // TODO: (()()) -> highestBracketLevel should be 2. but actually 3.
+    while(searchBracketLevel >= 0)
+    {
+        for(int search = 0; search < tokenCount; search++)
+        {
+            testArray = tokenArray.Get(search);
+
+            // FIXME: Example: "need_dev_mode && IsAdmin || (IsTesting || hai)"
+            // This is gonna "(IsTesting || hai) need_dev_mode && IsAdmin || " ????
+            if(testArray != view_as<ArrayList>(0) // 0
+                && testArray.Get(Token_BracketLevel) == searchBracketLevel)
+            {
+                sortedTokenArray.Push(testArray); 
+                tokenArray.Set(search, 0); // null
+            }
+        }
+        searchBracketLevel--;
+    }
     delete tokenArray;
+
+    Action action;
+    bool skip = false, result = true, currentResult;
+    int tempChance, logicalType, operatorType = LogicalOperator_None;
+
+    for(int search = 0; search < tokenCount; search++)
+    {
+        testArray = sortedTokenArray.Get(search);
+
+        if(skip) {
+            delete testArray;
+            continue;
+        }
+
+        ArrayList nextElement = null;
+        int nextLogicalType = LogicalOperator_None;
+        if(search + 1 < tokenCount)
+        {
+            nextElement = sortedTokenArray.Get(search + 1);
+            nextLogicalType = nextElement.Get(Token_Type);
+        }
+        
+        logicalType = testArray.Get(Token_Type);
+        bracketLevel = testArray.Get(Token_BracketLevel);
+        testArray.GetString(Token_Variable, token, sizeof(token));
+
+        // TEST
+        // PrintToChatAll("TEST: %d, %s", bracketLevel, token);
+
+        if(logicalType != LogicalOperator_None) {
+            if(nextElement != null) {
+                if(nextLogicalType == LogicalOperator_None) {
+                    operatorType = logicalType;
+                    continue;
+                }
+            }
+            
+            skip = true;
+            LogError("[FF2] %s's rule is invaild!", bossName);
+            continue;
+        }
+
+        currentResult = false;
+        action = Plugin_Continue;
+        tempChance = chance;
+
+        Call_StartForward(OnCheckRules);
+        Call_PushCell(client);
+        Call_PushCell(characterIndex);
+        Call_PushCellRef(tempChance);
+        Call_PushStringEx(token, sizeof(token), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, 0);
+        // TEMP
+        Call_PushStringEx(token, sizeof(token), SM_PARAM_STRING_UTF8 | SM_PARAM_STRING_COPY, 0);
+        Call_Finish(action);
+
+        if(action == Plugin_Handled || action == Plugin_Stop)
+            currentResult = false;
+        else if(action == Plugin_Changed 
+            && tempChance != chance) // I know. But compiler does not accept leave tempChance alone.
+            chance = tempChance;
+
+        switch(operatorType)
+        {
+            case LogicalOperator_And:
+                result &= currentResult;
+            case LogicalOperator_Or:
+                result |= currentResult;
+            default:
+                result = currentResult;
+        }
+
+        operatorType = LogicalOperator_None;
+        
+        // except if next oprator is OR or bracketLevel is not 0.
+        // TODO: IS THIS REALLY NEEDED?
+        /*       
+        if(nextLogicalType != LogicalOperator_Or
+            && bracketLevel == 0)
+            skip = !result;
+        */
+
+        PrintToChatAll("%s: %s", token, result ? "OK" : "FAILED");
+
+        delete testArray;
+    } 
+
+    delete sortedTokenArray;
     
-    return false;
+    return result;
 }
 
 public bool GetWeaponHint(int client, int weapon, char[] text, int buffer)
