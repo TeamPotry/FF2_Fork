@@ -124,7 +124,7 @@ Handle OnLoseLife;
 Handle OnAlivePlayersChanged;
 Handle OnParseUnknownVariable;
 
-// ff2_potry.inc
+// ff2_modules/general.inc
 Handle OnWaveStarted;
 Handle OnPlayBoss;
 Handle OnSpecialAttack;

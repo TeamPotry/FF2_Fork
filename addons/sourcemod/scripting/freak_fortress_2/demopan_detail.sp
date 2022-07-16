@@ -1,9 +1,7 @@
 #include <sourcemod>
-// #include <morecolors>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
-// #include <ff2_boss_selection>
+#include <ff2_modules/general>
 
 public Plugin myinfo=
 {

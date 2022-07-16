@@ -38,7 +38,7 @@
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 
 #pragma newdecls required
 

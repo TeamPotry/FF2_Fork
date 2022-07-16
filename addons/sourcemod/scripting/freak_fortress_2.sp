@@ -23,7 +23,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #define REQUIRE_EXTENSIONS
 #undef REQUIRE_PLUGIN
 #tryinclude <mannvsmann>
-#include <db_simple>
+// #include <db_simple>
 #tryinclude <smac>
 #tryinclude <updater>
 #define REQUIRE_PLUGIN
@@ -40,7 +40,7 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 #include <unixtime_sourcemod>
 
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules>
 
 #include <stocksoup/tf/monster_resource>
 #include <stocksoup/tf/econ>
@@ -222,13 +222,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_ClearSoundFlags", Native_ClearSoundFlags);
 	CreateNative("FF2_CheckSoundFlags", Native_CheckSoundFlags);
 
-	// ff2_potry.inc
+	// ff2_modules/general.inc
 	CreateNative("FF2_GetCharacterIndex", Native_GetCharacterIndex);
 	CreateNative("FF2_AddBossCharge", Native_AddBossCharge);
-	CreateNative("FF2_GetSettingData", Native_GetSettingData);
-	CreateNative("FF2_GetSettingStringData", Native_GetSettingStringData);
-	CreateNative("FF2_SetSettingData", Native_SetSettingData);
-	CreateNative("FF2_SetSettingStringData", Native_SetSettingStringData);
 	CreateNative("FF2_GetTimerType", Native_GetTimerType);
 	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
@@ -240,6 +236,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_MakePlayerToBoss", Native_MakePlayerToBoss);
 	CreateNative("FF2_GetBossCreatorFlags", Native_GetBossCreatorFlags);
 	CreateNative("FF2_GetBossCreators", Native_GetBossCreators);
+
+	// ff2_modules/database.inc
+	CreateNative("FF2_GetSettingData", Native_GetSettingData);
+	CreateNative("FF2_GetSettingStringData", Native_GetSettingStringData);
+	CreateNative("FF2_SetSettingData", Native_SetSettingData);
+	CreateNative("FF2_SetSettingStringData", Native_SetSettingStringData);
 
 	OnWaveStarted=CreateGlobalForward("FF2_OnWaveStarted", ET_Hook, Param_Cell); // wave
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
@@ -262,7 +264,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnParseUnknownVariable=CreateGlobalForward("FF2_OnParseUnknownVariable", ET_Hook, Param_String, Param_FloatByRef);  //Variable, value
 
 	RegPluginLibrary("freak_fortress_2");
-	RegPluginLibrary("ff2_potry");
+	RegPluginLibrary("ff2_fork_general");
+	RegPluginLibrary("ff2_db");
 
 	subpluginArray=CreateArray(64); // Create this as soon as possible so that subplugins have access to it
 
@@ -1760,7 +1763,7 @@ void CorrectionBossHealth()
 		{
 			int heal = RoundFloat(BossHealthMax[boss] * ratio);
 
-			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
+			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal - (BossLivesMax[boss] - 1));
 			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))));
 		}
 	}

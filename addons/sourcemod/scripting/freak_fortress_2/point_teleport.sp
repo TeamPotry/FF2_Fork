@@ -7,7 +7,7 @@
 // #include <morecolors>
 #include <tf2utils>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <stocksoup/sdkports/util>
 
 #pragma newdecls required

@@ -7,9 +7,9 @@
 #include <tf2_stocks>
 
 #include <freak_fortress_2>
-#include <ff2_stocks>
-#tryinclude <ff2_potry>
-#if defined _ff2_potry_included
+#include <ff2_modules/stocks>
+#tryinclude <ff2_modules/general>
+#if defined _ff2_fork_general_included
     #define THIS_PLUGIN_NAME   "samurai detail"
 
 	#define RUSH               		      "rush"
@@ -69,7 +69,7 @@ float g_flRushStateTime[MAXPLAYERS+1];
 int g_hRushTargetList[MAXPLAYERS+1][MAXIMUM_RUSH_TARGET_COUNT];
 int g_iRushTargetCount[MAXPLAYERS+1];
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	public void OnPluginStart()
 #else
 	public void OnPluginStart2()
@@ -83,7 +83,7 @@ int g_iRushTargetCount[MAXPLAYERS+1];
 	// HookEvent("arena_win_panel", Event_RoundInit);
 	// HookEvent("teamplay_round_win", Event_RoundInit); // for non-arena maps
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
 #endif
 }
@@ -146,7 +146,7 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
     return Plugin_Continue;
 }
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 #else
 public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)

@@ -6,7 +6,7 @@
 #include <tf2items>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <tf2attributes>
 #include <tf2utils>
 

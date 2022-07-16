@@ -4,7 +4,7 @@
 #include <sdktools>
 #include <sdktools_functions>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 
 #define MAJOR_REVISION "1"
 #define MINOR_REVISION "1"

@@ -4,8 +4,8 @@
 #include <tf2_stocks>
 #include <freak_fortress_2>
 
-#tryinclude <ff2_potry>
-#if !defined _ff2_potry_included
+#tryinclude <ff2_modules/general>
+#if !defined _ff2_fork_general_included
 	#include <freak_fortress_2_subplugin>
 #endif
 
@@ -29,7 +29,7 @@ float g_flKnifeSpeed[MAXPLAYERS+1];
 float g_flYAngleOffset[MAXPLAYERS+1];
 float g_flYPosOffset[MAXPLAYERS+1];
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 public void OnPluginStart()
 #else
 public void OnPluginStart2()
@@ -38,13 +38,13 @@ public void OnPluginStart2()
     HookEvent("arena_round_start", Event_RoundStart);
     HookEvent("teamplay_round_active", Event_RoundStart); // for non-arena maps
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
     FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
 #endif
 
 }
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 #else
 public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
@@ -60,7 +60,7 @@ void InvokeShush(int boss)
 {
     int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	int tick = FF2_GetAbilityArgument(boss, THIS_PLUGIN_NAME, THROW_KNIFE, "tick", 36);
 	g_flKnifeAngle[client] = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, THROW_KNIFE, "degree", 10.0);
 	g_flKnifeSpeed[client] = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, THROW_KNIFE, "speed", 2000.0);

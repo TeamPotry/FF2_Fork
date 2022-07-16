@@ -11,8 +11,8 @@
 #include <tf2wearables>
 #include <freak_fortress_2>
 
-#tryinclude <ff2_potry>
-#if !defined _ff2_potry_included
+#tryinclude <ff2_modules/general>
+#if !defined _ff2_fork_general_included
 	#include <freak_fortress_2_subplugin>
 #endif
 
@@ -28,7 +28,7 @@ public Plugin myinfo=
 
 #define DISCOUNT_NAME		"discount"
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	#define DISCOUNTMARK_PATH	"materials/potry/steam_sale/"
 	#define PLUGIN_NAME 		"gaben detail"
 #else
@@ -57,7 +57,7 @@ float g_flLoadoutDisableTime[MAXPLAYERS+1];
 char g_strCurrentLoadoutSoundPath[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	public void OnPluginStart()
 #else
 	public void OnPluginStart2()
@@ -75,7 +75,7 @@ char g_strCurrentLoadoutSoundPath[MAXPLAYERS+1][PLATFORM_MAX_PATH];
 		if(IsClientInGame(client))
 			OnClientPostAdminCheck(client);
 	}
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	FF2_RegisterSubplugin(PLUGIN_NAME);
 #endif
 }
@@ -131,7 +131,7 @@ public void OnProjectileSpawn(int entity)
 
 			float origin[3], angles[3], speed;
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			speed = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "speed", 2000.0);
 #else
 			speed = FF2_GetAbilityArgumentFloat(boss, this_plugin_name, CARD_THROW, 1, 2000.0);
@@ -141,7 +141,7 @@ public void OnProjectileSpawn(int entity)
 			GetClientEyeAngles(client, angles);
 
 			int count;
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			char key[64];
 			Format(key, sizeof(key), "slot %d card count", currentSlot);
 			count = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, key, 3);
@@ -162,7 +162,7 @@ void CreateCard(int owner, float pos[3], float angles[3], float speed, int curre
 	float velocity[3], degreeDiff;
 	char modelPath[PLATFORM_MAX_PATH];
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	char key[64];
 	Format(key, sizeof(key), "slot %d degree diff", currentSlot);
 	degreeDiff = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, key, 5.0);
@@ -220,7 +220,7 @@ public Action OnTouchCard(int prop, int other)
 
 	if(boss != -1)
 	{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
 #else
 		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, 6, 0);
@@ -249,7 +249,7 @@ void HitCard(int owner, int target, int prop)
 	int boss = FF2_GetBossIndex(owner), onHitSale;
 	float damage;
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			onHitSale = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
 			damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "damage", 10.0);
 #else
@@ -303,7 +303,7 @@ public Action OnCardThink(Handle timer, int prop)
 		touchType;
 	float cardRange;
 
-	#if defined _ff2_potry_included
+	#if defined _ff2_fork_general_included
 		touchType = FF2_GetAbilityArgument(boss, PLUGIN_NAME, CARD_THROW, "touch type", 0);
 		cardRange = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, CARD_THROW, "card range", 10.0);
 	#else
@@ -346,7 +346,7 @@ public bool TraceDontHitSelf(int entity, int contentsMask, any data)
 	return (IsValidClient(entity) && entity != data);
 }
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 #else
 public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
@@ -364,7 +364,7 @@ void LoadoutDisable(int boss)
 	float duration;
 	char soundPath[PLATFORM_MAX_PATH];
 
-	#if defined _ff2_potry_included
+	#if defined _ff2_fork_general_included
 		duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, LOADOUT_DISABLE, "duration", 20.0);
 		FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sound path", soundPath, PLATFORM_MAX_PATH, "");
 	#else
@@ -456,7 +456,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 	{
 		case TFClass_Scout:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "scout 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "scout 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "scout 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -471,7 +471,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Soldier:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "soldier 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "soldier 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "soldier 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -486,7 +486,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Pyro:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "pyro 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "pyro 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "pyro 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -501,7 +501,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_DemoMan:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "demoman 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "demoman 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "demoman 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -516,7 +516,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Heavy:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "heavy 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "heavy 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "heavy 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -531,7 +531,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Engineer:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "engineer 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -560,7 +560,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Medic:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "medic 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "medic 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "medic 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -575,7 +575,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Sniper:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sniper 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sniper 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "sniper 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -590,7 +590,7 @@ void SwitchToDefalutWeapon(int boss, int client, int currentSlot = TFWeaponSlot_
 		}
 		case TFClass_Spy:
 		{
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 0", attribs[TFWeaponSlot_Primary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 1", attribs[TFWeaponSlot_Secondary], 128, "");
 			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, LOADOUT_DISABLE, "spy 2", attribs[TFWeaponSlot_Melee], 128, "");
@@ -678,7 +678,7 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 	bool insertKill = g_iDiscountValue[client] >= 100;
 	int addDiscount;
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
 #else
 	addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 1, 10);
@@ -707,7 +707,7 @@ void AddDiscount(int client, int attacker, int addValue)
 	char soundPath[PLATFORM_MAX_PATH];
 	int boss = FF2_GetBossIndex(attacker);
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale sound", soundPath, sizeof(soundPath), "");
 #else
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, DISCOUNT_NAME, 2, soundPath, sizeof(soundPath));

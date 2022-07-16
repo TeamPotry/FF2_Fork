@@ -61,7 +61,7 @@
 #include <tf2items>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 
 #if SOURCEMOD_V_MINOR > 7
   #pragma newdecls required

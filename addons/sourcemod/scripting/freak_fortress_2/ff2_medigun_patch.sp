@@ -5,7 +5,7 @@
 #include <sdkhooks>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <medigun_patch>
 
 #define PLUGIN_NAME "medigun patch"

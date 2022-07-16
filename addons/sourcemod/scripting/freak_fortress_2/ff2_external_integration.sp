@@ -5,7 +5,7 @@
 
 #include <sourcemod>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <tf2>
 #include <tf2_stocks>
 #include <morecolors>
@@ -21,7 +21,7 @@
 
 ConVar cvarGoomba;
 ConVar cvarGoombaDamage;
-ConVar cvarGoombaRebound;
+// ConVar cvarGoombaRebound;
 ConVar cvarRTD;
 ConVar cvarBossRTD;
 
@@ -44,7 +44,7 @@ public void OnPluginStart()
 
 	cvarGoomba=CreateConVar("ff2_goomba", "1", "Allow FF2 to integrate with Goomba Stomp?", _, true, 0.0, true, 1.0);
 	cvarGoombaDamage=CreateConVar("ff2_goomba_damage", "0.02", "How much the Goomba damage should be multiplied by", _, true, 0.0, true, 1.0);
-	cvarGoombaRebound=CreateConVar("ff2_goomba_rebound", "300.0", "How high players should rebound after a Goomba stomp", _, true, 0.0);
+	// cvarGoombaRebound=CreateConVar("ff2_goomba_rebound", "300.0", "How high players should rebound after a Goomba stomp", _, true, 0.0);
 	cvarRTD=CreateConVar("ff2_rtd", "1", "Allow FF2 to integrate with RTD?", _, true, 0.0, true, 1.0);
 	cvarBossRTD=CreateConVar("ff2_boss_rtd", "0", "Allow the boss to use RTD?", _, true, 0.0, true, 1.0);
 

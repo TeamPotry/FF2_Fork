@@ -6,8 +6,8 @@
 #include <tf2items>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
-#include <ff2_stocks>
+#include <ff2_modules/general>
+#include <ff2_modules/stocks>
 
 #define PLUGIN_NAME "soldine detail"
 #define PLUGIN_VERSION 	"20220607"

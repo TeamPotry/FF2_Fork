@@ -8,8 +8,8 @@
 #include <tf2attributes>
 #include <tf2utils>
 #include <freak_fortress_2>
-#include <ff2_potry>
-#include <ff2_stocks>
+#include <ff2_modules/general>
+#include <ff2_modules/stocks>
 #include <dhooks>
 
 #undef REQUIRE_PLUGIN

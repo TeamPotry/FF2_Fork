@@ -1,8 +1,9 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
-#include <db_simple>
+#include <ff2_modules/general>
+#include <ff2_modules/database>
+// #include <db_simple>
 
 public Plugin myinfo=
 {

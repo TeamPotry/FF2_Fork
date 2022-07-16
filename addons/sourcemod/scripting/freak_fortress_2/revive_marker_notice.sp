@@ -3,7 +3,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 
 #define PLUGIN_VERSION "20191128"
 

@@ -5,7 +5,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+// #include <ff2_modules/general>
 
 #pragma newdecls required
 
@@ -289,6 +289,7 @@ public void PrepareAbilities()
 	}
 }
 
+// ????? Why is this compiled?
 public Action FF2_OnAbility2(int boss,const char[] plugin_name,const char[] ability_name,int status)
 {
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));

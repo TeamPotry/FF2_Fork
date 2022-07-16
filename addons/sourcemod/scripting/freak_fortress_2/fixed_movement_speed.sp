@@ -1,6 +1,6 @@
 #include <sourcemod>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <tf2>
 #include <tf2_stocks>
 #include <dhooks>

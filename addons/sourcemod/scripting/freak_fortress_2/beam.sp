@@ -7,8 +7,8 @@
 
 #include <stocksoup/colors>
 
-#tryinclude <ff2_potry>
-#if !defined _ff2_potry_included
+#tryinclude <ff2_modules/general>
+#if !defined _ff2_fork_general_included
 	#include <freak_fortress_2_subplugin>
 #endif
 
@@ -657,7 +657,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FilterEntityInfo.Create", Native_FilterEntityInfo_Create);
 }
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 	public void OnPluginStart()
 	{
 	    FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
@@ -697,7 +697,7 @@ void PrecacheBeamPoint()
     delete gameConfig;
 }
 
-#if defined _ff2_potry_included
+#if defined _ff2_fork_general_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 #else
 public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
@@ -713,7 +713,7 @@ void Ability_StraightBeam(int boss)
 	char beamModelPath[PLATFORM_MAX_PATH], haloModelPath[PLATFORM_MAX_PATH];
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
-	#if defined _ff2_potry_included
+	#if defined _ff2_fork_general_included
 		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "beam model path", beamModelPath, PLATFORM_MAX_PATH, "");
 		FF2_GetAbilityArgumentString(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "halo model path", haloModelPath, PLATFORM_MAX_PATH, "");
 	#else
@@ -732,7 +732,7 @@ public void GetBeamArgument(const int boss, BeamManagement beam, int beamType)
 	{
 		case BeamType_Straight:
 		{
-			#if defined _ff2_potry_included
+			#if defined _ff2_fork_general_included
 
 				beam.BeamType = BeamType_Straight;
 				beam.Width = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, STRAIGHT_BEAM_NAME, "width", 10.0);

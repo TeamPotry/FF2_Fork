@@ -7,7 +7,7 @@
 #include <tf2utils>
 #include <tf2attributes>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <stocksoup/sdkports/util>
 
 #define PLUGIN_NAME 	"simple abilities"

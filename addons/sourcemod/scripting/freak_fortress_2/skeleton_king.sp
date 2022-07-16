@@ -6,7 +6,7 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <stocksoup/tf/annotations>
 
 #define PLUGIN_VERSION "1.0.0"

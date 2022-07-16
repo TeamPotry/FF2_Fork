@@ -6,7 +6,7 @@
 #include <tf2_stocks>
 #include <morecolors>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <tf2utils>
 
 #pragma newdecls required
@@ -71,7 +71,7 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
-    PrecacheEffect("ParticleEffect");
+	PrecacheEffect("ParticleEffect");
 	PrecacheParticleEffect("passtime_air_blast");
 }
 

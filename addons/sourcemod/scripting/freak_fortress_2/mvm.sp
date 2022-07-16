@@ -1,6 +1,6 @@
 #include <sourcemod>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 #include <tf2>
 #include <tf2_stocks>
 #include <dhooks>
@@ -191,7 +191,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	CreateNative("CTFDroppedWeapon.Create", Native_CTFDroppedWeapon_Create);
 
-	// ff2_potry.inc
+	// ff2_modules/general.inc
 	CreateNative("FF2_DropWeapon", Native_DropWeapon);
 	CreateNative("FF2_EqiupWeaponFromDropped", Native_EqiupWeaponFromDropped);
 }

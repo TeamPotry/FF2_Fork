@@ -2,7 +2,7 @@
 #include <morecolors>
 #include <tf2_stocks>
 #include <freak_fortress_2>
-#include <ff2_potry>
+#include <ff2_modules/general>
 // #include <ff2_boss_selection>
 
 public Plugin myinfo=

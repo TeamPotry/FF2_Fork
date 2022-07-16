@@ -10,7 +10,7 @@
 #include <sdkhooks>
 #include <dhooks>
 
-#tryinclude <ff2_potry>
+#tryinclude <ff2_modules/general>
 
 #undef REQUIRE_PLUGIN
 #tryinclude <mannvsmann>
@@ -45,7 +45,7 @@ public void OnPluginStart()
 
     LoadTranslations("ff2_extra_abilities.phrases");
 
-    #if defined _ff2_potry_included
+    #if defined _ff2_fork_general_included
         FF2_RegisterSubplugin(PLUGIN_NAME);
     #endif
 
