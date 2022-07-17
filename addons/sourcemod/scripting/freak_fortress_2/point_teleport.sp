@@ -13,7 +13,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME "pointing abilities"
-#define PLUGIN_VERSION "20211001"
+#define PLUGIN_VERSION "20220716"
 
 public Plugin myinfo=
 {
@@ -25,8 +25,13 @@ public Plugin myinfo=
 
 // Handle jumpHUD;
 
+#define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
+#define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
+
 #define	MAX_EDICT_BITS		12
 #define	MAX_EDICTS			(1 << MAX_EDICT_BITS)
+
+#define DIST_EPSILON		0.03125
 
 Handle g_SDKCallTestEntityPosition;
 Handle g_SDKCallFindPassableSpace;
@@ -717,11 +722,16 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 				AddVectors(eyePos, sum, effectPos);
 			}
 
-			GetEndPos(client, eyePos, fwd, g_flTeleportDistance[client], endPos, normal, vecMin, vecMax);
+			bool rayTest = GetEndPos(client, eyePos, fwd, g_flTeleportDistance[client], endPos, normal, vecMin, vecMax),
+					stuck = IsStockInPosition(client, endPos, vecMin, vecMax);
 
-			bool stuck = IsStockInPosition(client, endPos, vecMin, vecMax);
-			if(stuck)
-				colors = {255, 20, 20, 255};
+			if(!rayTest || stuck)
+			{
+				if(GetEngineTime() - lastTime[client] > 0.5)
+					colors = {255, 20, 20, 255};
+				else 
+					endPos = VectorCopy(lastEndPos[client]);
+			}
 			else
 				colors = {255, 255, 255, 255};
 
@@ -914,7 +924,8 @@ public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3],
 			testPos[0][loop][rank[0]] += axis;
 			testPos[1][loop][rank[0]] += axis;
 
-			testPos[1][loop][2] += vecMax[2];
+			if(tries == 0)
+				testPos[1][loop][2] += vecMax[2];
 
 			testPos[0][loop][rank[1]] += vecMax[rank[1]];
 			testPos[0][loop][rank[1]] += vecMin[rank[1]];
@@ -1046,6 +1057,8 @@ public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3],
 	result = VectorCopy(currentPos);
 }
 
+// public void TestBoxPlane
+
 // This only support for [0], [1]
 public void GetPositionWithHull(int currentIndex, bool IsMax[3], float currentPos[3], float vecMin[3], float vecMax[3], float startPos[3], float endPos[3])
 {
@@ -1070,15 +1083,15 @@ public void AdjustPositionBySingleRay(int ent, float currentPos[3], float startP
 	TR_TraceRayFilter(startPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, ent);
 	TR_GetEndPosition(temp);
 
-	static int colors[4] = {0, 255, 0, 255};
-	TE_SetupBeamPoints(currentPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
-	TE_SendToClient(ent);
+	// static int colors[4] = {0, 255, 0, 255};
+	// TE_SetupBeamPoints(currentPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
+	// TE_SendToClient(ent);
 
 	for(int index = 0; index < 3; index++)
 		result[index] = currentPos[index] - (endPos[index] - temp[index]);
 }
 
-public void GetEndPos(int client, float pos[3], float angles[3], float distance, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
+public bool GetEndPos(int client, float pos[3], float angles[3], float distance, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
 {
 	float tempAngles[3];
 
@@ -1090,29 +1103,394 @@ public void GetEndPos(int client, float pos[3], float angles[3], float distance,
 	TR_GetEndPosition(endPos);
 
 	TR_GetPlaneNormal(null, normal);
-	PrintToChatAll("angles: %.5f %.5f %.5f", angles[0], angles[1], angles[2]);
+	// PrintToChatAll("angles: %.5f %.5f %.5f", angles[0], angles[1], angles[2]);
 	PrintToChatAll("normal: %.5f %.5f %.5f", normal[0], normal[1], normal[2]);
-	PrintToChatAll("DidHit: %s, endPos: %.5f %.5f %.5f",
-		TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
+	// PrintToChatAll("DidHit: %s, endPos: %.5f %.5f %.5f",
+	// 	TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
 
-	// 좌표 보정 함수로 들어가기 전에 벽에 안들어간 트레이스를 밖으로 빼냄
-	for(int loop = 0; loop < 2; loop++)
+	tempAngles = angles;
+	ScaleVector(tempAngles, -1.0);
+
+	// Set the trace to out of the world
+	// This will ensure the distance between wall and player is far as DIST_EPSILON.
+	int count = 0;
+	while(TR_DidHit())
 	{
-		if(normal[loop] != 0.0)
-			// 충돌 지점이 우선 벽 안이라서 최소한의 거리는 뒤로 뺴야할 필요가 있음
-			endPos[loop] += normal[loop] >= 0.0 ? 5.0 : -5.0;
+		if(count > 20)
+			// failed
+			return false;
+
+		AddVectors(endPos, tempAngles, endPos);
+		TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+
+		// PrintToChatAll("count: %i, DidHit: %s, endPos: %.5f %.5f %.5f",
+		// 	count, TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
+		count++;
 	}
+	
+	// float vecMin[3], vecMax[3];
+	// GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
+	// GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
 
-	// 바닥 면은 다른 벽과 다르게 0.0 값이면 수평이므로 위로 올려야 됨.
+	// Inital Position Test
+	// at first, Check floor
+	// we are using normal[2] for check this, but only read from its sign bit (IEEE-754).
 
-	if(normal[2] != 0.0)
-		endPos[2] += normal[2] >= 0.0 ? 5.0 : -5.0;
+	// bool sign = !(normal[2] & (1 << 31));
+	// PrintToChatAll("sign: %s", sign > 0 ? "true" : "false");
+
+	// This is floor or wall, and player surpposed aim to floor?
+	// so we are gonna move this upper.
+	// except perfect floor and extremely floor slope 
+	if(0.3 < normal[2] && normal[2] < 1.0) 
+	{
+		// float ratio = FloatAbs(normal[2] - 1.0);
+		float maxHeight = 0.0;
+		for(int search = 0; search < 2; search++)
+		{
+			maxHeight = max(FloatAbs(normal[search]), maxHeight);
+		}
+
+		endPos[2] += (vecMax[2] - vecMin[2]) * maxHeight;
+	}
+	else if(normal[2] < 0.0) // NOTE: some ceiling has 0.0 (same as perfect floor)
+	{
+		// skybox or ceiling
+		endPos[2] -= vecMax[2];
+	}
+	// else
+	// {
+	// 	// extremely floor slope, ignore.
+	// 	return;
+	// }
+
+	// No correction at this point.
+	if(!IsStockInPosition(client, endPos, vecMin, vecMax))
+		return true;
+
+	// // 좌표 보정 함수로 들어가기 전에 벽에 안들어간 트레이스를 밖으로 빼냄
+	// for(int loop = 0; loop < 2; loop++)
+	// {
+	// 	if(normal[loop] != 0.0)
+	// 		// 충돌 지점이 우선 벽 안이라서 최소한의 거리는 뒤로 뺴야할 필요가 있음
+	// 		endPos[loop] += normal[loop] >= 0.0 ? 5.0 : -5.0;
+	// }
+
+	// // 바닥 면은 다른 벽과 다르게 0.0 값이면 수평이므로 위로 올려야 됨.
+
+	// if(normal[2] != 0.0)
+	// 	endPos[2] += normal[2] >= 0.0 ? 5.0 : -5.0;
 
 	float tempEndPos[3];
-	// 좌표 보정!
 	AdjustPositionOppositeDirected(client, endPos, pos, normal, vecMin, vecMax, tempEndPos);
 
 	endPos = VectorCopy(tempEndPos);
+
+	// CorrectionPositionDirected(client, endPos, normal, vecMin, vecMax);
+
+	TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+	if(TR_DidHit())
+		return false;
+
+	return true;
+}
+
+public bool CorrectionPositionDirected(int client, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
+{
+	static int colors[4] = {0, 255, 0, 255};
+
+	enum
+	{
+		Center_Middle = 0,
+		Center_Left ,
+		Center_Right
+	}
+
+	// float currentAxisPos[3], nextAxisPos[3], temp[3], tempAngles[3],
+	// 		ZTestPos[3];
+
+	float testPos[3], testEndPos[3], fwdVec[3], fwdAng[3], leftVec[3], rightVec[3],
+			temp[3];
+
+	float fwdCheck = 0.0;
+	int fwdIndex = -1, sideIndex; // Wut.
+	bool isFwdBackward; // , isSideBackward;
+
+	for(int axis = 0; axis < 2; axis++)
+	{
+		if(FloatAbs(normal[axis]) > fwdCheck)
+		{
+			fwdCheck = FloatAbs(normal[axis]);
+			fwdIndex = axis;
+			isFwdBackward = normal[axis] > 0.0; // yeah.. reversed. 
+		}
+	}
+	sideIndex = (fwdIndex + 1) % 2; 
+	// isSideBackward = normal[sideIndex] < 0.0;
+
+	// PrintToChatAll("angles: %.3f %.3f %.3f, fwdIndex: %d, sideIndex: %d, isFwdBackward: %s",
+	// 		angles[0], angles[1], angles[2], fwdIndex, sideIndex, isFwdBackward ? "true" : "false");
+
+	int count = 0;
+ 	while(count < 3)
+	{
+		testPos = VectorCopy(endPos);
+
+		float centerPos[3];
+		for(int up = 0; up < 2; up++)
+		{
+			bool isDown = up == 0;
+			
+			for(int testcase = 0; testcase < 3; testcase++)
+			{ 
+				centerPos = VectorCopy(testPos);
+
+				if(!isDown)
+					centerPos[2] += vecMax[2];
+
+				switch(testcase)
+				{
+					case Center_Left:
+					{
+						centerPos[sideIndex] += isFwdBackward ? vecMax[sideIndex] : vecMin[sideIndex];
+					}
+					case Center_Right:
+					{
+						centerPos[sideIndex] += isFwdBackward ? vecMin[sideIndex] : vecMax[sideIndex];
+					}
+				}
+
+				testEndPos = VectorCopy(centerPos);
+				testEndPos[fwdIndex] += isFwdBackward ? vecMin[fwdIndex] : vecMax[fwdIndex];
+
+				TR_TraceRayFilter(centerPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+				if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
+				{
+					TR_GetEndPosition(temp);
+
+					TE_SetupBeamPoints(centerPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
+					TE_SendToClient(client);
+
+					centerPos[fwdIndex] = centerPos[fwdIndex] - (testEndPos[fwdIndex] - temp[fwdIndex]) /* + DIST_EPSILON */;
+					PrintToChatAll("testcase: %d, pullback: %.2f", testcase, testEndPos[fwdIndex] - temp[fwdIndex]);
+
+					// PrintToChatAll("testPos[fwdIndex]", testEndPos[fwdIndex] - temp[fwdIndex]);
+				}
+
+				// PrintToChatAll("TR_DidHit: %s", TR_DidHit() ? "true" : "false");
+				if(!isDown) // ????
+					centerPos[2] -= vecMax[2];
+
+				testPos = VectorCopy(centerPos);
+			}
+
+			// side check
+			centerPos = VectorCopy(testPos);
+			centerPos[sideIndex] += vecMax[sideIndex];
+
+			testEndPos = VectorCopy(testPos);
+			testEndPos[sideIndex] += vecMin[sideIndex];
+
+			TR_TraceRayFilter(centerPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+			if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
+			{
+				TR_GetEndPosition(temp);
+
+				TE_SetupBeamPoints(centerPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
+				TE_SendToClient(client);
+
+				centerPos[sideIndex] = centerPos[sideIndex] - (testEndPos[sideIndex] - temp[sideIndex]) /* + DIST_EPSILON */;
+				PrintToChatAll("left side: pullback: %.2f", testEndPos[sideIndex] - temp[sideIndex]);
+
+				// PrintToChatAll("testPos[fwdIndex]", testEndPos[fwdIndex] - temp[fwdIndex]);
+			}
+
+			centerPos = VectorCopy(testPos);
+			centerPos[sideIndex] += vecMin[sideIndex];
+
+			testEndPos = VectorCopy(testPos);
+			testEndPos[sideIndex] += vecMax[sideIndex];
+
+			TR_TraceRayFilter(centerPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+			if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
+			{
+				TR_GetEndPosition(temp);
+
+				TE_SetupBeamPoints(centerPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
+				TE_SendToClient(client);
+
+				centerPos[sideIndex] = centerPos[sideIndex] - (testEndPos[sideIndex] - temp[sideIndex]) /* + DIST_EPSILON */;
+				PrintToChatAll("right side: pullback: %.2f", testEndPos[sideIndex] - temp[sideIndex]);
+
+				// PrintToChatAll("testPos[fwdIndex]", testEndPos[fwdIndex] - temp[fwdIndex]);
+			}
+			
+			testPos = VectorCopy(centerPos);
+		}
+
+		if(!IsStockInPosition(client, testPos, vecMin, vecMax))
+		{
+			endPos = VectorCopy(testPos);
+			return true;
+		}
+		
+		//   o----------o
+		//  /          /|
+		// /          / |
+		// o----O----o  |
+		// |    |    |  o
+		// |    |    | /
+		// |    |    |/
+		// o----O----o
+
+		// First, up to down
+		testEndPos = VectorCopy(testPos);
+		testEndPos[2] += vecMax[2];
+		
+		TR_TraceRayFilter(testEndPos, testPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+		if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
+		{
+			TR_GetEndPosition(temp);
+			testPos[2] = testPos[2] + (testEndPos[2] - temp[2]);
+
+			// TE_SetupBeamPoints(testEndPos, testPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0, 10.0, 30.0, 0, 0.0, colors, 10);
+			// TE_SendToClient(client);
+		}
+		else 
+		{
+			// down to up 
+			testEndPos = VectorCopy(testPos);
+			testEndPos[2] += vecMax[2];
+
+			TR_TraceRayFilter(testPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+			if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
+			{
+				TR_GetEndPosition(temp);
+				testPos[2] = testPos[2] - (testEndPos[2] - temp[2]);
+
+				// TE_SetupBeamPoints(testPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0, 10.0, 30.0, 0, 0.0, colors, 10);
+				// TE_SendToClient(client);
+			}
+		}
+
+		endPos = VectorCopy(testPos);
+		if(!IsStockInPosition(client, endPos, vecMin, vecMax))
+		{
+			// endPos = VectorCopy(testPos);
+			return true;
+		}
+
+		// after failed, just pull back this whole box.
+
+
+
+		// Need testing
+		// if(sideCheck)
+		// 	break;
+		
+		// GetAngleVectors(fwdAng, NULL_VECTOR, rightVec);
+		// leftVec = VectorCopy(rightVec);
+		// NegateVector(leftVec);
+
+		
+
+		
+
+
+
+		// // 0 = lower, 1 = upper 
+		// for(int up = 0; up < 2; up++)
+		// {
+		// 	for(int loop = 0; loop < 4; loop++)
+		// 	{
+		// 		// 양반향 체크 필요?
+		// 		int next = (loop + 1) % 4;
+		// 		currentAxisPos[2] = up == 0 ? endPos[2] : endPos[2] + vecMax[2];
+		// 		nextAxisPos[2] = up == 0 ? endPos[2] : endPos[2] + vecMax[2];
+
+		// 		currentAxisPos[0] = XaxisSearch[loop] == 1 ? endPos[0] + vecMax[0] : endPos[0] + vecMin[0];
+		// 		nextAxisPos[0] = XaxisSearch[next] == 1 ? endPos[0] + vecMax[0] : endPos[0] + vecMin[0];
+
+		// 		nextAxisPos[0] += XaxisSearch[next] == 1 ? DIST_EPSILON : -DIST_EPSILON;
+
+		// 		currentAxisPos[1] = YaxisSearch[loop] == 1 ? endPos[1] + vecMax[1] : endPos[1] + vecMin[1];
+		// 		nextAxisPos[1] = YaxisSearch[next] == 1 ? endPos[1] + vecMax[1] : endPos[1] + vecMin[1];
+
+		// 		nextAxisPos[1] += YaxisSearch[next] == 1 ? DIST_EPSILON : -DIST_EPSILON;
+
+		// 		// AdjustPositionBySingleRay(client, endPos, currentAxisPos, nextAxisPos, endPos);
+				
+		// 		TR_TraceRayFilter(currentAxisPos, nextAxisPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+		// 		if(TR_StartSolid() || !TR_DidHit() || TR_AllSolid())			continue;
+
+		// 		TR_GetEndPosition(temp);
+		// 		for(int axis = 0; axis < 3; axis++)
+		// 		{
+		// 			endPos[axis] = endPos[axis] - (nextAxisPos[axis] - temp[axis]);
+		// 		}
+		// 	}	
+
+			
+		// }
+	/*
+		// causes crash?
+		if(!IsStockInPosition(client, endPos, vecMin, vecMax))
+			break;
+
+		// Check upper
+		for(int axis = 0; axis < 2; axis++)
+		{
+			currentAxisPos[axis] = endPos[axis];
+			nextAxisPos[axis] = endPos[axis];
+		}
+		currentAxisPos[2] = endPos[2];
+		nextAxisPos[2] = endPos[2] + vecMax[2];
+
+		ZTestPos = VectorCopy(endPos);
+
+		TR_TraceRayFilter(currentAxisPos, nextAxisPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+		if(!TR_StartSolid() && TR_DidHit())
+		{
+			TR_GetEndPosition(temp);
+			ZTestPos[2] = ZTestPos[2] - (nextAxisPos[2] - temp[2]);
+		}
+
+		if(!IsStockInPosition(client, ZTestPos, vecMin, vecMax))
+		{
+			endPos = VectorCopy(ZTestPos);
+			break;
+		}
+	*/
+
+		// This is supposed to be cleared at once.
+		// Still not enough? In this case, just bring this backward.
+		// Some walls does not set solid correctly...
+		// tempAngles = VectorCopy(angles);
+
+		// float maxBackMove = min(vecMin[0], vecMin[1]);
+		// ScaleVector(tempAngles, maxBackMove);
+
+		// AddVectors(endPos, tempAngles, endPos);
+
+		// GetVectorAngles(endPos, tempAngles);
+		// GetAngleVectors(tempAngles, tempAngles, NULL_VECTOR, NULL_VECTOR);
+
+		// float ratio = GetVectorDotProduct(angles, tempAngles);
+		// PrintToChatAll("count: %d, ratio: %.3f", count, ratio);
+		count++;
+	}
+		
+
+	// PrintToChatAll("CorrectionPositionDirected: stock: %s, endPos: %.5f %.5f %.5f", 
+	// 	IsStockInPosition(client, endPos, vecMin, vecMax) ? "true" : "false", endPos[0], endPos[1], endPos[2]);
+	
+	
+	// bool ilovemycompiler = true;
+	// while(ilovemycompiler)
+	// {
+		
+	// }
+	return false;
 }
 
 ///////////////////////////
@@ -1731,7 +2109,7 @@ public bool TraceAnything(int entity, int contentsMask, any data)
 
 stock bool IsStockInPosition(int ent, float pos[3], float vecMin[3], float vecMax[3])
 {
-	TR_TraceHullFilter(pos, pos, vecMin, vecMax, MASK_SOLID, TraceAnything, ent);
+	TR_TraceHullFilter(pos, pos, vecMin, vecMax, MASK_ALL, TraceAnything, ent);
 	return TR_DidHit();
 }
 
