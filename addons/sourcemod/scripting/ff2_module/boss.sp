@@ -100,7 +100,12 @@ public void AddBossCharge(int boss, int slot, float charge)
 	{
 		BossCharge[boss][slot]+=charge;
 		if(slot == 0)
+		{
+			if(BossMaxRageCharge[boss] >= 0.0)
+				BossCharge[boss][slot] = BossCharge[boss][slot] > BossMaxRageCharge[boss] ? BossMaxRageCharge[boss] : BossCharge[boss][slot];	
 			BossCharge[boss][slot] = BossCharge[boss][slot] > BossMaxRageCharge[boss] ? BossMaxRageCharge[boss] : BossCharge[boss][slot];
+				BossCharge[boss][slot] = BossCharge[boss][slot] > BossMaxRageCharge[boss] ? BossMaxRageCharge[boss] : BossCharge[boss][slot];	
+		}
 		else if(BossCharge[boss][slot] > 100.0)
 			BossCharge[boss][slot] = 100.0;
 	}

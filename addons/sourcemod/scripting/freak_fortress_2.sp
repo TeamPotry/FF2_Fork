@@ -4686,7 +4686,10 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		}
 		emitRageSound[boss]=true;
 
-		AddBossCharge(boss, 0, slot == 0 ? -100.0 : -200.0);
+		if(BossMaxRageCharge[boss] < 0.0)
+			BossCharge[boss][0] = 0.0;
+		else 
+			AddBossCharge(boss, 0, slot == 0 ? -100.0 : -200.0);
 
 		int type = slot == 0 ? SkillName_Rage : SkillName_200Rage;
 		float duration = GetBossSkillDuration(boss, type);
