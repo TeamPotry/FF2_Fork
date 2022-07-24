@@ -45,6 +45,24 @@ native int FF2_GetCharacterIndex(int boss);
 native void FF2_AddBossCharge(int boss, int slot, float charge);
 
 /**
+ * Gets the maximum charge meter value of the Boss
+ *
+ * @param boss      Boss's index
+ *
+ * @return          Charge value of the Boss
+ */
+native float FF2_GetBossMaxCharge(int boss);
+
+/**
+ * Sets the maximum charge meter value of the Boss
+ *
+ * @param boss      Boss's index
+ * @param value     New value of charge
+ * @noreturn
+ */
+native void FF2_SetBossMaxCharge(int boss, float value);
+
+/**
  * Get timer's type.
  *
  * @return          Remaining round time

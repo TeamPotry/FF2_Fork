@@ -58,6 +58,15 @@ public int Native_AddBossCharge(Handle plugin, int numParams)
 	AddBossCharge(GetNativeCell(1), GetNativeCell(2), view_as<float>(GetNativeCell(3)));
 }
 
+public int Native_GetBossMaxCharge(Handle plugin, int numParams)
+{
+	return view_as<int>(GetBossMaxCharge(GetNativeCell(1)));
+}
+public int Native_SetBossMaxCharge(Handle plugin, int numParams)
+{
+	SetBossMaxCharge(GetNativeCell(1), view_as<float>(GetNativeCell(2)));
+}
+
 public int Native_GetBossRageDamage(Handle plugin, int numParams)
 {
 	return GetBossRageDamage(GetNativeCell(1));

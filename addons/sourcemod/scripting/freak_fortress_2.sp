@@ -225,6 +225,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// ff2_modules/general.inc
 	CreateNative("FF2_GetCharacterIndex", Native_GetCharacterIndex);
 	CreateNative("FF2_AddBossCharge", Native_AddBossCharge);
+	CreateNative("FF2_GetBossMaxCharge", Native_GetBossMaxCharge);
+	CreateNative("FF2_SetBossMaxCharge", Native_SetBossMaxCharge);
 	CreateNative("FF2_GetTimerType", Native_GetTimerType);
 	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);

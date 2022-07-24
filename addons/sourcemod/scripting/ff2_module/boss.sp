@@ -85,6 +85,15 @@ public int SetBossCharge(int boss, int slot, float charge)
 	BossCharge[boss][slot]=charge;
 }
 
+public float GetBossMaxCharge(int boss)
+{
+	return BossMaxRageCharge[boss];
+}
+public int SetBossMaxCharge(int boss, float charge)
+{
+	BossMaxRageCharge[boss]=charge;
+}
+
 public void AddBossCharge(int boss, int slot, float charge)
 {
 	if(charge > 0.0)
