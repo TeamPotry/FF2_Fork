@@ -53,10 +53,19 @@
 	{
 		"en"		"LIFE Skill Duration"
 	}
-	"Rage Meter"
+	"Rage Meter Phrase"
+	{
+		"en"		"RAGE Meter"
+	}
+	"Current Rage Meter"
+	{
+		"#format"	"{1:i},{2:s}"
+		"en"		"{1}%% / {2}%%"
+	}
+	"Current Rage Damage"
 	{
 		"#format"	"{1:i},{2:i}"
-		"en"		"RAGE Meter: {1}%% / {2}%%"
+		"en"		"{1} / {2}"
 	}
 	"Current Boss Rage"
 	{

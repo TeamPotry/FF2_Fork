@@ -4267,7 +4267,19 @@ public Action BossTimer(Handle timer)
 			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
 		}
 
-		Format(text, sizeof(text), "%t (%i / %i)", "Rage Meter", RoundFloat(BossCharge[boss][0]), RoundFloat(BossMaxRageCharge[boss]), RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
+		char strMaxCharge[8];
+		if(BossMaxRageCharge[boss] < 0.0)
+		{
+			Format(strMaxCharge, sizeof(strMaxCharge), "∞");
+		}
+		else
+		{
+			Format(strMaxCharge, sizeof(strMaxCharge), "%i", RoundFloat(BossMaxRageCharge[boss]));
+		}
+
+		Format(text, sizeof(text), "%t", "Rage Meter Phrase");
+		Format(text, sizeof(text), "%s: %t", text, "Current Rage Meter", RoundFloat(BossCharge[boss][0]), strMaxCharge);
+		Format(text, sizeof(text), "%s (%t)", text, "Current Rage Damage", RoundFloat(BossCharge[boss][0]*(BossRageDamage[boss]/100.0)), BossRageDamage[boss]);
 
 		bossHudDisplay=FF2HudDisplay.CreateDisplay("Rage Meter", text);
 		PlayerHudQueue[client].AddHud(bossHudDisplay, client);
