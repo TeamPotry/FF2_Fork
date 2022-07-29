@@ -13,7 +13,7 @@
 #pragma newdecls required
 
 #define PLUGIN_NAME "pointing abilities"
-#define PLUGIN_VERSION "20220716"
+#define PLUGIN_VERSION "20220730"
 
 public Plugin myinfo=
 {
@@ -855,6 +855,118 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 	}
 }
 
+public bool CorrectionPositionDirected_2(int ent, float pos[3], float initAngles[3], float initNormal[3], float vecMin[3], float vecMax[3], float result[3])
+{
+	float fwdCheckNormal = 0.0;
+	int fwdIndex = -1, sideIndex;
+	bool isFwdBackward = false;
+	{
+		float temp;
+		for(int loop = 0; loop < 2; loop++)
+		{
+			temp = FloatAbs(initNormal[loop]);
+			if(fwdCheckNormal < temp)
+			{
+				fwdCheckNormal = temp;
+				fwdIndex = loop;
+				isFwdBackward = initNormal[loop] > 0.0; // This should be reverse.
+			}
+		}
+
+		// 바닥이나 지붕에 조준했던 경우는 시야 각도를 기준으로 전방 판정
+		if(fwdCheckNormal == 0.0)
+		{
+			for(int loop = 0; loop < 2; loop++)
+			{
+				temp = FloatAbs(initAngles[loop]);
+				if(fwdCheckNormal < temp)
+				{
+					fwdCheckNormal = temp;
+					fwdIndex = loop;
+					isFwdBackward = initAngles[loop] < 0.0;
+				}
+			}
+		}
+
+		// NOTE: Still does not work? Make full check for this.
+		// .. or just go backward. for now.
+		if(fwdIndex == -1)
+			return false;
+	}
+
+	sideIndex = fwdIndex == 0 ? 1 : 0; 
+
+	float _pos[3], testPos[3], testEndPos[3],
+		_distance;
+	bool isFar;
+
+	_pos = VectorCopy(pos);
+
+	// Test: under of BB
+	enum
+	{
+		Test_Under = 0,
+		Test_Middle,
+		Test_Upper
+	};
+
+	testPos = VectorCopy(_pos);
+
+	for(int testCase = 0; testCase < 3; testCase++)
+	{
+		for(int loop = 0; loop < 5; loop++)
+		{
+			isFar = 4 > loop && loop > 0;
+//			testPos = VectorCopy(_pos);
+			testEndPos = VectorCopy(testPos);
+
+			// forward
+			if(isFar)
+				testEndPos[fwdIndex] += isFwdBackward ? vecMin[fwdIndex] : vecMax[fwdIndex];
+
+			// side
+			if(loop < 2)
+				testEndPos[sideIndex] += vecMin[sideIndex];
+			else if(2 < loop)
+				testEndPos[sideIndex] += vecMax[sideIndex];
+
+			switch(testCase)
+			{
+				case Test_Middle:
+				{
+					// middle
+					testPos = VectorCopy(testEndPos);
+					testEndPos[2] += vecMax[2];
+				}
+				case Test_Upper:
+				{
+					testPos[2] += vecMax[2];
+					testEndPos[2] += vecMax[2];
+				}
+			}
+
+			AdjustPositionBySingleRay(ent, testPos, testPos, testEndPos, testPos);
+			if(testCase == Test_Middle)
+				AdjustPositionBySingleRay(ent, testPos, testEndPos, testPos, testPos);
+
+			if(TR_StartSolid())
+			{
+				if(testCase == Test_Upper)
+					return false;
+				continue;
+			}
+		}
+	}
+
+	if(!IsStockInPosition(ent, testPos, vecMin, vecMax))
+	{
+		result = testPos;
+		return true;
+	}
+	
+	return false;
+}
+
 public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3], float normal[3], float vecMin[3], float vecMax[3], float result[3])
 {
 	// 여기서 쓰인 모든 매개변수들은 백터
@@ -1096,7 +1208,7 @@ public bool GetEndPos(int client, float pos[3], float angles[3], float distance,
 	float tempAngles[3];
 
 	tempAngles = angles;
-	ScaleVector(tempAngles, distance);
+	ScaleVector(tempAngles, distance + 43.0); // 43.0: player default hull size
 	AddVectors(pos, tempAngles, endPos);
 
 	TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
@@ -1180,18 +1292,34 @@ public bool GetEndPos(int client, float pos[3], float angles[3], float distance,
 
 	// if(normal[2] != 0.0)
 	// 	endPos[2] += normal[2] >= 0.0 ? 5.0 : -5.0;
-
-	float tempEndPos[3];
-	AdjustPositionOppositeDirected(client, endPos, pos, normal, vecMin, vecMax, tempEndPos);
+/*
+	
+	CorrectionPositionDirected_2(client, endPos, pos, normal, vecMin, vecMax, tempEndPos);
 
 	endPos = VectorCopy(tempEndPos);
-
+*/
 	// CorrectionPositionDirected(client, endPos, normal, vecMin, vecMax);
 
-	TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+	float resultPos[3];
+	bool result = 
+		CorrectionPositionDirected_2(client, endPos, angles, normal, vecMin, vecMax, resultPos);
+
+	count = 0;
+	while(!result && count < 3)
+	{
+		ScaleVector(tempAngles, 82.0); // -1.0 * 82.0
+
+		AddVectors(endPos, tempAngles, resultPos);
+		result = !IsStockInPosition(client, resultPos, vecMin, vecMax);
+
+		count++;
+	}
+
+	TR_TraceRayFilter(pos, resultPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
 	if(TR_DidHit())
 		return false;
 
+	endPos = resultPos;
 	return true;
 }
 
