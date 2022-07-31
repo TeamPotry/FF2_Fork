@@ -1,19 +1,39 @@
+/*
+	"point_teleport"
+	"arg1" 		"1000.0" 	// "rocket speed"
+	"arg2"		"2.5"		// "rocket duration"
+	"arg3"		"75.0"		// "portal size"
+	"arg4"		"15.0"		// "portal duration"
+	"arg5"		"600.0"		// "portal launch power"
+	"arg6"		"2.0"		// "portal sound loop time"
+
+	"arg7"		"eyeboss_death_vortex"							// "portal entrance paticle name"
+	"arg8"		"eyeboss_vortex_blue"							// "portal exit paticle name"
+	"arg9"		"misc/halloween/spell_athletic.wav"				// "portal open sound path"
+	"arg10"		"potry_v2/saxton_hale/portal_loop.wav"			// "portal loop sound path"
+	"arg11"		"misc/halloween/spell_spawn_boss_disappear.wav" // "portal close sound path"
+
+	"arg12"		"weapons/teleporter_send.wav"					// "portal enter entrance sound path"
+	"arg13"		"weapons/teleporter_receive.wav"				// "portal enter exit sound path"
+*/
 #pragma semicolon 1
 
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
 #include <tf2_stocks>
-// #include <morecolors>
 #include <tf2utils>
 #include <freak_fortress_2>
-#include <ff2_modules/general>
 #include <stocksoup/sdkports/util>
+
+#tryinclude <ff2_modules/general>
+#if !defined _ff2_fork_general_included
+	#include <freak_fortress_2_subplugin>
+#endif
 
 #pragma newdecls required
 
-#define PLUGIN_NAME "pointing abilities"
-#define PLUGIN_VERSION "20220730"
+#define PLUGIN_VERSION "20220731"
 
 public Plugin myinfo=
 {
@@ -21,9 +41,56 @@ public Plugin myinfo=
 	author="Nopied◎",
 	description="Replace default Teleport ability",
 	version=PLUGIN_VERSION,
-};
+};		
 
-// Handle jumpHUD;
+#if defined _ff2_fork_general_included
+	#define PLUGIN_NAME 						"pointing abilities"
+	#define POINT_TELEPORT_NAME					"point teleport"
+
+	#define PORTAL_ROCKET_SPEED_NAME 			"rocket speed"
+	#define PORTAL_ROCKET_DURATION_NAME			"rocket duration"
+	#define PORTALS_SIZE_NAME					"portal size"
+	#define PORTALS_DURATION_NAME				"portal duration"
+	#define PORTALS_LAUNCH_POWER_NAME			"portal launch power"
+	#define PORTALS_SOUND_LOOP_TIME_NAME		"portal sound loop time"
+
+	#define PORTALS_ENTRANCE_PARTICLE_NAME		"portal entrance paticle name"
+	#define PORTALS_EXIT_PARTICLE_NAME			"portal exit paticle name"
+	#define PORTALS_OPEN_SOUND_PATH_NAME		"portal open sound path"
+	#define PORTALS_LOOP_SOUND_PATH_NAME		"portal loop sound path"
+	#define PORTALS_CLOSE_SOUND_PATH_NAME		"portal close sound path"
+
+	#define PORTALS_ENTER_ENTRANCE_SOUND_PATH_NAME	"portal enter entrance sound path"
+	#define PORTALS_EXIT_ENTRANCE_SOUND_PATH_NAME	"portal enter exit sound path"
+#else
+	#define PLUGIN_NAME 						this_plugin_name
+	#define POINT_TELEPORT_NAME					"point_teleport"
+
+//	#define FF2_GetFF2Flags						FF2_GetFF2flags
+//	#define FF2_SetFF2Flags						FF2_SetFF2flags
+
+	#define PORTAL_ROCKET_SPEED_NAME			1
+	#define PORTAL_ROCKET_DURATION_NAME			2
+	#define PORTALS_SIZE_NAME					3
+	#define PORTALS_DURATION_NAME				4
+	#define PORTALS_LAUNCH_POWER_NAME 			5
+	#define PORTALS_SOUND_LOOP_TIME_NAME		6
+
+	#define PORTALS_ENTRANCE_PARTICLE_NAME		7
+	#define PORTALS_EXIT_PARTICLE_NAME			8
+	#define PORTALS_OPEN_SOUND_PATH_NAME		9
+	#define PORTALS_LOOP_SOUND_PATH_NAME		10
+	#define PORTALS_CLOSE_SOUND_PATH_NAME		11
+
+	#define PORTALS_ENTER_ENTRANCE_SOUND_PATH_NAME	12
+	#define PORTALS_EXIT_ENTRANCE_SOUND_PATH_NAME	13
+#endif
+
+static const int WHITE_COLOR[4] = {255, 255, 255, 255};
+
+#define SPHERE_MODEL		"models/props_gameplay/ball001.mdl"
+#define EMPTY_MODEL			"models/empty.mdl"
+// #define EMPTY_MODEL			"models/props_lakeside_event/vortex_lakeside2.mdl"
 
 #define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
 #define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
@@ -33,9 +100,7 @@ public Plugin myinfo=
 
 #define DIST_EPSILON		0.03125
 
-Handle g_SDKCallTestEntityPosition;
-Handle g_SDKCallFindPassableSpace;
-Handle g_SDKCallSetAbsOrigin;
+Handle jumpHUD;
 
 int g_iBeamModel, g_iHaloModel;
 float g_flTeleportDistance[MAXPLAYERS+1];
@@ -290,6 +355,8 @@ methodmap CTFPortal < ArrayList {
 		this.SetString(Portal_EnterExitSoundPath, path);
 	}
 
+	public native void AddThisToList();
+
 	public void DispatchTPEffect(float pos[3], float endPos[3])
 	{
 		float angles[3];
@@ -335,9 +402,7 @@ methodmap CTFPortal < ArrayList {
 		this.GetExitParticleName(exitPaticleName, sizeof(exitPaticleName));
 
 		this.EntranceParticleIndex = SpawnParticle(pos, entrancePaticleName);
-		SDKCall_SetAbsOrigin(this.EntranceParticleIndex, pos);
 		this.ExitParticleIndex = SpawnParticle(endPos, exitPaticleName);
-		SDKCall_SetAbsOrigin(this.ExitParticleIndex, endPos);
 
 		char sound[PLATFORM_MAX_PATH];
 		this.GetOpenSound(sound, PLATFORM_MAX_PATH);
@@ -351,40 +416,51 @@ methodmap CTFPortal < ArrayList {
 			}
 		}
 
-		float vecMin[3], vecMax[3];
-		for(int loop = 0; loop < 3; loop++)
-		{
-			vecMin[loop] = pos[loop] + this.Size * -0.5;
-			vecMax[loop] = pos[loop] + this.Size * 0.5;
-		}
-/*
-		int func = CreateEntityByName("func_breakable");
+		int func = CreateEntityByName("prop_physics_override");
 		if(IsValidEntity(func))
 		{
-			DispatchKeyValue(func, "propdata", "0");
-			DispatchKeyValue(func, "health", "0");
-			DispatchKeyValue(func, "material", "0");
+			SetEntProp(func, Prop_Data, "m_iMaxHealth", 10000);
+			SetEntProp(func, Prop_Data, "m_iHealth", 10000);		
 
-			SetEntityModel(func, "models/error.mdl");
+			SetEntityModel(func, SPHERE_MODEL);
 			SetEntityRenderMode(func, RENDER_TRANSCOLOR);
 			SetEntityRenderColor(func, 255, 255, 255, 0);
+
+			SetEntProp(func, Prop_Data, "m_takedamage", 2);
+			DispatchSpawn(func);
+
+			// DispatchKeyValue(func, "propdata", "0");
+			// DispatchKeyValue(func, "material", "0");
+
+			static const float vecMin[3] = {-80.0, -80.0, -80.0}, vecMax[3] = {80.0, 80.0, 80.0};
 
 			SetEntPropVector(func, Prop_Send, "m_vecMins", vecMin);
 			SetEntPropVector(func, Prop_Send, "m_vecMaxs", vecMax);
 
-			DispatchSpawn(func);
+			SetEntityMoveType(func, MOVETYPE_NONE);
+			SetEntProp(func, Prop_Send, "m_CollisionGroup", 2); // 2 = COLLISION_GROUP_DEBRIS_TRIGGER
+			// SetEntProp(func, Prop_Send, "m_usSolidFlags", 0x0084); // 0x0001: FSOLID_NOT_SOLID
+			SetEntProp(func, Prop_Send, "m_nSolidType", 2); // 2: SOLID_BBOX
+			SetEntPropFloat(func, Prop_Send, "m_flModelScale", 2.0);
+
+			float funcPos[3];
+			funcPos = pos;
+			funcPos[2] += 48.0;
+
 			TeleportEntity(func, pos, NULL_VECTOR, NULL_VECTOR);
 
 			this.BreakableIndex = func;
 			SDKHook(func, SDKHook_OnTakeDamage, Portal_OnTakeDamage);
+
+			// PrintToServer("func: %d", func);
+			this.AddThisToList();
 		}
-		PrintToServer("func: %d", func);
-*/
+
 		this.SoundNextLoopTime = GetGameTime();
 
 		int colors[4];
 		if(!this.Ducked)
-			colors = {255, 255, 255, 255};
+			colors = WHITE_COLOR;
 		else
 			colors = {255, 60, 60, 255};
 
@@ -396,6 +472,37 @@ methodmap CTFPortal < ArrayList {
 		RequestFrame(Portal_Update, this);
 	}
 
+	public void TeleportToExit(int ent)
+	{
+		float exitPos[3], angles[3], velocity[3];
+		this.GetExitPosition(exitPos);
+
+		if(ent <= MaxClients) // Not player
+		{
+			this.GetLaunchAngles(angles);
+			ScaleVector(angles, this.LaunchPower);
+
+			float currentPos[3];
+			GetClientAbsOrigin(ent, currentPos);
+
+			TeleportEntity(ent, exitPos, NULL_VECTOR, angles);
+			UTIL_ScreenFade(ent, WHITE_COLOR, 0.1, 0.3, FFADE_IN);
+			return;
+		}
+		
+		// other entities
+		GetEntPropVector(ent, Prop_Send, "m_angRotation", angles);
+		GetEntPropVector(ent, Prop_Data, "m_vecVelocity", velocity);
+		float speed = GetVectorLength(velocity);
+		if(speed <= 0.0)
+			GetEntPropVector(ent, Prop_Send, "m_vInitialVelocity", velocity);
+
+		TeleportEntity(ent, exitPos, angles, velocity);
+
+		if(HasEntProp(ent, Prop_Send, "m_bTouched"))
+			SetEntProp(ent, Prop_Send, "m_bTouched", 0);
+	}
+
 	public void Close()
 	{
 		int entrancePaticle = this.EntranceParticleIndex,
@@ -403,24 +510,51 @@ methodmap CTFPortal < ArrayList {
 
 		RemoveEntity(entrancePaticle);
 		RemoveEntity(exitPaticle);
-		// RemoveEntity(this.BreakableIndex);
+		RemoveEntity(this.BreakableIndex);
 
 		delete this;
 	}
 }
 
-// CTFPortal g_hPortal[MAX_EDICTS+1];
+methodmap CTFPortal_List < ArrayList
+{
+	// Yeah. linear search.
+	public int SearchBreakable(int func)
+	{
+		int len = this.Length;
+		for(int search = 0; search < len; search++)
+		{
+			CTFPortal tempPortal = this.Get(search);
+			if(tempPortal.BreakableIndex == func)
+				return search;
+		}
+		
+		return -1;
+	}
+
+	public void DeleteFromThis(int func)
+	{
+		int index = this.SearchBreakable(func);
+		if(index != -1)
+			this.Erase(index);
+	}
+}
+
+// LOL. There is no prototype definition in SourcePawn.
+// This is the best spot for define this, I think..
+CTFPortal_List g_hPortalList;
 
 public void Portal_Update(CTFPortal portal)
 {
 	if(FF2_GetRoundState() != 1 || portal.LifeTime < GetGameTime())
 	{
+		g_hPortalList.DeleteFromThis(portal.BreakableIndex);
 		portal.Close();
 		return;
 	}
 
 	char sound[PLATFORM_MAX_PATH];
-	float pos[3], angles[3], exitPos[3];
+	float pos[3], exitPos[3];
 	portal.GetEntrancePosition(pos);
 	portal.GetExitPosition(exitPos);
 
@@ -442,43 +576,13 @@ public void Portal_Update(CTFPortal portal)
 
 	bool enter = false;
 	int target = GetEntityInSpot(pos, portal.Size);
-	if(IsValidClient(target) && !TF2_IsPlayerInCondition(target, TFCond_Dazed)
+	if((IsValidClient(target) && !TF2_IsPlayerInCondition(target, TFCond_Dazed)
 		&& (!portal.Ducked || (portal.Ducked && GetEntProp(target, Prop_Send, "m_bDucked") > 0)))
+		|| (!IsValidClient(target) && IsValidEntity(target)))
 	{
 		enter = true;
-		portal.GetLaunchAngles(angles);
-		// GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
-		ScaleVector(angles, portal.LaunchPower);
-
-		float currentPos[3];
-		GetClientAbsOrigin(target, currentPos);
-
-		SDKCall_SetAbsOrigin(target, exitPos);
-		TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, angles);
-
-		int colors[4] = {255, 255, 255, 255};
-		UTIL_ScreenFade(target, colors, 0.1, 0.3, FFADE_IN);
-	}
-	else if(!IsValidClient(target) && IsValidEntity(target))
-	{
-		enter = true;
-		GetEntPropVector(target, Prop_Data, "m_vecVelocity", angles);
-		float speed = GetVectorLength(angles);
-		if(speed <= 0.0)
-		{
-			GetEntPropVector(target, Prop_Send, "m_vInitialVelocity", angles);
-			speed = GetVectorLength(angles);
-		}
-
-		float tempAngles[3];
-
-		portal.GetLaunchAngles(angles);
-		portal.GetLaunchAngles(tempAngles);
-		ScaleVector(angles, speed);
-		TeleportEntity(target, exitPos, tempAngles, angles);
-
-		if(HasEntProp(target, Prop_Send, "m_bTouched"))
-			SetEntProp(target, Prop_Send, "m_bTouched", 0);
+		portal.TeleportToExit(target);
+		
 	}
 
 	portal.GetExitPosition(exitPos);
@@ -525,18 +629,6 @@ public void Portal_Update(CTFPortal portal)
 	RequestFrame(Portal_Update, portal);
 }
 
-public Action Portal_OnTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-{
-	PrintToServer("victim: %d, attacker: %d, damage: %.1f, damagetype: %d", victim, attacker, damage, damagetype);
-	PrintToServer("damageForce: %.1f %.1f %.1f, damagePosition: %.1f %.1f %.1f", damageForce[0], damageForce[1], damageForce[2], damagePosition[0], damagePosition[1], damagePosition[2]);
-	return Plugin_Continue;
-}
-
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
-{
-	CreateNative("CTFPortal.Create", Native_CTFPortal_Create);
-}
-
 public int Native_CTFPortal_Create(Handle plugin, int numParams)
 {
 	CTFPortal array = view_as<CTFPortal>(new ArrayList(PLATFORM_MAX_PATH, Portal_Max));
@@ -546,26 +638,339 @@ public int Native_CTFPortal_Create(Handle plugin, int numParams)
 	return view_as<int>(array);
 }
 
-public void OnPluginStart()
+public Action Portal_OnTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	// jumpHUD=CreateHudSynchronizer();
+	// PrintToServer("victim: %d, attacker: %d, damage: %.1f, damagetype: %d", victim, attacker, damage, damagetype);
+	// PrintToServer("damageForce: %.1f %.1f %.1f, damagePosition: %.1f %.1f %.1f", damageForce[0], damageForce[1], damageForce[2], damagePosition[0], damagePosition[1], damagePosition[2]);
+	
+	if(!(damagetype & (DMG_BULLET | DMG_BUCKSHOT)))
+		return Plugin_Continue;
+
+	CTFPortal portal = g_hPortalList.Get(g_hPortalList.SearchBreakable(victim));
+
+	float startPos[3], exitPos[3], angles[3];
+	portal.GetEntrancePosition(startPos);
+	portal.GetExitPosition(exitPos);
+
+	SubtractVectors(startPos, damagePosition, angles);
+	float distance = GetVectorLength(angles);
+	NormalizeVector(angles, angles);
+
+	char effectName[64];
+	GetBulletEffectName(TF2_GetClientTeam(attacker), effectName, sizeof(effectName));
+	FireBullet(attacker, attacker, exitPos, angles, damage, distance * 500, damagetype, effectName);
+	
+	return Plugin_Continue;
+}
+
+// Is enum struct the best option?
+methodmap SpotStacker < ArrayList
+{
+	// 0 ~ 2: position vector
+	public int GetLastPosition(float pos[3])
+	{
+		int latest = this.Length - 1;
+		ArrayList stackedPosition = this.Get(latest);
+
+		for(int loop = 0; loop < 3; loop++)
+			pos[loop] = stackedPosition.Get(loop);
+
+		return latest;
+	}
+
+	public void StackPush(const float pos[3])
+	{
+		ArrayList stackposition = new ArrayList(_, 3);
+
+		for(int loop = 0; loop < 3; loop++)
+			stackposition.Set(loop, pos[loop]);
+
+		if(this.Length >= 5)
+		{
+			ArrayList firstposition = this.Get(0);
+			delete firstposition;
+
+			this.Erase(0);
+		}
+		this.Push(stackposition);
+	}
+
+	public void KillSelf()
+	{
+		int len = this.Length;
+		ArrayList temp;
+
+		for(int loop = 0; loop < len; loop++)
+		{
+			temp = this.Get(loop);
+			delete temp; 
+		}
+
+		delete this;
+	}
+}
+
+enum 
+{
+	Rocket_Ref,
+	Rocket_Owner,
+	Rocket_PreviousSpots,
+	Rocket_LifeTime,
+	Rocket_Timer,
+
+	Rocket_AnglesX,
+	Rocket_AnglesY,
+	Rocket_AnglesZ,
+
+	Rocket_MAX
+};
+
+methodmap CTFPortalRocket < ArrayList
+{
+	public static native CTFPortalRocket Create(int owner);
+
+	property int Ref {
+		public get() {
+			return this.Get(Rocket_Ref);
+		}
+		public set(int ref) {
+			this.Set(Rocket_Ref, ref);
+		}
+	}
+
+	property int Owner {
+		public get() {
+			return this.Get(Rocket_Owner);
+		}
+		public set(int owner) {
+			this.Set(Rocket_Owner, owner);
+		}
+	}
+
+	property SpotStacker PreviousSpots {
+		public get() {
+			return this.Get(Rocket_PreviousSpots);
+		}
+		public set(SpotStacker stack) {
+			this.Set(Rocket_PreviousSpots, stack);
+		}
+	}
+
+	property float LifeTime {
+		public get() {
+			return this.Get(Rocket_LifeTime);
+		}
+		public set(float time) {
+			this.Set(Rocket_LifeTime, time);
+		}
+	}
+
+	property Handle Timer {
+		public get() {
+			return this.Get(Rocket_Timer);
+		}
+		public set(Handle timer) {
+			this.Set(Rocket_Timer, timer);
+		}
+	}
+
+	public native void AddThisToList();
+
+	public void KillSelf()
+	{
+		// This is supposed to use CTFPortalRocket_List.DeleteFromThis. But the code flow does not allow this.
+		// so that moved to DeletePortalRocket (PortalRocket_Update, PortalRocket_Touch).
+		
+		Handle timer = this.Timer;
+		if(timer != null) // TODO: check
+			KillTimer(timer);
+
+		SpotStacker temp = this.PreviousSpots;
+		temp.KillSelf();
+
+		delete this;
+	}
+
+	public void GetAngles(float angles[3])
+	{
+		for(int loop = 0; loop < 3; loop++)
+		{
+			int realIndex = loop + Rocket_AnglesX;
+			angles[loop] = this.Get(realIndex);
+		}
+	}
+
+	public void SetAngles(const float angles[3])
+	{
+		for(int loop = 0; loop < 3; loop++)
+		{
+			int realIndex = loop + Rocket_AnglesX;
+			this.Set(realIndex, angles[loop]);
+		}
+	}
+
+	public void Fire(float pos[3], float angles[3], float velocity[3])
+	{
+		this.SetAngles(angles);
+
+		int rocket = SpawnRocket(this.Owner, pos, angles, velocity, 0.0, false);
+
+		this.Ref = EntIndexToEntRef(rocket);
+		this.AddThisToList();
+
+		SetEntityModel(rocket, EMPTY_MODEL);
+		SpawnParticle(pos, "spell_teleport_black", _, rocket);
+
+		this.Timer = CreateTimer(0.2, PortalRocket_Update, this, TIMER_REPEAT); // NOTE: Don't add TIMER_FLAG_NO_MAPCHANGE.
+		SDKHook(rocket, SDKHook_StartTouch, PortalRocket_Touch);
+		SDKHook(rocket, SDKHook_Touch, PortalRocket_Touch);
+	}
+}
+
+methodmap CTFPortalRocket_List < ArrayList
+{
+	// Yeah. linear search.
+	public int SearchRocket(int ref)
+	{
+		int len = this.Length;
+		for(int search = 0; search < len; search++)
+		{
+			CTFPortalRocket tempRocket = this.Get(search);
+			if(tempRocket.Ref == ref)
+				return search;
+		}
+		
+		return -1;
+	}
+
+	public void DeleteFromThis(int ref)
+	{
+		int index = this.SearchRocket(ref);
+		if(index != -1)
+			this.Erase(index);
+	}
+}
+
+// LOL. There is no prototype definition in SourcePawn.
+// This is the best spot for define this, I think..
+CTFPortalRocket_List g_hPortalRocketList; 
+
+public Action PortalRocket_Update(Handle timer, CTFPortalRocket rocket)
+{
+	int index = EntRefToEntIndex(rocket.Ref);
+
+	// index == -1 : invalid reference
+	if(FF2_GetRoundState() != 1 || index == -1)
+	{
+		DeletePortalRocket(rocket);
+		return Plugin_Stop;
+	}
+	
+	SpotStacker spotStacker = rocket.PreviousSpots;
+	float pos[3];
+	
+	GetEntPropVector(index, Prop_Data, "m_vecOrigin", pos);
+	spotStacker.StackPush(pos);
+
+	if(rocket.LifeTime < GetGameTime())
+	{
+		TryOpenPortal(rocket);
+		
+		DeletePortalRocket(rocket);
+		return Plugin_Stop;
+	}
+	
+	return Plugin_Continue;
+}
+
+public Action PortalRocket_Touch(int rocketIndex, int other)
+{
+	CTFPortalRocket rocket = 
+		g_hPortalRocketList.Get(g_hPortalRocketList.SearchRocket(EntIndexToEntRef(rocketIndex)));
+
+	SpotStacker spotStacker = rocket.PreviousSpots;
+	float endPos[3], vecMin[3], vecMax[3];
+
+	GetEntPropVector(rocketIndex, Prop_Data, "m_vecOrigin", endPos);
+	GetEntPropVector(rocketIndex, Prop_Send, "m_vecMins", vecMin);
+	GetEntPropVector(rocketIndex, Prop_Send, "m_vecMins", vecMax);
+
+	// TODO: 최소한의 좌표 보정
+	spotStacker.StackPush(endPos);
+	TryOpenPortal(rocket);
+
+	DeletePortalRocket(rocket);
+	return Plugin_Continue;
+}
+
+void DeletePortalRocket(CTFPortalRocket rocket)
+{
+	// LogStackTrace("DeletePortalRocket Called");
+
+	int rocketIndex = EntRefToEntIndex(rocket.Ref);
+	if(rocketIndex != -1)
+		RemoveEntity(rocketIndex);
+
+	g_hPortalRocketList.DeleteFromThis(rocket.Ref);
+	rocket.KillSelf();
+}
+
+public int Native_CTFPortalRocket_Create(Handle plugin, int numParams)
+{
+	CTFPortalRocket array = view_as<CTFPortalRocket>(new ArrayList(_, Rocket_MAX));
+
+	array.Owner = GetNativeCell(1);
+	array.PreviousSpots = view_as<SpotStacker>(new ArrayList()); 
+	array.Timer = view_as<Handle>(0); // 0 = null 
+
+	return view_as<int>(array);
+}
+
+public int Native_CTFPortal_AddThisToList(Handle plugin, int numParams)
+{
+	CTFPortal rocket = GetNativeCell(1);
+
+	g_hPortalList.Push(rocket);
+	return 0;
+}
+
+public int Native_CTFPortalRocket_AddThisToList(Handle plugin, int numParams)
+{
+	CTFPortalRocket rocket = GetNativeCell(1);
+
+	g_hPortalRocketList.Push(rocket);
+	return 0;
+}
+
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	CreateNative("CTFPortal.Create", Native_CTFPortal_Create);
+	CreateNative("CTFPortalRocket.Create", Native_CTFPortalRocket_Create);
+
+	CreateNative("CTFPortal.AddThisToList", Native_CTFPortal_AddThisToList);
+	CreateNative("CTFPortalRocket.AddThisToList", Native_CTFPortalRocket_AddThisToList);
+}
+
+#if defined _ff2_fork_general_included
+public void OnPluginStart()
+#else
+public void OnPluginStart2()
+#endif
+{
+
+	jumpHUD = CreateHudSynchronizer();
+	if(jumpHUD == null)
+		ThrowError("Failed to create HudSynchronizer");
 
 	LoadTranslations("ff2_point_teleport.phrases");
+
+	// Wait.. Should reload on map change?
+	g_hPortalRocketList = view_as<CTFPortalRocket_List>(new ArrayList()); 
+	g_hPortalList = view_as<CTFPortal_List>(new ArrayList());
+
+#if defined _ff2_fork_general_included
 	FF2_RegisterSubplugin(PLUGIN_NAME);
-
-	GameData gamedata = new GameData("potry");
-	if (gamedata)
-	{
-		g_SDKCallTestEntityPosition = PrepSDKCall_TestEntityPosition(gamedata);
-		g_SDKCallFindPassableSpace = PrepSDKCall_FindPassableSpace(gamedata);
-		g_SDKCallSetAbsOrigin = PrepSDKCall_SetAbsOrigin(gamedata);
-
-		delete gamedata;
-	}
-	else
-	{
-		SetFailState("Could not find potry gamedata");
-	}
+#endif
 }
 
 public void OnMapStart()
@@ -596,31 +1001,45 @@ public void OnMapStart()
 	PrecacheParticleEffect("merasmus_zap");
 	PrecacheParticleEffect("merasmus_zap_beam03");
 	PrecacheParticleEffect("merasmus_zap_beam_bits");
+
+	PrecacheParticleEffect("bullet_pistol_tracer01_red_crit");
+	PrecacheParticleEffect("bullet_pistol_tracer01_blue_crit");
+
+	PrecacheParticleEffect("impact_dirt");
+	PrecacheParticleEffect("blood_impact_heavy");
+
+	PrecacheModel(SPHERE_MODEL, true);
+	PrecacheModel(EMPTY_MODEL, true);
 }
 
+#if defined _ff2_fork_general_included
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
+#else
+public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
+#endif
 {
+#if !defined _ff2_fork_general_included
+	int slot = FF2_GetAbilityArgument(boss, pluginName, abilityName, 0);
+#endif
 	if(!StrEqual(pluginName, PLUGIN_NAME, false))
-	{
 		return;
-	}
 
-	if(StrEqual(abilityName, "point teleport", false))
-	{
-		Charge_Teleport(boss, abilityName, slot, status);
-	}
+	if(StrEqual(abilityName, POINT_TELEPORT_NAME, false))
+		Charge_Teleport(boss, status, slot);
+
 }
 
+
+#if defined _ff2_fork_general_included
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	int boss = FF2_GetBossIndex(client);
 	if(boss == -1)
 		return;
 
-	bool hasCharge = FF2_HasAbility(boss, PLUGIN_NAME, "point teleport");
+	bool hasCharge = FF2_HasAbility(boss, PLUGIN_NAME, POINT_TELEPORT_NAME);
 
 	char text[256];
-	// bool changed = false;
 	FF2HudDisplay hudDisplay = null;
 
 	SetGlobalTransTarget(client);
@@ -628,7 +1047,7 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 
 	if(StrEqual(text, "Boss Down Additional") && hasCharge)
 	{
-		int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "point teleport", "slot");
+		int slot = FF2_GetAbilityArgument(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, "slot");
 		float charge = FF2_GetBossCharge(boss, slot);
 
 		if(charge < 0.0)
@@ -646,28 +1065,22 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 				SetHudTextParams(-1.0, 0.88, 0.12, 255, 255, 255, 255);
 			}
 
-			char buttonText[32];
-			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, "point teleport", "buttonmode", 0);
-			Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+			
+			Format(text, sizeof(text), "%t", "Point Teleportation Charge", RoundFloat(charge));
 
 			// 분리
-			Format(text, sizeof(text), "%t", "Point Teleportation Charge", RoundFloat(charge), buttonText);
+			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, "buttonmode", 0);
+			Format(text, sizeof(text), "%s (%t)", text, buttonMode == 2 ? "Reload" : "Right Click");
 		}
 
 		hudDisplay = FF2HudDisplay.CreateDisplay("Point Teleportation", text);
 		hudQueue.AddHud(hudDisplay, client);
 	}
 }
+#endif
 
-// Look at this mess..
-float lastStartPos[MAXPLAYERS+1][3], lastEndPos[MAXPLAYERS+1][3], lastAngles[MAXPLAYERS+1][3];
-float lastTime[MAXPLAYERS+1];
-void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
+void Charge_Teleport(int boss, int status, int slot = -3)
 {
-	// char message[128];
-	int colors[4] = {255, 255, 255, 255};
-	// 이전 프레림에서 테스트가 끝난 지점을 이용 (실제 레이저의 끝지점)
-
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	float charge = FF2_GetBossCharge(boss, slot);
 
@@ -675,974 +1088,301 @@ void Charge_Teleport(int boss, const char[] abilityName, int slot, int status)
 	GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
 
-	SetGlobalTransTarget(client);
 	switch(status)
 	{
-/*
+// !defined
+#if !defined _ff2_fork_general_included 
 		case 1:
 		{
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 			FF2_ShowHudText(client, -1, "%t", "Teleportation Cooldown", -RoundFloat(charge));
 		}
-*/
+#endif
 		case 0, 2:
 		{
-/*
+// !defined
+#if !defined _ff2_fork_general_included 
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 
-			char buttonText[32];
-			int buttonMode = FF2_GetAbilityArgument(boss, PLUGIN_NAME, abilityName, "buttonmode", 0, slot);
-			Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
-			Format(message, sizeof(message), "%t", "Point Teleportation Charge", RoundFloat(charge), buttonText);
+			char message[256];
+			// char buttonText[32];
+			// int buttonMode = FF2_GetAbilityArgument(boss, this_plugin_name, POINT_TELEPORT_NAME, "buttonmode", 0, slot);
+			// Format(buttonText, sizeof(buttonText), "%t", buttonMode == 2 ? "Reload" : "Right Click");
+			// Format(message, sizeof(message), "%t (%s)", "Point Teleportation Charge", RoundFloat(charge), buttonText);
+			Format(message, sizeof(message), "%t", "Point Teleportation Charge", RoundFloat(charge));
+			Format(message, sizeof(message), "%s\n%t", message, "Point Teleportation Hint");
 			ReAddPercentCharacter(message, sizeof(message), 2);
 			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
-*/
-			if(charge <= 10.0)	return;
-
-			float eyePos[3], currentPos[3], endPos[3];
-			float normal[3], effectPos[3], fwd[3];
-
-			GetClientEyePosition(client, eyePos);
-			GetEntPropVector(client, Prop_Data, "m_vecOrigin", currentPos);
-
-			float maxDistance = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "max distance", 3000.0, slot);
+#endif
+			float maxDistance = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTAL_ROCKET_SPEED_NAME, 1000.0);
 			g_flTeleportDistance[client] = maxDistance * (charge * 0.01);
-
-			float angles[3];
+		}
+		case 3:
+		{
+			// Throw rocket (portal gate)
+			char abilitySound[PLATFORM_MAX_PATH];
+			float eyePos[3], startPos[3], angles[3], velocity[3], endPos[3];
+			GetClientEyePosition(client, eyePos);
 			GetClientEyeAngles(client, angles);
+			
+#if defined _ff2_fork_general_included 
+			if(FF2_FindSound("ability", abilitySound, PLATFORM_MAX_PATH, boss, true, slot))
+#else 
+			if(FF2_RandomSound("ability", abilitySound, PLATFORM_MAX_PATH, boss, slot))
+#endif
+			{
+#if defined _ff2_fork_general_included 
+				if(FF2_CheckSoundFlags(client, FF2SOUND_MUTEVOICE))
+#endif		
+				{
+					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, eyePos);
+					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, eyePos);
+				}
 
+				for(int target=1; target<=MaxClients; target++)
+				{
+					if(IsClientInGame(target) && target != client)
+					{
+#if defined _ff2_fork_general_included 
+						if(FF2_CheckSoundFlags(target, FF2SOUND_MUTEVOICE))
+#endif
+						{
+							EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, eyePos);
+							EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, eyePos);
+						}
+					}
+				}
+			}
+
+			CTFPortalRocket rocket = CTFPortalRocket.Create(client);
+			rocket.LifeTime = GetGameTime() 
+				+ FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTAL_ROCKET_DURATION_NAME, 2.5);
+			
 			// Effect Position
 			{
-				float right[3], up[3], sum[3];
+				float fwd[3], right[3], up[3], sum[3];
 				GetAngleVectors(angles, fwd, right, up);
 
 				ScaleVector(up, -15.0);
 				ScaleVector(right, 15.0);
 				AddVectors(up, right, sum);
-				AddVectors(eyePos, sum, effectPos);
+				AddVectors(eyePos, sum, startPos);
+
+				NormalizeVector(fwd, endPos);
+				NormalizeVector(fwd, velocity);
+				ScaleVector(endPos, g_flTeleportDistance[client]);
+
+				AddVectors(endPos, startPos, endPos);
+				SubtractVectors(endPos, startPos, endPos);
+
+				GetVectorAngles(endPos, angles);
+				GetAngleVectors(angles, velocity, NULL_VECTOR, NULL_VECTOR);
+				ScaleVector(velocity, g_flTeleportDistance[client]);
 			}
 
-			bool rayTest = GetEndPos(client, eyePos, fwd, g_flTeleportDistance[client], endPos, normal, vecMin, vecMax),
-					stuck = IsStockInPosition(client, endPos, vecMin, vecMax);
-
-			if(!rayTest || stuck)
-			{
-				if(GetEngineTime() - lastTime[client] > 0.5)
-					colors = {255, 20, 20, 255};
-				else 
-					endPos = VectorCopy(lastEndPos[client]);
-			}
-			else
-				colors = {255, 255, 255, 255};
-
-			TE_SetupBeamPoints(effectPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 0.1, 10.0, 30.0, 0, 0.0, colors, 10);
-			TE_SendToClient(client);
-
-			lastStartPos[client] = VectorCopy(currentPos);
-			if(!stuck)
-			{
-				lastEndPos[client] = VectorCopy(endPos);
-				lastAngles[client] = VectorCopy(fwd);
-				lastTime[client] = GetEngineTime();
-			}
-		}
-		case 3:
-		{
-			// PrintToChatAll("lastStartPos: %.1f %.1f %.1f", lastStartPos[client][0], lastStartPos[client][1], lastStartPos[client][2]);
-			// PrintToChatAll("lastEndPos: %.1f %.1f %.1f", lastEndPos[client][0], lastEndPos[client][1], lastEndPos[client][2]);
-
-			bool stuck = IsStockInPosition(client, lastEndPos[client], vecMin, vecMax);
-			if(charge <= 10.0 || GetVectorDistance(lastStartPos[client], lastEndPos[client]) < 84.0
-				|| (stuck || GetEngineTime() - lastTime[client] > 0.5))
-			{
-				ResetBossCharge(boss, slot);
-				return;
-			}
-
-			TeleportEntity(client, lastEndPos[client], NULL_VECTOR, NULL_VECTOR);
-			// SDKCall_SetAbsOrigin(client, endPos);
-/*
-			if(!SDKCall_TestEntityPosition(client))
-			{
-				PrintToServer("Stuck endPos: %.1f %.1f %.1f", lastEndPos[client][0], lastEndPos[client][1], lastEndPos[client][2]);
-
-				// TeleportEntity(client, lastStartPos[client], NULL_VECTOR, NULL_VECTOR);
-				ResetBossCharge(boss, slot);
-				return;
-			}
-*/
-			float fwd[3];
-			float size = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "size", 75.0, slot),
-				lifeTime = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "life time", 15.0, slot),
-				launchPower = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "launch power", 600.0, slot),
-				soundLoopTime = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "sound loop time", 2.0, slot);
-
-			char entrancePaticleName[64], exitPaticleName[64],
-				openSound[PLATFORM_MAX_PATH], loopSound[PLATFORM_MAX_PATH], closeSound[PLATFORM_MAX_PATH],
-				enterEntranceSound[PLATFORM_MAX_PATH], enterExitSound[PLATFORM_MAX_PATH], abilitySound[PLATFORM_MAX_PATH];
-
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "entrance paticle name", entrancePaticleName, sizeof(entrancePaticleName), "eyeboss_death_vortex", slot);
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "exit paticle name", exitPaticleName, sizeof(exitPaticleName), "eyeboss_vortex_blue", slot);
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "portal open sound path", openSound, PLATFORM_MAX_PATH, "", slot);
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "portal loop sound path", loopSound, PLATFORM_MAX_PATH, "", slot);
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "portal close sound path", closeSound, PLATFORM_MAX_PATH, "", slot);
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "portal enter entrance sound path", enterEntranceSound, PLATFORM_MAX_PATH, "", slot);
-			FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, abilityName, "portal enter exit sound path", enterExitSound, PLATFORM_MAX_PATH, "", slot);
-
-			if(FF2_FindSound("ability", abilitySound, PLATFORM_MAX_PATH, boss, true, slot))
-			{
-				if(FF2_CheckSoundFlags(client, FF2SOUND_MUTEVOICE))
-				{
-					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, lastEndPos[client]);
-					EmitSoundToAll(abilitySound, client, _, _, _, 1.0, _, client, lastEndPos[client]);
-				}
-
-				for(int target=1; target<=MaxClients; target++)
-				{
-					if(IsClientInGame(target) && target!=client && FF2_CheckSoundFlags(target, FF2SOUND_MUTEVOICE))
-					{
-						EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, lastEndPos[client]);
-						EmitSoundToClient(target, abilitySound, client, _, _, _, _, _, client, lastEndPos[client]);
-					}
-				}
-			}
-
-			CTFPortal portal = CTFPortal.Create(client);
-			portal.Size = size;
-			portal.LifeTime = lifeTime;
-			portal.LaunchPower = launchPower;
-			portal.Ducked = GetEntProp(client, Prop_Send, "m_bDucked") > 0;
-			portal.SoundLoopTime = soundLoopTime;
-
-			portal.SetEntranceParticleName(entrancePaticleName);
-			portal.SetExitParticleName(exitPaticleName);
-
-			GetClientEyeAngles(client, lastAngles[client]);
-			GetAngleVectors(lastAngles[client], fwd, NULL_VECTOR, NULL_VECTOR);
-
-			portal.SetLaunchAngles(fwd);
-			portal.SetEntrancePosition(lastStartPos[client]);
-			portal.SetExitPosition(lastEndPos[client]);
-
-			portal.SetOpenSound(openSound);
-			portal.SetLoopSound(loopSound);
-			portal.SetOpenSound(closeSound);
-			portal.SetEnterEntranceSound(enterEntranceSound);
-			portal.SetEnterExitSound(enterExitSound);
-
-			ScaleVector(fwd, launchPower);
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fwd);
-
-			SetEntProp(client, Prop_Send, "m_bDucked", 1);
-			SetEntityFlags(client, GetEntityFlags(client)|FL_DUCKING);
-
-			portal.Open();
-			portal.DispatchTPEffect(lastStartPos[client], lastEndPos[client]); // 보스가 이미 통과함
-
-			UTIL_ScreenFade(client, colors, 0.1, 0.3, FFADE_IN);
-
-			int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-			if(IsValidEntity(weapon))
-				SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 1.0);
-
-			SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime()+2.0);
-			SetEntPropFloat(client, Prop_Send, "m_flStealthNextChangeTime", GetGameTime() + 1.0);
-
-			// PrintToChatAll("launchPower = %.1f, angles = %.1f %.1f %.1f", launchPower, angles[0], angles[1], angles[2]);
+			rocket.Fire(startPos, angles, velocity);
 			// SpawnParticle(endPos, "eyeboss_tp_vortex");		// 이건 블랙홀 이펙트
 			// SpawnParticle(endPos, "eyeboss_doorway_vortex"); // 이거 뭔가 차징 이펙트로 써볼만 한듯
 		}
 	}
 }
 
-public bool CorrectionPositionDirected_2(int ent, float pos[3], float initAngles[3], float initNormal[3], float vecMin[3], float vecMax[3], float result[3])
+void TryOpenPortal(CTFPortalRocket rocket)
 {
-	float fwdCheckNormal = 0.0;
-	int fwdIndex = -1, sideIndex;
-	bool isFwdBackward = false;
-	{
-		float temp;
-		for(int loop = 0; loop < 2; loop++)
-		{
-			temp = FloatAbs(initNormal[loop]);
-			if(fwdCheckNormal < temp)
-			{
-				fwdCheckNormal = temp;
-				fwdIndex = loop;
-				isFwdBackward = initNormal[loop] > 0.0; // This should be reverse.
-			}
-		}
+	int owner = rocket.Owner;
 
-		// 바닥이나 지붕에 조준했던 경우는 시야 각도를 기준으로 전방 판정
-		if(fwdCheckNormal == 0.0)
-		{
-			for(int loop = 0; loop < 2; loop++)
-			{
-				temp = FloatAbs(initAngles[loop]);
-				if(fwdCheckNormal < temp)
-				{
-					fwdCheckNormal = temp;
-					fwdIndex = loop;
-					isFwdBackward = initAngles[loop] < 0.0;
-				}
-			}
-		}
-
-		// NOTE: Still does not work? Make full check for this.
-		// .. or just go backward. for now.
-		if(fwdIndex == -1)
-			return false;
-	}
-
-	sideIndex = fwdIndex == 0 ? 1 : 0; 
-
-	float _pos[3], testPos[3], testEndPos[3],
-		_distance;
-	bool isFar;
-
-	_pos = VectorCopy(pos);
-
-	// Test: under of BB
-	enum
-	{
-		Test_Under = 0,
-		Test_Middle,
-		Test_Upper
-	};
-
-	testPos = VectorCopy(_pos);
-
-	for(int testCase = 0; testCase < 3; testCase++)
-	{
-		for(int loop = 0; loop < 5; loop++)
-		{
-			isFar = 4 > loop && loop > 0;
-//			testPos = VectorCopy(_pos);
-			testEndPos = VectorCopy(testPos);
-
-			// forward
-			if(isFar)
-				testEndPos[fwdIndex] += isFwdBackward ? vecMin[fwdIndex] : vecMax[fwdIndex];
-
-			// side
-			if(loop < 2)
-				testEndPos[sideIndex] += vecMin[sideIndex];
-			else if(2 < loop)
-				testEndPos[sideIndex] += vecMax[sideIndex];
-
-			switch(testCase)
-			{
-				case Test_Middle:
-				{
-					// middle
-					testPos = VectorCopy(testEndPos);
-					testEndPos[2] += vecMax[2];
-				}
-				case Test_Upper:
-				{
-					testPos[2] += vecMax[2];
-					testEndPos[2] += vecMax[2];
-				}
-			}
-
-			AdjustPositionBySingleRay(ent, testPos, testPos, testEndPos, testPos);
-			if(testCase == Test_Middle)
-				AdjustPositionBySingleRay(ent, testPos, testEndPos, testPos, testPos);
-
-			if(TR_StartSolid())
-			{
-				if(testCase == Test_Upper)
-					return false;
-				continue;
-			}
-		}
-	}
-
-	if(!IsStockInPosition(ent, testPos, vecMin, vecMax))
-	{
-		result = testPos;
-		return true;
-	}
+	float endPos[3], angles[3];
+	float vecMin[3], vecMax[3];
+	SpotStacker spotStacker = rocket.PreviousSpots;
 	
-	return false;
-}
+	rocket.GetAngles(angles);
+	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
 
-public bool AdjustPositionOppositeDirected(int ent, float pos[3], float from[3], float normal[3], float vecMin[3], float vecMax[3], float result[3])
-{
-	// 여기서 쓰인 모든 매개변수들은 백터
-	// 백터: https://developer.valvesoftware.com/wiki/Vector
+	GetEntPropVector(owner, Prop_Send, "m_vecMins", vecMin);
+	GetEntPropVector(owner, Prop_Send, "m_vecMaxs", vecMax);
 
-	// 바라보는 방향의 기준으로 중심 꼭짓점을 정함
-	// 우선 방향의 X와 Z ([0], [1]) 중에서 절댓값이 큰 쪽을 저장하여 연산의 우선순위를 정함
-	// x < 0.0: [0]은 반드시 max 좌표 사용, z < 0.0: [1]은 반드시 max 좌표 사용
-	// ㄴ 이를 이용해 시작 꼭짓점 값을 알아내고 방향에 따른 연산 순서를 다르게 할 것
-
-	/*
-		Vector의 인덱스
-
-		X +forward/-backward
-		Y +left/-right
-		Z +up/-down
-
-		예외 케이스: x: +, z: -
-	*/
-	float currentPos[3], angles[3], wallDir[3];
-	currentPos = VectorCopy(pos);
-
-	SubtractVectors(currentPos, from, angles);
-	NormalizeVector(angles, angles);
-
-	wallDir = normal[0] != 0.0 || normal[1] != 0.0 ?
-		VectorCopy(normal) : VectorCopy(angles);
-
-	// angles[0] = AngleNormalize(angles[0]);
-	// angles[1] = AngleNormalize(angles[1]);
-
-	bool IsMax[3]; // IsCenterMax
+	do
 	{
-		for(int loop = 0; loop < 2; loop++)
-		{
-			IsMax[loop] = wallDir[loop] > 0.0;
-		}
-		IsMax[2] = false; // This is only used when checking Y.
-	}
-	int rank[2];
-	{
-		if(FloatAbs(wallDir[0]) > FloatAbs(wallDir[1]))
-			rank[0] = 0, rank[1] = 1;
-		else
-			rank[0] = 1, rank[1] = 0;
-	}
+		int stackLastIndex = spotStacker.GetLastPosition(endPos);
 
-	float testStartPos[3], testEndPos[3], temp[3];
-	float testPos[2][2][3]; // [2][2][3];
-	// float testDown_left[3], testDown_right[3], testUp_left[3], testUp_right[3];
-	int tries = 1;
+		// CorrectCurrentPos(endPos, angles, vecMin, vecMax, result);
 
-	// 전체 보정 루프
-	while(tries > 0)
-	{
-		// TODO: 임시
-		bool stuck = IsStockInPosition(ent, currentPos, vecMin, vecMax);
-		if(tries == 3 || !stuck)	break;
+		if(stackLastIndex == -1)
+			return;
 
-		// float axis = wallDir[rank[0]] > 0.0 ? vecMax[rank[0]] : vecMin[rank[0]];
-		float axis = wallDir[rank[0]] > 0.0 ? vecMin[rank[0]] : vecMax[rank[0]];
-		for(int loop = 0; loop < 2; loop++)
-		{
-			testPos[0][loop] = VectorCopy(currentPos);
-			testPos[1][loop] = VectorCopy(currentPos);
-
-			testPos[0][loop][rank[0]] += axis;
-			testPos[1][loop][rank[0]] += axis;
-
-			if(tries == 0)
-				testPos[1][loop][2] += vecMax[2];
-
-			testPos[0][loop][rank[1]] += vecMax[rank[1]];
-			testPos[0][loop][rank[1]] += vecMin[rank[1]];
-
-			testPos[1][loop][rank[1]] += vecMax[rank[1]];
-			testPos[1][loop][rank[1]] += vecMin[rank[1]];
-
-			// TEST
-			// 특정 각도 이상 넘어가는 경우?
-
-			// -0.14198 0.21859 0.96542
-			// 0.46305 0.21040 0.86099
-			// 0.50937 -0.18331 0.84079
-/*
-			testPos[0][loop][rank[1]] += vecMin[rank[1]];
-			testPos[0][loop][rank[1]] += vecMax[rank[1]];
-
-			testPos[1][loop][rank[1]] += vecMin[rank[1]];
-			testPos[1][loop][rank[1]] += vecMax[rank[1]];
-*/
-		}
-
-		for(int i = 0; i < 2; i++)
-		{
-			for(int z = 0; z < 2; z++)
-			{
-				AdjustPositionBySingleRay(ent, currentPos, currentPos, testPos[i][z], currentPos);
-
-				stuck = IsStockInPosition(ent, currentPos, vecMin, vecMax);
-				if(!stuck)	break;
-			}
-
-			if(!stuck)	break;
-		}
-
-		if(!stuck) break;
-
-
-/*
-
-		// 아랫쪽 바운딩 박스 보정
-		{
-			// X축 확인
-			GetPositionWithHull(rank[0], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
-			AdjustPositionBySingleRay(ent, rank[0], currentPos, testStartPos, testEndPos, currentPos);
-
-			// Z축 확인
-			GetPositionWithHull(rank[1], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
-			AdjustPositionBySingleRay(ent, rank[1], currentPos, testStartPos, testEndPos, currentPos);
-		}
-
-		// 중간의 Y축 검증
-		// 아랫쪽의 바운드 박스 보정 후
-		{
-			IsMax[2] = currentPos[2] < from[2];
-			float y = IsMax[2] ? vecMax[2] : vecMin[2];
-
-			FloatToVector(testStartPos, currentPos[0] + vecMin[0], currentPos[1] + vecMin[1], currentPos[2]
-				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
-			FloatToVector(testEndPos, currentPos[0] + vecMin[0], currentPos[1] + vecMin[1], currentPos[2]
-				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
-
-			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
-			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
-			{
-				TR_GetEndPosition(temp);
-				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
-			}
-
-			FloatToVector(testStartPos, currentPos[0] + vecMax[0], currentPos[1] + vecMin[1], currentPos[2]
-				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
-			FloatToVector(testEndPos, currentPos[0] + vecMax[0], currentPos[1] + vecMin[1], currentPos[2]
-				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
-
-			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
-			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
-			{
-				TR_GetEndPosition(temp);
-				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
-			}
-
-			FloatToVector(testStartPos, currentPos[0] + vecMin[0], currentPos[1] + vecMax[1], currentPos[2]
-				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
-			FloatToVector(testEndPos, currentPos[0] + vecMin[0], currentPos[1] + vecMax[1], currentPos[2]
-				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
-
-			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
-			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
-			{
-				TR_GetEndPosition(temp);
-				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
-			}
-
-			FloatToVector(testStartPos, currentPos[0] + vecMax[0], currentPos[1] + vecMax[1], currentPos[2]
-				+ (IsMax[2] ? vecMax[2] : vecMin[2]));
-			FloatToVector(testEndPos, currentPos[0] + vecMax[0], currentPos[1] + vecMax[1], currentPos[2]
-				+ (IsMax[2] ? vecMin[2] : vecMax[2]));
-
-			TR_TraceRayFilter(testStartPos, testEndPos, MASK_SOLID, RayType_EndPoint, TraceAnything, ent);
-			if(!TR_StartSolid() && !TR_AllSolid() && TR_DidHit())
-			{
-				TR_GetEndPosition(temp);
-				currentPos[2] -= ((currentPos[2] + y) - temp[2]);
-			}
-		}
-
-		// 윗쪽 바운딩 박스 보정
-		{
-			IsMax[2] = true;
-			// X축 확인
-			GetPositionWithHull(rank[0], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
-			AdjustPositionBySingleRay(ent, rank[0], currentPos, testStartPos, testEndPos, currentPos);
-
-			// Z축 확인
-			GetPositionWithHull(rank[1], IsMax, currentPos, vecMin, vecMax, testStartPos, testEndPos);
-			AdjustPositionBySingleRay(ent, rank[1], currentPos, testStartPos, testEndPos, currentPos);
-		}
-*/
-/*
-		TR_TraceRayFilter(center, currentPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything, ent);
-		if(TR_DidHit())
-		{
-			TR_GetEndPosition(currentPos);
-		}
-*/
-		tries++;
-	}
-
-	result = VectorCopy(currentPos);
-}
-
-// public void TestBoxPlane
-
-// This only support for [0], [1]
-public void GetPositionWithHull(int currentIndex, bool IsMax[3], float currentPos[3], float vecMin[3], float vecMax[3], float startPos[3], float endPos[3])
-{
-	for(int search = 0; search < 3; search++)
-	{
-		if(search == currentIndex)
-		{
-			startPos[search] = IsMax[search] ? currentPos[search] + vecMax[search] : currentPos[search] + vecMin[search];
-			endPos[search] = IsMax[search] ? currentPos[search] + vecMin[search] : currentPos[search] + vecMax[search];
-		}
-		else
-		{
-			startPos[search] = IsMax[search] ? currentPos[search] + vecMax[search] : currentPos[search] + vecMin[search];
-			endPos[search] = IsMax[search] ? currentPos[search] + vecMax[search] : currentPos[search] + vecMin[search];
-		}
-	}
-}
-
-public void AdjustPositionBySingleRay(int ent, float currentPos[3], float startPos[3], float endPos[3], float result[3])
-{
-	float temp[3];
-	TR_TraceRayFilter(startPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, ent);
-	TR_GetEndPosition(temp);
-
-	// static int colors[4] = {0, 255, 0, 255};
-	// TE_SetupBeamPoints(currentPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
-	// TE_SendToClient(ent);
-
-	for(int index = 0; index < 3; index++)
-		result[index] = currentPos[index] - (endPos[index] - temp[index]);
-}
-
-public bool GetEndPos(int client, float pos[3], float angles[3], float distance, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
-{
-	float tempAngles[3];
-
-	tempAngles = angles;
-	ScaleVector(tempAngles, distance + 43.0); // 43.0: player default hull size
-	AddVectors(pos, tempAngles, endPos);
-
-	TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-	TR_GetEndPosition(endPos);
-
-	TR_GetPlaneNormal(null, normal);
-	// PrintToChatAll("angles: %.5f %.5f %.5f", angles[0], angles[1], angles[2]);
-	PrintToChatAll("normal: %.5f %.5f %.5f", normal[0], normal[1], normal[2]);
-	// PrintToChatAll("DidHit: %s, endPos: %.5f %.5f %.5f",
-	// 	TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
-
-	tempAngles = angles;
-	ScaleVector(tempAngles, -1.0);
-
-	// Set the trace to out of the world
-	// This will ensure the distance between wall and player is far as DIST_EPSILON.
-	int count = 0;
-	while(TR_DidHit())
-	{
-		if(count > 20)
-			// failed
-			return false;
-
-		AddVectors(endPos, tempAngles, endPos);
-		TR_TraceRayFilter(pos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-
-		// PrintToChatAll("count: %i, DidHit: %s, endPos: %.5f %.5f %.5f",
-		// 	count, TR_DidHit() ? "true" : "false", endPos[0], endPos[1], endPos[2]);
-		count++;
-	}
-	
-	// float vecMin[3], vecMax[3];
-	// GetEntPropVector(client, Prop_Send, "m_vecMins", vecMin);
-	// GetEntPropVector(client, Prop_Send, "m_vecMaxs", vecMax);
-
-	// Inital Position Test
-	// at first, Check floor
-	// we are using normal[2] for check this, but only read from its sign bit (IEEE-754).
-
-	// bool sign = !(normal[2] & (1 << 31));
-	// PrintToChatAll("sign: %s", sign > 0 ? "true" : "false");
-
-	// This is floor or wall, and player surpposed aim to floor?
-	// so we are gonna move this upper.
-	// except perfect floor and extremely floor slope 
-	if(0.3 < normal[2] && normal[2] < 1.0) 
-	{
-		// float ratio = FloatAbs(normal[2] - 1.0);
-		float maxHeight = 0.0;
-		for(int search = 0; search < 2; search++)
-		{
-			maxHeight = max(FloatAbs(normal[search]), maxHeight);
-		}
-
-		endPos[2] += (vecMax[2] - vecMin[2]) * maxHeight;
-	}
-	else if(normal[2] < 0.0) // NOTE: some ceiling has 0.0 (same as perfect floor)
-	{
-		// skybox or ceiling
-		endPos[2] -= vecMax[2];
-	}
-	// else
-	// {
-	// 	// extremely floor slope, ignore.
-	// 	return;
-	// }
-
-	// No correction at this point.
-	if(!IsStockInPosition(client, endPos, vecMin, vecMax))
-		return true;
-
-	// // 좌표 보정 함수로 들어가기 전에 벽에 안들어간 트레이스를 밖으로 빼냄
-	// for(int loop = 0; loop < 2; loop++)
-	// {
-	// 	if(normal[loop] != 0.0)
-	// 		// 충돌 지점이 우선 벽 안이라서 최소한의 거리는 뒤로 뺴야할 필요가 있음
-	// 		endPos[loop] += normal[loop] >= 0.0 ? 5.0 : -5.0;
-	// }
-
-	// // 바닥 면은 다른 벽과 다르게 0.0 값이면 수평이므로 위로 올려야 됨.
-
-	// if(normal[2] != 0.0)
-	// 	endPos[2] += normal[2] >= 0.0 ? 5.0 : -5.0;
-/*
-	
-	CorrectionPositionDirected_2(client, endPos, pos, normal, vecMin, vecMax, tempEndPos);
-
-	endPos = VectorCopy(tempEndPos);
-*/
-	// CorrectionPositionDirected(client, endPos, normal, vecMin, vecMax);
-
-	float resultPos[3];
-	bool result = 
-		CorrectionPositionDirected_2(client, endPos, angles, normal, vecMin, vecMax, resultPos);
-
-	count = 0;
-	while(!result && count < 3)
-	{
-		ScaleVector(tempAngles, 82.0); // -1.0 * 82.0
-
-		AddVectors(endPos, tempAngles, resultPos);
-		result = !IsStockInPosition(client, resultPos, vecMin, vecMax);
-
-		count++;
-	}
-
-	TR_TraceRayFilter(pos, resultPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-	if(TR_DidHit())
-		return false;
-
-	endPos = resultPos;
-	return true;
-}
-
-public bool CorrectionPositionDirected(int client, float endPos[3], float normal[3], float vecMin[3], float vecMax[3])
-{
-	static int colors[4] = {0, 255, 0, 255};
-
-	enum
-	{
-		Center_Middle = 0,
-		Center_Left ,
-		Center_Right
-	}
-
-	// float currentAxisPos[3], nextAxisPos[3], temp[3], tempAngles[3],
-	// 		ZTestPos[3];
-
-	float testPos[3], testEndPos[3], fwdVec[3], fwdAng[3], leftVec[3], rightVec[3],
-			temp[3];
-
-	float fwdCheck = 0.0;
-	int fwdIndex = -1, sideIndex; // Wut.
-	bool isFwdBackward; // , isSideBackward;
-
-	for(int axis = 0; axis < 2; axis++)
-	{
-		if(FloatAbs(normal[axis]) > fwdCheck)
-		{
-			fwdCheck = FloatAbs(normal[axis]);
-			fwdIndex = axis;
-			isFwdBackward = normal[axis] > 0.0; // yeah.. reversed. 
-		}
-	}
-	sideIndex = (fwdIndex + 1) % 2; 
-	// isSideBackward = normal[sideIndex] < 0.0;
-
-	// PrintToChatAll("angles: %.3f %.3f %.3f, fwdIndex: %d, sideIndex: %d, isFwdBackward: %s",
-	// 		angles[0], angles[1], angles[2], fwdIndex, sideIndex, isFwdBackward ? "true" : "false");
-
-	int count = 0;
- 	while(count < 3)
-	{
-		testPos = VectorCopy(endPos);
-
-		float centerPos[3];
-		for(int up = 0; up < 2; up++)
-		{
-			bool isDown = up == 0;
-			
-			for(int testcase = 0; testcase < 3; testcase++)
-			{ 
-				centerPos = VectorCopy(testPos);
-
-				if(!isDown)
-					centerPos[2] += vecMax[2];
-
-				switch(testcase)
-				{
-					case Center_Left:
-					{
-						centerPos[sideIndex] += isFwdBackward ? vecMax[sideIndex] : vecMin[sideIndex];
-					}
-					case Center_Right:
-					{
-						centerPos[sideIndex] += isFwdBackward ? vecMin[sideIndex] : vecMax[sideIndex];
-					}
-				}
-
-				testEndPos = VectorCopy(centerPos);
-				testEndPos[fwdIndex] += isFwdBackward ? vecMin[fwdIndex] : vecMax[fwdIndex];
-
-				TR_TraceRayFilter(centerPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-				if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
-				{
-					TR_GetEndPosition(temp);
-
-					TE_SetupBeamPoints(centerPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
-					TE_SendToClient(client);
-
-					centerPos[fwdIndex] = centerPos[fwdIndex] - (testEndPos[fwdIndex] - temp[fwdIndex]) /* + DIST_EPSILON */;
-					PrintToChatAll("testcase: %d, pullback: %.2f", testcase, testEndPos[fwdIndex] - temp[fwdIndex]);
-
-					// PrintToChatAll("testPos[fwdIndex]", testEndPos[fwdIndex] - temp[fwdIndex]);
-				}
-
-				// PrintToChatAll("TR_DidHit: %s", TR_DidHit() ? "true" : "false");
-				if(!isDown) // ????
-					centerPos[2] -= vecMax[2];
-
-				testPos = VectorCopy(centerPos);
-			}
-
-			// side check
-			centerPos = VectorCopy(testPos);
-			centerPos[sideIndex] += vecMax[sideIndex];
-
-			testEndPos = VectorCopy(testPos);
-			testEndPos[sideIndex] += vecMin[sideIndex];
-
-			TR_TraceRayFilter(centerPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-			if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
-			{
-				TR_GetEndPosition(temp);
-
-				TE_SetupBeamPoints(centerPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
-				TE_SendToClient(client);
-
-				centerPos[sideIndex] = centerPos[sideIndex] - (testEndPos[sideIndex] - temp[sideIndex]) /* + DIST_EPSILON */;
-				PrintToChatAll("left side: pullback: %.2f", testEndPos[sideIndex] - temp[sideIndex]);
-
-				// PrintToChatAll("testPos[fwdIndex]", testEndPos[fwdIndex] - temp[fwdIndex]);
-			}
-
-			centerPos = VectorCopy(testPos);
-			centerPos[sideIndex] += vecMin[sideIndex];
-
-			testEndPos = VectorCopy(testPos);
-			testEndPos[sideIndex] += vecMax[sideIndex];
-
-			TR_TraceRayFilter(centerPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-			if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
-			{
-				TR_GetEndPosition(temp);
-
-				TE_SetupBeamPoints(centerPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
-				TE_SendToClient(client);
-
-				centerPos[sideIndex] = centerPos[sideIndex] - (testEndPos[sideIndex] - temp[sideIndex]) /* + DIST_EPSILON */;
-				PrintToChatAll("right side: pullback: %.2f", testEndPos[sideIndex] - temp[sideIndex]);
-
-				// PrintToChatAll("testPos[fwdIndex]", testEndPos[fwdIndex] - temp[fwdIndex]);
-			}
-			
-			testPos = VectorCopy(centerPos);
-		}
-
-		if(!IsStockInPosition(client, testPos, vecMin, vecMax))
-		{
-			endPos = VectorCopy(testPos);
-			return true;
-		}
-		
-		//   o----------o
-		//  /          /|
-		// /          / |
-		// o----O----o  |
-		// |    |    |  o
-		// |    |    | /
-		// |    |    |/
-		// o----O----o
-
-		// First, up to down
-		testEndPos = VectorCopy(testPos);
-		testEndPos[2] += vecMax[2];
-		
-		TR_TraceRayFilter(testEndPos, testPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-		if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
-		{
-			TR_GetEndPosition(temp);
-			testPos[2] = testPos[2] + (testEndPos[2] - temp[2]);
-
-			// TE_SetupBeamPoints(testEndPos, testPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0, 10.0, 30.0, 0, 0.0, colors, 10);
-			// TE_SendToClient(client);
-		}
-		else 
-		{
-			// down to up 
-			testEndPos = VectorCopy(testPos);
-			testEndPos[2] += vecMax[2];
-
-			TR_TraceRayFilter(testPos, testEndPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-			if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
-			{
-				TR_GetEndPosition(temp);
-				testPos[2] = testPos[2] - (testEndPos[2] - temp[2]);
-
-				// TE_SetupBeamPoints(testPos, testEndPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0, 10.0, 30.0, 0, 0.0, colors, 10);
-				// TE_SendToClient(client);
-			}
-		}
-
-		endPos = VectorCopy(testPos);
-		if(!IsStockInPosition(client, endPos, vecMin, vecMax))
-		{
-			// endPos = VectorCopy(testPos);
-			return true;
-		}
-
-		// after failed, just pull back this whole box.
-
-
-
-		// Need testing
-		// if(sideCheck)
-		// 	break;
-		
-		// GetAngleVectors(fwdAng, NULL_VECTOR, rightVec);
-		// leftVec = VectorCopy(rightVec);
-		// NegateVector(leftVec);
-
-		
-
-		
-
-
-
-		// // 0 = lower, 1 = upper 
-		// for(int up = 0; up < 2; up++)
-		// {
-		// 	for(int loop = 0; loop < 4; loop++)
-		// 	{
-		// 		// 양반향 체크 필요?
-		// 		int next = (loop + 1) % 4;
-		// 		currentAxisPos[2] = up == 0 ? endPos[2] : endPos[2] + vecMax[2];
-		// 		nextAxisPos[2] = up == 0 ? endPos[2] : endPos[2] + vecMax[2];
-
-		// 		currentAxisPos[0] = XaxisSearch[loop] == 1 ? endPos[0] + vecMax[0] : endPos[0] + vecMin[0];
-		// 		nextAxisPos[0] = XaxisSearch[next] == 1 ? endPos[0] + vecMax[0] : endPos[0] + vecMin[0];
-
-		// 		nextAxisPos[0] += XaxisSearch[next] == 1 ? DIST_EPSILON : -DIST_EPSILON;
-
-		// 		currentAxisPos[1] = YaxisSearch[loop] == 1 ? endPos[1] + vecMax[1] : endPos[1] + vecMin[1];
-		// 		nextAxisPos[1] = YaxisSearch[next] == 1 ? endPos[1] + vecMax[1] : endPos[1] + vecMin[1];
-
-		// 		nextAxisPos[1] += YaxisSearch[next] == 1 ? DIST_EPSILON : -DIST_EPSILON;
-
-		// 		// AdjustPositionBySingleRay(client, endPos, currentAxisPos, nextAxisPos, endPos);
-				
-		// 		TR_TraceRayFilter(currentAxisPos, nextAxisPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-		// 		if(TR_StartSolid() || !TR_DidHit() || TR_AllSolid())			continue;
-
-		// 		TR_GetEndPosition(temp);
-		// 		for(int axis = 0; axis < 3; axis++)
-		// 		{
-		// 			endPos[axis] = endPos[axis] - (nextAxisPos[axis] - temp[axis]);
-		// 		}
-		// 	}	
-
-			
-		// }
-	/*
-		// causes crash?
-		if(!IsStockInPosition(client, endPos, vecMin, vecMax))
+		if(!IsStockInPosition(owner, endPos, vecMin, vecMax))
 			break;
-
-		// Check upper
-		for(int axis = 0; axis < 2; axis++)
-		{
-			currentAxisPos[axis] = endPos[axis];
-			nextAxisPos[axis] = endPos[axis];
-		}
-		currentAxisPos[2] = endPos[2];
-		nextAxisPos[2] = endPos[2] + vecMax[2];
-
-		ZTestPos = VectorCopy(endPos);
-
-		TR_TraceRayFilter(currentAxisPos, nextAxisPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
-		if(!TR_StartSolid() && TR_DidHit())
-		{
-			TR_GetEndPosition(temp);
-			ZTestPos[2] = ZTestPos[2] - (nextAxisPos[2] - temp[2]);
-		}
-
-		if(!IsStockInPosition(client, ZTestPos, vecMin, vecMax))
-		{
-			endPos = VectorCopy(ZTestPos);
-			break;
-		}
-	*/
-
-		// This is supposed to be cleared at once.
-		// Still not enough? In this case, just bring this backward.
-		// Some walls does not set solid correctly...
-		// tempAngles = VectorCopy(angles);
-
-		// float maxBackMove = min(vecMin[0], vecMin[1]);
-		// ScaleVector(tempAngles, maxBackMove);
-
-		// AddVectors(endPos, tempAngles, endPos);
-
-		// GetVectorAngles(endPos, tempAngles);
-		// GetAngleVectors(tempAngles, tempAngles, NULL_VECTOR, NULL_VECTOR);
-
-		// float ratio = GetVectorDotProduct(angles, tempAngles);
-		// PrintToChatAll("count: %d, ratio: %.3f", count, ratio);
-		count++;
+		
+		spotStacker.Erase(stackLastIndex);
 	}
-		
+	while(spotStacker.Length > 0);
 
-	// PrintToChatAll("CorrectionPositionDirected: stock: %s, endPos: %.5f %.5f %.5f", 
-	// 	IsStockInPosition(client, endPos, vecMin, vecMax) ? "true" : "false", endPos[0], endPos[1], endPos[2]);
-	
-	
-	// bool ilovemycompiler = true;
-	// while(ilovemycompiler)
-	// {
-		
-	// }
-	return false;
+	CreateAndOpenPortalByPlayer(owner, endPos);
 }
 
-///////////////////////////
+/*
+public void CorrectCurrentPos(float currentPos[3], float angles[3], float vecMin[3], float vecMax[3], float result[3])
+{
+	// Nothing here..
+}
+*/
 
-stock int SpawnParticle(float pos[3], char[] particleType, float offset=0.0)
+CTFPortal CreateAndOpenPortalByPlayer(int player, float endPos[3], int abilitySlot = -3)
+{
+	CTFPortal portal = CTFPortal.Create(player);
+
+	// only boss can use this... for now.
+	int boss = FF2_GetBossIndex(player);
+	if(boss != -1)
+		ApplyPortalBossConfig(boss, portal, abilitySlot);
+
+	float currentPos[3];
+	GetEntPropVector(player, Prop_Data, "m_vecOrigin", currentPos);
+
+	float fwd[3];
+	GetClientEyeAngles(player, fwd);
+	GetAngleVectors(fwd, fwd, NULL_VECTOR, NULL_VECTOR);
+
+	portal.SetLaunchAngles(fwd);
+	portal.SetEntrancePosition(currentPos);
+	portal.SetExitPosition(endPos);
+
+	portal.Ducked = GetEntProp(player, Prop_Send, "m_bDucked") > 0;
+
+	ScaleVector(fwd, portal.LaunchPower);
+	TeleportEntity(player, endPos, NULL_VECTOR, fwd);
+
+	SetEntProp(player, Prop_Send, "m_bDucked", 1);
+	SetEntityFlags(player, GetEntityFlags(player)|FL_DUCKING);
+
+	portal.Open();
+	portal.DispatchTPEffect(currentPos, endPos); // 보스가 이미 통과함
+
+	UTIL_ScreenFade(player, WHITE_COLOR, 0.1, 0.3, FFADE_IN);
+	ApplyPlayerWeaponDisable(player, 2.0);
+
+	return portal;
+}
+
+public void ApplyPortalBossConfig(int boss, CTFPortal portal, int slot)
+{
+	float size = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_SIZE_NAME, 75.0),
+		lifeTime = GetGameTime() + FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_DURATION_NAME, 15.0),
+		launchPower = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_LAUNCH_POWER_NAME, 600.0),
+		soundLoopTime = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_SOUND_LOOP_TIME_NAME, 2.0);
+
+	char entrancePaticleName[64], exitPaticleName[64],
+		openSound[PLATFORM_MAX_PATH], loopSound[PLATFORM_MAX_PATH], closeSound[PLATFORM_MAX_PATH],
+		enterEntranceSound[PLATFORM_MAX_PATH], enterExitSound[PLATFORM_MAX_PATH];
+
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_ENTRANCE_PARTICLE_NAME, entrancePaticleName, sizeof(entrancePaticleName));
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_EXIT_PARTICLE_NAME, exitPaticleName, sizeof(exitPaticleName));
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_OPEN_SOUND_PATH_NAME, openSound, PLATFORM_MAX_PATH);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_LOOP_SOUND_PATH_NAME, loopSound, PLATFORM_MAX_PATH);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_CLOSE_SOUND_PATH_NAME, closeSound, PLATFORM_MAX_PATH);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_ENTER_ENTRANCE_SOUND_PATH_NAME, enterEntranceSound, PLATFORM_MAX_PATH);
+	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTALS_EXIT_ENTRANCE_SOUND_PATH_NAME, enterExitSound, PLATFORM_MAX_PATH);
+
+	portal.Size = size;
+	portal.LifeTime = lifeTime;
+	portal.LaunchPower = launchPower;
+	portal.SoundLoopTime = soundLoopTime;
+
+	portal.SetEntranceParticleName(entrancePaticleName);
+	portal.SetExitParticleName(exitPaticleName);
+
+	portal.SetOpenSound(openSound);
+	portal.SetLoopSound(loopSound);
+	portal.SetOpenSound(closeSound);
+	portal.SetEnterEntranceSound(enterEntranceSound);
+	portal.SetEnterExitSound(enterExitSound);
+}
+
+public void GetBulletEffectName(TFTeam team, char[] name, int _buffer)
+{
+	switch(team)
+	{
+		case TFTeam_Red:
+		{
+			Format(name, _buffer, "bullet_pistol_tracer01_red_crit");
+		}
+		case TFTeam_Blue:
+		{
+			Format(name, _buffer, "bullet_pistol_tracer01_blue_crit");
+		}
+	}
+}
+
+stock void ApplyPlayerWeaponDisable(int client, float time = 2.0)
+{
+	int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+	if(IsValidEntity(weapon))
+		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + time);
+
+	SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime()+time);
+	SetEntPropFloat(client, Prop_Send, "m_flStealthNextChangeTime", GetGameTime() + time);
+}
+
+stock int SpawnParticle(float pos[3], char[] particleType, float offset=0.0, int attachToEntity = -1)
 {
 	int particle=CreateEntityByName("info_particle_system");
 
 	char targetName[128];
 	pos[2]+=offset;
 	TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
-
-	// Format(targetName, sizeof(targetName), "target%i", entity);
-	// DispatchKeyValue(entity, "targetname", targetName);
-
 	DispatchKeyValue(particle, "targetname", "tf2particle");
-	DispatchKeyValue(particle, "parentname", targetName);
+	
 	DispatchKeyValue(particle, "effect_name", particleType);
 	DispatchSpawn(particle);
 	SetVariantString(targetName);
 
+	if(attachToEntity > 0)
+	{
+		Format(targetName, sizeof(targetName), "target%i", attachToEntity);
+		DispatchKeyValue(attachToEntity, "targetname", targetName);
+		DispatchKeyValue(particle, "parentname", targetName);
+
+		SetVariantString(targetName);
+		AcceptEntityInput(particle, "SetParent", particle, particle, 0);
+		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", attachToEntity);
+	}
+
 	ActivateEntity(particle);
 	AcceptEntityInput(particle, "start");
 	return particle;
+}
+
+stock int SpawnRocket(int owner, float origin[3], float angles[3], float velocity[3], float damage, bool allowcrit)
+{
+	int ent=CreateEntityByName("tf_projectile_rocket");
+	if(!IsValidEntity(ent))
+		return -1;
+
+	int clientTeam = GetClientTeam(owner);
+	int damageOffset = FindSendPropInfo("CTFProjectile_Rocket", "m_iDeflected") + 4;
+
+	SetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity", owner);
+	SetEntProp(ent, Prop_Send, "m_bCritical", allowcrit ? 1 : 0);
+	SetEntProp(ent, Prop_Send, "m_iTeamNum", clientTeam);
+	SetEntProp(ent, Prop_Send, "m_CollisionGroup", 4);
+	SetEntProp(ent, Prop_Data, "m_takedamage", 0);
+	// SetEntPropEnt(ent, Prop_Send, "m_nForceBone", -1);
+
+	float zeroVec[3];
+	SetEntPropVector(ent, Prop_Send, "m_vecMins", zeroVec);
+	SetEntPropVector(ent, Prop_Send, "m_vecMaxs", zeroVec);
+
+	SetEntDataFloat(ent, damageOffset, damage); // set damage
+	SetVariantInt(clientTeam);
+	AcceptEntityInput(ent, "TeamNum", -1, -1, 0);
+	SetVariantInt(clientTeam);
+	AcceptEntityInput(ent, "SetTeam", -1, -1, 0);
+	DispatchSpawn(ent);
+	SetEntPropEnt(ent, Prop_Send, "m_hOriginalLauncher", GetEntPropEnt(owner, Prop_Send, "m_hActiveWeapon"));
+	SetEntPropEnt(ent, Prop_Send, "m_hLauncher", GetEntPropEnt(owner, Prop_Send, "m_hActiveWeapon"));
+
+	TeleportEntity(ent, origin, angles, velocity);
+	return ent;
 }
 
 int GetParticleEffectIndex(const char[] sEffectName)
@@ -1720,7 +1460,7 @@ void TE_DispatchEffect(const char[] particle, const float pos[3], const float en
 
 stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, int time=1, int controlpoint=0)
 {
-    int particle = CreateEntityByName("info_particle_system");
+	int particle = CreateEntityByName("info_particle_system");
 
 	char temp[64], targetName[64];
 	if (IsValidEdict(particle))
@@ -1751,17 +1491,7 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 				float cpPos[3];
 				GetEntPropVector(controlpoint, Prop_Data, "m_vecOrigin", cpPos);
 				TeleportEntity(cpParticle, cpPos, angles, NULL_VECTOR);
-/*
-				// SetVariantString(cpTargetName);
-				SetVariantString("!activator");
-				AcceptEntityInput(cpParticle, "SetParent", controlpoint, cpParticle);
-
-				SetVariantString("flag");
-				AcceptEntityInput(cpParticle, "SetParentAttachment", controlpoint, cpParticle);
-*/
 			}
-			// SetEntPropEnt(particle, Prop_Send, "m_hControlPointEnts", controlpoint, 1);
-			// SetEntProp(particle, Prop_Send, "m_iControlPointParents", controlpoint, 1);
 		}
 
 		DispatchSpawn(particle);
@@ -1788,6 +1518,108 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 	}
 }
 
+// https://github.com/Pelipoika/The-unfinished-and-abandoned/blob/master/CSGO_SentryGun.sp
+stock void FireBullet(int m_pAttacker, int m_pDamager, float m_vecSrc[3], float m_vecDirShooting[3], float m_flDamage, float m_flDistance, int nDamageType, const char[] tracerEffect)
+{
+	float vecEnd[3];
+	vecEnd[0] = m_vecSrc[0] + (m_vecDirShooting[0] * m_flDistance);
+	vecEnd[1] = m_vecSrc[1] + (m_vecDirShooting[1] * m_flDistance);
+	vecEnd[2] = m_vecSrc[2] + (m_vecDirShooting[2] * m_flDistance);
+
+	// Fire a bullet (ignoring the shooter).
+	Handle trace = TR_TraceRayFilterEx(m_vecSrc, vecEnd, ( MASK_SOLID | CONTENTS_HITBOX ), RayType_EndPoint, AimTargetFilter, m_pAttacker);
+
+	if ( TR_GetFraction(trace) < 1.0 )
+	{
+		// Verify we have an entity at the point of impact.
+		int ent = TR_GetEntityIndex(trace);
+		if(ent == -1)
+		{
+			delete trace;
+			return;
+		}
+
+		int team = GetEntProp(m_pAttacker, Prop_Send, "m_iTeamNum");
+		if(team == GetEntProp(ent, Prop_Send, "m_iTeamNum"))
+		{
+			// .. Just in case.
+			delete trace;
+			return;
+		}
+
+		float endpos[3]; TR_GetEndPosition(endpos, trace);
+		
+		float multiplier = (800.0 / GetVectorDistance(m_vecSrc, endpos)) + 0.3;
+		if(multiplier > 1.0)
+			multiplier = 1.0;
+		
+		SDKHooks_TakeDamage(ent, m_pAttacker, m_pDamager, m_flDamage, nDamageType, m_pAttacker, CalculateBulletDamageForce(m_vecDirShooting, 1.0), endpos);
+
+		// Bullet tracer
+		TE_DispatchEffect(tracerEffect, endpos, m_vecSrc, NULL_VECTOR);
+		// TE_WriteFloat("m_flRadius", 20.0);
+		TE_SendToAll();
+
+		float vecNormal[3];	TR_GetPlaneNormal(trace, vecNormal);
+		GetVectorAngles(vecNormal, vecNormal);
+
+		if(ent <= 0 || ent > MaxClients)
+		{
+			//Can't get surface properties from traces unfortunately.
+			//Just another shortsighting from the SM devs :///
+			TE_DispatchEffect("impact_dirt", endpos, endpos, vecNormal);
+			TE_SendToAll();
+
+			TE_Start("Impact");
+			TE_WriteVector("m_vecOrigin", endpos);
+			TE_WriteVector("m_vecNormal", vecNormal);
+			TE_WriteNum("m_iType", GetRandomInt(1, 10));
+			TE_SendToAll();
+		}
+
+		else if(ent > 0 && ent <= MaxClients)
+		{
+			TE_DispatchEffect("blood_impact_heavy", endpos, endpos, vecNormal);
+			TE_SendToAll();
+		}
+
+	}
+
+	delete trace;
+}
+
+public bool AimTargetFilter(int entity, int contentsMask, any iExclude)
+{
+	char class[64];
+	GetEntityClassname(entity, class, sizeof(class));
+
+	if(StrEqual(class, "monster_generic"))
+	{
+		return false;
+	}
+	if(!(entity == iExclude))
+	{
+		if(HasEntProp(iExclude, Prop_Send, "m_iTeamNum"))
+		{
+			int team = GetEntProp(entity, Prop_Send, "m_iTeamNum");
+			return team != GetEntProp(iExclude, Prop_Send, "m_iTeamNum");
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+float[] CalculateBulletDamageForce( const float vecBulletDir[3], float flScale )
+{
+	float vecForce[3]; vecForce = vecBulletDir;
+	NormalizeVector( vecForce, vecForce );
+	ScaleVector(vecForce, FindConVar("phys_pushscale").FloatValue);
+	ScaleVector(vecForce, flScale);
+	return vecForce;
+}
+
 stock float AngleNormalize(float angle)
 {
 	angle = fmodf(angle, 360.0);
@@ -1807,7 +1639,6 @@ stock float fmodf(float num, float denom)
 	return num - denom * RoundToFloor(num / denom);
 }
 
-// bool g_bTouched[MAXPLAYERS+1];
 int GetEntityInSpot(float pos[3], float size)
 {
 	float targetPos[3];
@@ -1821,418 +1652,29 @@ int GetEntityInSpot(float pos[3], float size)
 		GetClientEyePosition(client, targetPos);
 		// GetEntPropVector(client, Prop_Data, "m_vecOrigin", targetPos);
 		if(GetVectorDistance(pos, targetPos) <= size)
+		{
+			// FIXME:
+			// TR_TraceRayFilter(pos, targetPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+			// if(!TR_DidHit())
 			return client;
+		}
 	}
+
+// 	static const char[][]  =
 
 	while((ent = FindEntityByClassname(ent, "tf_projectile_*")) != -1)
 	{
 		GetEntPropVector(ent, Prop_Data, "m_vecOrigin", targetPos);
 		if(GetVectorDistance(pos, targetPos) <= size)
+		{
+			// FIXME:
+			// TR_TraceRayFilter(pos, targetPos, MASK_ALL, RayType_EndPoint, TraceAnything, ent);
+			// if(!TR_DidHit())
 			return ent;
+		}
 	}
-
 
 	return -1;
-}
-
-public void FloatToVector(float vector[3], float x, float z, float y)
-{
-	vector[0] = x, vector[1] = z, vector[2] = y;
-}
-
-//Copied from Chdata's Fixed Friendly Fire
-stock bool IsPlayerStuck(int ent)
-{
-	float vecMin[3], vecMax[3], vecOrigin[3];
-
-	GetEntPropVector(ent, Prop_Send, "m_vecMins", vecMin);
-	GetEntPropVector(ent, Prop_Send, "m_vecMaxs", vecMax);
-	GetEntPropVector(ent, Prop_Send, "m_vecOrigin", vecOrigin);
-
-	TR_TraceHullFilter(vecOrigin, vecOrigin, vecMin, vecMax, MASK_SOLID, TraceRayPlayerOnly, ent);
-	return (TR_DidHit());
-}
-
-public bool TraceRayPlayerOnly(int iEntity, int iMask, any iData)
-{
-    return (IsValidClient(iEntity) && IsValidClient(iData) && iEntity != iData);
-}
-/*
-// Copied from sarysa's code.
-bool ResizeTraceFailed;
-public bool TryTeleport(int clientIdx, float startPos[3], float endPos[3])
-{
-	float sizeMultiplier = GetEntPropFloat(clientIdx, Prop_Send, "m_flModelScale");
-	// static float startPos[3];
-	// static float endPos[3];
-	static float testPos[3];
-	// static float eyeAngles[3];
-	// GetClientEyePosition(clientIdx, startPos);
-	// GetClientEyeAngles(clientIdx, eyeAngles);
-	// TR_TraceRayFilter(startPos, eyeAngles, MASK_PLAYERSOLID, RayType_Infinite, TraceAnything);
-	// TR_GetEndPosition(endPos);
-
-	// don't even try if the distance is less than 82
-	float distance = GetVectorDistance(startPos, endPos);
-	if (distance < 90.0)
-	{
-		return false;
-	}
-
-	if (distance > 1500.0)
-		constrainDistance(startPos, endPos, distance, 1500.0);
-	else // shave just a tiny bit off the end position so our point isn't directly on top of a wall
-		constrainDistance(startPos, endPos, distance, distance - 1.0);
-
-	constrainDistance(startPos, endPos, distance, distance - 1.0);
-
-	// now for the tests. I go 1 extra on the standard mins/maxs on purpose.
-	bool found = false;
-	for (int x = 0; x < 3; x++)
-	{
-		if (found)
-			break;
-
-		float xOffset;
-		if (x == 0)
-			xOffset = 0.0;
-		else if (x == 1)
-			xOffset = 12.5 * sizeMultiplier;
-		else
-			xOffset = 25.0 * sizeMultiplier;
-
-		if (endPos[0] < startPos[0])
-			testPos[0] = endPos[0] + xOffset;
-		else if (endPos[0] > startPos[0])
-			testPos[0] = endPos[0] - xOffset;
-		else if (xOffset != 0.0)
-			break; // super rare but not impossible, no sense wasting on unnecessary tests
-
-		for (int y = 0; y < 3; y++)
-		{
-			if (found)
-				break;
-
-			float yOffset;
-			if (y == 0)
-				yOffset = 0.0;
-			else if (y == 1)
-				yOffset = 12.5 * sizeMultiplier;
-			else
-				yOffset = 25.0 * sizeMultiplier;
-
-			if (endPos[1] < startPos[1])
-				testPos[1] = endPos[1] + yOffset;
-			else if (endPos[1] > startPos[1])
-				testPos[1] = endPos[1] - yOffset;
-			else if (yOffset != 0.0)
-				break; // super rare but not impossible, no sense wasting on unnecessary tests
-
-			for (int z = 0; z < 3; z++)
-			{
-				if (found)
-					break;
-
-				float zOffset;
-				if (z == 0)
-					zOffset = 0.0;
-				else if (z == 1)
-					zOffset = 41.5 * sizeMultiplier;
-				else
-					zOffset = 83.0 * sizeMultiplier;
-
-				if (endPos[2] < startPos[2])
-					testPos[2] = endPos[2] + zOffset;
-				else if (endPos[2] > startPos[2])
-					testPos[2] = endPos[2] - zOffset;
-				else if (zOffset != 0.0)
-					break; // super rare but not impossible, no sense wasting on unnecessary tests
-
-				// before we test this position, ensure it has line of sight from the point our player looked from
-				// this ensures the player can't teleport through walls
-				static float tmpPos[3];
-				TR_TraceRayFilter(endPos, testPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything);
-				TR_GetEndPosition(tmpPos);
-				if (testPos[0] != tmpPos[0] || testPos[1] != tmpPos[1] || testPos[2] != tmpPos[2])
-					continue;
-
-				// now we do our very expensive test. thankfully there's only 27 of these calls, worst case scenario.
-				found = IsSpotSafe(clientIdx, testPos, sizeMultiplier);
-			}
-		}
-	}
-
-	if (!found)
-	{
-		return false;
-	}
-	TeleportEntity(clientIdx, testPos, NULL_VECTOR, NULL_VECTOR);
-
-	return true;
-}
-
-stock void constrainDistance(const float[] startPoint, float[] endPoint, float distance, float maxDistance)
-{
-	float constrainFactor = maxDistance / distance;
-	endPoint[0] = ((endPoint[0] - startPoint[0]) * constrainFactor) + startPoint[0];
-	endPoint[1] = ((endPoint[1] - startPoint[1]) * constrainFactor) + startPoint[1];
-	endPoint[2] = ((endPoint[2] - startPoint[2]) * constrainFactor) + startPoint[2];
-}
-
-public bool IsSpotSafe(int clientIdx, float playerPos[3], float sizeMultiplier)
-{
-	ResizeTraceFailed = false;
-	static float mins[3];
-	static float maxs[3];
-	mins[0] = -24.0 * sizeMultiplier;
-	mins[1] = -24.0 * sizeMultiplier;
-	mins[2] = 0.0;
-	maxs[0] = 24.0 * sizeMultiplier;
-	maxs[1] = 24.0 * sizeMultiplier;
-	maxs[2] = 90.0 * sizeMultiplier;
-
-	// the eight 45 degree angles and center, which only checks the z offset
-	if (!Resize_TestResizeOffset(playerPos, mins[0], mins[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, mins[0], 0.0, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, mins[0], maxs[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, 0.0, mins[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, 0.0, 0.0, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, 0.0, maxs[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0], mins[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0], 0.0, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0], maxs[1], maxs[2])) return false;
-
-	// 22.5 angles as well, for paranoia sake
-	if (!Resize_TestResizeOffset(playerPos, mins[0], mins[1] * 0.5, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, mins[0], maxs[1] * 0.5, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0], mins[1] * 0.5, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0], maxs[1] * 0.5, maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, mins[0] * 0.5, mins[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0] * 0.5, mins[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, mins[0] * 0.5, maxs[1], maxs[2])) return false;
-	if (!Resize_TestResizeOffset(playerPos, maxs[0] * 0.5, maxs[1], maxs[2])) return false;
-
-	// four square tests
-	if (!Resize_TestSquare(playerPos, mins[0], maxs[0], mins[1], maxs[1], maxs[2])) return false;
-	if (!Resize_TestSquare(playerPos, mins[0] * 0.75, maxs[0] * 0.75, mins[1] * 0.75, maxs[1] * 0.75, maxs[2])) return false;
-	if (!Resize_TestSquare(playerPos, mins[0] * 0.5, maxs[0] * 0.5, mins[1] * 0.5, maxs[1] * 0.5, maxs[2])) return false;
-	if (!Resize_TestSquare(playerPos, mins[0] * 0.25, maxs[0] * 0.25, mins[1] * 0.25, maxs[1] * 0.25, maxs[2])) return false;
-
-	return true;
-}
-
-bool Resize_TestResizeOffset(const float bossOrigin[3], float xOffset, float yOffset, float zOffset)
-{
-	static float tmpOrigin[3];
-	tmpOrigin[0] = bossOrigin[0];
-	tmpOrigin[1] = bossOrigin[1];
-	tmpOrigin[2] = bossOrigin[2];
-	static float targetOrigin[3];
-	targetOrigin[0] = bossOrigin[0] + xOffset;
-	targetOrigin[1] = bossOrigin[1] + yOffset;
-	targetOrigin[2] = bossOrigin[2];
-
-	if (!(xOffset == 0.0 && yOffset == 0.0))
-		if (!Resize_OneTrace(tmpOrigin, targetOrigin))
-			return false;
-
-	tmpOrigin[0] = targetOrigin[0];
-	tmpOrigin[1] = targetOrigin[1];
-	tmpOrigin[2] = targetOrigin[2] + zOffset;
-
-	if (!Resize_OneTrace(targetOrigin, tmpOrigin))
-		return false;
-
-	targetOrigin[0] = bossOrigin[0];
-	targetOrigin[1] = bossOrigin[1];
-	targetOrigin[2] = bossOrigin[2] + zOffset;
-
-	if (!(xOffset == 0.0 && yOffset == 0.0))
-		if (!Resize_OneTrace(tmpOrigin, targetOrigin))
-			return false;
-
-	return true;
-}
-
-bool Resize_TestSquare(const float bossOrigin[3], float xmin, float xmax, float ymin, float ymax, float zOffset)
-{
-	static float pointA[3];
-	static float pointB[3];
-	for (int phase = 0; phase <= 7; phase++)
-	{
-		// going counterclockwise
-		if (phase == 0)
-		{
-			pointA[0] = bossOrigin[0] + 0.0;
-			pointA[1] = bossOrigin[1] + ymax;
-			pointB[0] = bossOrigin[0] + xmax;
-			pointB[1] = bossOrigin[1] + ymax;
-		}
-		else if (phase == 1)
-		{
-			pointA[0] = bossOrigin[0] + xmax;
-			pointA[1] = bossOrigin[1] + ymax;
-			pointB[0] = bossOrigin[0] + xmax;
-			pointB[1] = bossOrigin[1] + 0.0;
-		}
-		else if (phase == 2)
-		{
-			pointA[0] = bossOrigin[0] + xmax;
-			pointA[1] = bossOrigin[1] + 0.0;
-			pointB[0] = bossOrigin[0] + xmax;
-			pointB[1] = bossOrigin[1] + ymin;
-		}
-		else if (phase == 3)
-		{
-			pointA[0] = bossOrigin[0] + xmax;
-			pointA[1] = bossOrigin[1] + ymin;
-			pointB[0] = bossOrigin[0] + 0.0;
-			pointB[1] = bossOrigin[1] + ymin;
-		}
-		else if (phase == 4)
-		{
-			pointA[0] = bossOrigin[0] + 0.0;
-			pointA[1] = bossOrigin[1] + ymin;
-			pointB[0] = bossOrigin[0] + xmin;
-			pointB[1] = bossOrigin[1] + ymin;
-		}
-		else if (phase == 5)
-		{
-			pointA[0] = bossOrigin[0] + xmin;
-			pointA[1] = bossOrigin[1] + ymin;
-			pointB[0] = bossOrigin[0] + xmin;
-			pointB[1] = bossOrigin[1] + 0.0;
-		}
-		else if (phase == 6)
-		{
-			pointA[0] = bossOrigin[0] + xmin;
-			pointA[1] = bossOrigin[1] + 0.0;
-			pointB[0] = bossOrigin[0] + xmin;
-			pointB[1] = bossOrigin[1] + ymax;
-		}
-		else if (phase == 7)
-		{
-			pointA[0] = bossOrigin[0] + xmin;
-			pointA[1] = bossOrigin[1] + ymax;
-			pointB[0] = bossOrigin[0] + 0.0;
-			pointB[1] = bossOrigin[1] + ymax;
-		}
-
-		for (int shouldZ = 0; shouldZ <= 1; shouldZ++)
-		{
-			pointA[2] = pointB[2] = shouldZ == 0 ? bossOrigin[2] : (bossOrigin[2] + zOffset);
-			if (!Resize_OneTrace(pointA, pointB))
-				return false;
-		}
-	}
-
-	return true;
-}
-*/
-Handle PrepSDKCall_TestEntityPosition(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Static);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "TestEntityPosition");
-	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: TestEntityPosition");
-
-	return call;
-}
-
-Handle PrepSDKCall_FindPassableSpace(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Static);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "FindPassableSpace");
-	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
-	PrepSDKCall_AddParameter(SDKType_Float, SDKPass_Plain);
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: FindPassableSpace");
-
-	return call;
-}
-
-Handle PrepSDKCall_SetAbsOrigin(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::SetAbsOrigin");
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CBaseEntity::SetAbsOrigin");
-
-	return call;
-}
-
-public bool SDKCall_TestEntityPosition(int entity)
-{
-	if (g_SDKCallTestEntityPosition)
-		return SDKCall(g_SDKCallTestEntityPosition, entity);
-
-	return false;
-}
-
-public bool SDKCall_FindPassableSpace(int entity, float direction[3], float step, float oldorigin[3])
-{
-	if (g_SDKCallFindPassableSpace)
-		return SDKCall(g_SDKCallFindPassableSpace, entity, direction, step, oldorigin);
-
-	return false;
-}
-
-public void SDKCall_SetAbsOrigin(int entity, float absOrigin[3])
-{
-	if (g_SDKCallSetAbsOrigin)
-		SDKCall(g_SDKCallSetAbsOrigin, entity, absOrigin);
-}
-
-float[] VectorCopy(float source[3])
-{
-	float dest[3];
-	dest[0] = source[0];
-	dest[1] = source[1];
-	dest[2] = source[2];
-
-	return dest;
-}
-
-public void VectorMA(float start[3], float scale, float direction[3], float dest[3])
-{
-	dest[0] = start[0] + (scale * direction[0]);
-	dest[1] = start[1] + (scale * direction[1]);
-	dest[2] = start[2] + (scale * direction[2]);
-}
-
-/*
-bool Resize_OneTrace(const float startPos[3], const float endPos[3])
-{
-	static float result[3];
-	TR_TraceRayFilter(startPos, endPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceAnything);
-	if (ResizeTraceFailed)
-	{
-		return false;
-	}
-	TR_GetEndPosition(result);
-	if (endPos[0] != result[0] || endPos[1] != result[1] || endPos[2] != result[2])
-	{
-		return false;
-	}
-
-	return true;
-}
-*/
-public bool TraceAnything(int entity, int contentsMask, any data)
-{
-    return entity == 0 || entity != data;
 }
 
 stock bool IsStockInPosition(int ent, float pos[3], float vecMin[3], float vecMax[3])
@@ -2240,6 +1682,23 @@ stock bool IsStockInPosition(int ent, float pos[3], float vecMin[3], float vecMa
 	TR_TraceHullFilter(pos, pos, vecMin, vecMax, MASK_ALL, TraceAnything, ent);
 	return TR_DidHit();
 }
+
+public bool TraceAnything(int entity, int contentsMask, any data)
+{
+    return entity == 0 || entity != data;
+}
+
+/*
+public void FloatToVector(float vector[3], float x, float z, float y)
+{
+	vector[0] = x, vector[1] = z, vector[2] = y;
+}
+
+public bool TraceRayPlayerOnly(int iEntity, int iMask, any iData)
+{
+    return (IsValidClient(iEntity) && IsValidClient(iData) && iEntity != iData);
+}
+*/
 
 public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCount)
 {
@@ -2252,5 +1711,5 @@ public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCoun
 
 stock bool IsValidClient(int client)
 {
-    return (0<client && client<=MaxClients && IsClientInGame(client));
+    return (0 < client && client <= MaxClients && IsClientInGame(client));
 }

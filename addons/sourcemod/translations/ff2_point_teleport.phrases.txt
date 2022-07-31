@@ -7,12 +7,12 @@
     }
     "Point Teleportation Charge"
     {
-        "#format"   "{1:i},{2:s}"
+        "#format"   "{1:i}"
         "en"        "PRESS {2}: Teleportation is {1} percent ready."
     }
 	"Point Teleportation Hint"
 	{
-		"en"        "When at 10 percent reached, point and release"
+		"en"        "Release button to teleport"
 	}
 	"Right Click"
 	{

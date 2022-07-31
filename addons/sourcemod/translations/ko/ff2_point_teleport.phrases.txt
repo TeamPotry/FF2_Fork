@@ -7,12 +7,12 @@
     }
     "Point Teleportation Charge"
     {
-        "#format"   "{1:i},{2:s}"
-        "ko"		"텔레포트: {1}%% / 100%% ({2})"
+        "#format"   "{1:i}"
+        "ko"		"텔레포트: {1}%% / 100%%"
     }
 	"Point Teleportation Hint"
 	{
-		"ko"        "10%% 이상일 때, 위치를 바라보며 버튼을 때세요"
+		"ko"        "위치를 바라보며 버튼을 때세요"
 	}
 	"Right Click"
 	{
