@@ -35,7 +35,7 @@
 
 #pragma newdecls required
 
-#define PLUGIN_VERSION "20220802"
+#define PLUGIN_VERSION "20220803"
 
 public Plugin myinfo=
 {
@@ -46,43 +46,40 @@ public Plugin myinfo=
 };		
 
 #if defined _ff2_fork_general_included
-	#define PLUGIN_NAME 						"pointing abilities"
-	#define POINT_TELEPORT_NAME					"point teleport"
+	#define PLUGIN_NAME						"pointing abilities"
+	#define POINT_TELEPORT_NAME				"point teleport"
 
-	#define PORTAL_ROCKET_SPEED_NAME 			"rocket speed"
-	#define PORTAL_ROCKET_DURATION_NAME			"rocket duration"
-	#define PORTALS_SIZE_NAME					"portal size"
-	#define PORTALS_DURATION_NAME				"portal duration"
-	#define PORTALS_LAUNCH_POWER_NAME			"portal launch power"
-	#define PORTALS_SOUND_LOOP_TIME_NAME		"portal sound loop time"
+	#define PORTAL_ROCKET_SPEED_NAME		"rocket speed"
+	#define PORTAL_ROCKET_DURATION_NAME		"rocket duration"
+	#define PORTALS_SIZE_NAME				"portal size"
+	#define PORTALS_DURATION_NAME			"portal duration"
+	#define PORTALS_LAUNCH_POWER_NAME		"portal launch power"
+	#define PORTALS_SOUND_LOOP_TIME_NAME	"portal sound loop time"
 
-	#define PORTALS_ENTRANCE_PARTICLE_NAME		"portal entrance paticle name"
-	#define PORTALS_EXIT_PARTICLE_NAME			"portal exit paticle name"
-	#define PORTALS_OPEN_SOUND_PATH_NAME		"portal open sound path"
-	#define PORTALS_LOOP_SOUND_PATH_NAME		"portal loop sound path"
-	#define PORTALS_CLOSE_SOUND_PATH_NAME		"portal close sound path"
+	#define PORTALS_ENTRANCE_PARTICLE_NAME	"portal entrance paticle name"
+	#define PORTALS_EXIT_PARTICLE_NAME		"portal exit paticle name"
+	#define PORTALS_OPEN_SOUND_PATH_NAME	"portal open sound path"
+	#define PORTALS_LOOP_SOUND_PATH_NAME	"portal loop sound path"
+	#define PORTALS_CLOSE_SOUND_PATH_NAME	"portal close sound path"
 
 	#define PORTALS_ENTER_ENTRANCE_SOUND_PATH_NAME	"portal enter entrance sound path"
 	#define PORTALS_EXIT_ENTRANCE_SOUND_PATH_NAME	"portal enter exit sound path"
 #else
-	#define PLUGIN_NAME 						this_plugin_name
-	#define POINT_TELEPORT_NAME					"point_teleport"
+	#define PLUGIN_NAME						this_plugin_name
+	#define POINT_TELEPORT_NAME				"point_teleport"
 
-//	#define FF2_GetFF2Flags						FF2_GetFF2flags
-//	#define FF2_SetFF2Flags						FF2_SetFF2flags
+	#define PORTAL_ROCKET_SPEED_NAME		1
+	#define PORTAL_ROCKET_DURATION_NAME		2
+	#define PORTALS_SIZE_NAME				3
+	#define PORTALS_DURATION_NAME			4
+	#define PORTALS_LAUNCH_POWER_NAME		5
+	#define PORTALS_SOUND_LOOP_TIME_NAME	6
 
-	#define PORTAL_ROCKET_SPEED_NAME			1
-	#define PORTAL_ROCKET_DURATION_NAME			2
-	#define PORTALS_SIZE_NAME					3
-	#define PORTALS_DURATION_NAME				4
-	#define PORTALS_LAUNCH_POWER_NAME 			5
-	#define PORTALS_SOUND_LOOP_TIME_NAME		6
-
-	#define PORTALS_ENTRANCE_PARTICLE_NAME		7
-	#define PORTALS_EXIT_PARTICLE_NAME			8
-	#define PORTALS_OPEN_SOUND_PATH_NAME		9
-	#define PORTALS_LOOP_SOUND_PATH_NAME		10
-	#define PORTALS_CLOSE_SOUND_PATH_NAME		11
+	#define PORTALS_ENTRANCE_PARTICLE_NAME	7
+	#define PORTALS_EXIT_PARTICLE_NAME		8
+	#define PORTALS_OPEN_SOUND_PATH_NAME	9
+	#define PORTALS_LOOP_SOUND_PATH_NAME	10
+	#define PORTALS_CLOSE_SOUND_PATH_NAME	11
 
 	#define PORTALS_ENTER_ENTRANCE_SOUND_PATH_NAME	12
 	#define PORTALS_EXIT_ENTRANCE_SOUND_PATH_NAME	13
@@ -91,21 +88,21 @@ public Plugin myinfo=
 static const int WHITE_COLOR[4] = {255, 255, 255, 255};
 
 #define SPHERE_MODEL		"models/props_gameplay/ball001.mdl"
-#define EMPTY_MODEL			"models/empty.mdl"
-// #define EMPTY_MODEL			"models/props_lakeside_event/vortex_lakeside2.mdl"
+#define EMPTY_MODEL		"models/empty.mdl"
+// #define EMPTY_MODEL		"models/props_lakeside_event/vortex_lakeside2.mdl"
 
 #define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
 #define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
 
 #define	MAX_EDICT_BITS		12
-#define	MAX_EDICTS			(1 << MAX_EDICT_BITS)
+#define	MAX_EDICTS		(1 << MAX_EDICT_BITS)
 
 #define DIST_EPSILON		0.03125
 
 #define POINT_TELEPORT_REENTER_TIME		0.5 // Do not modify below 0.1.
 
-#define ENTERFLAG_APPLY_WEAPONDISABLE 			(1<<0)
-#define ENTERFLAG_APPLY_OFFSET 					(1<<1)
+#define ENTERFLAG_APPLY_WEAPONDISABLE 		(1<<0)
+#define ENTERFLAG_APPLY_OFFSET 			(1<<1)
 
 Handle jumpHUD;
 
@@ -116,7 +113,7 @@ float g_flTeleportEnterCooldown[2049]; // MAX Entity Count
 enum
 {
 	Portal_Owner,
-    Portal_Size,
+	Portal_Size,
 	Portal_LifeTime,
 	Portal_BreakableIndex,
 	Portal_InDuck,
