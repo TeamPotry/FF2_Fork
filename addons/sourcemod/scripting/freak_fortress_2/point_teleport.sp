@@ -138,7 +138,7 @@ enum
 	Portal_EnterEntranceSoundPath,
 	Portal_EnterExitSoundPath,
 
-	Portal_Max
+	Portal_MAX
 };
 
 methodmap CTFPortal < ArrayList {
@@ -631,7 +631,7 @@ public void Portal_Update(CTFPortal portal)
 
 public int Native_CTFPortal_Create(Handle plugin, int numParams)
 {
-	CTFPortal array = view_as<CTFPortal>(new ArrayList(PLATFORM_MAX_PATH, Portal_Max));
+	CTFPortal array = view_as<CTFPortal>(new ArrayList(PLATFORM_MAX_PATH, Portal_MAX));
 
 	array.Owner = GetNativeCell(1);
 
