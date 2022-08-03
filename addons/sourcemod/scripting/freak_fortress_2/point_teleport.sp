@@ -450,7 +450,7 @@ methodmap CTFPortal < ArrayList {
 			TeleportEntity(func, pos, NULL_VECTOR, NULL_VECTOR);
 
 			this.BreakableIndex = func;
-			SDKHook(func, SDKHook_OnTakeDamage, Portal_OnTakeDamage);
+			SDKHook(func, SDKHook_OnTakeDamagePost , Portal_OnTakeDamage);
 
 			// PrintToServer("func: %d", func);
 			this.AddThisToList();
@@ -638,13 +638,13 @@ public int Native_CTFPortal_Create(Handle plugin, int numParams)
 	return view_as<int>(array);
 }
 
-public Action Portal_OnTakeDamage(int victim, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public void Portal_OnTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
 	// PrintToServer("victim: %d, attacker: %d, damage: %.1f, damagetype: %d", victim, attacker, damage, damagetype);
 	// PrintToServer("damageForce: %.1f %.1f %.1f, damagePosition: %.1f %.1f %.1f", damageForce[0], damageForce[1], damageForce[2], damagePosition[0], damagePosition[1], damagePosition[2]);
 	
 	if(!(damagetype & (DMG_BULLET | DMG_BUCKSHOT)))
-		return Plugin_Continue;
+		return;
 
 	CTFPortal portal = g_hPortalList.Get(g_hPortalList.SearchBreakable(victim));
 
@@ -653,14 +653,14 @@ public Action Portal_OnTakeDamage(int victim, int& attacker, int& inflictor, flo
 	portal.GetExitPosition(exitPos);
 
 	SubtractVectors(startPos, damagePosition, angles);
+	SubtractVectors(exitPos, angles, exitPos);
 	float distance = GetVectorLength(angles);
 	NormalizeVector(angles, angles);
 
 	char effectName[64];
 	GetBulletEffectName(TF2_GetClientTeam(attacker), effectName, sizeof(effectName));
+
 	FireBullet(attacker, attacker, exitPos, angles, damage, distance * 500, damagetype, effectName);
-	
-	return Plugin_Continue;
 }
 
 // Is enum struct the best option?
