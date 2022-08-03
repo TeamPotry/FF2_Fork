@@ -1,5 +1,7 @@
 /*
 	"point_teleport"
+	"slot"			"2"			// ability slot (2: In Unofficial FF2, to avoid view angle check.)
+	"charge time"	"1.5"		// Only for Unofficial FF2.
 	"arg1" 		"1000.0" 	// "rocket speed"
 	"arg2"		"2.5"		// "rocket duration"
 	"arg3"		"75.0"		// "portal size"
@@ -33,14 +35,14 @@
 
 #pragma newdecls required
 
-#define PLUGIN_VERSION "20220731"
+#define PLUGIN_VERSION "20220802"
 
 public Plugin myinfo=
 {
-	name="Freak Fortress 2: Pointing Abilities",
-	author="Nopied◎",
-	description="Replace default Teleport ability",
-	version=PLUGIN_VERSION,
+	name = "Freak Fortress 2: Pointing Abilities",
+	author = "Nopied◎",
+	description = "Replace default Teleport ability",
+	version = PLUGIN_VERSION,
 };		
 
 #if defined _ff2_fork_general_included
@@ -100,10 +102,16 @@ static const int WHITE_COLOR[4] = {255, 255, 255, 255};
 
 #define DIST_EPSILON		0.03125
 
+#define POINT_TELEPORT_REENTER_TIME		0.5 // Do not modify below 0.1.
+
+#define ENTERFLAG_APPLY_WEAPONDISABLE 			(1<<0)
+#define ENTERFLAG_APPLY_OFFSET 					(1<<1)
+
 Handle jumpHUD;
 
 int g_iBeamModel, g_iHaloModel;
 float g_flTeleportDistance[MAXPLAYERS+1];
+float g_flTeleportEnterCooldown[2049]; // MAX Entity Count
 
 enum
 {
@@ -472,12 +480,12 @@ methodmap CTFPortal < ArrayList {
 		RequestFrame(Portal_Update, this);
 	}
 
-	public void TeleportToExit(int ent)
+	public void TeleportToExit(int ent, int flags)
 	{
 		float exitPos[3], angles[3], velocity[3];
 		this.GetExitPosition(exitPos);
 
-		if(ent <= MaxClients) // Not player
+		if(ent <= MaxClients) // player
 		{
 			this.GetLaunchAngles(angles);
 			ScaleVector(angles, this.LaunchPower);
@@ -487,12 +495,29 @@ methodmap CTFPortal < ArrayList {
 
 			TeleportEntity(ent, exitPos, NULL_VECTOR, angles);
 			UTIL_ScreenFade(ent, WHITE_COLOR, 0.1, 0.3, FFADE_IN);
+
+			if(flags & ENTERFLAG_APPLY_WEAPONDISABLE)
+				ApplyPlayerWeaponDisable(ent, 2.0);
+
 			return;
 		}
 		
 		// other entities
+		float pos[3];
+
+		GetEntPropVector(ent, Prop_Data, "m_vecOrigin", pos);
 		GetEntPropVector(ent, Prop_Send, "m_angRotation", angles);
 		GetEntPropVector(ent, Prop_Data, "m_vecVelocity", velocity);
+
+		if(flags & ENTERFLAG_APPLY_OFFSET)
+		{
+			float startPos[3];
+			this.GetEntrancePosition(startPos);
+
+			SubtractVectors(startPos, pos, pos);
+			SubtractVectors(exitPos, pos, exitPos);
+		}
+
 		float speed = GetVectorLength(velocity);
 		if(speed <= 0.0)
 			GetEntPropVector(ent, Prop_Send, "m_vInitialVelocity", velocity);
@@ -574,20 +599,29 @@ public void Portal_Update(CTFPortal portal)
 		portal.SoundNextLoopTime = GetGameTime() + portal.SoundLoopTime;
 	}
 
+	int target = -1;
 	bool enter = false;
-	int target = GetEntityInSpot(pos, portal.Size);
-	if((IsValidClient(target) && !TF2_IsPlayerInCondition(target, TFCond_Dazed)
-		&& (!portal.Ducked || (portal.Ducked && GetEntProp(target, Prop_Send, "m_bDucked") > 0)))
-		|| (!IsValidClient(target) && IsValidEntity(target)))
+	
+	while ((target = GetEntityInSpot(target, pos, portal.Size)) < 2048)
 	{
-		enter = true;
-		portal.TeleportToExit(target);
-		
+		if(((IsValidClient(target) && g_flTeleportEnterCooldown[target] < GetGameTime()) 
+			&& !TF2_IsPlayerInCondition(target, TFCond_Dazed)
+			&& (!portal.Ducked || (portal.Ducked && GetEntProp(target, Prop_Send, "m_bDucked") > 0)))
+			|| (target > MaxClients && IsValidEntity(target)))
+		{
+			enter = true;
+			portal.TeleportToExit(target, ENTERFLAG_APPLY_OFFSET);
+			break;
+		}
 	}
 
-	portal.GetExitPosition(exitPos);
-	if(enter)
+/* // SM 1.11
+	TR_EnumerateEntitiesSphere(pos, portal.Size, PARTITION_TRIGGER_EDICTS, PortalFilter, portal);
+	bool enter = TR_DidHit();
+*/
+	if(enter && g_flTeleportEnterCooldown[target] < GetGameTime())
 	{
+		g_flTeleportEnterCooldown[target] = GetGameTime() + POINT_TELEPORT_REENTER_TIME;
 		portal.DispatchTPEffect(pos, exitPos);
 
 		portal.GetEnterEntranceSound(sound, PLATFORM_MAX_PATH);
@@ -962,6 +996,8 @@ public void OnPluginStart2()
 	if(jumpHUD == null)
 		ThrowError("Failed to create HudSynchronizer");
 
+	HookEvent("teamplay_round_start", OnRoundStart);
+
 	LoadTranslations("ff2_point_teleport.phrases");
 
 	// Wait.. Should reload on map change?
@@ -1010,6 +1046,16 @@ public void OnMapStart()
 
 	PrecacheModel(SPHERE_MODEL, true);
 	PrecacheModel(EMPTY_MODEL, true);
+}
+
+public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	for(int ent = 1; ent <= 2048; ent++)
+	{
+		g_flTeleportEnterCooldown[ent] = 0.0;
+	}
+
+	return Plugin_Continue;
 }
 
 #if defined _ff2_fork_general_included
@@ -1100,8 +1146,6 @@ void Charge_Teleport(int boss, int status, int slot = -3)
 #endif
 		case 0, 2:
 		{
-// !defined
-#if !defined _ff2_fork_general_included 
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 
 			char message[256];
@@ -1258,8 +1302,7 @@ CTFPortal CreateAndOpenPortalByPlayer(int player, float endPos[3], int abilitySl
 	portal.Open();
 	portal.DispatchTPEffect(currentPos, endPos); // 보스가 이미 통과함
 
-	UTIL_ScreenFade(player, WHITE_COLOR, 0.1, 0.3, FFADE_IN);
-	ApplyPlayerWeaponDisable(player, 2.0);
+	portal.TeleportToExit(player, ENTERFLAG_APPLY_WEAPONDISABLE);
 
 	return portal;
 }
@@ -1639,24 +1682,27 @@ stock float fmodf(float num, float denom)
 	return num - denom * RoundToFloor(num / denom);
 }
 
-int GetEntityInSpot(float pos[3], float size)
+
+// NOTE: This is mess.
+// If this gonna add object or something here, don't forget edit Portal_Update.
+int GetEntityInSpot(int startIndex = -1, float pos[3], float size)
 {
 	float targetPos[3];
-	int ent = -1;
+	int ent = startIndex + 1;
 
-	for(int client = 1; client <= MaxClients; client++)
+	for(; ent <= MaxClients; ent++)
 	{
-		if(!IsValidClient(client) || !IsPlayerAlive(client))
+		if(!IsValidClient(ent) || !IsPlayerAlive(ent))
 			continue;
 
-		GetClientEyePosition(client, targetPos);
-		// GetEntPropVector(client, Prop_Data, "m_vecOrigin", targetPos);
+		// GetClientEyePosition(client, targetPos);
+		GetEntPropVector(ent, Prop_Data, "m_vecOrigin", targetPos);
 		if(GetVectorDistance(pos, targetPos) <= size)
 		{
 			// FIXME:
 			// TR_TraceRayFilter(pos, targetPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
 			// if(!TR_DidHit())
-			return client;
+			return ent;
 		}
 	}
 
@@ -1674,7 +1720,7 @@ int GetEntityInSpot(float pos[3], float size)
 		}
 	}
 
-	return -1;
+	return 2048; // or use GetMaxEntities()?
 }
 
 stock bool IsStockInPosition(int ent, float pos[3], float vecMin[3], float vecMax[3])
@@ -1682,6 +1728,22 @@ stock bool IsStockInPosition(int ent, float pos[3], float vecMin[3], float vecMa
 	TR_TraceHullFilter(pos, pos, vecMin, vecMax, MASK_ALL, TraceAnything, ent);
 	return TR_DidHit();
 }
+/* // NOTE: SM 1.11
+public bool PortalFilter(int ent, CTFPortal portal)
+{
+	if(portal.BreakableIndex == ent)	return false;
+
+	if(((IsValidClient(ent) && g_flTeleportEnterCooldown[ent] < GetGameTime()) 
+			&& !TF2_IsPlayerInCondition(ent, TFCond_Dazed)
+			&& (!portal.Ducked || (portal.Ducked && GetEntProp(ent, Prop_Send, "m_bDucked") > 0)))
+			|| (!IsValidClient(ent) && IsValidEntity(ent)))
+	{
+		portal.TeleportToExit(ent, ENTERFLAG_APPLY_OFFSET);
+	}
+
+	return true;
+}
+*/
 
 public bool TraceAnything(int entity, int contentsMask, any data)
 {
