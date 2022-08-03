@@ -1064,9 +1064,12 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 public Action FF2_OnAbility2(int boss, const char[] pluginName, const char[] abilityName, int status)
 #endif
 {
-#if !defined _ff2_fork_general_included
+#if defined _FFBAT_included
+	int slot = FF2_GetArgNamedI(boss, pluginName, abilityName, "slot");	
+#elseif !defined _ff2_fork_general_included
 	int slot = FF2_GetAbilityArgument(boss, pluginName, abilityName, 0);
 #endif
+
 	if(!StrEqual(pluginName, PLUGIN_NAME, false))
 		return;
 
@@ -1148,6 +1151,16 @@ void Charge_Teleport(int boss, int status, int slot = -3)
 		{
 			SetHudTextParams(-1.0, 0.88, 0.15, 255, 255, 255, 255);
 
+// !defined
+#if defined _FFBAT_included
+			char message[256];
+			int buttonMode = FF2_GetArgNamedI(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, "buttonmode", 0);
+			Format(message, sizeof(message), "%t", "Point Teleportation Charge", RoundFloat(charge));
+			Format(message, sizeof(message), "%s (%t)", message, buttonMode == 2 ? "Reload" : "Right Click");
+			Format(message, sizeof(message), "%s\n%t", message, "Point Teleportation Hint");
+			ReAddPercentCharacter(message, sizeof(message), 2);
+			FF2_ShowSyncHudText(client, jumpHUD, "%s", message);
+#elseif !defined _ff2_fork_general_included 
 			char message[256];
 			// char buttonText[32];
 			// int buttonMode = FF2_GetAbilityArgument(boss, this_plugin_name, POINT_TELEPORT_NAME, "buttonmode", 0, slot);
