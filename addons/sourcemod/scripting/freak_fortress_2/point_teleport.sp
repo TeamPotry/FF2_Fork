@@ -1176,6 +1176,9 @@ void Charge_Teleport(int boss, int status, int slot = -3)
 		}
 		case 3:
 		{
+			if(slot == 0)
+				g_flTeleportDistance[client] = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, POINT_TELEPORT_NAME, PORTAL_ROCKET_SPEED_NAME, 1000.0);
+
 			// Throw rocket (portal gate)
 			char abilitySound[PLATFORM_MAX_PATH];
 			float eyePos[3], startPos[3], angles[3], velocity[3], endPos[3];
