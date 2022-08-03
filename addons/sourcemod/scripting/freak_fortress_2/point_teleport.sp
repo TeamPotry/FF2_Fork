@@ -1185,7 +1185,7 @@ void Charge_Teleport(int boss, int status, int slot = -3)
 #if defined _ff2_fork_general_included 
 			if(FF2_FindSound("ability", abilitySound, PLATFORM_MAX_PATH, boss, true, slot))
 #else 
-			if(FF2_RandomSound("ability", abilitySound, PLATFORM_MAX_PATH, boss, slot))
+			if(FF2_RandomSound("sound_point_teleport_rocket", abilitySound, PLATFORM_MAX_PATH, boss, slot))
 #endif
 			{
 #if defined _ff2_fork_general_included 
