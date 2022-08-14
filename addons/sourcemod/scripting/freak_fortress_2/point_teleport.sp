@@ -1258,6 +1258,8 @@ void TryOpenPortal(CTFPortalRocket rocket)
 	GetEntPropVector(owner, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(owner, Prop_Send, "m_vecMaxs", vecMax);
 
+	bool stuck = true;
+
 	do
 	{
 		int stackLastIndex = spotStacker.GetLastPosition(endPos);
@@ -1267,14 +1269,15 @@ void TryOpenPortal(CTFPortalRocket rocket)
 		if(stackLastIndex == -1)
 			return;
 
-		if(!IsStockInPosition(owner, endPos, vecMin, vecMax))
-			break;
+		stuck = IsStockInPosition(owner, endPos, vecMin, vecMax);
+		if(!stuck)	break;
 		
 		spotStacker.Erase(stackLastIndex);
 	}
 	while(spotStacker.Length > 0);
 
-	CreateAndOpenPortalByPlayer(owner, endPos);
+	if(!stuck)
+		CreateAndOpenPortalByPlayer(owner, endPos);
 }
 
 /*
