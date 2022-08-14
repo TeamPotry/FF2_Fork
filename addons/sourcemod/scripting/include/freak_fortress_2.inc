@@ -61,7 +61,7 @@ native void FF2_UnregisterSubplugin(char[] pluginName);
  * @param version   An array of size 3 that will contain the major, minor, and stable version numbers respectively
  * @return			True if the server is running a dev version of FF2, false otherwise
  */
-native void FF2_GetFF2Version(int version[] = {0, ...});
+native void FF2_GetFF2Version(int version[3]);
 
 /**
  * Gets current round state

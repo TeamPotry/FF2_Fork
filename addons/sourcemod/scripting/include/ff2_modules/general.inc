@@ -357,10 +357,10 @@ stock int ShowGameText(int team, float time, char[] buffer, any ...)
         DispatchSpawn(ent);
 
         Format(temp, sizeof(temp), "OnUser1 !self:kill::%.1f:1", time);
-		SetVariantString(temp);
+        SetVariantString(temp);
 
-		AcceptEntityInput(ent, "AddOutput");
-		AcceptEntityInput(ent, "FireUser1");
+        AcceptEntityInput(ent, "AddOutput");
+        AcceptEntityInput(ent, "FireUser1");
 
         AcceptEntityInput(ent, "Display", ent, ent);
         return ent;
