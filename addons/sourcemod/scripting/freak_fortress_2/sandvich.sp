@@ -22,7 +22,7 @@ public Action SoundHook(int clients[MAXPLAYERS], int &numClients, char sample[PL
 	  char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
 	// vo/SandwichEat09.mp3
-    if(StrEqual(sample, "vo/SandwichEat09.mp3") && FF2_GetBossIndex(entity) == -1)
+	if(StrEqual(sample, "vo/SandwichEat09.mp3") && FF2_GetBossIndex(entity) == -1)
 		TF2_AddCondition(entity, TFCond_UberchargedCanteen, 3.0);
 
 	return Plugin_Continue;

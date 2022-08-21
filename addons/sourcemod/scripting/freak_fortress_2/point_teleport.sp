@@ -1579,6 +1579,8 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 
 		return particle;
 	}
+
+	return -1;
 }
 
 // https://github.com/Pelipoika/The-unfinished-and-abandoned/blob/master/CSGO_SentryGun.sp
