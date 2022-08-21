@@ -107,6 +107,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
     {
         g_iRobotOwnerIndex[client] = -1;
     }
+
+	return Plugin_Continue;
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -390,6 +392,8 @@ public Action Timer_MakeRobotMinion(Handle timer, DataPack pack)
         AcceptEntityInput(client, "SetCustomModel");
         SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
     }
+
+	return Plugin_Continue;
 }
 
 public void GetRobotModelPath(TFClassType class, char[] path, int buffer)
@@ -845,7 +849,11 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 
 		DispatchKeyValueVector(particle, "angles", angles);
 		AcceptEntityInput(particle, "start");
+
+		return particle;
 	}
+
+	return -1;
 }
 
 stock float AngleNormalize(float angle)

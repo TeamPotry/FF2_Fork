@@ -32,6 +32,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
     for(int client = 1; client < MaxClients; client++)
         for(int loop = 0; loop < sizeof(g_flPlayerDPS[]); loop++)
             g_flPlayerDPS[client][loop] = 0.0;
+
+	return Plugin_Continue;
 }
 
 public Action DPSTimer(Handle timer)
@@ -42,6 +44,8 @@ public Action DPSTimer(Handle timer)
     {
         g_flPlayerDPS[client][g_Count] = 1.0 < g_flPlayerDPS[client][g_Count] ? g_flPlayerDPS[client][g_Count] * 0.9 : 0.0;
     }
+
+	return Plugin_Continue;
 }
 
 public void OnClientPostAdminCheck(int client)

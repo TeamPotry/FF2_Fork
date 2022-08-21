@@ -64,6 +64,8 @@ public Action SentryBustPrepare(Handle timer, any boss)
 
 	TF2_AddCondition(client, TFCond_Ubercharged, 2.0);
 	SetEntProp(client, Prop_Data, "m_takedamage", 0);
+
+	return Plugin_Continue;
 }
 
 public Action SentryBusting(Handle timer, any boss)
@@ -76,11 +78,11 @@ public Action SentryBusting(Handle timer, any boss)
 	float clientPos[3];
 	GetClientAbsOrigin(client, clientPos);
 
-	float range = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, EXPLODE_ABILITY, "explosion range", 700.0),
-			power = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, EXPLODE_ABILITY, "explosion power", 600.0),
-			multiplier = g_flPriviousRage[client] / 100.0;
+	// range = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, EXPLODE_ABILITY, "explosion range", 700.0),
+	float power = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, EXPLODE_ABILITY, "explosion power", 600.0),
+		multiplier = g_flPriviousRage[client] / 100.0;
 
-	range *= multiplier;
+	// range *= multiplier;
 	power *= multiplier;
 
 	int explosion = CreateEntityByName("env_explosion");

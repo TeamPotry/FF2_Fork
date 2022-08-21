@@ -59,9 +59,10 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 public Action Event_ArenaRoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
 	if(!FF2_IsFF2Enabled() || FF2_GetRoundState()!=1)
-		return;
+		return Plugin_Continue;
 
 	PrepareAbilities();
+	return Plugin_Continue;
 }
 
 public void PrepareAbilities()
@@ -155,6 +156,7 @@ public Action Event_ArenaWinPanel(Handle event, const char[] name, bool dontBroa
 			}
 		}
 	}
+	return Plugin_Continue;
 }
 
 public void PersistentTFCondition_PreThink(int client)

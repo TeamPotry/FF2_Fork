@@ -42,12 +42,16 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		g_flHealCooldown[client] = 0.0;
 		g_flHealStun[client] = 0.0;
 	}
+
+	return Plugin_Continue;
 }
 
 public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcast)
 {
     int client=GetClientOfUserId(event.GetInt("userid"));
     g_bGhost[client] = false;
+
+	return Plugin_Continue;
 }
 
 public void OnClientDisconnect(int client)

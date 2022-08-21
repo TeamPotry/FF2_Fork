@@ -765,7 +765,7 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 
 
 // Copied from ff2_otokiru
-stock int SetAmmo(int client, int slot, int ammo)
+stock void SetAmmo(int client, int slot, int ammo)
 {
 	int weapon = GetPlayerWeaponSlot(client, slot);
 	if(IsValidEntity(weapon))
@@ -792,6 +792,7 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
+/*
 float[] GetNormalAngles(float normal[3])
 {
 	float angles[3], axisNormal;
@@ -806,6 +807,7 @@ float[] GetNormalAngles(float normal[3])
 
 	return angles;
 }
+*/
 
 public bool TraceAnything(int entity, int contentsMask, any data)
 {

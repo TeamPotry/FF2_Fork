@@ -980,6 +980,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	CreateNative("CTFPortal.AddThisToList", Native_CTFPortal_AddThisToList);
 	CreateNative("CTFPortalRocket.AddThisToList", Native_CTFPortalRocket_AddThisToList);
+
+	return APLRes_Success;
 }
 
 #if defined _ff2_fork_general_included
@@ -1574,6 +1576,8 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 
 		DispatchKeyValueVector(particle, "angles", angles);
 		AcceptEntityInput(particle, "start");
+
+		return particle;
 	}
 }
 

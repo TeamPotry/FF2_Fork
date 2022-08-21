@@ -19,7 +19,6 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
-Handle g_SDKCallGetEffectBarProgress;
 Handle g_SDKCallInitDroppedWeapon;
 Handle g_SDKCallPickupWeaponFromOther;
 
@@ -194,6 +193,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	// ff2_modules/general.inc
 	CreateNative("FF2_DropWeapon", Native_DropWeapon);
 	CreateNative("FF2_EqiupWeaponFromDropped", Native_EqiupWeaponFromDropped);
+
+	return APLRes_Success;
 }
 
 public int Native_CTFDroppedWeapon_Create(Handle plugin, int numParams)
@@ -252,9 +253,10 @@ public int Native_DropWeapon(Handle plugin, int numParams)
 	return DropWeapon(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), true);
 }
 
-public int Native_EqiupWeaponFromDropped(Handle plugin, int numParams)
+public /*void*/int Native_EqiupWeaponFromDropped(Handle plugin, int numParams)
 {
 	EqiupWeaponFromDropped(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public void OnPluginStart()
@@ -264,7 +266,6 @@ public void OnPluginStart()
 	GameData gamedata = new GameData("potry");
 	if (gamedata)
 	{
-		g_SDKCallGetEffectBarProgress = PrepSDKCall_GetEffectBarProgress(gamedata);
 		g_SDKCallPickupWeaponFromOther = PrepSDKCall_PickupWeaponFromOther(gamedata);
 		g_SDKCallInitDroppedWeapon = PrepSDKCall_InitDroppedWeapon(gamedata);
 
@@ -634,28 +635,6 @@ bool SDKCall_PickupWeaponFromOther(int player, int weapon)
 		return SDKCall(g_SDKCallPickupWeaponFromOther, player, weapon);
 
 	return false;
-}
-
-
-Handle PrepSDKCall_GetEffectBarProgress(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CTFWeaponBase::GetEffectBarProgress");
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CTFWeaponBase::GetEffectBarProgress");
-
-	return call;
-}
-
-float SDKCall_GetEffectBarProgress(int weapon)
-{
-	if (g_SDKCallGetEffectBarProgress)
-		return SDKCall(g_SDKCallGetEffectBarProgress, weapon);
-
-	return -1.0;
 }
 
 stock int SpawnWeapon(int client, char[] name, int index, int level, int quality, char[] attribute)
