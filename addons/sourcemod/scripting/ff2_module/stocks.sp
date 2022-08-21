@@ -476,7 +476,7 @@ void ForceTeamWin(TFTeam team)
 	AcceptEntityInput(entity, "SetWinner");
 }
 
-stock void GetClientCloakIndex(int client)
+stock int GetClientCloakIndex(int client)
 {
 	if(!IsValidClient(client, false))
 	{

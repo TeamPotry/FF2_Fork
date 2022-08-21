@@ -447,14 +447,16 @@ stock void SetMusicSetting(int client, char[] musicId, bool value)
 //NATIVES
 ///
 
-public int Native_StartMusic(Handle plugin, int numParams)
+public /*void*/int Native_StartMusic(Handle plugin, int numParams)
 {
 	StartMusic(GetNativeCell(1));
+	return 0;
 }
 
-public int Native_StopMusic(Handle plugin, int numParams)
+public /*void*/ Native_StopMusic(Handle plugin, int numParams)
 {
 	StopMusic(GetNativeCell(1));
+	return 0;
 }
 
 public int Native_FindSound(Handle plugin, int numParams)
@@ -469,14 +471,16 @@ public int Native_FindSound(Handle plugin, int numParams)
 	return soundExists;
 }
 
-public int Native_SetSoundFlags(Handle plugin, int numParams)
+public /*void*/int Native_SetSoundFlags(Handle plugin, int numParams)
 {
 	SetSoundFlags(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
-public int Native_ClearSoundFlags(Handle plugin, int numParams)
+public /*void*/int Native_ClearSoundFlags(Handle plugin, int numParams)
 {
 	ClearSoundFlags(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public int Native_CheckSoundFlags(Handle plugin, int numParams)

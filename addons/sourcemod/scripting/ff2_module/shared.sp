@@ -26,6 +26,8 @@
 #define HUDS_CONFIG "hud_setting.cfg"
 #define CHANGELOG "changelog.txt"
 
+#define KILLSTREAK_DAMAGE_INTERVAL 500
+
 bool Enabled=true;
 bool Enabled2=true;
 
@@ -59,7 +61,10 @@ int ChangeLogLastTime;
 
 int Boss[MAXPLAYERS+1];
 
-FF2HudQueue PlayerHudQueue[MAXPLAYERS+1] = null;
+FF2HudQueue PlayerHudQueue[MAXPLAYERS+1] = {null, ...};
+
+// TODO: REMOVE THIS
+int shortname[MAXPLAYERS+1];
 
 enum FF2RoundState
 {

@@ -12,68 +12,77 @@ public int Native_GetBossHealth(Handle plugin, int numParams)
 {
 	return GetBossHealth(GetNativeCell(1));
 }
-public int Native_SetBossHealth(Handle plugin, int numParams)
+
+public /*void*/int Native_SetBossHealth(Handle plugin, int numParams)
 {
 	SetBossHealth(GetNativeCell(1), GetNativeCell(2));
 	UpdateHealthBar(false);
+	return 0;
 }
 
-public int Native_GetBossMaxHealth(Handle plugin, int numParams)
+public /*float*/any Native_GetBossMaxHealth(Handle plugin, int numParams)
 {
 	return GetBossMaxHealth(GetNativeCell(1));
 }
-public int Native_SetBossMaxHealth(Handle plugin, int numParams)
+public /*void*/int Native_SetBossMaxHealth(Handle plugin, int numParams)
 {
 	SetBossMaxHealth(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public int Native_GetBossLives(Handle plugin, int numParams)
 {
 	return GetBossLives(GetNativeCell(1));
 }
-public int Native_SetBossLives(Handle plugin, int numParams)
+public /*void*/int Native_SetBossLives(Handle plugin, int numParams)
 {
 	SetBossLives(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public int Native_GetBossMaxLives(Handle plugin, int numParams)
 {
 	return GetBossMaxLives(GetNativeCell(1));
 }
-public int Native_SetBossMaxLives(Handle plugin, int numParams)
+public /*void*/ int Native_SetBossMaxLives(Handle plugin, int numParams)
 {
 	SetBossMaxLives(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
-public int Native_GetBossCharge(Handle plugin, int numParams)
+public /*float*/any Native_GetBossCharge(Handle plugin, int numParams)
 {
-	return view_as<int>(GetBossCharge(GetNativeCell(1), GetNativeCell(2)));
+	return GetBossCharge(GetNativeCell(1), GetNativeCell(2));
 }
-public int Native_SetBossCharge(Handle plugin, int numParams)
+public /*void*/int Native_SetBossCharge(Handle plugin, int numParams)
 {
 	SetBossCharge(GetNativeCell(1), GetNativeCell(2), view_as<float>(GetNativeCell(3)));
+	return 0;
 }
-public int Native_AddBossCharge(Handle plugin, int numParams)
+public /*void*/int Native_AddBossCharge(Handle plugin, int numParams)
 {
 	AddBossCharge(GetNativeCell(1), GetNativeCell(2), view_as<float>(GetNativeCell(3)));
+	return 0;
 }
 
-public int Native_GetBossMaxCharge(Handle plugin, int numParams)
+public /*float*/any Native_GetBossMaxCharge(Handle plugin, int numParams)
 {
-	return view_as<int>(GetBossMaxCharge(GetNativeCell(1)));
+	return GetBossMaxCharge(GetNativeCell(1));
 }
-public int Native_SetBossMaxCharge(Handle plugin, int numParams)
+public /*void*/int Native_SetBossMaxCharge(Handle plugin, int numParams)
 {
 	SetBossMaxCharge(GetNativeCell(1), view_as<float>(GetNativeCell(2)));
+	return 0;
 }
 
 public int Native_GetBossRageDamage(Handle plugin, int numParams)
 {
 	return GetBossRageDamage(GetNativeCell(1));
 }
-public int Native_SetBossRageDamage(Handle plugin, int numParams)
+public /*void*/int Native_SetBossRageDamage(Handle plugin, int numParams)
 {
 	SetBossRageDamage(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public int Native_GetBossTeam(Handle plugin, int numParams)
@@ -133,7 +142,7 @@ public int Native_GetAbilityArgumentFloat(Handle plugin, int numParams)
 	return view_as<int>(GetAbilityArgumentFloatWrapper(GetNativeCell(1), pluginName, abilityName, argument, view_as<float>(GetNativeCell(5)), GetNativeCell(6)));
 }
 
-public int Native_GetAbilityArgumentString(Handle plugin, int numParams)
+public /*void*/int Native_GetAbilityArgumentString(Handle plugin, int numParams)
 {
 	char pluginName[64], abilityName[64], defaultValue[64], argument[64];
 	GetNativeString(2, pluginName, sizeof(pluginName));
@@ -144,13 +153,15 @@ public int Native_GetAbilityArgumentString(Handle plugin, int numParams)
 	char[] abilityString=new char[length];
 	GetAbilityArgumentStringWrapper(GetNativeCell(1), pluginName, abilityName, argument, abilityString, length, defaultValue, GetNativeCell(8));
 	SetNativeString(5, abilityString, length);
+	return 0;
 }
 
 
-public int Native_UseAbility(Handle plugin, int numParams)
+public /*void*/int Native_UseAbility(Handle plugin, int numParams)
 {
 	char pluginName[64], abilityName[64];
 	GetNativeString(2, pluginName, sizeof(pluginName));
 	GetNativeString(3, abilityName, sizeof(abilityName));
 	UseAbility(GetNativeCell(1), pluginName, abilityName, GetNativeCell(4), GetNativeCell(5));
+	return 0;
 }

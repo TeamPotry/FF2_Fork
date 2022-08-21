@@ -300,6 +300,8 @@ public Action ResetTimer(Handle timer, ArrayList pack)
     int slot = pack.Get(1);
     FF2_SetBossCharge(boss, slot, 0.0);
     delete pack;
+
+    return Plugin_Continue;
 }
 
 stock void CreateKillStreak(int attacker, int target, const char[] name, int streak)

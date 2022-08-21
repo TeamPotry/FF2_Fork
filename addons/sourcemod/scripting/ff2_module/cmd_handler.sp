@@ -1,11 +1,12 @@
 public int Handler_Temp(Menu menu, MenuAction action, int client, int selection)
 {
 	// Nop
+	return 0;
 }
 
 public int Handler_FF2Panel(Menu menu, MenuAction action, int client, int selection)
 {
-	if(action==MenuAction_Select)
+	if(action == MenuAction_Select)
 	{
 		switch(selection)
 		{
@@ -43,15 +44,16 @@ public int Handler_FF2Panel(Menu menu, MenuAction action, int client, int select
 			}
 			default:
 			{
-				return;
+				return 0;
 			}
 		}
 	}
+	return 0;
 }
 
 public int Handler_AdvanceMenuPanel(Menu menu, MenuAction action, int client, int selection)
 {
-	if(action==MenuAction_Select)
+	if(action == MenuAction_Select)
 	{
 		switch(selection)
 		{
@@ -69,21 +71,25 @@ public int Handler_AdvanceMenuPanel(Menu menu, MenuAction action, int client, in
 			}
 			default:
 			{
-				return;
+				return 0 ;
 			}
 		}
 	}
+
+	return 0;
 }
 
 public int HudMenu_Handler(Menu menu, MenuAction action, int client, int selection)
 {
-	if(action==MenuAction_Select)
+	if(action == MenuAction_Select)
 	{
 		int drawStyle;
 		char infoBuf[64];
 		menu.GetItem(selection, infoBuf, sizeof(infoBuf), drawStyle);
 		HudSettingMenu(client, infoBuf);
 	}
+
+	return 0;
 }
 
 public int HudSetting_Handler(Menu menu, MenuAction action, int client, int selection)
@@ -96,6 +102,8 @@ public int HudSetting_Handler(Menu menu, MenuAction action, int client, int sele
 
 		HudDataMenu(client, infoBuf);
 	}
+
+	return 0;
 }
 
 public int HudData_Handler(Menu menu, MenuAction action, int client, int selection)
@@ -113,6 +121,8 @@ public int HudData_Handler(Menu menu, MenuAction action, int client, int selecti
 		CPrintToChat(client, "{olive}[FF2]{default} %s: %s", infoBuf, statusString);
 		HudMenu(client, 0);
 	}
+
+	return 0;
 }
 
 public int HumanTeamBossMenu_Handler(Menu menu, MenuAction action, int client, int selection)
@@ -124,6 +134,8 @@ public int HumanTeamBossMenu_Handler(Menu menu, MenuAction action, int client, i
 		CPrintToChat(client, "{olive}[FF2]{default} %t: %s",
 			"Human Team Boss Setting Title", selection > 0 ? "OFF" : "ON");
 	}
+
+	return 0;
 }
 
 public int ClassInfoTogglePanelH(Menu menu, MenuAction action, int client, int selection)
@@ -137,6 +149,8 @@ public int ClassInfoTogglePanelH(Menu menu, MenuAction action, int client, int s
 			CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Class Info", selection==2 ? "off" : "on");
 		}
 	}
+
+	return 0;
 }
 
 public int Handler_ChangelogMenu(Menu menu, MenuAction action, int client, int selection)
@@ -166,6 +180,8 @@ public int Handler_ChangelogMenu(Menu menu, MenuAction action, int client, int s
 		}
 		logMenu.Display(client, MENU_TIME_FOREVER);
 	}
+
+	return 0;
 }
 
 public int MusicTogglePanelH(Menu menu, MenuAction action, int client, int selection)
@@ -193,6 +209,7 @@ public int MusicTogglePanelH(Menu menu, MenuAction action, int client, int selec
 		}
 		CPrintToChat(client, "{olive}[FF2]{default} %t", "FF2 Music", selection==2 ? "off" : "on");
 	}
+	
 	return 0;
 }
 
@@ -242,6 +259,8 @@ public int MusicTrackMenu_Handler(Menu menu, MenuAction action, int client, int 
 			}
 		}
 	}
+
+	return 0; 
 }
 
 public int VoiceTogglePanelH(Menu menu, MenuAction action, int client, int selection)
@@ -266,4 +285,6 @@ public int VoiceTogglePanelH(Menu menu, MenuAction action, int client, int selec
 			}
 		}
 	}
+
+	return 0;
 }

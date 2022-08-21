@@ -44,7 +44,7 @@ public int GetBossHealth(int boss)
 {
 	return BossHealth[boss];
 }
-public int SetBossHealth(int boss, int health)
+public void SetBossHealth(int boss, int health)
 {
 	BossHealth[boss]=health;
 }
@@ -53,7 +53,7 @@ public int GetBossMaxHealth(int boss)
 {
 	return BossHealthMax[boss];
 }
-public int SetBossMaxHealth(int boss, int health)
+public void SetBossMaxHealth(int boss, int health)
 {
 	BossHealthMax[boss]=health;
 }
@@ -62,7 +62,7 @@ public int GetBossLives(int boss)
 {
 	return BossLives[boss];
 }
-public int SetBossLives(int boss, int lives)
+public void SetBossLives(int boss, int lives)
 {
 	BossLives[boss]=lives;
 }
@@ -71,7 +71,7 @@ public int GetBossMaxLives(int boss)
 {
 	return BossLivesMax[boss];
 }
-public int SetBossMaxLives(int boss, int lives)
+public void SetBossMaxLives(int boss, int lives)
 {
 	BossLivesMax[boss]=lives;
 }
@@ -80,7 +80,7 @@ public float GetBossCharge(int boss, int slot)
 {
 	return BossCharge[boss][slot];
 }
-public int SetBossCharge(int boss, int slot, float charge)
+public void SetBossCharge(int boss, int slot, float charge)
 {
 	BossCharge[boss][slot]=charge;
 }
@@ -89,7 +89,7 @@ public float GetBossMaxCharge(int boss)
 {
 	return BossMaxRageCharge[boss];
 }
-public int SetBossMaxCharge(int boss, float charge)
+public void SetBossMaxCharge(int boss, float charge)
 {
 	BossMaxRageCharge[boss]=charge;
 }
@@ -119,7 +119,7 @@ public int GetBossRageDamage(int boss)
 {
 	return BossRageDamage[boss];
 }
-public int SetBossRageDamage(int boss, int damage)
+public void SetBossRageDamage(int boss, int damage)
 {
 	BossRageDamage[boss]=damage;
 }
@@ -305,7 +305,7 @@ public float GetAbilityArgumentFloatWrapper(int boss, const char[] pluginName, c
 	return GetAbilityArgumentFloat(boss, pluginName, abilityName, argument, defaultValue, slot);
 }
 
-public int GetAbilityArgumentStringWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, char[] abilityString, int length, const char[] defaultValue, int slot)
+public void GetAbilityArgumentStringWrapper(int boss, const char[] pluginName, const char[] abilityName, const char[] argument, char[] abilityString, int length, const char[] defaultValue, int slot)
 {
 	GetAbilityArgumentString(boss, pluginName, abilityName, argument, abilityString, length, defaultValue, slot);
 }
