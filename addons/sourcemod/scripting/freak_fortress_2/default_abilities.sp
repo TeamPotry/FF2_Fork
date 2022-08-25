@@ -784,9 +784,7 @@ int DissolveRagdoll(int ragdoll)
 {
 	int dissolver=CreateEntityByName("env_entity_dissolver");
 	if(dissolver==-1)
-	{
-		return;
-	}
+		return -1;
 
 	DispatchKeyValue(dissolver, "dissolvetype", "0");
 	DispatchKeyValue(dissolver, "magnitude", "200");
