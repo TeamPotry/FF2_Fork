@@ -74,7 +74,6 @@ int ComboPunchCount[MAXPLAYERS+1];
 float KSpreeTimer[MAXPLAYERS+1];
 int KSpreeCount[MAXPLAYERS+1];
 float GlowTimer[MAXPLAYERS+1];
-int shortname[MAXPLAYERS+1];
 bool emitRageSound[MAXPLAYERS+1];
 
 float RocketJumpPosition[MAXPLAYERS+1][3];
@@ -872,11 +871,13 @@ stock bool IsFF2Map()
 	return false;
 }
 
+
+// TODO: Mess
 stock bool CheckToChangeMapDoors()
 {
 	if(!Enabled || !Enabled2)
 	{
-		return;
+		return false;
 	}
 
 	char config[PLATFORM_MAX_PATH];
@@ -888,7 +889,7 @@ stock bool CheckToChangeMapDoors()
 		{
 			checkDoors=true;
 		}
-		return;
+		return checkDoors;
 	}
 
 	File file=OpenFile(config, "r");
@@ -898,7 +899,7 @@ stock bool CheckToChangeMapDoors()
 		{
 			checkDoors=true;
 		}
-		return;
+		return checkDoors;
 	}
 
 	while(!file.EndOfFile() && file.ReadLine(config, sizeof(config)))
@@ -913,10 +914,11 @@ stock bool CheckToChangeMapDoors()
 		{
 			delete file;
 			checkDoors=true;
-			return;
+			return checkDoors;
 		}
 	}
 	delete file;
+	return false;
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -988,6 +990,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	for(int client=1; client<=MaxClients; client++)
 	{
 		Damage[client]=0;
+		LastNoticedDamage[client] = KILLSTREAK_DAMAGE_INTERVAL;
 		Assist[client]=0;
 		uberTarget[client]=-1;
 		emitRageSound[client]=true;
@@ -1163,6 +1166,7 @@ public Action Timer_EnableCap(Handle timer)
 			}
 		}
 	}
+	return Plugin_Continue;
 }
 
 public Action BossInfoTimer_Begin(Handle timer, int boss)
@@ -1488,7 +1492,7 @@ public Action Timer_CalcQueuePoints(Handle timer)
 	{
 		case Plugin_Stop, Plugin_Handled:
 		{
-			return;
+			return Plugin_Continue;
 		}
 		case Plugin_Changed:
 		{
@@ -1519,6 +1523,8 @@ public Action Timer_CalcQueuePoints(Handle timer)
 			}
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 public Action StartResponseTimer(Handle timer)
@@ -1653,11 +1659,11 @@ public void SetSettingData(int client, const char[] settingId, any value, DBSDat
 
 	switch(type)
 	{
-		case KvData_Int:
+		case DBSData_Int:
 		{
 			Format(data, sizeof(data), "%d", value);
 		}
-		case KvData_Float:
+		case DBSData_Float:
 		{
 			Format(data, sizeof(data), "%.1f", value);
 		}
@@ -1670,7 +1676,7 @@ public void SetSettingData(int client, const char[] settingId, any value, DBSDat
 	SetSettingStringData(client, settingId, data);
 }
 
-public any Native_SetSettingData(Handle plugin, int numParams)
+public /*void*/int Native_SetSettingData(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	char settingId[128];
@@ -1678,6 +1684,7 @@ public any Native_SetSettingData(Handle plugin, int numParams)
 	DBSDataTypes type = GetNativeCell(4);
 
 	SetSettingData(client, settingId, GetNativeCellRef(3), type);
+	return 0;
 }
 
 public void SetSettingStringData(int client, const char[] settingId, char[] value)
@@ -1685,7 +1692,7 @@ public void SetSettingStringData(int client, const char[] settingId, char[] valu
 	(DBSPlayerData.GetClientData(client)).SetStringData(FF2DATABASE_CONFIG_NAME, FF2_DB_PLAYERDATA_TABLENAME, settingId, "value", value);
 }
 
-public any Native_SetSettingStringData(Handle plugin, int numParams)
+public /*void*/int Native_SetSettingStringData(Handle plugin, int numParams)
 {
 	int client = GetNativeCell(1);
 	char settingId[128], value[128];
@@ -1693,6 +1700,8 @@ public any Native_SetSettingStringData(Handle plugin, int numParams)
 
 	SetSettingStringData(client, settingId, value);
 	SetNativeString(3, value, sizeof(value));
+
+	return 0;
 }
 
 public Action Timer_Move(Handle timer)
@@ -1704,6 +1713,8 @@ public Action Timer_Move(Handle timer)
 			SetEntityMoveType(client, MOVETYPE_WALK);
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 public Action StartRound(Handle timer)
@@ -1751,6 +1762,7 @@ public Action Timer_StartDrawGame(Handle timer)
 	}
 
 	CreateTimer(0.1, Timer_DrawGame, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	return Plugin_Continue;
 }
 
 void CorrectionBossHealth()
@@ -1765,7 +1777,7 @@ void CorrectionBossHealth()
 		{
 			int heal = RoundFloat(BossHealthMax[boss] * ratio);
 
-			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal - (BossLivesMax[boss] - 1));
+			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal - 1);
 			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))));
 		}
 	}
@@ -1793,6 +1805,8 @@ public Action Timer_NextBossPanel(Handle timer)
 		}
 		added[client]=true;
 	}
+
+	return Plugin_Continue;
 }
 
 public Action MessageTimer(Handle timer)
@@ -2930,6 +2944,8 @@ public Action Timer_NoHonorBound(Handle timer, int userid)
 			}
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 /*
@@ -3840,9 +3856,10 @@ void MakePlayerToBoss(int client, int characterIndex)
 	}
 }
 
-public int Native_MakePlayerToBoss(Handle plugin, int numParams)
+public /*void*/int Native_MakePlayerToBoss(Handle plugin, int numParams)
 {
 	MakePlayerToBoss(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public Action Timer_RegenPlayer(Handle timer, int userid)
@@ -3852,6 +3869,8 @@ public Action Timer_RegenPlayer(Handle timer, int userid)
 	{
 		TF2_RegeneratePlayer(client);
 	}
+
+	return Plugin_Continue;
 }
 
 public Action ClientTimer(Handle timer)
@@ -4518,9 +4537,9 @@ void OnBossThink(int client)
 public Action Timer_BotRage(Handle timer, int bot)
 {
 	if(IsValidClient(Boss[bot], false))
-	{
 		FakeClientCommandEx(Boss[bot], "voicemenu 0 0");
-	}
+
+	return Plugin_Continue;
 }
 
 public int ScoutsLeft(int& others)
@@ -5640,21 +5659,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(IsValidEntity(weapon))
 				{
-					static int kStreakDamage;
-					kStreakDamage += RoundFloat(damage);
-					if(kStreakDamage >= 250)
+					if(Damage[attacker] >= LastNoticedDamage[attacker])
 					{
-						int playerStreaks = GetEntProp(attacker, Prop_Send, "m_nStreaks");
-						SetEntProp(attacker, Prop_Send, "m_nStreaks", ++playerStreaks);
-						switch(playerStreaks)
-						{
-							case 5, 10, 15, 20, 25, 50, 75, 100, 150, 200, 250, 500, 750, 1000:
-							{
-								CreateKillStreak(attacker, client, "world", playerStreaks);
-							}
-						}
-						kStreakDamage = 0;
-					}
+						int interval = (Damage[attacker] + view_as<int>(damage)) / KILLSTREAK_DAMAGE_INTERVAL;
+						LastNoticedDamage[attacker] = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
+						CreateKillStreak(attacker, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
+					}			
 				}
 
 				//Sniper rifles aren't handled by the switch/case because of the amount of reskins there are
@@ -6229,17 +6239,7 @@ public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
 {
 	if(Enabled && IsBoss(client))
 	{
-		switch(bossTeleportation)
-		{
-			case -1:  //No bosses are allowed to use teleporters
-			{
-				result=false;
-			}
-			case 1:  //All bosses are allowed to use teleporters
-			{
-				result=true;
-			}
-		}
+		result = bossTeleportation;
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
@@ -6790,84 +6790,6 @@ public Action FF2_OnCheckRules(int client, int characterIndex, int &chance, cons
 	return Plugin_Continue;
 }
 
-public int HintPanelH(Menu menu, MenuAction action, int client, int selection)
-{
-	if(IsValidClient(client) && (action==MenuAction_Select || (action==MenuAction_Cancel && selection==MenuCancel_Exit)))
-	{
-		FF2Flags[client]|=FF2FLAG_CLASSHELPED;
-	}
-	return;
-}
-
-public int QueuePanelH(Menu menu, MenuAction action, int client, int selection)
-{
-	if(action==MenuAction_Select && selection==10)
-	{
-		TurnToZeroPanel(client, client);
-	}
-	return false;
-}
-
-
-public Action QueuePanelCmd(int client, int args)
-{
-	if(!Enabled2)
-	{
-		return Plugin_Continue;
-	}
-
-	char text[64];
-	int items;
-	bool[] added=new bool[MaxClients+1];
-
-	Panel panel=new Panel();
-	SetGlobalTransTarget(client);
-	Format(text, sizeof(text), "%t", "Boss Queue");  //"Boss Queue"
-	panel.SetTitle(text);
-	for(int boss; boss<=MaxClients; boss++)  //Add the current bosses to the top of the list
-	{
-		if(IsBoss(boss))
-		{
-			added[boss]=true;  //Don't want the bosses to show up again in the actual queue list
-			Format(text, sizeof(text), "%N-%i", boss, GetClientQueuePoints(boss));
-			panel.DrawItem(text);
-			items++;
-		}
-	}
-
-	panel.DrawText("---");
-	do
-	{
-		int target=GetClientWithMostQueuePoints(added);  //Get whoever has the highest queue points out of those who haven't been listed yet
-		if(!IsValidClient(target))  //When there's no players left, fill up the rest of the list with blank lines
-		{
-			panel.DrawItem("");
-			items++;
-			continue;
-		}
-
-		Format(text, sizeof(text), "%N-%i", target, GetClientQueuePoints(target));
-		if(client!=target)
-		{
-			panel.DrawItem(text);
-			items++;
-		}
-		else
-		{
-			panel.DrawText(text);  //DrawPanelText() is white, which allows the client's points to stand out
-		}
-		added[target]=true;
-	}
-	while(items<9);
-
-	Format(text, sizeof(text), "%t (%t)", "Your Queue Points", GetClientQueuePoints(client), "Reset Queue Points");  //"Your queue point(s) is {1} (set to 0)"
-	panel.DrawItem(text);
-
-	panel.Send(client, QueuePanelH, MENU_TIME_FOREVER);
-	delete panel;
-	return Plugin_Handled;
-}
-
 public Action ResetQueuePointsCmd(int client, int args)
 {
 	if(!Enabled2)
@@ -6926,54 +6848,6 @@ public Action ResetQueuePointsCmd(int client, int args)
 	return Plugin_Handled;
 }
 
-public int TurnToZeroPanelH(Menu menu, MenuAction action, int client, int position)
-{
-	if(action==MenuAction_Select && position==1)
-	{
-		if(shortname[client]==client)
-		{
-			CPrintToChat(client,"{olive}[FF2]{default} %t", "Reset Queue Points Done");  //Your queue points have been reset to {olive}0{default}
-		}
-		else
-		{
-			CPrintToChat(client, "{olive}[FF2]{default} %t", "Reset Player's Points Done", shortname[client]);  //{olive}{1}{default}'s queue points have been reset to {olive}0{default}
-			CPrintToChat(shortname[client], "{olive}[FF2]{default} %t", "Queue Points Reset by Admin", client);  //{olive}{1}{default} reset your queue points to {olive}0{default}
-		}
-		SetClientQueuePoints(shortname[client], 0);
-	}
-}
-
-public Action TurnToZeroPanel(int client, int target)
-{
-	if(!Enabled2)
-	{
-		return Plugin_Continue;
-	}
-
-	Panel panel=CreatePanel();
-	char text[128];
-	SetGlobalTransTarget(client);
-	if(client==target)
-	{
-		Format(text, 512, "%t", "Reset Queue Points Confirmation");  //Do you really want to set your queue points to 0?
-	}
-	else
-	{
-		Format(text, 512, "%t", "Reset Player's Queue Points", client);  //Do you really want to set {1}'s queue points to 0?
-	}
-
-	PrintToChat(client, text);
-	panel.SetTitle(text);
-	Format(text, sizeof(text), "%t", "Yes");
-	panel.DrawItem(text);
-	Format(text, sizeof(text), "%t", "No");
-	panel.DrawItem(text);
-	shortname[client]=target;
-	panel.Send(client, TurnToZeroPanelH, MENU_TIME_FOREVER);
-	delete panel;
-	return Plugin_Handled;
-}
-
 int GetClientClassInfoCookie(int client)
 {
 	return GetSettingData(client, "class_info_view", DBSData_Int);
@@ -6982,14 +6856,10 @@ int GetClientClassInfoCookie(int client)
 int GetClientQueuePoints(int client)
 {
 	if(!IsValidClient(client))
-	{
 		return 0;
-	}
 
 	if(IsFakeClient(client))
-	{
 		return botqueuepoints;
-	}
 
 	return queuePoints[client];
 }
@@ -7137,6 +7007,8 @@ public int Handler_VoteCharset(Menu menu, MenuAction action, int param1, int par
 	{
 		delete menu;
 	}
+
+	return 0;
 }
 
 public Action Command_Nextmap(int client, int args)
@@ -7191,11 +7063,13 @@ public void RegisterSubplugin(char[] pluginName)
 	PushArrayString(subpluginArray, pluginName);
 }
 
-public int Native_RegisterSubplugin(Handle plugin, int numParams)
+public /*void*/int Native_RegisterSubplugin(Handle plugin, int numParams)
 {
 	char pluginName[64];
 	GetNativeString(1, pluginName, sizeof(pluginName));
 	RegisterSubplugin(pluginName);
+
+	return 0;
 }
 
 public void UnregisterSubplugin(char[] pluginName)
@@ -7207,11 +7081,13 @@ public void UnregisterSubplugin(char[] pluginName)
 	}
 }
 
-public int Native_UnregisterSubplugin(Handle plugin, int numParams)
+public /*void*/int Native_UnregisterSubplugin(Handle plugin, int numParams)
 {
 	char pluginName[64];
 	GetNativeString(1, pluginName, sizeof(pluginName));
 	UnregisterSubplugin(pluginName);
+
+	return 0;
 }
 
 public bool GetFF2Version()
@@ -7286,14 +7162,15 @@ public int Native_GetClientDamage(Handle plugin, int numParams)
 	return GetClientDamage(GetNativeCell(1));
 }
 
-public int SetClientDamage(int client, int damage)
+public void SetClientDamage(int client, int damage)
 {
 	Damage[client]=damage;
 }
 
-public int Native_SetClientDamage(Handle plugin, int numParams)
+public /*void*/int Native_SetClientDamage(Handle plugin, int numParams)
 {
 	SetClientDamage(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public int GetRoundTime()
@@ -7311,9 +7188,10 @@ public void SetRoundTime(float time)
 	timeleft = time;
 }
 
-public int Native_SetRoundTime(Handle plugin, int numParams)
+public /*void*/int Native_SetRoundTime(Handle plugin, int numParams)
 {
 	SetRoundTime(GetNativeCell(1));
+	return 0;
 }
 
 public int GetClientAssist(int client)
@@ -7331,14 +7209,16 @@ public void SetClientAssist(int client, int assist)
 	Assist[client]=assist;
 }
 
-public int Native_SetClientAssist(Handle plugin, int numParams)
+public /*void*/int Native_SetClientAssist(Handle plugin, int numParams)
 {
 	SetClientAssist(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
-public int Native_EquipBoss(Handle plugin, int numParams)
+public /*void*/int Native_EquipBoss(Handle plugin, int numParams)
 {
 	EquipBoss(GetNativeCell(1));
+	return 0;
 }
 
 public Action SpecialAttackToBoss(int attacker, int victimBoss, int weapon, char[] name, float &damage)
@@ -7346,12 +7226,13 @@ public Action SpecialAttackToBoss(int attacker, int victimBoss, int weapon, char
 	return Forward_OnSpecialAttack(attacker, victimBoss, weapon, name, damage);
 }
 
-public int Native_SpecialAttackToBoss(Handle plugin, int numParams)
+public /*void*/int Native_SpecialAttackToBoss(Handle plugin, int numParams)
 {
 	char name[80];
 	GetNativeString(4, name, sizeof(name));
 	float damage = GetNativeCell(5);
 	SpecialAttackToBoss(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), name, damage);
+	return 0;
 }
 
 public Action Forward_OnSpecialAttack(int attacker, int victimBoss, int weapon, const char[] name, float &damage)
@@ -7399,14 +7280,15 @@ public int Native_GetFF2Flags(Handle plugin, int numParams)
 	return GetFF2Flags(GetNativeCell(1));
 }
 
-public int SetFF2Flags(int client, int flags)
+public void SetFF2Flags(int client, int flags)
 {
 	FF2Flags[client]=flags;
 }
 
-public int Native_SetFF2Flags(Handle plugin, int numParams)
+public /*void*/int Native_SetFF2Flags(Handle plugin, int numParams)
 {
 	SetFF2Flags(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public int Native_GetQueuePoints(Handle plugin, int numParams)
@@ -7414,9 +7296,10 @@ public int Native_GetQueuePoints(Handle plugin, int numParams)
 	return GetClientQueuePoints(GetNativeCell(1));
 }
 
-public int Native_SetQueuePoints(Handle plugin, int numParams)
+public /*void*/int Native_SetQueuePoints(Handle plugin, int numParams)
 {
 	SetClientQueuePoints(GetNativeCell(1), GetNativeCell(2));
+	return 0;
 }
 
 public float GetClientGlow(int client)
@@ -7452,9 +7335,10 @@ void SetClientGlow(int client, float time1, float time2=-1.0)
 	}
 }
 
-public int Native_SetClientGlow(Handle plugin, int numParams)
+public /*void*/int Native_SetClientGlow(Handle plugin, int numParams)
 {
 	SetClientGlow(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
+	return 0;
 }
 
 public int Native_Debug(Handle plugin, int numParams)

@@ -103,10 +103,12 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-    for(int client = 1; client <= MaxClients; client++)
-    {
-        g_iRobotOwnerIndex[client] = -1;
-    }
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		g_iRobotOwnerIndex[client] = -1;
+	}
+
+	return Plugin_Continue;
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -373,23 +375,25 @@ public void OnSentryMinionQueue(int sentryRef)
 
 public Action Timer_MakeRobotMinion(Handle timer, DataPack pack)
 {
-    pack.Reset();
-    int client=GetClientOfUserId(pack.ReadCell());
-    TFClassType class = pack.ReadCell();
-    if(client && IsClientInGame(client) && IsPlayerAlive(client))
-    {
-        TF2Attrib_RemoveAll(client);
-        TF2_RemoveAllWeapons(client);
-        TF2_RemoveAllWearables(client);
+	pack.Reset();
+	int client=GetClientOfUserId(pack.ReadCell());
+	TFClassType class = pack.ReadCell();
+	if(client && IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		TF2Attrib_RemoveAll(client);
+		TF2_RemoveAllWeapons(client);
+		TF2_RemoveAllWearables(client);
 
-        SwitchToDefalutWeapon(client, class);
+		SwitchToDefalutWeapon(client, class);
 
-        char model[PLATFORM_MAX_PATH];
-        pack.ReadString(model, PLATFORM_MAX_PATH);
-        SetVariantString(model);
-        AcceptEntityInput(client, "SetCustomModel");
-        SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-    }
+		char model[PLATFORM_MAX_PATH];
+		pack.ReadString(model, PLATFORM_MAX_PATH);
+		SetVariantString(model);
+		AcceptEntityInput(client, "SetCustomModel");
+		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
+	}
+
+	return Plugin_Continue;
 }
 
 public void GetRobotModelPath(TFClassType class, char[] path, int buffer)
@@ -780,11 +784,11 @@ void TE_DispatchEffect(const char[] particle, const float pos[3], const float en
 
 stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, int time=1, int controlpoint=0)
 {
-    int particle = CreateEntityByName("info_particle_system");
+	int particle = CreateEntityByName("info_particle_system");
 
-    char temp[64], targetName[64];
-    if (IsValidEdict(particle))
-    {
+	char temp[64], targetName[64];
+	if (IsValidEdict(particle))
+	{
 		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
 
 		Format(targetName, sizeof(targetName), "tf2particle%i", particle);
@@ -811,14 +815,14 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 				float cpPos[3];
 				GetEntPropVector(controlpoint, Prop_Data, "m_vecOrigin", cpPos);
 				TeleportEntity(cpParticle, cpPos, angles, NULL_VECTOR);
-/*
+			/*
 				// SetVariantString(cpTargetName);
 				SetVariantString("!activator");
 				AcceptEntityInput(cpParticle, "SetParent", controlpoint, cpParticle);
 
 				SetVariantString("flag");
 				AcceptEntityInput(cpParticle, "SetParentAttachment", controlpoint, cpParticle);
-*/
+			*/
 			}
 			// SetEntPropEnt(particle, Prop_Send, "m_hControlPointEnts", controlpoint, 1);
 			// SetEntProp(particle, Prop_Send, "m_iControlPointParents", controlpoint, 1);
@@ -845,7 +849,11 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 
 		DispatchKeyValueVector(particle, "angles", angles);
 		AcceptEntityInput(particle, "start");
+
+		return particle;
 	}
+
+	return -1;
 }
 
 stock float AngleNormalize(float angle)

@@ -21,7 +21,7 @@ public Plugin myinfo = {
 #define INACTIVE 100000000.0
 
 int envFog=-1;
-float fogDuration[MAXPLAYERS+1]=INACTIVE;
+float fogDuration[MAXPLAYERS+1]={INACTIVE, ...};
 bool IsFogActive;
 
 #define THIS_PLUGIN_NAME 		"ff2_fog"

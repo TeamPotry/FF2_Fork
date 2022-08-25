@@ -96,6 +96,8 @@ stock int SpawnExplosion(int owner, float pos[3], int magnitude, float damage)
 	TeleportEntity(explosion, pos, NULL_VECTOR, NULL_VECTOR);
 	AcceptEntityInput(explosion, "Explode");
 	AcceptEntityInput(explosion, "kill");
+
+	return explosion;
 }
 
 stock bool IsBoss(int client)

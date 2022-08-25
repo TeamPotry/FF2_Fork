@@ -69,23 +69,23 @@ stock int PlayAnimation(int entity, char[] anim, float stopDelay = -1.0, float k
 	// SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 0);
 
 	float vecOrigin[3], vecAngles[3];
-    GetEntPropVector(entity, Prop_Data, "m_vecOrigin", vecOrigin);
-    GetEntPropVector(entity, Prop_Data, "m_angRotation", vecAngles);
+	GetEntPropVector(entity, Prop_Data, "m_vecOrigin", vecOrigin);
+	GetEntPropVector(entity, Prop_Data, "m_angRotation", vecAngles);
 
 	vecAngles[0] = 0.0;
 
 	char modelPath[PLATFORM_MAX_PATH];
-    GetEntPropString(entity, Prop_Data, "m_ModelName", modelPath, PLATFORM_MAX_PATH);
+	GetEntPropString(entity, Prop_Data, "m_ModelName", modelPath, PLATFORM_MAX_PATH);
 
 	int animationentity = CreateEntityByName("prop_dynamic_override");
 	if(IsValidEntity(animationentity))
 	{
-// 		DispatchKeyValueVector(animationentity, "origin", vecOrigin);
-// 		DispatchKeyValueVector(animationentity, "angles", vecAngles);
+		// 		DispatchKeyValueVector(animationentity, "origin", vecOrigin);
+		// 		DispatchKeyValueVector(animationentity, "angles", vecAngles);
 		DispatchKeyValue(animationentity, "model", modelPath);
 		// DispatchKeyValue(animationentity, "defaultanim", anim);
 		DispatchSpawn(animationentity);
-        TeleportEntity(animationentity, vecOrigin, vecAngles, NULL_VECTOR);
+		TeleportEntity(animationentity, vecOrigin, vecAngles, NULL_VECTOR);
 		SetEntPropEnt(animationentity, Prop_Send, "m_hOwnerEntity", entity);
 
 		if(GetEntProp(entity, Prop_Send, "m_iTeamNum") == 0)
@@ -93,15 +93,15 @@ stock int PlayAnimation(int entity, char[] anim, float stopDelay = -1.0, float k
 		else
 			SetEntProp(animationentity, Prop_Send, "m_nSkin", GetClientTeam(entity) - 2);
 
-        char outputString[128];
-        if(stopDelay > 0.0)
-        {
-            Format(outputString, sizeof(outputString), "OnAnimationBegun !self:SetPlaybackRate:0.0:%.1f:1", stopDelay);
-            SetVariantString(outputString);
-            AcceptEntityInput(animationentity, "AddOutput");
-        }
+		char outputString[128];
+		if(stopDelay > 0.0)
+		{
+			Format(outputString, sizeof(outputString), "OnAnimationBegun !self:SetPlaybackRate:0.0:%.1f:1", stopDelay);
+			SetVariantString(outputString);
+			AcceptEntityInput(animationentity, "AddOutput");
+		}
 
-        Format(outputString, sizeof(outputString), "OnAnimationDone !self:KillHierarchy::%.1f:1", killDelay);
+		Format(outputString, sizeof(outputString), "OnAnimationDone !self:KillHierarchy::%.1f:1", killDelay);
 		SetVariantString(outputString);
 		AcceptEntityInput(animationentity, "AddOutput");
 
@@ -117,8 +117,8 @@ stock int PlayAnimation(int entity, char[] anim, float stopDelay = -1.0, float k
 			SetEntPropEnt(animationentity, Prop_Send, "m_hEffectEntity", link);
 		}
 
-        SetVariantString(anim);
-        AcceptEntityInput(animationentity, "SetAnimation");
+		SetVariantString(anim);
+		AcceptEntityInput(animationentity, "SetAnimation");
 
 		return animationentity;
 	}
@@ -160,7 +160,7 @@ stock int CreateLink(int iClient)
 // https://github.com/Chdata/TF2-Bumper-Cars/blob/ecc90ee4eb06fbdc70ca508dc2384f9c67dc5842/scripting/bumpercar.sp#L771
 stock void TE_PlayerAnimEvent(int client, int event, int data = 0)
 {
-    TE_Start("PlayerAnimEvent");
+	TE_Start("PlayerAnimEvent");
 	TE_WriteNum("m_iPlayerIndex", client);
 	TE_WriteNum("m_iEvent", event);
 	TE_WriteNum("m_nData", data);

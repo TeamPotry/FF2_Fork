@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sm-version: [ '1.10' ]
+        sm-version: [ '1.10', '1.11' ]
 
     name: SM version ${{ matrix.sm-version }}
 
@@ -48,5 +48,5 @@ jobs:
       - name: Upload plugin artifact
         uses: actions/upload-artifact@master
         with:
-          name: Plugins
+          name: SM ${{ matrix.sm-version }}
           path: addons/sourcemod/scripting/compiled

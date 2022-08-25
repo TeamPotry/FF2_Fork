@@ -35,13 +35,13 @@ public void OnPluginStart()
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 {
-	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+    int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
     if(StrEqual(PAINIS_RAGE_NAME, abilityName))
-	{
+    {
         float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, PAINIS_RAGE_NAME, "duration", 10.0);
-		g_flPainisRageDuration[client] = GetGameTime() + duration;
-	}
+        g_flPainisRageDuration[client] = GetGameTime() + duration;
+    }
 }
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
@@ -54,7 +54,8 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcast)
 {
-    int client = GetClientOfUserId(event.GetInt("userid")), attacker = GetClientOfUserId(event.GetInt("attacker"));
+    // int client = GetClientOfUserId(event.GetInt("userid"));
+    int attacker = GetClientOfUserId(event.GetInt("attacker"));
 
     if((event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) > 0)
         return;

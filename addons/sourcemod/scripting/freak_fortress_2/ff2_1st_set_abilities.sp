@@ -31,7 +31,7 @@ public Plugin myinfo=
 #define FLAG_ONSLOWMO (1<<0)
 
 int FF2Flags[MAXPLAYERS+1];
-int CloneOwnerIndex[MAXPLAYERS+1]=-1;
+int CloneOwnerIndex[MAXPLAYERS+1] = {-1, ...};
 
 Handle SlowMoTimer;
 int oldTarget;
@@ -420,6 +420,8 @@ public Action Timer_EquipModel(Handle timer, DataPack pack)
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
 	}
+
+	return Plugin_Continue;
 }
 
 public Action Timer_Enable_Damage(Handle timer, int userid)
@@ -712,6 +714,8 @@ public Action Timer_Rage_SlowMo_Attack(Handle timer, DataPack data)
 			oldTarget=target;
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 public bool TraceRayDontHitSelf(int entity, int mask)
@@ -908,6 +912,8 @@ public Action Timer_RemoveRagdoll(Handle timer, int userid)
 	{
 		AcceptEntityInput(ragdoll, "Kill");
 	}
+	
+	return Plugin_Continue;
 }
 
 stock int SpawnWeapon(int client, char[] name, int index, int level, int quality, char[] attribute)
@@ -962,6 +968,8 @@ public Action Timer_RemoveEntity(Handle timer, int entid)
 	{
 		AcceptEntityInput(entity, "Kill");
 	}
+
+	return Plugin_Continue;
 }
 
 stock int AttachParticle(int entity, char[] particleType, float offset=0.0, bool attach=true)

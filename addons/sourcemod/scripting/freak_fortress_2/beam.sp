@@ -655,6 +655,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	CreateNative("BeamManagement.Create", Native_BeamManagement_Create);
 	CreateNative("FilterEntityInfo.Create", Native_FilterEntityInfo_Create);
+
+	return APLRes_Success;
 }
 
 #if defined _ff2_fork_general_included

@@ -110,7 +110,7 @@ public int Native_FF2HudQueue_PushDisplay(Handle plugin, int numParams)
 	return queue.GetSectionSymbol(posId) ? posId : -1;
 }
 
-public int Native_FF2HudQueue_GetName(Handle plugin, int numParams)
+public /*void*/int Native_FF2HudQueue_GetName(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
 	char name[MAX_HUD_INFO_LENGTH];
@@ -119,9 +119,10 @@ public int Native_FF2HudQueue_GetName(Handle plugin, int numParams)
 	queue.GetString("queue name", name, sizeof(name));
 
 	SetNativeString(2, name, GetNativeCell(3));
+	return 0;
 }
 
-public int Native_FF2HudQueue_SetName(Handle plugin, int numParams)
+public /*void*/int Native_FF2HudQueue_SetName(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
 	char name[MAX_HUD_INFO_LENGTH];
@@ -129,18 +130,20 @@ public int Native_FF2HudQueue_SetName(Handle plugin, int numParams)
 
 	queue.Rewind();
 	queue.SetString("queue name", name);
+	return 0;
 }
 
-public int Native_FF2HudQueue_DeleteDisplay(Handle plugin, int numParams)
+public /*void*/int Native_FF2HudQueue_DeleteDisplay(Handle plugin, int numParams)
 {
 	FF2HudQueue queue = GetNativeCell(1);
 	int posId = GetNativeCell(2);
 
 	if(queue.JumpToKeySymbol(posId))
 		queue.DeleteThis();
+	return 0;
 }
 
-public int Native_FF2HudQueue_DeleteAllDisplay(Handle plugin, int numParams)
+public /*void*/int Native_FF2HudQueue_DeleteAllDisplay(Handle plugin, int numParams)
 {
 	ArrayList array = new ArrayList();
 	FF2HudQueue queue = GetNativeCell(1);
@@ -168,6 +171,7 @@ public int Native_FF2HudQueue_DeleteAllDisplay(Handle plugin, int numParams)
 	}
 
 	delete array;
+	return 0;
 }
 
 public int Native_FF2HudQueue_AddHud(Handle plugin, int numParams)
@@ -247,7 +251,7 @@ public int Native_FF2HudDisplay_CreateDisplay(Handle plugin, int numParams)
 	return view_as<int>(displayKv);
 }
 
-public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numParams)
+public /*void*/int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numParams)
 {
 	FF2HudDisplay displayKv = GetNativeCell(1);
 	int client = GetNativeCell(2);
@@ -266,6 +270,8 @@ public int Native_FF2HudDisplay_ShowSyncHudDisplayText(Handle plugin, int numPar
 	    else
 	        FF2_ShowHudText(client, -1, display);
 	}
+
+	return 0;
 }
 
 public int Native_FF2HudQueue_ShowSyncHudQueueText(Handle plugin, int numParams)

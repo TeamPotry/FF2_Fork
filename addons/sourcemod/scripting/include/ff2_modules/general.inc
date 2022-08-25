@@ -300,6 +300,8 @@ public Action ResetTimer(Handle timer, ArrayList pack)
     int slot = pack.Get(1);
     FF2_SetBossCharge(boss, slot, 0.0);
     delete pack;
+
+    return Plugin_Continue;
 }
 
 stock void CreateKillStreak(int attacker, int target, const char[] name, int streak)
@@ -357,10 +359,10 @@ stock int ShowGameText(int team, float time, char[] buffer, any ...)
         DispatchSpawn(ent);
 
         Format(temp, sizeof(temp), "OnUser1 !self:kill::%.1f:1", time);
-		SetVariantString(temp);
+        SetVariantString(temp);
 
-		AcceptEntityInput(ent, "AddOutput");
-		AcceptEntityInput(ent, "FireUser1");
+        AcceptEntityInput(ent, "AddOutput");
+        AcceptEntityInput(ent, "FireUser1");
 
         AcceptEntityInput(ent, "Display", ent, ent);
         return ent;

@@ -101,6 +101,8 @@ public Action OnPlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 	{
 		PrintToChatAll("%t", "Ban by Gabe", client);
 	}
+
+	return Plugin_Continue;
 }
 
 public void OnEntityCreated(int entity, const char[] classname)
@@ -645,6 +647,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	{
 		g_flCardLifeTime[loop] = 0.0;
 	}
+
+	return Plugin_Continue;
 }
 
 public void OnClientPostAdminCheck(int client)

@@ -13,12 +13,12 @@ public Plugin myinfo=
 	version="20210824",
 };
 
-bool g_bPressSwitch[MAXPLAYERS+1] = false;
+bool g_bPressSwitch[MAXPLAYERS+1] = {false, ...};
 int g_hWeaponindex[MAXPLAYERS+1];
 
 public void OnPluginStart()
 {
-    HookEvent("player_spawn", OnPlayerSpawn);
+	HookEvent("player_spawn", OnPlayerSpawn);
 
 	GameData gamedata = new GameData("potry");
 	if (gamedata)
@@ -34,9 +34,9 @@ public void OnPluginStart()
 
 public void OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
-    int client = GetClientOfUserId(event.GetInt("userid"));
+	int client = GetClientOfUserId(event.GetInt("userid"));
 	g_hWeaponindex[client] = 0;
-    g_bPressSwitch[client] = false;
+	g_bPressSwitch[client] = false;
 }
 
 static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallback callbackPre = INVALID_FUNCTION, DHookCallback callbackPost = INVALID_FUNCTION)

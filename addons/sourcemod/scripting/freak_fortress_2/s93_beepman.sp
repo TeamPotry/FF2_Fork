@@ -76,13 +76,13 @@ bool HasTrails[MAXPLAYERS+1];
 #define INACTIVE 100000000.0
 int currentBossIdx;
 int enemies;
-bool HasHijackAbility[MAXPLAYERS+1]=false;
-bool scrambleKeys[MAXPLAYERS+1]=false;
-bool IsOnCoolDown[MAXPLAYERS+1]=false;
+bool HasHijackAbility[MAXPLAYERS+1]={false, ...};
+bool scrambleKeys[MAXPLAYERS+1]={false, ...};
+bool IsOnCoolDown[MAXPLAYERS+1]={false, ...};
 float ragecost[MAXPLAYERS+1];
-float LoopHudNotificationAt[MAXPLAYERS+1]=INACTIVE;
-float UnscrambleAt[MAXPLAYERS+1]=INACTIVE;
-float CooldownEndsIn[MAXPLAYERS+1]=INACTIVE;
+float LoopHudNotificationAt[MAXPLAYERS+1]={INACTIVE, ...};
+float UnscrambleAt[MAXPLAYERS+1]={INACTIVE, ...};
+float CooldownEndsIn[MAXPLAYERS+1]={INACTIVE, ...};
 
 char HUDText[MAXPLAYERS+1][10][256];
 

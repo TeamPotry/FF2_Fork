@@ -90,7 +90,7 @@ public Action AdvanceMenu(int client, int args)
 
 public Action BossDifficultyMenu(int client, int args)
 {
-
+	return Plugin_Continue;
 }
 
 public Action HudMenu(int client, int args)
@@ -114,6 +114,8 @@ public Action HudMenu(int client, int args)
 		menu.ExitButton=true;
 		menu.Display(client, MENU_TIME_FOREVER);
 	}
+
+	return Plugin_Continue;
 }
 
 public void HudSettingMenu(int client, const char[] name)
@@ -216,6 +218,8 @@ public Action HumanTeamBossMenu(int client, int args)
 		menu.ExitButton=true;
 		menu.Display(client, MENU_TIME_FOREVER);
 	}
+
+	return Plugin_Continue;
 }
 
 public Action Command_ShowChangelog(int client, int args)
@@ -347,6 +351,15 @@ public Action HelpPanelClass(int client)
 	return Plugin_Continue;
 }
 
+public int HintPanelH(Menu menu, MenuAction action, int client, int selection)
+{
+	if(IsValidClient(client) && (action==MenuAction_Select || (action==MenuAction_Cancel && selection==MenuCancel_Exit)))
+	{
+		FF2Flags[client]|=FF2FLAG_CLASSHELPED;
+	}
+	return 0;
+}
+
 void HelpPanelBoss(int client, int boss)
 {
 	if(!IsValidClient(Boss[boss]))
@@ -380,6 +393,128 @@ void HelpPanelBoss(int client, int boss)
 		delete panel;
 	}
 }
+
+public Action QueuePanelCmd(int client, int args)
+{
+	if(!Enabled2)
+	{
+		return Plugin_Continue;
+	}
+
+	char text[64];
+	int items;
+	bool[] added = new bool[MaxClients + 1];
+
+	Panel panel = new Panel();
+	SetGlobalTransTarget(client);
+	Format(text, sizeof(text), "%t", "Boss Queue");  //"Boss Queue"
+	panel.SetTitle(text);
+	for(int boss = 0; boss <= MaxClients; boss++)  //Add the current bosses to the top of the list
+	{
+		if(IsBoss(boss))
+		{
+			added[boss] = true;  //Don't want the bosses to show up again in the actual queue list
+			Format(text, sizeof(text), "%N-%i", boss, GetClientQueuePoints(boss));
+			panel.DrawItem(text);
+			items++;
+		}
+	}
+
+	panel.DrawText("---");
+	do
+	{
+		int target = GetClientWithMostQueuePoints(added);  //Get whoever has the highest queue points out of those who haven't been listed yet
+		if(!IsValidClient(target))  //When there's no players left, fill up the rest of the list with blank lines
+		{
+			panel.DrawItem("");
+			items++;
+			continue;
+		}
+
+		Format(text, sizeof(text), "%N-%i", target, GetClientQueuePoints(target));
+		if(client != target)
+		{
+			panel.DrawItem(text);
+			items++;
+		}
+		else
+		{
+			panel.DrawText(text);  //DrawPanelText() is white, which allows the client's points to stand out
+		}
+		added[target] = true;
+	}
+	while(items < 9);
+
+	Format(text, sizeof(text), "%t (%t)", "Your Queue Points", GetClientQueuePoints(client), "Reset Queue Points");  //"Your queue point(s) is {1} (set to 0)"
+	panel.DrawItem(text);
+
+	panel.Send(client, QueuePanelH, MENU_TIME_FOREVER);
+	delete panel;
+
+	return Plugin_Handled;
+}
+
+public int QueuePanelH(Menu menu, MenuAction action, int client, int selection)
+{
+	if(action == MenuAction_Select && selection == 10)
+	{
+		TurnToZeroPanel(client, client);
+	}
+
+	return 0;
+}
+
+public Action TurnToZeroPanel(int client, int target)
+{
+	if(!Enabled2)
+	{
+		return Plugin_Continue;
+	}
+
+	Panel panel = CreatePanel();
+	char text[128];
+	SetGlobalTransTarget(client);
+	if(client == target)
+	{
+		Format(text, 512, "%t", "Reset Queue Points Confirmation");  //Do you really want to set your queue points to 0?
+	}
+	else
+	{
+		Format(text, 512, "%t", "Reset Player's Queue Points", client);  //Do you really want to set {1}'s queue points to 0?
+	}
+
+	PrintToChat(client, text);
+	panel.SetTitle(text);
+	Format(text, sizeof(text), "%t", "Yes");
+	panel.DrawItem(text);
+	Format(text, sizeof(text), "%t", "No");
+	panel.DrawItem(text);
+	shortname[client] = target;
+	panel.Send(client, TurnToZeroPanelH, MENU_TIME_FOREVER);
+	delete panel;
+
+	return Plugin_Handled;
+}
+
+public int TurnToZeroPanelH(Menu menu, MenuAction action, int client, int position)
+{
+	if(action==MenuAction_Select && position==1)
+	{
+		if(shortname[client]==client)
+		{
+			CPrintToChat(client,"{olive}[FF2]{default} %t", "Reset Queue Points Done");  //Your queue points have been reset to {olive}0{default}
+		}
+		else
+		{
+			CPrintToChat(client, "{olive}[FF2]{default} %t", "Reset Player's Points Done", shortname[client]);  //{olive}{1}{default}'s queue points have been reset to {olive}0{default}
+			CPrintToChat(shortname[client], "{olive}[FF2]{default} %t", "Queue Points Reset by Admin", client);  //{olive}{1}{default} reset your queue points to {olive}0{default}
+		}
+		SetClientQueuePoints(shortname[client], 0);
+	}
+
+	return 0;
+}
+
 
 public Action MusicTogglePanelCmd(int client, int args)
 {
@@ -573,6 +708,8 @@ public int MusicTrackDetailMenu_Handler(Menu menu, MenuAction action, int client
 			MusicTrackDetailMenu(client, kv);
 		}
 	}
+
+	return 0;
 }
 
 public Action VoiceTogglePanelCmd(int client, int args)

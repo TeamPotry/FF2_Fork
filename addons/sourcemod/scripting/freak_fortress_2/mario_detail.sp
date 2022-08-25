@@ -123,13 +123,13 @@ void Mario_Star_Start(int client, int slot)
 		SDKHook(client, SDKHook_TouchPost, OnTouchStar);
 		SDKHook(client, SDKHook_PostThink, OnStarThink);
 	}
-    else
-    {
+	else
+	{
 		StopStarSoundAll(g_strStarSoundPath[client]);
 		StartStarSoundAll(client, g_strStarSoundPath[client], volume);
 
 		TF2_AddCondition(client, TFCond_MegaHeal, time);
-    }
+	}
 
 	TF2_AddCondition(client, TFCond_UberchargedHidden, time); // TODO: 테스트
 	g_flStarTime[client] = GetGameTime() + time;
@@ -139,8 +139,8 @@ void Mario_Star_Start(int client, int slot)
 void StartStarSoundAll(int owner, char[] sound, float volume)
 {
 	if(sound[0] == '\0')	return;
-    EmitSoundToAll(sound, owner, 0, 140, 0, volume);
-    // SNDCHAN_USER_BASE, SNDLEVEL_HELICOPTER, SNDVOL_NORMAL, SND_NOFLAGS, SNDPITCH_NORMAL
+	EmitSoundToAll(sound, owner, 0, 140, 0, volume);
+	// SNDCHAN_USER_BASE, SNDLEVEL_HELICOPTER, SNDVOL_NORMAL, SND_NOFLAGS, SNDPITCH_NORMAL
 }
 
 void StopStarSoundAll(char[] sound)
@@ -156,21 +156,21 @@ void StopStarSoundAll(char[] sound)
 
 public void OnStarThink(int client)
 {
-    if(FF2_GetRoundState() != 1 || g_flStarTime[client] < GetGameTime())
-    {
+	if(FF2_GetRoundState() != 1 || g_flStarTime[client] < GetGameTime())
+	{
 		if(IsValidEntity(g_hStarLight[client]))
 			RemoveEntity(g_hStarLight[client]);
 		g_hStarLight[client] = -1;
 
-        g_flStarTime[client] = 0.0;
+		g_flStarTime[client] = 0.0;
 
-        SDKUnhook(client, SDKHook_StartTouchPost, OnTouchStar);
-        SDKUnhook(client, SDKHook_TouchPost, OnTouchStar);
-        SDKUnhook(client, SDKHook_PostThink, OnStarThink);
+		SDKUnhook(client, SDKHook_StartTouchPost, OnTouchStar);
+		SDKUnhook(client, SDKHook_TouchPost, OnTouchStar);
+		SDKUnhook(client, SDKHook_PostThink, OnStarThink);
 
-        StopStarSoundAll(g_strStarSoundPath[client]);
+		StopStarSoundAll(g_strStarSoundPath[client]);
 		return;
-    }
+	}
 
 	if(GetGameTime() - g_flStarLastFlickTime[client] > 0.15 && IsValidEntity(g_hStarLight[client]))
 	{
