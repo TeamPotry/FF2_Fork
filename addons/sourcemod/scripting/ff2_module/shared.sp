@@ -19,6 +19,8 @@
 
 #define FF2_CONFIGS "configs/freak_fortress_2"
 #define FF2_SETTINGS "data/freak_fortress_2"
+#define FF2_SUBPLUGIN_ROOT_PATH	"freak_fortress_2"
+
 #define BOSS_CONFIG "characters.cfg"
 #define DOORS_CONFIG "doors.cfg"
 #define WEAPONS_CONFIG "weapons.cfg"

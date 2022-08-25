@@ -3658,24 +3658,45 @@ public Action Command_Charset(int client, int args)
 public Action Command_ReloadSubPlugins(int client, int args)
 {
 	if(Enabled)
-	{
-		//DisableSubPlugins(true);
-		//EnableSubPlugins(true);
-		char path[PLATFORM_MAX_PATH], filename[PLATFORM_MAX_PATH];
-		BuildPath(Path_SM, path, sizeof(path), "plugins/freak_fortress_2");
-		FileType filetype;
-		DirectoryListing directory=OpenDirectory(path);
-		while(directory.GetNext(filename, sizeof(filename), filetype))
-		{
-			if(filetype==FileType_File && StrContains(filename, ".smx", false)!=-1)
-			{
-				ServerCommand("sm plugins unload freak_fortress_2/%s", filename);
-				ServerCommand("sm plugins load freak_fortress_2/%s", filename);
-			}
-		}
-	}
+		ReloadSubPlugins();
+
 	CReplyToCommand(client, "{olive}[FF2]{default} Reloaded subplugins!");
 	return Plugin_Handled;
+}
+
+void ReloadSubPlugins()
+{
+	char path[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, path, sizeof(path), "plugins/%s", FF2_SUBPLUGIN_ROOT_PATH);
+
+	ReloadSubPluginFolder(OpenDirectory(path), FF2_SUBPLUGIN_ROOT_PATH);
+}
+
+void ReloadSubPluginFolder(DirectoryListing directory, char[] folderPath)
+{
+	if(directory == null)		return;
+
+	FileType filetype;
+	char filename[PLATFORM_MAX_PATH];
+
+	while(directory.GetNext(filename, sizeof(filename), filetype))
+	{
+		if(filetype == FileType_Directory)
+		{
+			if(StrEqual(filename, ".") || StrEqual(filename, ".."))
+				continue;
+
+			char path[PLATFORM_MAX_PATH], newFolderPath[PLATFORM_MAX_PATH];
+			Format(newFolderPath, sizeof(newFolderPath), "%s/%s", folderPath, filename);
+			BuildPath(Path_SM, path, sizeof(path), "plugins/%s", newFolderPath);
+			ReloadSubPluginFolder(OpenDirectory(path), newFolderPath);			
+		}
+		else if(filetype == FileType_File && StrContains(filename, ".smx", false) != -1)
+		{
+			ServerCommand("sm plugins unload %s/%s", folderPath, filename);
+			ServerCommand("sm plugins load %s/%s", folderPath, filename);
+		}
+	}
 }
 
 public Action Command_Point_Disable(int client, int args)
