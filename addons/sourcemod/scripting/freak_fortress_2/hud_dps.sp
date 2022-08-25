@@ -31,7 +31,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	for(int client = 1; client < MaxClients; client++)
 		for(int loop = 0; loop < sizeof(g_flPlayerDPS[]); loop++)
-			_flPlayerDPS[client][loop] = 0.0;
+			flPlayerDPS[client][loop] = 0.0;
 
 	return Plugin_Continue;
 }
