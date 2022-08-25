@@ -43,6 +43,7 @@ jobs:
         run: |
          chmod +x spcomp
          mkdir compiled compiled/freak_fortress_2
+         mkdir compiled/freak_fortress_2/ability
          ./compile.sh freak_fortress_2.sp freak_fortress_2/*.sp freak_fortress_2/ability/*.sp
 
       - name: Upload plugin artifact
