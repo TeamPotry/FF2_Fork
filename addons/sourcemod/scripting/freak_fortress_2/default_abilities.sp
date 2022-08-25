@@ -641,7 +641,7 @@ public Action Timer_StunBoss(Handle timer, int boss)
 	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(!IsValidEntity(client))
 	{
-		return;
+		return Plugin_Continue;
 	}
 	TF2_StunPlayer(client, (enableSuperDuperJump[boss] ? 4.0 : 2.0), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
 
