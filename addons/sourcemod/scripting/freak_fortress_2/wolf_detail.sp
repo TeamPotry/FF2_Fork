@@ -45,7 +45,7 @@ Handle g_SDKCallSetAbsVelocity;
 bool g_bReflecter[MAXPLAYERS+1];
 bool g_bReflecterForce[MAXPLAYERS+1];
 float g_flReflecterHealth[MAXPLAYERS+1];
-int g_hReflecterEffect[MAXPLAYERS+1] = -1;
+int g_hReflecterEffect[MAXPLAYERS+1] = {-1, ...};
 
 public void OnPluginStart()
 {
@@ -86,8 +86,10 @@ public void OnMapStart()
 
 public Action OnPlayerSpawnOrDead(Event event, const char[] name, bool dontBroadcast)
 {
-    int client = GetClientOfUserId(event.GetInt("userid"));
-    g_flReflecterHealth[client] = 0.0;
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	g_flReflecterHealth[client] = 0.0;
+
+	return Plugin_Continue;
 }
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
@@ -845,7 +847,11 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 		ActivateEntity(particle);
 		DispatchKeyValueVector(particle, "angles", angles);
 		AcceptEntityInput(particle, "start");
+
+		return particle;
 	}
+
+	return -1;
 }
 
 stock bool TF2_IsPlayerCritBuffed(int client)

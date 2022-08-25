@@ -30,7 +30,7 @@ enum
 	Skill_OneOfUs
 }
 
-Handle g_SDKCallGiveAmmo;
+// Handle g_SDKCallGiveAmmo;
 Handle g_SDKCallGetMaxAmmo;
 
 bool g_bRageBlock[MAXPLAYERS+1];
@@ -47,7 +47,7 @@ public void OnPluginStart()
 	GameData gamedata = new GameData("potry");
 	if (gamedata)
 	{
-		g_SDKCallGiveAmmo = PrepSDKCall_GiveAmmo(gamedata);
+		// g_SDKCallGiveAmmo = PrepSDKCall_GiveAmmo(gamedata);
 		g_SDKCallGetMaxAmmo = PrepSDKCall_GetMaxAmmo(gamedata);
 		delete gamedata;
 	}
@@ -286,7 +286,7 @@ public Action HotSwitch_Item(Handle timer, DataPack data)
 		if(!IsValidEntity(weapon))
 			continue;
 
-		int attribDefIndexs[20], attribDefCount, count = 0;
+		int attribDefIndexs[20], attribDefCount = 0;
 		float attribDefAttribs[20];
 		Address address;
 
@@ -398,6 +398,8 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 	int client=GetClientOfUserId(event.GetInt("userid"));
 	g_bRageBlock[client] = false;
 	g_bOneOfUs[client] = false;
+
+	return Plugin_Continue;
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -405,10 +407,12 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 	int client=GetClientOfUserId(event.GetInt("userid"));
 	g_bRageBlock[client] = false;
 	g_bOneOfUs[client] = false;
+
+	return Plugin_Continue;
 }
 
 //////////////////////////////////////
-
+/*
 Handle PrepSDKCall_GiveAmmo(GameData gamedata)
 {
 	StartPrepSDKCall(SDKCall_Player);
@@ -424,7 +428,7 @@ Handle PrepSDKCall_GiveAmmo(GameData gamedata)
 
 	return call;
 }
-/*
+
 int SDKCall_GiveAmmo(int player, int iCount, int iAmmoIndex, bool bSuppressSound)
 {
 	if (g_SDKCallGiveAmmo)
@@ -663,12 +667,12 @@ stock int TF2_SpawnDemoShield(int defindex = -1, int quality = 6, int level = 1)
 
 stock int GetWearableSlotOfIndex(int client, int defindex)
 {
-	int wearableCount = TF2Util_GetPlayerWearableCount(client), index, wearable;
+	int wearableCount = TF2Util_GetPlayerWearableCount(client), wearable;
 
 	for(int slot = 0; slot < wearableCount; slot++)
 	{
 		wearable = TF2Util_GetPlayerWearable(client, slot);
-		if((index = GetEntProp(wearable, Prop_Send, "m_iItemDefinitionIndex")) == defindex)
+		if(GetEntProp(wearable, Prop_Send, "m_iItemDefinitionIndex") == defindex)
 			return wearable;
 	}
 

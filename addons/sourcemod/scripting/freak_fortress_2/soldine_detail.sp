@@ -185,28 +185,28 @@ methodmap CTFBlackHole < ArrayList {
 
 	public void Open()
     {
-        // PrintToServer("this.Duration: %.1f", this.Duration);
-        this.Duration = g_flDuration[this.Owner] + GetGameTime();
+		// PrintToServer("this.Duration: %.1f", this.Duration);
+		this.Duration = g_flDuration[this.Owner] + GetGameTime();
 		this.ParticleNextUpdateTime = GetGameTime();
 
-        float pos[3];
-        char sound[PLATFORM_MAX_PATH];
-        this.GetOpenSound(sound, PLATFORM_MAX_PATH);
-        this.GetUpdatePosition(pos);
+		float pos[3];
+		char sound[PLATFORM_MAX_PATH];
+		this.GetOpenSound(sound, PLATFORM_MAX_PATH);
+		this.GetUpdatePosition(pos);
 
-        for(int target=1; target<=MaxClients; target++)
-        {
-            if(IsClientInGame(target))
-            {
-                EmitSoundToClient(target, sound, this.Index, _, _, _, _, _, this.Index, pos);
-                EmitSoundToClient(target, sound, this.Index, _, _, _, _, _, this.Index, pos);
-            }
-        }
+		for(int target=1; target<=MaxClients; target++)
+		{
+			if(IsClientInGame(target))
+			{
+				EmitSoundToClient(target, sound, this.Index, _, _, _, _, _, this.Index, pos);
+				EmitSoundToClient(target, sound, this.Index, _, _, _, _, _, this.Index, pos);
+			}
+		}
 
-        RequestFrame(BlackHole_Open_Update, this);
-    }
+		RequestFrame(BlackHole_Open_Update, this);
+	}
 
-    public void Close()
+	public void Close()
 	{
 		RemoveEntity(this.Index);
 
@@ -216,33 +216,33 @@ methodmap CTFBlackHole < ArrayList {
 
 public void BlackHole_Init_Update(CTFBlackHole hole)
 {
-    if(FF2_GetRoundState() != 1)
-    {
-        delete hole;
-        return;
-    }
+	if(FF2_GetRoundState() != 1)
+	{
+		delete hole;
+		return;
+	}
 
-    float pos[3];
+	float pos[3];
 	int attachedIndex = EntRefToEntIndex(hole.AttachedRef);
-    // 중간에 벽에 충돌해서 없어졌거나 시간이 다 되어서 오픈되거나
+	// 중간에 벽에 충돌해서 없어졌거나 시간이 다 되어서 오픈되거나
 
 	hole.GetUpdatePosition(pos);
 
-    if(hole.InitTime < GetGameTime())
-    {
-        hole.Index = SpawnParticle(pos, "eyeboss_tp_vortex");
+	if(hole.InitTime < GetGameTime())
+	{
+		hole.Index = SpawnParticle(pos, "eyeboss_tp_vortex");
 
-        hole.Open();
+		hole.Open();
 
-        if(IsValidEntity(attachedIndex))
-            RemoveEntity(attachedIndex);
+		if(IsValidEntity(attachedIndex))
+			RemoveEntity(attachedIndex);
 
-        return;
-    }
+		return;
+	}
 	else if(IsValidEntity(attachedIndex))
 	{
 		GetEntPropVector(attachedIndex, Prop_Send, "m_vecOrigin", pos);
-	    hole.SetUpdatePosition(pos);
+		hole.SetUpdatePosition(pos);
 	}
 	else
 	{
@@ -250,29 +250,29 @@ public void BlackHole_Init_Update(CTFBlackHole hole)
 		hole.AttachedRef = EntIndexToEntRef(particle);
 	}
 
-    RequestFrame(BlackHole_Init_Update, hole);
+	RequestFrame(BlackHole_Init_Update, hole);
 }
 
 public void BlackHole_Open_Update(CTFBlackHole hole)
 {
-    if(FF2_GetRoundState() != 1 || hole.Duration < GetGameTime())
-    {
-        hole.Close();
-        return;
-    }
+	if(FF2_GetRoundState() != 1 || hole.Duration < GetGameTime())
+	{
+		hole.Close();
+		return;
+	}
 
-    float pos[3], tickInterval = GetTickInterval();
-    char sound[PLATFORM_MAX_PATH];
-    hole.GetUpdatePosition(pos);
+	float pos[3], tickInterval = GetTickInterval();
+	char sound[PLATFORM_MAX_PATH];
+	hole.GetUpdatePosition(pos);
 
-    if(hole.Duration < (GetGameTime() - 1.3))
-    {
-        hole.GetCloseSound(sound, PLATFORM_MAX_PATH);
-        EmitSoundToAll(sound, _, _, _, _, 1.0, _, _, pos, _, false);
-        EmitSoundToAll(sound, _, _, _, _, 1.0, _, _, pos, _, false);
-    }
+	if(hole.Duration < (GetGameTime() - 1.3))
+	{
+		hole.GetCloseSound(sound, PLATFORM_MAX_PATH);
+		EmitSoundToAll(sound, _, _, _, _, 1.0, _, _, pos, _, false);
+		EmitSoundToAll(sound, _, _, _, _, 1.0, _, _, pos, _, false);
+	}
 
-    if(hole.SoundLoopTime < GetGameTime())
+	if(hole.SoundLoopTime < GetGameTime())
 	{
 		hole.GetLoopSound(sound, PLATFORM_MAX_PATH);
 
@@ -289,15 +289,15 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 	}
 
 	char classname[32];
-    for(int target = 1; target < MAX_EDICTS; target++)
-    {
-        if(!IsValidEntity(target))
-            continue;
+	for(int target = 1; target < MAX_EDICTS; target++)
+	{
+		if(!IsValidEntity(target))
+			continue;
 
 		bool isPlayer = false;
 		GetEntityClassname(target, classname, sizeof(classname));
 
-        if((isPlayer = target <= MaxClients)
+		if((isPlayer = target <= MaxClients)
 			&& (!IsPlayerAlive(target) || GetClientTeam(hole.Owner) == GetClientTeam(target)))
 			continue;
 
@@ -314,10 +314,10 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 					&& StrContains(classname, "tf_dropped_weapon") == -1))
 			continue;
 
-        float targetPos[3], targetAngles[3], velocity[3];
-        GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPos);
-        GetEntPropVector(target, Prop_Data, "m_vecVelocity", velocity);
-/*
+		float targetPos[3], targetAngles[3], velocity[3];
+		GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPos);
+		GetEntPropVector(target, Prop_Data, "m_vecVelocity", velocity);
+		/*
 		// 중력의 영향을 받는 투사체는 m_vInitialVelocity에 속도가 저장됨
 		// 아래 조건문은 움직이지 않는 오브젝트에도 적용될 수 있으나 반환값은 어차피 둘 다 0임.
 		if(GetVectorLength(velocity) <= 0.0
@@ -325,17 +325,17 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 		{
 			GetEntPropVector(target, Prop_Send, "m_vInitialVelocity", velocity);
 		}
-*/
-        float realPower = hole.Power - GetVectorDistance(pos, targetPos);
-        if(realPower <= 0.0)    continue;
+		*/
+		float realPower = hole.Power - GetVectorDistance(pos, targetPos);
+		if(realPower <= 0.0)    continue;
 
-        // TR_TraceRayFilter(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceDontHitMe, target);
-        // if(TR_GetEntityIndex() != target)       continue;
+		// TR_TraceRayFilter(pos, targetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceDontHitMe, target);
+		// if(TR_GetEntityIndex() != target)       continue;
 
-        SubtractVectors(pos, targetPos, targetAngles);
+		SubtractVectors(pos, targetPos, targetAngles);
 		NormalizeVector(targetAngles, targetAngles);
 
-        // 포탈에 근접한 경우 속도를 줄여 오히려 발을 묶기
+		// 포탈에 근접한 경우 속도를 줄여 오히려 발을 묶기
 		if(isPlayer)
 		{
 			SetEntPropEnt(target, Prop_Send, "m_hGroundEntity", -1);
@@ -343,8 +343,8 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 			realPower *= 0.12;	// 플레이어 무게 표현
 		}
 
-        ScaleVector(targetAngles, realPower);
-        AddVectors(targetAngles, velocity, targetAngles);
+		ScaleVector(targetAngles, realPower);
+		AddVectors(targetAngles, velocity, targetAngles);
 		TeleportEntity(target, NULL_VECTOR, NULL_VECTOR, targetAngles);
 
 		// FIXME: CAUSES OVERFLOW
@@ -356,15 +356,15 @@ public void BlackHole_Open_Update(CTFBlackHole hole)
 			AddVectors(targetPos, targetAngles, effectPos);
 
 			TE_DispatchEffect("sniper_dxhr_rail_noise", targetPos, effectPos);
-	        TE_SendToAll();
+			TE_SendToAll();
 		}
 		*/
-    }
+	}
 
 	if(hole.ParticleNextUpdateTime < GetGameTime())
 		hole.ParticleNextUpdateTime += tickInterval * 32.0;
 
-    RequestFrame(BlackHole_Open_Update, hole);
+	RequestFrame(BlackHole_Open_Update, hole);
 }
 
 public bool TraceDontHitMe(int entity, int contentsMask, any data)
@@ -376,6 +376,8 @@ public bool TraceDontHitMe(int entity, int contentsMask, any data)
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	CreateNative("CTFBlackHole.Create", Native_CTFBlackHole_Create);
+
+	return APLRes_Success;
 }
 
 public int Native_CTFBlackHole_Create(Handle plugin, int numParams)

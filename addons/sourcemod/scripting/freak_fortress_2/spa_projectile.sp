@@ -31,10 +31,10 @@ public void OnClientPostAdminCheck(int client)
 
 public Action OnStartTouch(int entity, int other)
 {
-    if(MaxClients >= other && other > 0)
-    {
+	if(MaxClients >= other && other > 0)
 		g_bTouched[other] = true;
-    }
+
+	return Plugin_Continue;
 }
 
 public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
