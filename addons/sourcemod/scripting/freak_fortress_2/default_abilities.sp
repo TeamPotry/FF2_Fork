@@ -117,6 +117,8 @@ public Action StartBossTimer(Handle timer)  //TODO: What.
 			FF2_SetBossCharge(boss, FF2_GetAbilityArgument(boss, PLUGIN_NAME, "teleport", "slot", 1), -1.0*FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, "teleport", "cooldown", 5.0));
 		}
 	}
+
+	return Plugin_Continue;
 }
 /*
 public Action FF2_PreAbility(int boss, const char[] pluginName, const char[] abilityName, int slot);
@@ -630,6 +632,8 @@ public Action Timer_ResetCharge(Handle timer, int boss)  //FIXME: What.
 	int slot=boss%10000;
 	boss/=1000;
 	FF2_SetBossCharge(boss, slot, 0.0);
+
+	return Plugin_Continue;
 }
 
 public Action Timer_StunBoss(Handle timer, int boss)
@@ -640,6 +644,8 @@ public Action Timer_StunBoss(Handle timer, int boss)
 		return;
 	}
 	TF2_StunPlayer(client, (enableSuperDuperJump[boss] ? 4.0 : 2.0), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, client);
+
+	return Plugin_Continue;
 }
 
 void Charge_WeighDown(int boss, int slot)  //TODO: Create a HUD for this?
@@ -766,14 +772,12 @@ public Action Timer_DissolveRagdoll(Handle timer, int userid)
 	int client=GetClientOfUserId(userid);
 	int ragdoll=-1;
 	if(client && IsClientInGame(client))
-	{
 		ragdoll=GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
-	}
 
 	if(IsValidEntity(ragdoll))
-	{
 		DissolveRagdoll(ragdoll);
-	}
+
+	return Plugin_Continue;
 }
 
 int DissolveRagdoll(int ragdoll)
@@ -790,6 +794,8 @@ int DissolveRagdoll(int ragdoll)
 
 	AcceptEntityInput(dissolver, "Dissolve", ragdoll);
 	AcceptEntityInput(dissolver, "Kill");
+
+	return dissolver;
 }
 
 public Action Timer_RemoveEntity(Handle timer, int entid)
@@ -799,6 +805,8 @@ public Action Timer_RemoveEntity(Handle timer, int entid)
 	{
 		AcceptEntityInput(entity, "Kill");
 	}
+
+	return Plugin_Continue;
 }
 
 public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCount)

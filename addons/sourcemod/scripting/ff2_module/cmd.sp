@@ -511,6 +511,8 @@ public int TurnToZeroPanelH(Menu menu, MenuAction action, int client, int positi
 		}
 		SetClientQueuePoints(shortname[client], 0);
 	}
+
+	return 0;
 }
 
 

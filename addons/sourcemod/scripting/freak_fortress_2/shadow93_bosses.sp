@@ -103,7 +103,8 @@ float CheckBabifyAt[MAXPLAYERS+1];
 #define THIS_PLUGIN_NAME    "shadow93_bosses"
 
 // Ints
-int bDmg, SummonerIndex[MAXPLAYERS+1], addtime[MAXPLAYERS+1], timeleft[MAXPLAYERS+1], liveplayers, livebosses;
+int bDmg, SummonerIndex[MAXPLAYERS+1], addtime[MAXPLAYERS+1], timeleft[MAXPLAYERS+1], liveplayers;
+// int livebosses;
 
 // floats
 float bRange;
@@ -532,7 +533,9 @@ void Multiplier_Rage(const char[] ability_name, int boss, int rType)
 public Action FF2_OnAlivePlayersChanged(int players, int bosses)
 {
 	liveplayers = players;
-	livebosses =  bosses;
+	// livebosses =  bosses;
+
+	return Plugin_Continue;
 }
 
 // Modified from Eggman's Skeleton King reincarnation code.
@@ -712,10 +715,9 @@ stock bool IsValidMinion(int client)
 	if (TF2_GetClientTeam(client)!=FF2_GetBossTeam()) return false;
 	if (FF2_GetBossIndex(client) != -1) return false;
 	return true;
-
 }
 
-stock int SetClip(int client, int slot, int clip)
+stock void SetClip(int client, int slot, int clip)
 {
 	int weapon = GetPlayerWeaponSlot(client, slot);
 	if (IsValidEntity(weapon))
@@ -724,7 +726,7 @@ stock int SetClip(int client, int slot, int clip)
 	}
 }
 
-stock int SetAmmo(int client, int slot, int ammo)
+stock void SetAmmo(int client, int slot, int ammo)
 {
 	int weapon = GetPlayerWeaponSlot(client, slot);
 	if (IsValidEntity(weapon))
@@ -898,6 +900,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 			}
 		}
 	}
+
+	return Plugin_Continue;
 }
 
 public Action OnUberDeploy(Event event, const char[] name, bool dontBroadcast)
@@ -914,8 +918,9 @@ public Action OnUberDeploy(Event event, const char[] name, bool dontBroadcast)
 			}
 		}
 	}
-}
 
+	return Plugin_Continue;
+}
 
 // T I M E R S
 
@@ -963,6 +968,8 @@ public Action GainLife(Handle timer, any boss)
 		SetHudTextParams(-1.0, 0.42, 1.0, 255, 255, 255, 255);
 		ShowSyncHudText(bClient, cooldownHUD, "%t","life_regeneration",timeleft[boss]);
 	}
+
+	return Plugin_Continue;
 }
 
 public Action SentryBustPrepare(Handle timer, any bClient)
@@ -971,6 +978,8 @@ public Action SentryBustPrepare(Handle timer, any bClient)
 		FakeClientCommand(bClient, "taunt");
 	SetEntityMoveType(bClient, MOVETYPE_NONE);
 	SDKHook(bClient, SDKHook_OnTakeDamage, BlockDamage);
+
+	return Plugin_Continue;
 }
 
 public Action SentryBusting(Handle timer, any bClient)
@@ -1022,16 +1031,21 @@ public Action SentryBusting(Handle timer, any bClient)
     if(TF2_IsPlayerInCondition(bClient, TFCond_Taunting))
         TF2_RemoveCondition(bClient,TFCond_Taunting);
     SetEntityMoveType(bClient, MOVETYPE_WALK);
+
     return Plugin_Continue;
 }
 
 public Action DeleteParticle(Handle timer, any Ent)
 {
-	if (!IsValidEntity(Ent)) return;
+	if (!IsValidEntity(Ent)) return Plugin_Continue;
+
 	char cls[25];
 	GetEdictClassname(Ent, cls, sizeof(cls));
-	if (StrEqual(cls, "info_particle_system", false)) AcceptEntityInput(Ent, "Kill");
-	return;
+
+	if (StrEqual(cls, "info_particle_system", false))
+		AcceptEntityInput(Ent, "Kill");
+
+	return Plugin_Continue;
 }
 
 

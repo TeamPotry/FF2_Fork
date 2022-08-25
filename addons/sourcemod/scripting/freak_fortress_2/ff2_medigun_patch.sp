@@ -48,8 +48,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcast)
 {
-    int client=GetClientOfUserId(event.GetInt("userid"));
-    g_bGhost[client] = false;
+	int client=GetClientOfUserId(event.GetInt("userid"));
+	g_bGhost[client] = false;
 
 	return Plugin_Continue;
 }

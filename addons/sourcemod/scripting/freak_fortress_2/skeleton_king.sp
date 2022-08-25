@@ -431,7 +431,7 @@ public Action:Timer_ReincarnateII(Handle:hTimer,Handle:data)
 		SetEntityFlags(client, GetEntityFlags(client) & ~FL_FROZEN);
 		SDKUnhook(client, SDKHook_OnTakeDamage, StopTakeDamage);
 		FF2_SetBossHealth(index,FF2_GetBossMaxHealth(index));
-		isDead[false] = false;
+		isDead[0] = false;
 		SetVariantInt(0);
 		AcceptEntityInput(client, "SetForcedTauntCam");
 		SetEntityMoveType(client, MOVETYPE_WALK);
