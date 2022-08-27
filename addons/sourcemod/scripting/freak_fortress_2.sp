@@ -3931,7 +3931,7 @@ public Action ClientTimer(Handle timer)
 			if(!IsPlayerAlive(client))
 			{
 				int observerIndex = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-				FF2BaseEntity observer = g_hBaseEntity[observer];
+				FF2BaseEntity observer = g_hBaseEntity[observerIndex];
 
 				if(IsValidClient(observerIndex) && observerIndex!=client)
 				{
