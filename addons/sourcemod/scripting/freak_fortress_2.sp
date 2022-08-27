@@ -52,14 +52,15 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 
 #include "ff2_module/stocks.sp"
 #include "ff2_module/sdkcalls.sp"
-#include "ff2_module/dhooks.sp"
 
 #include "ff2_module/hud.sp"
 #include "ff2_module/music.sp"
 #include "ff2_module/character.sp"
+#include "ff2_module/player.sp"
 #include "ff2_module/boss.sp"
 
 #include "ff2_module/cmd.sp"
+#include "ff2_module/dhooks.sp"
 
 #pragma newdecls required
 
@@ -987,11 +988,16 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	playing=0;
+
+	FF2BaseEntity player;
 	for(int client=1; client<=MaxClients; client++)
 	{
-		Damage[client]=0;
-		LastNoticedDamage[client] = KILLSTREAK_DAMAGE_INTERVAL;
-		Assist[client]=0;
+		player = g_hBaseEntity[client];
+
+		player.Damage = 0;
+		player.Assist = 0;
+		player.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL;
+		
 		uberTarget[client]=-1;
 		emitRageSound[client]=true;
 		FF2Flags[client]=0; // TODO: 테스트
@@ -1346,20 +1352,24 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 
 
-	int top[3];
+	int top[3], Damage[MAXPLAYERS+1];
 	Damage[0]=0;
 
+	// TODO: 기타 등록된 모든 엔티티를 수집하여 피해량 종합
+	FF2BaseEntity baseEnt;
 	for(int client=0; client<=MaxClients; client++)
 	{
 		if(!IsValidClient(client) || Damage[client]<=0 || (IsBoss(client) && BossTeam == TF2_GetClientTeam(client)))
-		{
 			continue;
-		}
+
+		baseEnt = g_hBaseEntity[client];
+
+		Damage[client] = baseEnt.Damage;
+		int assist = baseEnt.Assist;
 
 		SetClientGlow(client, 0.0, 0.0);
-		if(Assist[client]>10)
-			Damage[client]+=Assist[client]/2;
-		Assist[client]=0;
+		if(assist >= 2)
+			Damage[client] += assist / 2;
 
 		if(Damage[client]>=Damage[top[0]])
 		{
@@ -1447,11 +1457,13 @@ public Action Timer_CalcQueuePoints(Handle timer)
 	botqueuepoints+=5;
 	int[] add_points=new int[MaxClients+1];
 	int[] add_points2=new int[MaxClients+1];
+
+	FF2BaseEntity baseEnt; // TODO: Replace this to FF2BasePlayer
 	for(int client=1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
-			damage=Damage[client];
+			damage = baseEnt.Damage;
 			Event event=CreateEvent("player_escort_score", true);
 			event.SetInt("player", client);
 
@@ -3724,10 +3736,9 @@ public void OnClientPostAdminCheck(int client)
 	// SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
 
 	FF2Flags[client]=0;
-	Damage[client]=0;
-	Assist[client]=0;
 	uberTarget[client]=-1;
 
+	g_hBaseEntity[client] = new FF2BaseEntity(EntIndexToEntRef(client));
 	PlayerHudQueue[client] = FF2HudQueue.CreateHudQueue("Player");
 
 	if(!IsFakeClient(client))
@@ -3792,6 +3803,7 @@ public void OnClientDisconnect(int client)
 		delete MusicTimer[client];
 	}
 
+	delete g_hBaseEntity[client];
 	delete PlayerHudQueue[client];
 }
 
@@ -3904,40 +3916,45 @@ public Action ClientTimer(Handle timer)
 	char classname[32], hudText[64];
 	TFCond cond;
 	FF2HudDisplay hudDisplay;
+	FF2BaseEntity player;
 
 	for(int client=1; client<=MaxClients; client++)
 	{
+		// Hud 구문 분리
 		if(IsValidClient(client) && !IsBoss(client) && !(FF2Flags[client] & FF2FLAG_CLASSTIMERDISABLED))
 		{
+			player = g_hBaseEntity[client];
 			SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
 			SetGlobalTransTarget(client);
 
 			PlayerHudQueue[client].SetName("Player");
 			if(!IsPlayerAlive(client))
 			{
-				int observer=GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-				if(IsValidClient(observer) && observer!=client)
+				int observerIndex = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+				FF2BaseEntity observer = g_hBaseEntity[observer];
+
+				if(IsValidClient(observerIndex) && observerIndex!=client)
 				{
 					PlayerHudQueue[client].SetName("Observer");
-					if(!IsBoss(observer))
+					if(!IsBoss(observerIndex))
 					{
-						Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-						if(Assist[client] > 0)
-							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
+						Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", player.Damage);
+						if(player.Assist > 0)
+							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, player.Assist);
 
 						hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
-						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
-						if(Assist[observer] > 0)
-							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
+						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, observer.Damage);
+						if(observer.Assist > 0)
+							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, observer.Assist);
 
 						hudDisplay=FF2HudDisplay.CreateDisplay("Observer Target Player Damage", hudText);
-						PlayerHudQueue[client].AddHud(hudDisplay, client, observer);
+						PlayerHudQueue[client].AddHud(hudDisplay, client, observerIndex);
 					}
-					else if(IsBoss(observer))
+					else if(IsBoss(observerIndex))
 					{
-						int boss=GetBossIndex(observer);
+						int boss=GetBossIndex(observerIndex);
 						char lives[8];
 						if(BossLives[boss]>1)
 						{
@@ -3947,22 +3964,22 @@ public Action ClientTimer(Handle timer)
 						hudDisplay=FF2HudDisplay.CreateDisplay("Observer Target Boss HP", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
-						if(BossTeam != TF2_GetClientTeam(observer))
+						if(BossTeam != TF2_GetClientTeam(observerIndex))
 						{
-							Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, Damage[observer]);
-							if(Assist[observer] > 0)
-								Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[observer]);
+							Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, observer.Damage);
+							if(observer.Assist > 0)
+								Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, observer.Assist);
 
 							hudDisplay = FF2HudDisplay.CreateDisplay("Observer Target Player Damage", hudText);
-							PlayerHudQueue[client].AddHud(hudDisplay, client, observer);
+							PlayerHudQueue[client].AddHud(hudDisplay, client, observerIndex);
 						}
 					}
 				}
 				else
 				{
-					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-					if(Assist[client] > 0)
-						Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
+					Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", player.Damage);
+					if(player.Assist > 0)
+						Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, player.Assist);
 
 					hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 					PlayerHudQueue[client].AddHud(hudDisplay, client);
@@ -3971,6 +3988,7 @@ public Action ClientTimer(Handle timer)
 			else
 			{
 #if defined _MVM_included
+// TODO: move this to mvm
 				if(mannvsmann)
 				{
 					Format(hudText, sizeof(hudText), "$%d", MVM_GetPlayerCurrency(client));
@@ -3979,9 +3997,9 @@ public Action ClientTimer(Handle timer)
 				}
 #endif
 
-				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", Damage[client]);
-				if(Assist[client] > 0)
-					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, Assist[client]);
+				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", player.Damage);
+				if(player.Assist > 0)
+					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, player.Assist);
 
 				hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 				PlayerHudQueue[client].AddHud(hudDisplay, client);
@@ -4250,6 +4268,9 @@ public Action BossTimer(Handle timer)
 	}
 
 	bool validBoss;
+
+	// TODO: Add FF2CharacterInfo on this
+	FF2BaseEntity baseBoss;
 	for(int boss; boss<=MaxClients; boss++)
 	{
 		int client=Boss[boss];
@@ -4258,10 +4279,9 @@ public Action BossTimer(Handle timer)
 			continue;
 		*/
 		if(!IsValidClient(client) || !IsPlayerAlive(client) || !(FF2Flags[client] & FF2FLAG_USEBOSSTIMER))
-		{
 			continue;
-		}
 
+		baseBoss = g_hBaseEntity[client];
 		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
 
 		PlayerHudQueue[client].SetName("Boss");
@@ -4358,9 +4378,9 @@ public Action BossTimer(Handle timer)
 		}
 		else if(BossTeam != TF2_GetClientTeam(client))
 		{
-			Format(text, sizeof(text), "%t", "Your Damage Dealt", Damage[client]);
-			if(Assist[client] > 0)
-				Format(text, sizeof(text), "%s + ASSIST: %d", text, Assist[client]);
+			Format(text, sizeof(text), "%t", "Your Damage Dealt", baseBoss.Damage);
+			if(baseBoss.Assist > 0)
+				Format(text, sizeof(text), "%s + ASSIST: %d", text, baseBoss.Assist);
 
 			bossHudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", text);
 			PlayerHudQueue[client].AddHud(bossHudDisplay, client);
@@ -4879,7 +4899,7 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 	{
 		if(!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
 		{
-			CreateTimer(1.0, Timer_Damage, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(1.0, Timer_Damage, g_hBaseEntity[client], TIMER_FLAG_NO_MAPCHANGE);
 		}
 
 		if(IsBoss(attacker))
@@ -5003,12 +5023,12 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 	return Plugin_Continue;
 }
 
-public Action Timer_Damage(Handle timer, int userid)
+public Action Timer_Damage(Handle timer, FF2BaseEntity player)
 {
-	int client=GetClientOfUserId(userid);
+	int client = EntRefToEntIndex(player.Ref);
 	if(IsValidClient(client, false))
 	{
-		CPrintToChat(client, "{olive}[FF2] %t.{default}", "Total Damage Dealt", Damage[client]);
+		CPrintToChat(client, "{olive}[FF2] %t.{default}", "Total Damage Dealt", player.Damage);
 	}
 	return Plugin_Continue;
 }
@@ -5061,7 +5081,7 @@ public Action OnDeployBackup(Event event, const char[] name, bool dontBroadcast)
 public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 {
 	int client = GetClientOfUserId(event.GetInt("patient"));
-	int healer = GetClientOfUserId(event.GetInt("healer"));
+	int iHealer = GetClientOfUserId(event.GetInt("healer"));
 	int healed = event.GetInt("amount");
 	int boss = GetBossIndex(client);
 
@@ -5080,9 +5100,10 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 		}
 		UpdateHealthBar(false);
 	}
-	else if(client != healer)
+	else if(client != iHealer)
 	{
-		Assist[healer] += healed/2;
+		FF2BaseEntity healer = g_hBaseEntity[iHealer];
+		healer.Assist += healed/2;
 	}
 
 	return Plugin_Continue;
@@ -5349,18 +5370,20 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	Debug("allseecrit removed");
 	event.SetBool("allseecrit", false);
 
-	int client = GetClientOfUserId(GetEventInt(event, "userid")),
-		attacker = GetClientOfUserId(GetEventInt(event, "attacker")),
+	int iClient = GetClientOfUserId(GetEventInt(event, "userid")),
+		iAttacker = GetClientOfUserId(GetEventInt(event, "attacker")),
 		damage = GetEventInt(event, "damageamount"),
-		boss = GetBossIndex(client);
+		boss = GetBossIndex(iClient);
 
-	if(!IsBoss(client)) 	return Plugin_Continue;
+	// FF2BaseEntity client = g_hBaseEntity[iClient];
+
+	if(!IsBoss(iClient)) 	return Plugin_Continue;
 
 	for(int lives=1; lives<BossLives[boss]; lives++)
 	{
 		if(BossHealth[boss]-damage<=BossHealthMax[boss]*lives)
 		{
-			SetEntityHealth(client, (BossHealth[boss]-damage)-BossHealthMax[boss]*(lives-1));  //Set the health early to avoid the boss dying from fire, etc.
+			SetEntityHealth(iClient, (BossHealth[boss]-damage)-BossHealthMax[boss]*(lives-1));  //Set the health early to avoid the boss dying from fire, etc.
 
 			Action action;
 			int bossLives=BossLives[boss];  //Used for the forward
@@ -5371,7 +5394,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 			Call_Finish(action);
 			if(action==Plugin_Stop || action==Plugin_Handled)  //Don't allow any damage to be taken and also don't let the life-loss go through
 			{
-				SetEntityHealth(client, BossHealth[boss]);
+				SetEntityHealth(iClient, BossHealth[boss]);
 				return Plugin_Continue;
 			}
 			else if(action==Plugin_Changed)
@@ -5464,9 +5487,11 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 	BossHealth[boss]-=damage;
 
-	if(IsValidClient(attacker) && attacker!=client)
+	if(IsValidClient(iAttacker) && iAttacker!=iClient)
 	{
-		Damage[attacker]+=damage;
+		FF2BaseEntity attacker = g_hBaseEntity[iAttacker];
+
+		attacker.Damage += damage;
 		bool rage = true;
 /*
 		if(weapon > MaxClients && IsValidEntity(weapon))
@@ -5488,7 +5513,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	int healerCount = 0;
 	for(int target=1; target<=MaxClients; target++)
 	{
-		if(IsValidClient(target) && IsPlayerAlive(target) && (GetHealingTarget(target, true)==attacker))
+		if(IsValidClient(target) && IsPlayerAlive(target) && (GetHealingTarget(target, true) == iAttacker))
 		{
 			healers[healerCount++] = target;
 		}
@@ -5498,14 +5523,12 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	{
 		if(IsValidClient(healers[target]) && IsPlayerAlive(healers[target]))
 		{
-			if(damage<10 || uberTarget[healers[target]]==attacker)
-			{
-				Assist[healers[target]]+=damage;
-			}
+			FF2BaseEntity healer = g_hBaseEntity[healers[target]];
+
+			if(damage<10 || uberTarget[healers[target]] == iAttacker)
+				healer.Assist += damage;
 			else
-			{
-				Assist[healers[target]]+=damage/(healerCount+1);
-			}
+				healer.Assist += damage / (healerCount + 1);
 		}
 	}
 
@@ -5513,9 +5536,9 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
-public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if(!Enabled || !IsValidEntity(attacker))
+	if(!Enabled || !IsValidEntity(iAttacker))
 	{
 		return Plugin_Continue;
 	}
@@ -5529,7 +5552,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 		return Plugin_Changed;
 	}
 
-	if(attacker<=0 || client==attacker)
+	if(iAttacker <= 0 || client == iAttacker)
 	{
 		if(IsBoss(client))
 		{
@@ -5537,18 +5560,18 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			KeyValues bossKv = GetBossKV(boss);
 			bossKv.Rewind();
 
-			// Debug("%d, %d, %d, %.1f", client, attacker, inflictor, damage);
-			if(bossKv.GetNum("enable selfdamage", 0) > 0 && attacker > 0)
+			// Debug("%d, %d, %d, %.1f", client, iAttacker, inflictor, damage);
+			if(bossKv.GetNum("enable selfdamage", 0) > 0 && iAttacker > 0)
 			{
 				// Debug("selfdamage");
-				bool noSelfDmg = TF2Attrib_HookValueInt(0, "no_self_blast_dmg", attacker) > 0;
+				bool noSelfDmg = TF2Attrib_HookValueInt(0, "no_self_blast_dmg", iAttacker) > 0;
 				if(noSelfDmg)
 				{
 					damage=0.0;
 					return Plugin_Changed;
 				}
 
-				float blastDmgRatio = TF2Attrib_HookValueFloat(1.0, "blast_dmg_to_self", attacker);
+				float blastDmgRatio = TF2Attrib_HookValueFloat(1.0, "blast_dmg_to_self", iAttacker);
 				if((damagetype & DMG_BLAST) && blastDmgRatio != 1.0)
 				{
 					damage *= blastDmgRatio;
@@ -5564,8 +5587,8 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 	}
 
 	float position[3];
-	GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
-	if(IsBoss(attacker))
+	GetEntPropVector(iAttacker, Prop_Send, "m_vecOrigin", position);
+	if(IsBoss(iAttacker))
 	{
 		if(damagecustom == TF_CUSTOM_BACKSTAB)
 		{
@@ -5614,7 +5637,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				}
 				else
 				{
-					// RemoveShield(client, attacker, position);
+					// RemoveShield(client, iAttacker, position);
 					PlayShieldBreakSound(client, position, volume);
 					float charge = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") - damage;
 					SetEntPropFloat(client, Prop_Send, "m_flChargeMeter",
@@ -5641,15 +5664,15 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 	{
 		int boss=GetBossIndex(client);
 		float victimPosition[3];
-		GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", position);
+		GetEntPropVector(iAttacker, Prop_Send, "m_vecOrigin", position);
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", victimPosition);
 		if(boss!=-1)
 		{
-			if(attacker<=MaxClients)
+			if(iAttacker<=MaxClients)
 			{
 				int index;
 				char classname[64];
-				if(IsValidEntity(weapon) && weapon>MaxClients && attacker<=MaxClients)
+				if(IsValidEntity(weapon) && weapon>MaxClients && iAttacker<=MaxClients)
 				{
 					GetEntityClassname(weapon, classname, sizeof(classname));
 					if(!StrContains(classname, "eyeball_boss"))  //Dang spell Monoculuses
@@ -5680,11 +5703,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(IsValidEntity(weapon))
 				{
-					if(Damage[attacker] >= LastNoticedDamage[attacker])
+					FF2BaseEntity attacker = g_hBaseEntity[iAttacker];
+					if(attacker.Damage >= attacker.LastNoticedDamage)
 					{
-						int interval = (Damage[attacker] + view_as<int>(damage)) / KILLSTREAK_DAMAGE_INTERVAL;
-						LastNoticedDamage[attacker] = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
-						CreateKillStreak(attacker, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
+						int interval = (attacker.Damage + view_as<int>(damage)) / KILLSTREAK_DAMAGE_INTERVAL;
+						attacker.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
+						CreateKillStreak(iAttacker, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
 					}			
 				}
 
@@ -5697,12 +5721,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						if(index==752)  //Hitman's Heatmaker
 						{
 							float focus=10+(charge/10);
-							if(TF2_IsPlayerInCondition(attacker, TFCond_FocusBuff))
+							if(TF2_IsPlayerInCondition(iAttacker, TFCond_FocusBuff))
 							{
 								focus/=3;
 							}
-							float rage=GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter");
-							SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter", (rage+focus>100) ? 100.0 : rage+focus);
+							float rage=GetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter");
+							SetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter", (rage+focus>100) ? 100.0 : rage+focus);
 						}
 						else if(index!=230 && index!=402 && index!=526 && index!=30665)  //Sydney Sleeper, Bazaar Bargain, Machina, Shooting Star
 						{
@@ -5721,43 +5745,43 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 						// NO CRIT
 						static float damageAdjust = 1.6;
-						if(!(damagetype & DMG_CRIT) /*&& !TF2_IsPlayerInCondition(attacker, TFCond_Buffed)*/)
+						if(!(damagetype & DMG_CRIT) /*&& !TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed)*/)
 							damage *= damageAdjust;
 						// MINI CRIT.. Just in case.
-						else if((damagetype & DMG_CRIT) && TF2_IsPlayerInCondition(attacker, TFCond_Buffed) && !TF2_IsPlayerCritBuffed(attacker))
+						else if((damagetype & DMG_CRIT) && TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed) && !TF2_IsPlayerCritBuffed(iAttacker))
 							damage *= damageAdjust;
 
 						return Plugin_Changed;
 					}
 				}
 
-				if(TF2_GetPlayerClass(attacker) == TFClass_Heavy)
+				if(TF2_GetPlayerClass(iAttacker) == TFClass_Heavy)
 				{
 					if(StrContains(classname, "tf_weapon_shotgun")!=-1)
 					{
-						int maxHealth = GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
-						int currentHealth = GetEntProp(attacker, Prop_Data, "m_iHealth");
+						int maxHealth = GetEntProp(iAttacker, Prop_Data, "m_iMaxHealth");
+						int currentHealth = GetEntProp(iAttacker, Prop_Data, "m_iHealth");
 						if(currentHealth <= maxHealth * 2)
 						{
 							currentHealth += 50;
-							TF2Util_TakeHealth(attacker, 50.0, TAKEHEALTH_IGNORE_MAXHEALTH);
+							TF2Util_TakeHealth(iAttacker, 50.0, TAKEHEALTH_IGNORE_MAXHEALTH);
 
 							if(currentHealth > maxHealth * 2)
 							{
-								SetEntProp(attacker, Prop_Data, "m_iHealth", maxHealth * 2);
+								SetEntProp(iAttacker, Prop_Data, "m_iHealth", maxHealth * 2);
 							}
 						}
 					}
 
-					float charge = GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter") + (damage * 0.056);
-					SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter",
+					float charge = GetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter") + (damage * 0.056);
+					SetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter",
 						charge > 100.0 ? 100.0 : charge);
 				}
 
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
 				{
 /*
-					int sentry=-1, targettingCount=0, closestSentry, currentWeapon = GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon");
+					int sentry=-1, targettingCount=0, closestSentry, currentWeapon = GetEntPropEnt(iAttacker, Prop_Send, "m_hActiveWeapon");
 					float distance, closestdistanse=800.0, sentryPos[3];
 
 					if(IsValidEntity(currentWeapon) && GetEntProp(currentWeapon, Prop_Send, "m_iItemDefinitionIndex") == 141)
@@ -5814,7 +5838,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 					case 132, 266, 482, 1082:  //Eyelander, HHHH, Nessie's Nine Iron, Festive Eyelander, Vita-Saw(?)
 					{
-						IncrementHeadCount(attacker);
+						IncrementHeadCount(iAttacker);
 					}
 					case 142:
 					{
@@ -5827,66 +5851,66 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 
-							SpecialAttackToBoss(attacker, boss, weapon, "combo_punch", damage);
-							CreateKillStreak(attacker, client, "robot_arm_combo_kill", ++ComboPunchCount[attacker]);
+							SpecialAttackToBoss(iAttacker, boss, weapon, "combo_punch", damage);
+							CreateKillStreak(iAttacker, client, "robot_arm_combo_kill", ++ComboPunchCount[iAttacker]);
 
 							return Plugin_Changed;
 						}
 					}
 					case 214:  //Powerjack
 					{
-						int health=GetClientHealth(attacker);
+						int health=GetClientHealth(iAttacker);
 						int newhealth=health+50;
-						if(newhealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))  //No overheal allowed
+						if(newhealth<=GetEntProp(iAttacker, Prop_Data, "m_iMaxHealth"))  //No overheal allowed
 						{
-							SetEntityHealth(attacker, newhealth);
+							SetEntityHealth(iAttacker, newhealth);
 						}
 
-						if(TF2_IsPlayerInCondition(attacker, TFCond_OnFire))
+						if(TF2_IsPlayerInCondition(iAttacker, TFCond_OnFire))
 						{
-							TF2_RemoveCondition(attacker, TFCond_OnFire);
+							TF2_RemoveCondition(iAttacker, TFCond_OnFire);
 						}
 					}
 					case 310:  //Warrior's Spirit
 					{
-						int health=GetClientHealth(attacker);
+						int health=GetClientHealth(iAttacker);
 						int newhealth=health+50;
-						if(newhealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))  //No overheal allowed
+						if(newhealth<=GetEntProp(iAttacker, Prop_Data, "m_iMaxHealth"))  //No overheal allowed
 						{
-							SetEntityHealth(attacker, newhealth);
+							SetEntityHealth(iAttacker, newhealth);
 						}
 
-						if(TF2_IsPlayerInCondition(attacker, TFCond_OnFire))
+						if(TF2_IsPlayerInCondition(iAttacker, TFCond_OnFire))
 						{
-							TF2_RemoveCondition(attacker, TFCond_OnFire);
+							TF2_RemoveCondition(iAttacker, TFCond_OnFire);
 						}
 					}
 					case 317:  //Candycane
 					{
-						SpawnSmallHealthPackAt(client, TF2_GetClientTeam(attacker));
+						SpawnSmallHealthPackAt(client, TF2_GetClientTeam(iAttacker));
 					}
 					case 327:  //Claidheamh Mòr
 					{
-						int health=GetClientHealth(attacker);
+						int health=GetClientHealth(iAttacker);
 						int newhealth=health+25;
-						if(newhealth<=GetEntProp(attacker, Prop_Data, "m_iMaxHealth"))  //No overheal allowed
+						if(newhealth<=GetEntProp(iAttacker, Prop_Data, "m_iMaxHealth"))  //No overheal allowed
 						{
-							SetEntityHealth(attacker, newhealth);
+							SetEntityHealth(iAttacker, newhealth);
 						}
 
-						if(TF2_IsPlayerInCondition(attacker, TFCond_OnFire))
+						if(TF2_IsPlayerInCondition(iAttacker, TFCond_OnFire))
 						{
-							TF2_RemoveCondition(attacker, TFCond_OnFire);
+							TF2_RemoveCondition(iAttacker, TFCond_OnFire);
 						}
 
-						float charge=GetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter");
+						float charge=GetEntPropFloat(iAttacker, Prop_Send, "m_flChargeMeter");
 						if(charge+25.0>=100.0)
 						{
-							SetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter", 100.0);
+							SetEntPropFloat(iAttacker, Prop_Send, "m_flChargeMeter", 100.0);
 						}
 						else
 						{
-							SetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter", charge+25.0);
+							SetEntPropFloat(iAttacker, Prop_Send, "m_flChargeMeter", charge+25.0);
 						}
 					}
 					case 349:
@@ -5898,7 +5922,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						}
 						else
 						{
-							TF2_IgnitePlayer(client, attacker);
+							TF2_IgnitePlayer(client, iAttacker);
 						}
 					}
 
@@ -5909,13 +5933,13 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					case 357:  //Half-Zatoichi
 					{
 						SetEntProp(weapon, Prop_Send, "m_bIsBloody", 1);
-						if(GetEntProp(attacker, Prop_Send, "m_iKillCountSinceLastDeploy")<1)
+						if(GetEntProp(iAttacker, Prop_Send, "m_iKillCountSinceLastDeploy")<1)
 						{
-							SetEntProp(attacker, Prop_Send, "m_iKillCountSinceLastDeploy", 1);
+							SetEntProp(iAttacker, Prop_Send, "m_iKillCountSinceLastDeploy", 1);
 						}
 
-						int health=GetClientHealth(attacker);
-						int max=GetEntProp(attacker, Prop_Data, "m_iMaxHealth");
+						int health=GetClientHealth(iAttacker);
+						int max=GetEntProp(iAttacker, Prop_Data, "m_iMaxHealth");
 						int newhealth=health+50;
 						if(health<max+100)
 						{
@@ -5923,36 +5947,36 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 							{
 								newhealth=max+100;
 							}
-							SetEntityHealth(attacker, newhealth);
+							SetEntityHealth(iAttacker, newhealth);
 						}
 
-						if(TF2_IsPlayerInCondition(attacker, TFCond_OnFire))
+						if(TF2_IsPlayerInCondition(iAttacker, TFCond_OnFire))
 						{
-							TF2_RemoveCondition(attacker, TFCond_OnFire);
+							TF2_RemoveCondition(iAttacker, TFCond_OnFire);
 						}
 					}
 					case 416:  //Market Gardener (courtesy of Chdata)
 					{
-						if(FF2Flags[attacker] & FF2FLAG_BLAST_JUMPING)
+						if(FF2Flags[iAttacker] & FF2FLAG_BLAST_JUMPING)
 						{
 							damage=(Pow(float(BossHealthMax[boss]), 0.54074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
 							if(damage < 500.0)
 								damage = 500.0; // x3
 
 							float velocity[3]; // TODO: move this when anything use this in OnTakeDamage
-							GetEntPropVector(attacker, Prop_Data, "m_vecVelocity", velocity);
+							GetEntPropVector(iAttacker, Prop_Data, "m_vecVelocity", velocity);
 
 							float score = FloatAbs(velocity[2]);
 							if(velocity[2] < 0.0)
 								score *= 0.65;
 
-							float distance = GetVectorDistance(position, RocketJumpPosition[attacker]);
+							float distance = GetVectorDistance(position, RocketJumpPosition[iAttacker]);
 							score = score > distance ? score : distance;
 
 							damage += score;
 							damagetype|=DMG_CRIT;
 
-							if(SpecialAttackToBoss(attacker, boss, weapon, "market_garden", damage) == Plugin_Handled)
+							if(SpecialAttackToBoss(iAttacker, boss, weapon, "market_garden", damage) == Plugin_Handled)
 								return Plugin_Handled;
 
 							if(Marketed[client]<5)
@@ -5960,9 +5984,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 								Marketed[client]++;
 							}
 
-							CreateKillStreak(attacker, client, "market_gardener", RoundFloat(score));
+							CreateKillStreak(iAttacker, client, "market_gardener", RoundFloat(score));
 
-							PrintHintText(attacker, "%t", "Market Gardener");  //You just market-gardened the boss!
+							PrintHintText(iAttacker, "%t", "Market Gardener");  //You just market-gardened the boss!
 							PrintHintText(client, "%t", "Market Gardened");  //You just got market-gardened!
 
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
@@ -5974,7 +5998,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 					case 525, 595:  //Diamondback, Manmelter
 					{
-						if(GetEntProp(attacker, Prop_Send, "m_iRevengeCrits"))  //If a revenge crit was used, give a damage bonus
+						if(GetEntProp(iAttacker, Prop_Send, "m_iRevengeCrits"))  //If a revenge crit was used, give a damage bonus
 						{
 							damage=255.0;
 							return Plugin_Changed;
@@ -5984,7 +6008,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						if(circuitStun)
 						{
-							TF2_StunPlayer(client, circuitStun, 0.0, TF_STUNFLAGS_SMALLBONK|TF_STUNFLAG_NOSOUNDOREFFECT, attacker);
+							TF2_StunPlayer(client, circuitStun, 0.0, TF_STUNFLAGS_SMALLBONK|TF_STUNFLAG_NOSOUNDOREFFECT, iAttacker);
 							EmitSoundToAll("weapons/barret_arm_zap.wav", client);
 							EmitSoundToClient(client, "weapons/barret_arm_zap.wav");
 						}
@@ -5995,7 +6019,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						int healerCount;
 						for(int healer; healer<=MaxClients; healer++)
 						{
-							if(IsValidClient(healer) && IsPlayerAlive(healer) && (GetHealingTarget(healer, true)==attacker))
+							if(IsValidClient(healer) && IsPlayerAlive(healer) && (GetHealingTarget(healer, true)==iAttacker))
 							{
 								healers[healerCount]=healer;
 								healerCount++;
@@ -6026,7 +6050,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					}
 					case 594:  //Phlogistinator
 					{
-						if(!TF2_IsPlayerInCondition(attacker, TFCond_CritMmmph))
+						if(!TF2_IsPlayerInCondition(iAttacker, TFCond_CritMmmph))
 						{
 							damage/=2.0;
 							return Plugin_Changed;
@@ -6035,7 +6059,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 /*
 					case 1099:  //Tide Turner
 					{
-						SetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter", 100.0);
+						SetEntPropFloat(iAttacker, Prop_Send, "m_flChargeMeter", 100.0);
 					}
 */
 					case 1104:
@@ -6044,7 +6068,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						airStrikeDamage+=damage;
 						if(airStrikeDamage>=200.0)
 						{
-							SetEntProp(attacker, Prop_Send, "m_iDecapitations", GetEntProp(attacker, Prop_Send, "m_iDecapitations")+1);
+							SetEntProp(iAttacker, Prop_Send, "m_iDecapitations", GetEntProp(iAttacker, Prop_Send, "m_iDecapitations")+1);
 							airStrikeDamage-=200.0;
 						}
 					}
@@ -6054,7 +6078,7 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", attacker) > 0;
+					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", iAttacker) > 0;
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
 					// damage = BossHealth[boss] * 0.06;
 					if(damage < 1500.0)
@@ -6066,14 +6090,14 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 					{
 						Stabbed[boss]++;
 					}
-					CreateKillStreak(attacker, client, "backstab", Stabbed[boss]);
+					CreateKillStreak(iAttacker, client, "backstab", Stabbed[boss]);
 
 					if(!isSlient)
 					{
 						EmitSoundToClient(client, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
-						EmitSoundToClient(attacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
+						EmitSoundToClient(iAttacker, "player/spy_shield_break.wav", _, _, _, _, 0.7, _, _, position, _, false);
 						EmitSoundToClient(client, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
-						EmitSoundToClient(attacker, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
+						EmitSoundToClient(iAttacker, "player/crit_received3.wav", _, _, _, _, 0.7, _, _, _, _, false);
 						EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 						EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 						EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
@@ -6083,17 +6107,17 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						damage *= 0.4;
 					}
 					
-					if(SpecialAttackToBoss(attacker, boss, weapon, "backstab", damage) == Plugin_Handled)
+					if(SpecialAttackToBoss(iAttacker, boss, weapon, "backstab", damage) == Plugin_Handled)
 						return Plugin_Handled;
 
 					SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime()+2.0);
-					SetEntPropFloat(attacker, Prop_Send, "m_flNextAttack", GetGameTime()+2.0);
-					SetEntPropFloat(attacker, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+2.0);
+					SetEntPropFloat(iAttacker, Prop_Send, "m_flNextAttack", GetGameTime()+2.0);
+					SetEntPropFloat(iAttacker, Prop_Send, "m_flStealthNextChangeTime", GetGameTime()+2.0);
 
-					int viewmodel=GetEntPropEnt(attacker, Prop_Send, "m_hViewModel");
-					if(viewmodel>MaxClients && IsValidEntity(viewmodel) && TF2_GetPlayerClass(attacker)==TFClass_Spy)
+					int viewmodel=GetEntPropEnt(iAttacker, Prop_Send, "m_hViewModel");
+					if(viewmodel>MaxClients && IsValidEntity(viewmodel) && TF2_GetPlayerClass(iAttacker)==TFClass_Spy)
 					{
-						int melee=GetIndexOfWeaponSlot(attacker, TFWeaponSlot_Melee);
+						int melee=GetIndexOfWeaponSlot(iAttacker, TFWeaponSlot_Melee);
 						int animation=41;
 						switch(melee)
 						{
@@ -6109,9 +6133,9 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 						SetEntProp(viewmodel, Prop_Send, "m_nSequence", animation);
 					}
 
-					if(!(FF2Flags[attacker] & FF2FLAG_HUDDISABLED))
+					if(!(FF2Flags[iAttacker] & FF2FLAG_HUDDISABLED))
 					{
-						PrintHintText(attacker, "%t", "Backstab");
+						PrintHintText(iAttacker, "%t", "Backstab");
 					}
 
 					if(!(FF2Flags[client] & FF2FLAG_HUDDISABLED))
@@ -6121,26 +6145,26 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 
 					if(index==225 || index==574)  //Your Eternal Reward, Wanga Prick
 					{
-						CreateTimer(0.3, Timer_DisguiseBackstab, GetClientUserId(attacker), TIMER_FLAG_NO_MAPCHANGE);
+						CreateTimer(0.3, Timer_DisguiseBackstab, GetClientUserId(iAttacker), TIMER_FLAG_NO_MAPCHANGE);
 					}
 					else if(index==356)  //Conniver's Kunai
 					{
-						int health=GetClientHealth(attacker)+200;
+						int health=GetClientHealth(iAttacker)+200;
 						if(health>500)
 						{
 							health=500;
 						}
-						SetEntityHealth(attacker, health);
+						SetEntityHealth(iAttacker, health);
 					}
 					else if(index==461)  //Big Earner
 					{
-						SetEntPropFloat(attacker, Prop_Send, "m_flCloakMeter", 100.0);  //Full cloak
-						TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 3.0);  //Speed boost
+						SetEntPropFloat(iAttacker, Prop_Send, "m_flCloakMeter", 100.0);  //Full cloak
+						TF2_AddCondition(iAttacker, TFCond_SpeedBuffAlly, 3.0);  //Speed boost
 					}
 
-					if(GetIndexOfWeaponSlot(attacker, TFWeaponSlot_Primary)==525)  //Diamondback
+					if(GetIndexOfWeaponSlot(iAttacker, TFWeaponSlot_Primary)==525)  //Diamondback
 					{
-						SetEntProp(attacker, Prop_Send, "m_iRevengeCrits", GetEntProp(attacker, Prop_Send, "m_iRevengeCrits")+2);
+						SetEntProp(iAttacker, Prop_Send, "m_iRevengeCrits", GetEntProp(iAttacker, Prop_Send, "m_iRevengeCrits")+2);
 					}
 
 					char sound[PLATFORM_MAX_PATH];
@@ -6154,26 +6178,29 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 				else if(damagecustom==TF_CUSTOM_TELEFRAG)
 				{
 					damagecustom=0;
-					if(!IsPlayerAlive(attacker))
+					if(!IsPlayerAlive(iAttacker))
 					{
 						damage=1.0;
 						return Plugin_Changed;
 					}
 					damage=(BossHealth[boss]>9001 ? 9001.0 : float(GetEntProp(Boss[boss], Prop_Send, "m_iHealth"))+90.0);
 
-					int teleowner=FindTeleOwner(attacker);
-					if(IsValidClient(teleowner) && teleowner!=attacker)
+					int iTeleowner=FindTeleOwner(iAttacker);
+					FF2BaseEntity teleowner = g_hBaseEntity[iTeleowner];
+
+					if(IsValidClient(iTeleowner) && iTeleowner != iAttacker)
 					{
-						Assist[teleowner]+=9001*3/5;
-						if(!(FF2Flags[teleowner] & FF2FLAG_HUDDISABLED))
+						teleowner.Assist += 9001 * 3 / 5;
+
+						if(!(FF2Flags[iTeleowner] & FF2FLAG_HUDDISABLED))
 						{
-							PrintHintText(teleowner, "TELEFRAG ASSIST!  Nice job setting it up!");
+							PrintHintText(iTeleowner, "TELEFRAG ASSIST!  Nice job setting it up!");
 						}
 					}
 
-					if(!(FF2Flags[attacker] & FF2FLAG_HUDDISABLED))
+					if(!(FF2Flags[iAttacker] & FF2FLAG_HUDDISABLED))
 					{
-						PrintHintText(attacker, "TELEFRAG! You are a pro!");
+						PrintHintText(iAttacker, "TELEFRAG! You are a pro!");
 					}
 
 					if(!(FF2Flags[client] & FF2FLAG_HUDDISABLED))
@@ -6191,12 +6218,12 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 			else
 			{
 				char classname[64];
-				if(GetEntityClassname(attacker, classname, sizeof(classname)) && StrEqual(classname, "trigger_hurt", false))
+				if(GetEntityClassname(iAttacker, classname, sizeof(classname)) && StrEqual(classname, "trigger_hurt", false))
 				{
 					Action action;
 					Call_StartForward(OnTriggerHurt);
 					Call_PushCell(boss);
-					Call_PushCell(attacker);
+					Call_PushCell(iAttacker);
 					float damage2=damage;
 					Call_PushFloatRef(damage2);
 					Call_Finish(action);
@@ -6241,19 +6268,6 @@ public Action OnTakeDamageAlive(int client, int& attacker, int& inflictor, float
 */
 	}
 	return bChanged ? Plugin_Changed : Plugin_Continue;
-}
-
-public void OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float damageFloat, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
-{
-	// ha?
-	/*
-	if(!Enabled || CheckRoundState() != FF2RoundState_RoundRunning) return;
-
-	if(victim > MaxClients)
-	{
-		Assist[attacker] += RoundFloat(damageFloat);
-	}
-	*/
 }
 
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
@@ -7175,7 +7189,8 @@ public int Native_GetBossRageDistance(Handle plugin, int numParams)
 
 public int GetClientDamage(int client)
 {
-	return Damage[client];
+	FF2BaseEntity player = g_hBaseEntity[client];
+	return player.Damage;
 }
 
 public int Native_GetClientDamage(Handle plugin, int numParams)
@@ -7183,9 +7198,10 @@ public int Native_GetClientDamage(Handle plugin, int numParams)
 	return GetClientDamage(GetNativeCell(1));
 }
 
-public void SetClientDamage(int client, int damage)
+public void SetClientDamage(int client, int iDamage)
 {
-	Damage[client]=damage;
+	FF2BaseEntity player = g_hBaseEntity[client];
+	player.Damage = iDamage;
 }
 
 public /*void*/int Native_SetClientDamage(Handle plugin, int numParams)
@@ -7217,7 +7233,8 @@ public /*void*/int Native_SetRoundTime(Handle plugin, int numParams)
 
 public int GetClientAssist(int client)
 {
-	return Assist[client];
+	FF2BaseEntity player = g_hBaseEntity[client];
+	return player.Assist;
 }
 
 public int Native_GetClientAssist(Handle plugin, int numParams)
@@ -7227,7 +7244,8 @@ public int Native_GetClientAssist(Handle plugin, int numParams)
 
 public void SetClientAssist(int client, int assist)
 {
-	Assist[client]=assist;
+	FF2BaseEntity player = g_hBaseEntity[client];
+	player.Assist = assist;
 }
 
 public /*void*/int Native_SetClientAssist(Handle plugin, int numParams)
