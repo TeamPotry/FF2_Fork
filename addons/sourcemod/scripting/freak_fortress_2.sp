@@ -6104,7 +6104,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
 					FF2BaseEntity victim = g_hBaseEntity[client],
-						attacker = g_hBaseEntity[attacker];
+						attacker = g_hBaseEntity[iAttacker];
 					
 					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", iAttacker) > 0;
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
@@ -6212,7 +6212,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					int iTeleowner=FindTeleOwner(iAttacker);
 					FF2BaseEntity teleowner = g_hBaseEntity[iTeleowner],
 						victim = g_hBaseEntity[client],
-						attacker = g_hBaseEntity[attacker];
+						attacker = g_hBaseEntity[iAttacker];
 
 					if(IsValidClient(iTeleowner) && iTeleowner != iAttacker)
 					{
