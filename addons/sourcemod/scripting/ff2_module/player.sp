@@ -25,7 +25,7 @@ methodmap FF2BaseEntity < ArrayList
 {
     public FF2BaseEntity(int entRef)
     {
-        ArrayList newArray = new ArrayList(_, FF2BE_MAX_COUNT);
+        ArrayList newArray = new ArrayList();
 
         newArray.Push(entRef);
         

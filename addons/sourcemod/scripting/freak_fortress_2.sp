@@ -499,10 +499,16 @@ public void OnMapStart()
 	HPTime=0.0;
 	doorCheckTimer=null;
 	RoundCount=0;
-	for(int client; client<=MaxClients; client++)
+
+	
+	for(int client = 0; client <= MaxClients; client++)
 	{
+		// TODO: Change this to FF2BasePlayer
+		FF2BaseEntity player = g_hBaseEntity[client];
+
+		player.Flags = 0;
+
 		KSpreeTimer[client]=0.0;
-		FF2Flags[client]=0;
 		Incoming[client]=-1;
 		MusicTimer[client]=null;
 	}
@@ -989,18 +995,19 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 	playing=0;
 
-	FF2BaseEntity player;
-	for(int client=1; client<=MaxClients; client++)
+	for(int client = 1; client <= MaxClients; client++)
 	{
-		player = g_hBaseEntity[client];
+		if(!IsClientInGame(client)) 	continue;
+
+		FF2BaseEntity player = g_hBaseEntity[client];
 
 		player.Damage = 0;
 		player.Assist = 0;
 		player.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL;
+		player.Flags = 0;
 		
 		uberTarget[client]=-1;
 		emitRageSound[client]=true;
-		FF2Flags[client]=0; // TODO: 테스트
 		if(IsValidClient(client) && TF2_GetClientTeam(client)>TFTeam_Spectator)
 		{
 			playing++;
@@ -1045,13 +1052,16 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		return Plugin_Continue;
 	}
 
-	for(int client; client<=MaxClients; client++)
+	for(int client = 0; client <= MaxClients; client++)
 	{
-		Boss[client]=0;
-		if(IsValidClient(client) && IsPlayerAlive(client) && !(FF2Flags[client] & FF2FLAG_HASONGIVED))
-		{
+		Boss[client] = 0;
+
+		if(!IsValidClient(client) || !IsPlayerAlive(client))
+			continue;
+
+		FF2BaseEntity player = g_hBaseEntity[client];
+		if(!(player.Flags & FF2FLAG_HASONGIVED))
 			TF2_RespawnPlayer(client);
-		}
 	}
 
 	Enabled=true;
@@ -1097,7 +1107,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		{
 			if(IsValidClient(client) && !IsBoss(client) && TF2_GetClientTeam(client)!=OtherTeam)
 			{
-				CreateTimer(0.1, MakeNotBoss, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+				FF2BaseEntity player = g_hBaseEntity[client];
+				CreateTimer(0.1, MakeNotBoss, player, TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
 		return Plugin_Continue;  //NOTE: This is needed because OnRoundStart gets fired a second time once both teams have players
@@ -1458,11 +1469,13 @@ public Action Timer_CalcQueuePoints(Handle timer)
 	int[] add_points=new int[MaxClients+1];
 	int[] add_points2=new int[MaxClients+1];
 
-	FF2BaseEntity baseEnt; // TODO: Replace this to FF2BasePlayer
-	for(int client=1; client<=MaxClients; client++)
+	for(int client = 1; client<=MaxClients; client++)
 	{
 		if(IsValidClient(client))
 		{
+			 // TODO: Replace this to FF2BasePlayer
+			FF2BaseEntity baseEnt = g_hBaseEntity[client];
+
 			damage = baseEnt.Damage;
 			Event event=CreateEvent("player_escort_score", true);
 			event.SetInt("player", client);
@@ -1594,7 +1607,8 @@ public Action StartBossTimer(Handle timer)
 		if(IsValidClient(client) && !IsBoss(client) && IsPlayerAlive(client))
 		{
 			playing++;
-			CreateTimer(0.15, MakeNotBoss, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);  //TODO:  Is this needed?
+			FF2BaseEntity player = g_hBaseEntity[client];
+			CreateTimer(0.15, MakeNotBoss, player, TIMER_FLAG_NO_MAPCHANGE);  //TODO:  Is this needed?
 		}
 	}
 
@@ -2051,14 +2065,12 @@ public Action MakeBoss(Handle timer, int boss)
 {
 	int client=Boss[boss];
 	if(!IsValidClient(client) || CheckRoundState()==FF2RoundState_Loading)
-	{
 		return Plugin_Continue;
-	}
+
+	FF2BaseEntity player = g_hBaseEntity[client];
 
 	if(!IsPlayerAlive(client))
-	{
 		TF2_RespawnPlayer(client);
-	}
 
 	KeyValues kv=GetCharacterKV(character[boss]);
 	kv.Rewind();
@@ -2086,15 +2098,15 @@ public Action MakeBoss(Handle timer, int boss)
 	{
 		case 1:
 		{
-			FF2Flags[client]|=FF2FLAG_ALLOW_HEALTH_PICKUPS;
+			player.Flags |= FF2FLAG_ALLOW_HEALTH_PICKUPS;
 		}
 		case 2:
 		{
-			FF2Flags[client]|=FF2FLAG_ALLOW_AMMO_PICKUPS;
+			player.Flags |= FF2FLAG_ALLOW_AMMO_PICKUPS;
 		}
 		case 3:
 		{
-			FF2Flags[client]|=FF2FLAG_ALLOW_HEALTH_PICKUPS|FF2FLAG_ALLOW_AMMO_PICKUPS;
+			player.Flags |= FF2FLAG_ALLOW_HEALTH_PICKUPS|FF2FLAG_ALLOW_AMMO_PICKUPS;
 		}
 	}
 
@@ -3092,16 +3104,18 @@ stock Handle PrepareItemHandle(Handle item, char[] classname="", int index=-1, c
 	return weapon;
 }
 
-public Action MakeNotBoss(Handle timer, int userid)
+public Action MakeNotBoss(Handle timer, FF2BaseEntity player)
 {
-	int client=GetClientOfUserId(userid);
-	if(!IsValidClient(client) || !IsPlayerAlive(client) || CheckRoundState()==FF2RoundState_RoundEnd || IsBoss(client) || (FF2Flags[client] & FF2FLAG_ALLOWSPAWNINBOSSTEAM))
-	{
-		return Plugin_Continue;
-	}
+	int client = EntRefToEntIndex(player.Ref);
 
-	if(!IsFakeClient(client) && CheckRoundState()==FF2RoundState_Setup
-		&& !IsVoteInProgress() && !(FF2Flags[client] & FF2FLAG_CLASSHELPED))
+	if(!IsValidClient(client) || !IsPlayerAlive(client)
+		|| CheckRoundState()==FF2RoundState_RoundEnd
+		|| IsBoss(client) || (player.Flags & FF2FLAG_ALLOWSPAWNINBOSSTEAM)
+	)
+		return Plugin_Continue;
+
+	if(!IsFakeClient(client) && CheckRoundState() == FF2RoundState_Setup
+		&& !IsVoteInProgress() && !(player.Flags & FF2FLAG_CLASSHELPED))
 	{
 		if(!GetClientClassInfoCookie(client))
 			HelpPanelClass(client);
@@ -3117,17 +3131,17 @@ public Action MakeNotBoss(Handle timer, int userid)
 		AssignTeam(client, OtherTeam);
 	}
 
-	CreateTimer(0.1, CheckItems, userid, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, CheckItems, player, TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Continue;
 }
 
-public Action CheckItems(Handle timer, int userid)
+public Action CheckItems(Handle timer, FF2BaseEntity player)
 {
-	int client=GetClientOfUserId(userid);
-	if(!IsValidClient(client) || !IsPlayerAlive(client) || CheckRoundState()==FF2RoundState_RoundEnd || IsBoss(client) || (FF2Flags[client] & FF2FLAG_ALLOWSPAWNINBOSSTEAM))
-	{
+	int client = EntRefToEntIndex(player.Ref);
+	if(!IsValidClient(client) || !IsPlayerAlive(client)
+		|| CheckRoundState()==FF2RoundState_RoundEnd
+		|| IsBoss(client) || (player.Flags & FF2FLAG_ALLOWSPAWNINBOSSTEAM))
 		return Plugin_Continue;
-	}
 
 	SetEntityRenderColor(client, 255, 255, 255, 255);
 	shield[client]=0;
@@ -3735,7 +3749,6 @@ public void OnClientPostAdminCheck(int client)
 	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamageAlive);
 	// SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
 
-	FF2Flags[client]=0;
 	uberTarget[client]=-1;
 
 	g_hBaseEntity[client] = new FF2BaseEntity(EntIndexToEntRef(client));
@@ -3799,11 +3812,11 @@ public void OnClientDisconnect(int client)
 	}
 
 	if(MusicTimer[client]!=null)
-	{
 		delete MusicTimer[client];
-	}
 
-	delete g_hBaseEntity[client];
+	if(g_hBaseEntity[client] != null)
+		delete g_hBaseEntity[client];
+
 	delete PlayerHudQueue[client];
 }
 
@@ -3819,40 +3832,36 @@ public Action OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 public Action OnPostInventoryApplication(Event event, const char[] name, bool dontBroadcast)
 {
 	if(!Enabled)
-	{
 		return Plugin_Continue;
-	}
 
-	int client=GetClientOfUserId(event.GetInt("userid"));
+	int client = GetClientOfUserId(event.GetInt("userid"));
 	if(!IsValidClient(client))
-	{
 		return Plugin_Continue;
-	}
 
 	SetVariantString("");
 	AcceptEntityInput(client, "SetCustomModel");
 
 	if(IsBoss(client))
-	{
 		CreateTimer(0.1, MakeBoss, GetBossIndex(client), TIMER_FLAG_NO_MAPCHANGE);
-	}
 
-	if(!(FF2Flags[client] & FF2FLAG_ALLOWSPAWNINBOSSTEAM))
+	FF2BaseEntity player = g_hBaseEntity[client];
+	if(!(player.Flags & FF2FLAG_ALLOWSPAWNINBOSSTEAM))
 	{
-		if(!(FF2Flags[client] & FF2FLAG_HASONGIVED))
+		if(!(player.Flags & FF2FLAG_HASONGIVED))
 		{
-			FF2Flags[client]|=FF2FLAG_HASONGIVED;
+			player.Flags |= FF2FLAG_HASONGIVED;
 			RemovePlayerBack(client, {57, 133, 405, 444, 608, 642}, 7);
 			RemovePlayerTarge(client);
 			TF2_RemoveAllWeapons(client);
 			TF2_RegeneratePlayer(client);
 			CreateTimer(0.1, Timer_RegenPlayer, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 		}
-		CreateTimer(0.2, MakeNotBoss, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(0.2, MakeNotBoss, player, TIMER_FLAG_NO_MAPCHANGE);
 	}
 
-	FF2Flags[client]&=~(FF2FLAG_UBERREADY|FF2FLAG_ISBUFFED|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_USINGABILITY|FF2FLAG_CLASSHELPED|FF2FLAG_CHANGECVAR|FF2FLAG_ALLOW_HEALTH_PICKUPS|FF2FLAG_ALLOW_AMMO_PICKUPS|FF2FLAG_BLAST_JUMPING);
-	FF2Flags[client]|=FF2FLAG_USEBOSSTIMER;
+	player.Flags &= ~(FF2FLAG_UBERREADY|FF2FLAG_ISBUFFED|FF2FLAG_ALLOWSPAWNINBOSSTEAM|FF2FLAG_USINGABILITY|FF2FLAG_CLASSHELPED|FF2FLAG_CHANGECVAR|FF2FLAG_ALLOW_HEALTH_PICKUPS|FF2FLAG_ALLOW_AMMO_PICKUPS|FF2FLAG_BLAST_JUMPING);
+	player.Flags |= FF2FLAG_USEBOSSTIMER;
+
 	return Plugin_Continue;
 }
 
@@ -3916,14 +3925,16 @@ public Action ClientTimer(Handle timer)
 	char classname[32], hudText[64];
 	TFCond cond;
 	FF2HudDisplay hudDisplay;
-	FF2BaseEntity player;
-
-	for(int client=1; client<=MaxClients; client++)
+	
+	// Hud 구문 분리
+	for(int client = 1; client <= MaxClients; client++)
 	{
-		// Hud 구문 분리
-		if(IsValidClient(client) && !IsBoss(client) && !(FF2Flags[client] & FF2FLAG_CLASSTIMERDISABLED))
+		if(!IsClientInGame(client))	continue;
+
+		FF2BaseEntity player = g_hBaseEntity[client];
+
+		if(!IsBoss(client) && !(player.Flags & FF2FLAG_CLASSTIMERDISABLED))
 		{
-			player = g_hBaseEntity[client];
 			SetHudTextParams(-1.0, 0.88, 0.35, 90, 255, 90, 255, 0, 0.35, 0.0, 0.1);
 			SetGlobalTransTarget(client);
 
@@ -3931,11 +3942,12 @@ public Action ClientTimer(Handle timer)
 			if(!IsPlayerAlive(client))
 			{
 				int observerIndex = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-				FF2BaseEntity observer = g_hBaseEntity[observerIndex];
 
 				if(IsValidClient(observerIndex) && observerIndex!=client)
 				{
+					FF2BaseEntity observer = g_hBaseEntity[observerIndex];
 					PlayerHudQueue[client].SetName("Observer");
+
 					if(!IsBoss(observerIndex))
 					{
 						Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", player.Damage);
@@ -4040,10 +4052,10 @@ public Action ClientTimer(Handle timer)
 						hudDisplay=FF2HudDisplay.CreateDisplay("Ubercharge", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
-						if(charge==100 && !(FF2Flags[client] & FF2FLAG_UBERREADY))
+						if(charge==100 && !(player.Flags & FF2FLAG_UBERREADY))
 						{
 							FakeClientCommandEx(client, "voicemenu 1 7");
-							FF2Flags[client]|=FF2FLAG_UBERREADY;
+							player.Flags |= FF2FLAG_UBERREADY;
 						}
 					}
 
@@ -4092,9 +4104,9 @@ public Action ClientTimer(Handle timer)
 			}
 			else if(playerclass==TFClass_Soldier)
 			{
-				if((FF2Flags[client] & FF2FLAG_ISBUFFED) && !(GetEntProp(client, Prop_Send, "m_bRageDraining")))
+				if((player.Flags & FF2FLAG_ISBUFFED) && !(GetEntProp(client, Prop_Send, "m_bRageDraining")))
 				{
-					FF2Flags[client]&=~FF2FLAG_ISBUFFED;
+					player.Flags &= ~FF2FLAG_ISBUFFED;
 				}
 			}
 
@@ -4147,7 +4159,7 @@ public Action ClientTimer(Handle timer)
 				addthecrit=true;
 				if(index==416)  //Market Gardener
 				{
-					addthecrit=FF2Flags[client] & FF2FLAG_BLAST_JUMPING ? true : false;
+					addthecrit = (player.Flags & FF2FLAG_BLAST_JUMPING) ? true : false;
 				}
 			}
 			else if((!StrContains(classname, "tf_weapon_smg") && index!=751) ||  //Cleaner's Carbine
@@ -4182,10 +4194,10 @@ public Action ClientTimer(Handle timer)
 						if(IsValidEntity(medigun) && GetEntityClassname(medigun, mediclassname, sizeof(mediclassname)) && !StrContains(mediclassname, "tf_weapon_medigun", false))
 						{
 							int charge=RoundToFloor(GetEntPropFloat(medigun, Prop_Send, "m_flChargeLevel")*100);
-							if(charge==100 && !(FF2Flags[client] & FF2FLAG_UBERREADY))
+							if(charge==100 && !(player.Flags & FF2FLAG_UBERREADY))
 							{
 								FakeClientCommand(client, "voicemenu 1 7");  //"I am fully charged!"
-								FF2Flags[client]|= FF2FLAG_UBERREADY;
+								player.Flags |= FF2FLAG_UBERREADY;
 							}
 						}
 					}
@@ -4278,10 +4290,14 @@ public Action BossTimer(Handle timer)
 		if(!IsPlayerAlive(client) && (BossTeam != TF2_GetClientTeam(client)))
 			continue;
 		*/
-		if(!IsValidClient(client) || !IsPlayerAlive(client) || !(FF2Flags[client] & FF2FLAG_USEBOSSTIMER))
+
+		if(!IsValidClient(client) || !IsPlayerAlive(client))
 			continue;
 
 		baseBoss = g_hBaseEntity[client];
+		if(!(baseBoss.Flags & FF2FLAG_USEBOSSTIMER))
+			continue;
+		
 		// Debug("BossTimer has started for %d at %f", boss, GetGameTime());
 
 		PlayerHudQueue[client].SetName("Boss");
@@ -4346,10 +4362,10 @@ public Action BossTimer(Handle timer)
 
 		if(RoundFloat(BossCharge[boss][0]) >= 100.0)
 		{
-			if(IsFakeClient(client) && !(FF2Flags[client] & FF2FLAG_BOTRAGE))
+			if(IsFakeClient(client) && !(baseBoss.Flags & FF2FLAG_BOTRAGE))
 			{
 				CreateTimer(1.0, Timer_BotRage, boss, TIMER_FLAG_NO_MAPCHANGE);
-				FF2Flags[client]|=FF2FLAG_BOTRAGE;
+				baseBoss.Flags |= FF2FLAG_BOTRAGE;
 			}
 			else
 			{
@@ -4484,7 +4500,8 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
 void OnBossThink(int client)
 {
 	// BossTimer
-	if(!(FF2Flags[client] & FF2FLAG_USEBOSSTIMER))
+	FF2BaseEntity baseBoss = g_hBaseEntity[client];
+	if(!(baseBoss.Flags & FF2FLAG_USEBOSSTIMER))
 		return;
 
 	float tickTime = GetTickInterval();
@@ -4623,11 +4640,13 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 		}
 		else if(!IsBoss(client))
 		{
+			FF2BaseEntity player = g_hBaseEntity[client];
+
 			switch(condition)
 			{
 				case TFCond_BlastJumping:
 				{
-					FF2Flags[client]|=FF2FLAG_BLAST_JUMPING;
+					player.Flags |= FF2FLAG_BLAST_JUMPING;
 					GetEntPropVector(client, Prop_Send, "m_vecOrigin", RocketJumpPosition[client]);
 				}
 				case TFCond_RestrictToMelee:
@@ -4658,9 +4677,10 @@ public void TF2_OnConditionRemoved(int client, TFCond condition)
 		{
 			TF2_AddCondition(client, TFCond_SpeedBuffAlly, 0.01);
 		}
-		else if(!IsBoss(client) && condition==TFCond_BlastJumping)
+		else if(!IsBoss(client) && condition == TFCond_BlastJumping)
 		{
-			FF2Flags[client]&=~FF2FLAG_BLAST_JUMPING;
+			FF2BaseEntity player = g_hBaseEntity[client];
+			player.Flags &= ~FF2FLAG_BLAST_JUMPING;
 		}
 	}
 }
@@ -5649,9 +5669,10 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
 			{
 				bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
+				FF2BaseEntity victim = g_hBaseEntity[client];
 
 				if(valid && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==226  //Battalion's Backup
-				&& !(FF2Flags[client] & FF2FLAG_ISBUFFED))
+				&& !(victim.Flags & FF2FLAG_ISBUFFED))
 				{
 					float charge = GetEntPropFloat(client, Prop_Send, "m_flRageMeter") + (damage * 0.75);
 					SetEntPropFloat(client, Prop_Send, "m_flRageMeter",
@@ -6074,10 +6095,11 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					}
 				}
 
-				
-
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
+					FF2BaseEntity victim = g_hBaseEntity[client],
+						attacker = g_hBaseEntity[attacker];
+					
 					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", iAttacker) > 0;
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
 					// damage = BossHealth[boss] * 0.06;
@@ -6133,15 +6155,11 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						SetEntProp(viewmodel, Prop_Send, "m_nSequence", animation);
 					}
 
-					if(!(FF2Flags[iAttacker] & FF2FLAG_HUDDISABLED))
-					{
+					if(!(attacker.Flags & FF2FLAG_HUDDISABLED))
 						PrintHintText(iAttacker, "%t", "Backstab");
-					}
 
-					if(!(FF2Flags[client] & FF2FLAG_HUDDISABLED))
-					{
+					if(!(victim.Flags & FF2FLAG_HUDDISABLED))
 						PrintHintText(client, "%t", "Backstabbed");
-					}
 
 					if(index==225 || index==574)  //Your Eternal Reward, Wanga Prick
 					{
@@ -6186,24 +6204,26 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					damage=(BossHealth[boss]>9001 ? 9001.0 : float(GetEntProp(Boss[boss], Prop_Send, "m_iHealth"))+90.0);
 
 					int iTeleowner=FindTeleOwner(iAttacker);
-					FF2BaseEntity teleowner = g_hBaseEntity[iTeleowner];
+					FF2BaseEntity teleowner = g_hBaseEntity[iTeleowner],
+						victim = g_hBaseEntity[client],
+						attacker = g_hBaseEntity[attacker];
 
 					if(IsValidClient(iTeleowner) && iTeleowner != iAttacker)
 					{
-						teleowner.Assist += 9001 * 3 / 5;
+						teleowner.Assist += 9001 * 0.5;
 
-						if(!(FF2Flags[iTeleowner] & FF2FLAG_HUDDISABLED))
+						if(!(teleowner.Flags & FF2FLAG_HUDDISABLED))
 						{
 							PrintHintText(iTeleowner, "TELEFRAG ASSIST!  Nice job setting it up!");
 						}
 					}
 
-					if(!(FF2Flags[iAttacker] & FF2FLAG_HUDDISABLED))
+					if(!(attacker.Flags & FF2FLAG_HUDDISABLED))
 					{
 						PrintHintText(iAttacker, "TELEFRAG! You are a pro!");
 					}
 
-					if(!(FF2Flags[client] & FF2FLAG_HUDDISABLED))
+					if(!(victim.Flags & FF2FLAG_HUDDISABLED))
 					{
 						PrintHintText(client, "TELEFRAG! Be careful around quantum tunneling devices!");
 					}
@@ -7311,7 +7331,8 @@ public void Forward_OnSpecialAttack_Post(int attacker, int victimBoss, const cha
 
 public int GetFF2Flags(int client)
 {
-	return FF2Flags[client];
+	FF2BaseEntity player = g_hBaseEntity[client];
+	return player.Flags;
 }
 
 public int Native_GetFF2Flags(Handle plugin, int numParams)
@@ -7321,7 +7342,8 @@ public int Native_GetFF2Flags(Handle plugin, int numParams)
 
 public void SetFF2Flags(int client, int flags)
 {
-	FF2Flags[client]=flags;
+	FF2BaseEntity player = g_hBaseEntity[client];
+	player.Flags = flags;
 }
 
 public /*void*/int Native_SetFF2Flags(Handle plugin, int numParams)
@@ -7445,16 +7467,15 @@ public Action OnPickup(int entity, int client)  //Thanks friagram!
 {
 	if(IsBoss(client))
 	{
+		FF2BaseEntity player = g_hBaseEntity[client];
+
 		char classname[32];
 		GetEntityClassname(entity, classname, sizeof(classname));
-		if(!StrContains(classname, "item_healthkit") && !(FF2Flags[client] & FF2FLAG_ALLOW_HEALTH_PICKUPS))
-		{
+
+		if(!StrContains(classname, "item_healthkit") && !(player.Flags & FF2FLAG_ALLOW_HEALTH_PICKUPS))
 			return Plugin_Handled;
-		}
-		else if((!StrContains(classname, "item_ammopack") || StrEqual(classname, "tf_ammo_pack")) && !(FF2Flags[client] & FF2FLAG_ALLOW_AMMO_PICKUPS))
-		{
+		else if((!StrContains(classname, "item_ammopack") || StrEqual(classname, "tf_ammo_pack")) && !(player.Flags & FF2FLAG_ALLOW_AMMO_PICKUPS))
 			return Plugin_Handled;
-		}
 	}
 	return Plugin_Continue;
 }

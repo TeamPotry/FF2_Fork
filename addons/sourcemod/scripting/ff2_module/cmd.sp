@@ -355,7 +355,8 @@ public int HintPanelH(Menu menu, MenuAction action, int client, int selection)
 {
 	if(IsValidClient(client) && (action==MenuAction_Select || (action==MenuAction_Cancel && selection==MenuCancel_Exit)))
 	{
-		FF2Flags[client]|=FF2FLAG_CLASSHELPED;
+		FF2BaseEntity player = g_hBaseEntity[client];
+		player.Flags |= FF2FLAG_CLASSHELPED;
 	}
 	return 0;
 }
