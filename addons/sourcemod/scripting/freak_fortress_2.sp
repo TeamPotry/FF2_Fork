@@ -5724,10 +5724,16 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 				if(IsValidEntity(weapon))
 				{
+					// TODO: Move this to Onplayerhit event
 					FF2BaseEntity attacker = g_hBaseEntity[iAttacker];
-					if(attacker.Damage >= attacker.LastNoticedDamage)
+					int currentDamage = RoundFloat(damage);
+/*
+					PrintToChatAll("attacker.Damage: %d, currentDamage: %d, attacker.LastNoticedDamage: %d",
+						attacker.Damage, currentDamage, attacker.LastNoticedDamage);
+*/
+					if(attacker.Damage + currentDamage >= attacker.LastNoticedDamage)
 					{
-						int interval = (attacker.Damage + view_as<int>(damage)) / KILLSTREAK_DAMAGE_INTERVAL;
+						int interval = (attacker.Damage + currentDamage) / KILLSTREAK_DAMAGE_INTERVAL;
 						attacker.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
 						CreateKillStreak(iAttacker, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
 					}			
