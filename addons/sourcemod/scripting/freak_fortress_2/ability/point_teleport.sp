@@ -1224,7 +1224,9 @@ void Charge_Teleport(int boss, int status, int slot = -3)
 
 				ScaleVector(up, -15.0);
 				ScaleVector(right, 15.0);
+				// ScaleVector(fwd, 25.0);
 				AddVectors(up, right, sum);
+				// AddVectors(sum, fwd, sum);
 				AddVectors(eyePos, sum, startPos);
 
 				NormalizeVector(fwd, endPos);
@@ -1260,34 +1262,273 @@ void TryOpenPortal(CTFPortalRocket rocket)
 	GetEntPropVector(owner, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(owner, Prop_Send, "m_vecMaxs", vecMax);
 
-	bool stuck = true;
+	bool stuck = true, initPosCheck = false;
 
 	do
 	{
+		// test++;
 		int stackLastIndex = spotStacker.GetLastPosition(endPos);
-
-		// CorrectCurrentPos(endPos, angles, vecMin, vecMax, result);
-
 		if(stackLastIndex == -1)
 			return;
 
+		// CorrectCurrentPos(endPos, angles, vecMin, vecMax, result);
+
 		stuck = IsStockInPosition(owner, endPos, vecMin, vecMax);
-		if(!stuck)	break;
+		if(!stuck)
+			break;	
+
+		if(!initPosCheck)
+		{
+			initPosCheck = true;
+			CorrectCurrentPos(owner, endPos, angles, vecMin, vecMax, endPos);
+
+			stuck = IsStockInPosition(owner, endPos, vecMin, vecMax);
+			if(!stuck)
+				break;
+		}
 		
 		spotStacker.Erase(stackLastIndex);
 	}
 	while(spotStacker.Length > 0);
 
+	// PrintToChatAll("final check: %s (on: %i)", !stuck ? "passed" : "blocked", test);
 	if(!stuck)
 		CreateAndOpenPortalByPlayer(owner, endPos);
 }
 
-/*
-public void CorrectCurrentPos(float currentPos[3], float angles[3], float vecMin[3], float vecMax[3], float result[3])
+public bool CorrectCurrentPos(int client, float currentPos[3], float angles[3], float vecMin[3], float vecMax[3], float result[3])
 {
-	// Nothing here..
-}
+	float initPos[3], normal[3];
+
+	TestFloorNormal(client, currentPos, angles, vecMin, vecMax, initPos, normal);
+
+	// PrintToChatAll("initPos: %.1f %.1f %.1f", initPos[0], initPos[1], initPos[2]);
+	// PrintToChatAll("angles: %.1f %.1f %.1f", angles[0], angles[1], angles[2]);
+
+	if(!IsStockInPosition(client, initPos, vecMin, vecMax))
+	{
+		result = initPos;
+		return true;
+	}
+
+	// tempAngles = angles;
+
+	int rank[2];
+	bool IsBackward[2];
+	{
+		bool usingNormal = normal[0] != 0.0 || normal[1] != 0.0;
+		float realValue[2];
+
+		for(int axis = 0; axis < 2; axis++)
+		{
+			realValue[axis] = usingNormal ? normal[axis] : angles[axis];
+			IsBackward[axis] = usingNormal ? (realValue[axis] > 0.0) : (realValue[axis] < 0.0);
+		}
+		
+		// PrintToChatAll("using normal: %.1f %.1f %.1f", normal[0], normal[1], normal[2]);
+		// PrintToChatAll("using angles: %.1f %.1f %.1f", angles[0], angles[1], angles[2]);
+		
+		if(FloatAbs(realValue[0]) > FloatAbs(realValue[1]))
+		{
+			rank[0] = 0;
+			rank[1] = 1;
+		}
+		// But, what would we do if this 0?
+		else
+		{
+			rank[0] = 1;
+			rank[1] = 0;
+		}
+
+		// PrintToChatAll("rank: %i %i, IsBackward: %s %s", rank[0], rank[1], IsBackward[0] ? "true" : "false", IsBackward[1] ? "true" : "false");
+	}
+
+	for(int testHeight = 0; testHeight < 2; testHeight++)
+	{
+		bool testYaxis = testHeight > 0;
+		float testStart[3], testEnd[3];
+
+		testStart = initPos;
+		testEnd = initPos;
+
+		testEnd[rank[0]] += IsBackward[rank[0]] ? vecMin[rank[0]] : vecMax[rank[0]];
+		if(testYaxis)
+		{
+			testEnd[2] += vecMax[2];
+		}
+			
+		AdjustPositionBySingleRay(client, testStart, testStart, testEnd, testStart);
+		if(testYaxis)
+		{
+			float temp[3];
+			temp = testStart;
+
+			temp[2] += vecMax[2];
+			testEnd[2] -= vecMax[2];
+
+			AdjustPositionBySingleRay(client, testStart, temp, testEnd, testStart);
+			
+		}
+
+
+		// PrintToChatAll("%.1f %.1f %.1f", testStart[0], testStart[1], testStart[2]);
+
+		testEnd = testStart;
+		testEnd[rank[0]] += IsBackward[rank[0]] ? vecMin[rank[0]] : vecMax[rank[0]];
+		testEnd[rank[1]] += vecMax[rank[1]];
+		if(testYaxis)
+			testEnd[2] += vecMax[2];
+		AdjustPositionBySingleRay(client, testStart, testStart, testEnd, testStart);
+		if(testYaxis)
+		{
+			float temp[3];
+			temp = testStart;
+
+			temp[2] += vecMax[2];
+			testEnd[2] -= vecMax[2];
+
+			AdjustPositionBySingleRay(client, testStart, temp, testEnd, testStart);
+			
+		}
+
+		
+		// PrintToChatAll("TR_StartSolid: %s", TR_StartSolid() ? "true" : "false");
+		// PrintToChatAll("%.1f %.1f %.1f", testStart[0], testStart[1], testStart[2]);
+
+		// testStart[rank[0]] += IsBackward[rank[0]] ? vecMin[rank[0]] : vecMax[rank[0]];
+
+		// testEnd = testStart;
+		// testStart[rank[1]] += vecMin[rank[1]];
+		// testEnd[rank[1]] += vecMax[rank[1]];
+		// AdjustPositionBySingleRay(client, testStart, testStart, testEnd, testStart);
+
+		// PrintToChatAll("TR_AllSolid: %s", TR_AllSolid() ? "true" : "false");
+
+		testEnd = testStart;
+		testEnd[rank[0]] += IsBackward[rank[0]] ? vecMin[rank[0]] : vecMax[rank[0]];
+		testEnd[rank[1]] += vecMin[rank[1]];
+		if(testYaxis)
+			testEnd[2] += vecMax[2];
+		AdjustPositionBySingleRay(client, testStart, testStart, testEnd, testStart);
+		if(testYaxis)
+		{
+			float temp[3];
+			temp = testStart;
+
+			temp[2] += vecMax[2];
+			testEnd[2] -= vecMax[2];
+
+			AdjustPositionBySingleRay(client, testStart, temp, testEnd, testStart);
+			
+		}
+
+		// PrintToChatAll("TR_StartSolid: %s", TR_StartSolid() ? "true" : "false");
+		// PrintToChatAll("%.1f %.1f %.1f", testStart[0], testStart[1], testStart[2]);
+
+		// float temp = testStart[rank[1]];
+		// testStart[rank[1]] = testEnd[rank[1]];
+		// testEnd[rank[1]] = temp;
+		// AdjustPositionBySingleRay(client, testStart, testStart, testEnd, testStart);
+
+		// PrintToChatAll("TR_AllSolid: %s", TR_AllSolid() ? "true" : "false");
+
+
+		if(!IsStockInPosition(client, testStart, vecMin, vecMax))
+		{
+			result = testStart;
+			return true;
+		}
+	}
+
+	
+/*
+	ScaleVector(tempAngles, 1.0);
+	AddVectors(endPos, tempAngles, endPos);
+
+	TR_TraceRayFilter(initPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+	TR_GetEndPosition(initPos);
 */
+	// TODO: 충돌 이면 false 반환
+	return false;
+}
+
+public void TestFloorNormal(int client, float currentPos[3], float angles[3], float vecMin[3], float vecMax[3], float result[3], float normal[3])
+{
+	float initPos[3], endPos[3], tempAngles[3];
+
+	// 이게 얕은 복사가 맞던가?
+	initPos = currentPos;
+	endPos = currentPos;
+	tempAngles = angles;
+
+	// -5.0, 4.2(* 5.0) = 21.0 = Hull side size (default)
+	// 0.0135 = Epsilon, Just in case
+	ScaleVector(tempAngles, -5.0);
+	AddVectors(initPos, tempAngles, initPos);
+
+	ScaleVector(tempAngles, -(4.2 + 0.0135));
+	AddVectors(endPos, tempAngles, endPos);
+
+	TR_TraceRayFilter(initPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, client);
+	TR_GetEndPosition(initPos);
+
+	TR_GetPlaneNormal(null, normal);
+
+	tempAngles = angles;
+	ScaleVector(tempAngles, -15.0);
+	AddVectors(initPos, tempAngles, initPos);
+
+	if(0.3 < normal[2] && normal[2] < 1.0) 
+	{
+		float maxHeight = 0.0;
+		for(int search = 0; search < 2; search++)
+		{
+			maxHeight = max(FloatAbs(normal[search]), maxHeight);
+		}
+
+		initPos[2] += (vecMax[2] - vecMin[2]) * maxHeight;
+	}
+	else if(normal[2] < 0.0 && TR_GetSurfaceFlags() & SURF_SKY) // NOTE: some ceiling has 0.0 (same as perfect floor)
+	{
+		// skybox or ceiling
+		initPos[2] -= vecMax[2];
+	}
+/*
+	else 
+		initPos[2] += 1.0;
+*/
+	result = initPos;
+}
+
+public void AdjustPositionBySingleRay(int ent, float currentPos[3], float startPos[3], float endPos[3], float result[3])
+{
+	float temp[3];
+	TR_TraceRayFilter(startPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, ent);
+	TR_GetEndPosition(temp);
+
+	result = currentPos; 
+	if(TR_DidHit() && !TR_StartSolid() && !TR_AllSolid())
+	{
+		for(int index = 0; index < 3; index++)
+		{
+			result[index] -= endPos[index] - temp[index];
+			// PrintToChatAll("create gap %i: %.1f", index, endPos[index] - temp[index]);
+		}
+	}
+/*
+	static int colors[4] = {0, 255, 0, 255};
+
+	float zeroVec[3];
+	TE_SetupArmorRicochet(currentPos, zeroVec);
+	TE_SendToClient(ent);
+
+	TE_SetupBeamPoints(currentPos, endPos, g_iBeamModel, g_iHaloModel, 0, 10, 20.0, 10.0, 30.0, 0, 0.0, colors, 10);
+	TE_SendToClient(ent);
+*/
+	// colors = {255, 0, 0, 255};
+	// TE_SetupBeamPoints(endPos, result, g_iBeamModel, g_iHaloModel, 0, 10, 20.0/*0.1*/, 10.0, 30.0, 0, 0.0, colors, 10);
+	// TE_SendToClient(ent);
+}
 
 CTFPortal CreateAndOpenPortalByPlayer(int player, float endPos[3], int abilitySlot = -3)
 {
@@ -1425,7 +1666,11 @@ stock int SpawnRocket(int owner, float origin[3], float angles[3], float velocit
 	SetEntPropEnt(ent, Prop_Send, "m_hOwnerEntity", owner);
 	SetEntProp(ent, Prop_Send, "m_bCritical", allowcrit ? 1 : 0);
 	SetEntProp(ent, Prop_Send, "m_iTeamNum", clientTeam);
-	SetEntProp(ent, Prop_Send, "m_CollisionGroup", 4);
+
+	SetEntProp(ent, Prop_Send, "m_CollisionGroup", 0);
+	// SetEntProp(ent, Prop_Send, "m_usSolidFlags", 0x284); 
+	// SetEntProp(ent, Prop_Send, "m_nSolidType", 2); // SOLID_BBOX
+
 	SetEntProp(ent, Prop_Data, "m_takedamage", 0);
 	// SetEntPropEnt(ent, Prop_Send, "m_nForceBone", -1);
 
