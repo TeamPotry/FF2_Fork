@@ -716,7 +716,7 @@ methodmap SpotStacker < ArrayList
 		for(int loop = 0; loop < 3; loop++)
 			stackposition.Set(loop, pos[loop]);
 
-		if(this.Length >= 5)
+		if(this.Length >= 10)
 		{
 			ArrayList firstposition = this.Get(0);
 			delete firstposition;
