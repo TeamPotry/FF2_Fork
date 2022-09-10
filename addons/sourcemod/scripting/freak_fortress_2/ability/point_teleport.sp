@@ -1252,17 +1252,20 @@ void TryOpenPortal(CTFPortalRocket rocket)
 {
 	int owner = rocket.Owner;
 
-	float endPos[3], angles[3];
+	float currentPos[3], endPos[3], angles[3];
 	float vecMin[3], vecMax[3];
 	SpotStacker spotStacker = rocket.PreviousSpots;
 	
+	GetClientEyePosition(owner, currentPos);
 	rocket.GetAngles(angles);
 	GetAngleVectors(angles, angles, NULL_VECTOR, NULL_VECTOR);
+	// NormalizeVector(angles, angles);
 
 	GetEntPropVector(owner, Prop_Send, "m_vecMins", vecMin);
 	GetEntPropVector(owner, Prop_Send, "m_vecMaxs", vecMax);
 
 	bool stuck = true, initPosCheck = false;
+	// int test = 0;
 
 	do
 	{
@@ -1271,7 +1274,12 @@ void TryOpenPortal(CTFPortalRocket rocket)
 		if(stackLastIndex == -1)
 			return;
 
-		// CorrectCurrentPos(endPos, angles, vecMin, vecMax, result);
+		TR_TraceRayFilter(currentPos, endPos, MASK_ALL, RayType_EndPoint, TraceAnything, owner);
+		if(TR_DidHit())
+		{
+			spotStacker.Erase(stackLastIndex);
+			continue;
+		}
 
 		stuck = IsStockInPosition(owner, endPos, vecMin, vecMax);
 		if(!stuck)
