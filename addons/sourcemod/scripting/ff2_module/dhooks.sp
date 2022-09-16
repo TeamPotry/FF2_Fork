@@ -45,7 +45,7 @@ public MRESReturn DHookCallback_OnEntityHit_Post(int weapon, DHookParam params)
                 TF2Util_SetPlayerConditionDuration(ent, TFCond_Dazed,
                     TF2Util_GetPlayerConditionDuration(ent, TFCond_Dazed) - (buffed ? 4.0 : 2.0));
 */
-                FF2BaseEntity owner = g_hBaseEntity[iOwner];
+                FF2BaseEntity owner = g_hBasePlayer[iOwner];
                 owner.Assist += buffed ? 400 : 200;
             }
         }

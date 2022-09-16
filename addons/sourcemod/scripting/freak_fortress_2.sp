@@ -106,8 +106,6 @@ ConVar cvarDebug;
 ConVar cvarPreroundBossDisconnect;
 ConVar cvarTimerType;
 
-Handle FF2Cookie_QueuePoints;
-
 Handle jumpHUD;
 Handle rageHUD;
 Handle upAddtionalHUD, downAddtionalHUD;
@@ -130,7 +128,6 @@ int allowedDetonations;
 
 Handle doorCheckTimer;
 
-int botqueuepoints;
 float HPTime;
 char currentmap[99];
 bool checkDoors;
@@ -503,10 +500,8 @@ public void OnMapStart()
 	
 	for(int client = 0; client <= MaxClients; client++)
 	{
-		// TODO: Change this to FF2BasePlayer
-		FF2BaseEntity player = g_hBaseEntity[client];
-
-		player.Flags = 0;
+		// FF2BasePlayer player = GetBasePlayer(client);
+		// player.Flags = 0;
 
 		KSpreeTimer[client]=0.0;
 		Incoming[client]=-1;
@@ -999,7 +994,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	{
 		if(!IsClientInGame(client)) 	continue;
 
-		FF2BaseEntity player = g_hBaseEntity[client];
+		FF2BaseEntity player = g_hBasePlayer[client];
 
 		player.Damage = 0;
 		player.Assist = 0;
@@ -1059,7 +1054,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		if(!IsValidClient(client) || !IsPlayerAlive(client))
 			continue;
 
-		FF2BaseEntity player = g_hBaseEntity[client];
+		FF2BaseEntity player = g_hBasePlayer[client];
 		if(!(player.Flags & FF2FLAG_HASONGIVED))
 			TF2_RespawnPlayer(client);
 	}
@@ -1107,7 +1102,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		{
 			if(IsValidClient(client) && !IsBoss(client) && TF2_GetClientTeam(client)!=OtherTeam)
 			{
-				FF2BaseEntity player = g_hBaseEntity[client];
+				FF2BaseEntity player = g_hBasePlayer[client];
 				CreateTimer(0.1, MakeNotBoss, player, TIMER_FLAG_NO_MAPCHANGE);
 			}
 		}
@@ -1373,7 +1368,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 		if(!IsValidClient(client) || Damage[client]<=0 || (IsBoss(client) && BossTeam == TF2_GetClientTeam(client)))
 			continue;
 
-		baseEnt = g_hBaseEntity[client];
+		baseEnt = g_hBasePlayer[client];
 
 		Damage[client] = baseEnt.Damage;
 		int assist = baseEnt.Assist;
@@ -1473,10 +1468,9 @@ public Action Timer_CalcQueuePoints(Handle timer)
 	{
 		if(IsValidClient(client))
 		{
-			 // TODO: Replace this to FF2BasePlayer
-			FF2BaseEntity baseEnt = g_hBaseEntity[client];
+			FF2BasePlayer player = GetBasePlayer(client);
 
-			damage = baseEnt.Damage;
+			damage = player.Damage;
 			Event event=CreateEvent("player_escort_score", true);
 			event.SetInt("player", client);
 
@@ -1607,7 +1601,7 @@ public Action StartBossTimer(Handle timer)
 		if(IsValidClient(client) && !IsBoss(client) && IsPlayerAlive(client))
 		{
 			playing++;
-			FF2BaseEntity player = g_hBaseEntity[client];
+			FF2BaseEntity player = g_hBasePlayer[client];
 			CreateTimer(0.15, MakeNotBoss, player, TIMER_FLAG_NO_MAPCHANGE);  //TODO:  Is this needed?
 		}
 	}
@@ -2067,7 +2061,7 @@ public Action MakeBoss(Handle timer, int boss)
 	if(!IsValidClient(client) || CheckRoundState()==FF2RoundState_Loading)
 		return Plugin_Continue;
 
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 
 	if(!IsPlayerAlive(client))
 		TF2_RespawnPlayer(client);
@@ -3751,7 +3745,7 @@ public void OnClientPostAdminCheck(int client)
 
 	uberTarget[client]=-1;
 
-	g_hBaseEntity[client] = new FF2BaseEntity(EntIndexToEntRef(client));
+	g_hBasePlayer[client] = new FF2BasePlayer(client);
 	PlayerHudQueue[client] = FF2HudQueue.CreateHudQueue("Player");
 
 	if(!IsFakeClient(client))
@@ -3776,13 +3770,8 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientCookiesCached(int client)
 {
-	char buffer[4];
-	GetClientCookie(client, FF2Cookie_QueuePoints, buffer, sizeof(buffer));
-	if(!buffer[0])
-	{
-		SetClientCookie(client, FF2Cookie_QueuePoints, "0");
-	}
-	queuePoints[client]=StringToInt(buffer);
+	FF2BasePlayer player = GetBasePlayer(client);
+	player.LoadPlayerData();
 }
 
 public void OnClientDisconnect(int client)
@@ -3814,8 +3803,8 @@ public void OnClientDisconnect(int client)
 	if(MusicTimer[client]!=null)
 		delete MusicTimer[client];
 
-	if(g_hBaseEntity[client] != null)
-		delete g_hBaseEntity[client];
+	if(g_hBasePlayer[client] != null)
+		delete g_hBasePlayer[client];
 
 	delete PlayerHudQueue[client];
 }
@@ -3844,7 +3833,7 @@ public Action OnPostInventoryApplication(Event event, const char[] name, bool do
 	if(IsBoss(client))
 		CreateTimer(0.1, MakeBoss, GetBossIndex(client), TIMER_FLAG_NO_MAPCHANGE);
 
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	if(!(player.Flags & FF2FLAG_ALLOWSPAWNINBOSSTEAM))
 	{
 		if(!(player.Flags & FF2FLAG_HASONGIVED))
@@ -3931,7 +3920,7 @@ public Action ClientTimer(Handle timer)
 	{
 		if(!IsClientInGame(client))	continue;
 
-		FF2BaseEntity player = g_hBaseEntity[client];
+		FF2BaseEntity player = g_hBasePlayer[client];
 
 		if(!IsBoss(client) && !(player.Flags & FF2FLAG_CLASSTIMERDISABLED))
 		{
@@ -3945,7 +3934,7 @@ public Action ClientTimer(Handle timer)
 
 				if(IsValidClient(observerIndex) && observerIndex!=client)
 				{
-					FF2BaseEntity observer = g_hBaseEntity[observerIndex];
+					FF2BaseEntity observer = g_hBasePlayer[observerIndex];
 					PlayerHudQueue[client].SetName("Observer");
 
 					if(!IsBoss(observerIndex))
@@ -4294,7 +4283,7 @@ public Action BossTimer(Handle timer)
 		if(!IsValidClient(client) || !IsPlayerAlive(client))
 			continue;
 
-		baseBoss = g_hBaseEntity[client];
+		baseBoss = g_hBasePlayer[client];
 		if(!(baseBoss.Flags & FF2FLAG_USEBOSSTIMER))
 			continue;
 		
@@ -4500,7 +4489,7 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
 void OnBossThink(int client)
 {
 	// BossTimer
-	FF2BaseEntity baseBoss = g_hBaseEntity[client];
+	FF2BaseEntity baseBoss = g_hBasePlayer[client];
 	if(!(baseBoss.Flags & FF2FLAG_USEBOSSTIMER))
 		return;
 
@@ -4640,7 +4629,7 @@ public void TF2_OnConditionAdded(int client, TFCond condition)
 		}
 		else if(!IsBoss(client))
 		{
-			FF2BaseEntity player = g_hBaseEntity[client];
+			FF2BaseEntity player = g_hBasePlayer[client];
 
 			switch(condition)
 			{
@@ -4679,7 +4668,7 @@ public void TF2_OnConditionRemoved(int client, TFCond condition)
 		}
 		else if(!IsBoss(client) && condition == TFCond_BlastJumping)
 		{
-			FF2BaseEntity player = g_hBaseEntity[client];
+			FF2BaseEntity player = g_hBasePlayer[client];
 			player.Flags &= ~FF2FLAG_BLAST_JUMPING;
 		}
 	}
@@ -4919,7 +4908,7 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 	{
 		if(!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
 		{
-			CreateTimer(1.0, Timer_Damage, g_hBaseEntity[client], TIMER_FLAG_NO_MAPCHANGE);
+			CreateTimer(1.0, Timer_Damage, g_hBasePlayer[client], TIMER_FLAG_NO_MAPCHANGE);
 		}
 
 		if(IsBoss(attacker))
@@ -5122,7 +5111,7 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 	}
 	else if(client != iHealer)
 	{
-		FF2BaseEntity healer = g_hBaseEntity[iHealer];
+		FF2BaseEntity healer = g_hBasePlayer[iHealer];
 		healer.Assist += healed/2;
 	}
 
@@ -5395,7 +5384,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 		damage = GetEventInt(event, "damageamount"),
 		boss = GetBossIndex(iClient);
 
-	// FF2BaseEntity client = g_hBaseEntity[iClient];
+	// FF2BaseEntity client = g_hBasePlayer[iClient];
 
 	if(!IsBoss(iClient)) 	return Plugin_Continue;
 
@@ -5509,7 +5498,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 	if(IsValidClient(iAttacker) && iAttacker!=iClient)
 	{
-		FF2BaseEntity attacker = g_hBaseEntity[iAttacker];
+		FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
 
 		attacker.Damage += damage;
 		bool rage = true;
@@ -5543,7 +5532,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	{
 		if(IsValidClient(healers[target]) && IsPlayerAlive(healers[target]))
 		{
-			FF2BaseEntity healer = g_hBaseEntity[healers[target]];
+			FF2BaseEntity healer = g_hBasePlayer[healers[target]];
 
 			if(damage<10 || uberTarget[healers[target]] == iAttacker)
 				healer.Assist += damage;
@@ -5669,7 +5658,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 			if(TF2_GetPlayerClass(client)==TFClass_Soldier)
 			{
 				bool valid = IsValidEntity((weapon=GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)));
-				FF2BaseEntity victim = g_hBaseEntity[client];
+				FF2BaseEntity victim = g_hBasePlayer[client];
 
 				if(valid && GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex")==226  //Battalion's Backup
 				&& !(victim.Flags & FF2FLAG_ISBUFFED))
@@ -5725,7 +5714,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				if(IsValidEntity(weapon))
 				{
 					// TODO: Move this to Onplayerhit event
-					FF2BaseEntity attacker = g_hBaseEntity[iAttacker];
+					FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
 					int currentDamage = RoundFloat(damage);
 /*
 					PrintToChatAll("attacker.Damage: %d, currentDamage: %d, attacker.LastNoticedDamage: %d",
@@ -6103,8 +6092,8 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					FF2BaseEntity victim = g_hBaseEntity[client],
-						attacker = g_hBaseEntity[iAttacker];
+					FF2BaseEntity victim = g_hBasePlayer[client],
+						attacker = g_hBasePlayer[iAttacker];
 					
 					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", iAttacker) > 0;
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
@@ -6210,9 +6199,9 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					damage=(BossHealth[boss]>9001 ? 9001.0 : float(GetEntProp(Boss[boss], Prop_Send, "m_iHealth"))+90.0);
 
 					int iTeleowner=FindTeleOwner(iAttacker);
-					FF2BaseEntity teleowner = g_hBaseEntity[iTeleowner],
-						victim = g_hBaseEntity[client],
-						attacker = g_hBaseEntity[iAttacker];
+					FF2BaseEntity teleowner = g_hBasePlayer[iTeleowner],
+						victim = g_hBasePlayer[client],
+						attacker = g_hBasePlayer[iAttacker];
 
 					if(IsValidClient(iTeleowner) && iTeleowner != iAttacker)
 					{
@@ -7215,7 +7204,7 @@ public int Native_GetBossRageDistance(Handle plugin, int numParams)
 
 public int GetClientDamage(int client)
 {
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	return player.Damage;
 }
 
@@ -7226,7 +7215,7 @@ public int Native_GetClientDamage(Handle plugin, int numParams)
 
 public void SetClientDamage(int client, int iDamage)
 {
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	player.Damage = iDamage;
 }
 
@@ -7259,7 +7248,7 @@ public /*void*/int Native_SetRoundTime(Handle plugin, int numParams)
 
 public int GetClientAssist(int client)
 {
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	return player.Assist;
 }
 
@@ -7270,7 +7259,7 @@ public int Native_GetClientAssist(Handle plugin, int numParams)
 
 public void SetClientAssist(int client, int assist)
 {
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	player.Assist = assist;
 }
 
@@ -7337,7 +7326,7 @@ public void Forward_OnSpecialAttack_Post(int attacker, int victimBoss, const cha
 
 public int GetFF2Flags(int client)
 {
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	return player.Flags;
 }
 
@@ -7348,7 +7337,7 @@ public int Native_GetFF2Flags(Handle plugin, int numParams)
 
 public void SetFF2Flags(int client, int flags)
 {
-	FF2BaseEntity player = g_hBaseEntity[client];
+	FF2BaseEntity player = g_hBasePlayer[client];
 	player.Flags = flags;
 }
 
@@ -7473,7 +7462,7 @@ public Action OnPickup(int entity, int client)  //Thanks friagram!
 {
 	if(IsBoss(client))
 	{
-		FF2BaseEntity player = g_hBaseEntity[client];
+		FF2BaseEntity player = g_hBasePlayer[client];
 
 		char classname[32];
 		GetEntityClassname(entity, classname, sizeof(classname));

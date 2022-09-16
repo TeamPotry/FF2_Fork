@@ -1,9 +1,14 @@
+Handle FF2Cookie_QueuePoints;
+
+int botqueuepoints;
+
 // TODO: 클라이언트에 한해서는 인덱스를 통한 직접 접근 허용
 // 기타 엔티티의 경우는 리스트화 하여 접근할 수 있도록 할 것
 
 enum
 {
     FF2BE_Ref = 0,
+    FF2BE_Index,
 
     FF2BE_Damage,
     FF2BE_LastNoticedDamage,
@@ -17,7 +22,7 @@ enum
 };
 
 /*
- * TODO: Not only player, include other entities
+ * Not only player, include other entities
  * 
  * General Info about entities for FF2
  */
@@ -25,7 +30,7 @@ methodmap FF2BaseEntity < ArrayList
 {
     public FF2BaseEntity(int entRef)
     {
-        ArrayList newArray = new ArrayList();
+        ArrayList newArray = new ArrayList(PLATFORM_MAX_PATH);
 
         newArray.Push(entRef);
         
@@ -44,6 +49,12 @@ methodmap FF2BaseEntity < ArrayList
         }
         public set(int ref) {
             this.Set(FF2BE_Ref, ref);
+        }
+    } 
+
+    property int Index {
+        public get() {
+            return EntRefToEntIndex(this.Get(FF2BE_Ref));
         }
     } 
 
@@ -82,8 +93,75 @@ methodmap FF2BaseEntity < ArrayList
     }
 }
 
-// TODO: Replace this to Tree.
-FF2BaseEntity g_hBaseEntity[MAXPLAYERS+1];
+FF2BaseEntity g_hBasePlayer[MAXPLAYERS+1];
+
+enum
+{
+    FF2P_QueuePoints = 0,
+    FF2P_MusicTimer,
+    FF2P_CurrentMusicPath,
+    // FF2P_MusicPacks
+    
+    FF2P_MAX_COUNT
+};
+
+methodmap FF2BasePlayer < FF2BaseEntity
+{
+    public FF2BasePlayer(int playerIndex)
+    {
+        FF2BaseEntity newArray = new FF2BaseEntity(EntIndexToEntRef(playerIndex));
+
+        newArray.Push(0);
+        newArray.Push(0);
+        newArray.PushString("");
+        newArray.Push(0);   // 
+        
+        return view_as<FF2BasePlayer>(newArray); 
+    }
+
+    property int QueuePoints {
+        public get() {
+            if(IsFakeClient(this.Index))
+                return botqueuepoints;
+
+            return this.Get(FF2P_QueuePoints);
+        }
+        public set(int queuepoints) {
+            if(!IsFakeClient(this.Index))
+            {
+                char buffer[12];
+                IntToString(queuepoints, buffer, sizeof(buffer));
+                SetClientCookie(this.Index, FF2Cookie_QueuePoints, buffer);
+                this.Set(FF2P_QueuePoints, queuepoints);
+            }
+        }
+    }
+
+    property Handle MusicTimer {
+        public get() {
+            return this.Get(FF2P_MusicTimer);
+        }
+        public set(Handle timer) {
+            this.Set(FF2P_MusicTimer, timer);
+        }
+    }    
+
+    public bool LoadPlayerData()
+    {
+        if(!AreClientCookiesCached(this.Index))     return false;
+
+        char buffer[4];
+        GetClientCookie(this.Index, FF2Cookie_QueuePoints, buffer, sizeof(buffer));
+        if(!buffer[0])
+        {
+            SetClientCookie(this.Index, FF2Cookie_QueuePoints, "0");
+        }
+
+        this.QueuePoints = StringToInt(buffer);
+
+        return true;
+    }
+}
 
 /*
  * Currently, only client index is supported.
@@ -92,9 +170,16 @@ FF2BaseEntity g_hBaseEntity[MAXPLAYERS+1];
 FF2BaseEntity GetBaseByEntIndex(int ent)
 {
     if(ent <= MaxClients)
-        return g_hBaseEntity[ent];
+        return g_hBasePlayer[ent];
+
+    // search in list array
 
     return null;
+}
+
+FF2BasePlayer GetBasePlayer(int ent)
+{
+    return view_as<FF2BasePlayer>(GetBaseByEntIndex(ent));
 }
 
 /*
