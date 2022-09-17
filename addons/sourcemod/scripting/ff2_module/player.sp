@@ -121,12 +121,18 @@ methodmap FF2BasePlayer < FF2BaseEntity
 
     property int QueuePoints {
         public get() {
+            if(!IsClientInGame(this.Index))
+                return -1;
+
             if(IsFakeClient(this.Index))
                 return botqueuepoints;
 
-            return this.Get(FF2P_QueuePoints);
+            return this.Get(FF2BE_MAX_COUNT + FF2P_QueuePoints);
         }
         public set(int queuepoints) {
+            if(!IsClientInGame(this.Index))
+                return;
+                
             if(!IsFakeClient(this.Index))
             {
                 char buffer[12];
