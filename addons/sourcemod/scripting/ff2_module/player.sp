@@ -169,7 +169,7 @@ methodmap FF2BasePlayer < FF2BaseEntity
  */
 FF2BaseEntity GetBaseByEntIndex(int ent)
 {
-    if(ent <= MaxClients)
+    if(0 < ent && ent <= MaxClients)
         return g_hBasePlayer[ent];
 
     // search in list array
