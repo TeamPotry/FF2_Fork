@@ -3752,6 +3752,7 @@ public void OnClientPostAdminCheck(int client)
 
 	if(!IsFakeClient(client))
 	{
+		view_as<FF2BasePlayer>(g_hBasePlayer[client]).LoadPlayerData();
 		muteSound[client]=GetSettingData(client, "sound_mute_flag", DBSData_Int);
 	}
 
@@ -3768,12 +3769,6 @@ public void OnClientPostAdminCheck(int client)
 	{
 		playBGM[client]=false;
 	}
-}
-
-public void OnClientCookiesCached(int client)
-{
-	FF2BasePlayer player = GetBasePlayer(client);
-	player.LoadPlayerData();
 }
 
 public void OnClientDisconnect(int client)
