@@ -405,6 +405,7 @@ public Action QueuePanelCmd(int client, int args)
 	char text[64];
 	int items;
 	bool[] added = new bool[MaxClients + 1];
+	FF2BasePlayer player;
 
 	Panel panel = new Panel();
 	SetGlobalTransTarget(client);
@@ -414,13 +415,15 @@ public Action QueuePanelCmd(int client, int args)
 	{
 		if(IsBoss(boss))
 		{
+		 	player = GetBasePlayer(boss);
 			added[boss] = true;  //Don't want the bosses to show up again in the actual queue list
-			Format(text, sizeof(text), "%N-%i", boss, GetClientQueuePoints(boss));
+			Format(text, sizeof(text), "%N-%i", boss, player.QueuePoints);
 			panel.DrawItem(text);
 			items++;
 		}
 	}
 
+	FF2BasePlayer targetPlayer;
 	panel.DrawText("---");
 	do
 	{
@@ -432,7 +435,8 @@ public Action QueuePanelCmd(int client, int args)
 			continue;
 		}
 
-		Format(text, sizeof(text), "%N-%i", target, GetClientQueuePoints(target));
+		targetPlayer = GetBasePlayer(target);
+		Format(text, sizeof(text), "%N-%i", target, targetPlayer.QueuePoints);
 		if(client != target)
 		{
 			panel.DrawItem(text);
@@ -446,7 +450,8 @@ public Action QueuePanelCmd(int client, int args)
 	}
 	while(items < 9);
 
-	Format(text, sizeof(text), "%t (%t)", "Your Queue Points", GetClientQueuePoints(client), "Reset Queue Points");  //"Your queue point(s) is {1} (set to 0)"
+	player = GetBasePlayer(client);
+	Format(text, sizeof(text), "%t (%t)", "Your Queue Points", player.QueuePoints, "Reset Queue Points");  //"Your queue point(s) is {1} (set to 0)"
 	panel.DrawItem(text);
 
 	panel.Send(client, QueuePanelH, MENU_TIME_FOREVER);
@@ -510,7 +515,7 @@ public int TurnToZeroPanelH(Menu menu, MenuAction action, int client, int positi
 			CPrintToChat(client, "{olive}[FF2]{default} %t", "Reset Player's Points Done", shortname[client]);  //{olive}{1}{default}'s queue points have been reset to {olive}0{default}
 			CPrintToChat(shortname[client], "{olive}[FF2]{default} %t", "Queue Points Reset by Admin", client);  //{olive}{1}{default} reset your queue points to {olive}0{default}
 		}
-		SetClientQueuePoints(shortname[client], 0);
+		GetBasePlayer(shortname[client]).QueuePoints = 0;
 	}
 
 	return 0;

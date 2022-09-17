@@ -1491,7 +1491,7 @@ public Action Timer_CalcQueuePoints(Handle timer)
 				}
 				else
 				{
-					add_points[client]=-GetClientQueuePoints(client);
+					add_points[client] = -player.QueuePoints;
 					add_points2[client]=add_points[client];
 				}
 			}
@@ -1517,28 +1517,28 @@ public Action Timer_CalcQueuePoints(Handle timer)
 		{
 			for(int client=1; client<=MaxClients; client++)
 			{
-				if(IsValidClient(client))
-				{
-					if(add_points2[client]>0)
-					{
-						CPrintToChat(client, "{olive}[FF2]{default} %t", "Points Earned", add_points2[client]);
-					}
-					SetClientQueuePoints(client, GetClientQueuePoints(client)+add_points2[client]);
-				}
+				if(!IsValidClient(client)) 	continue;
+				
+				FF2BasePlayer player = GetBasePlayer(client);
+
+				if(add_points2[client] > 0)
+					CPrintToChat(client, "{olive}[FF2]{default} %t", "Points Earned", add_points2[client]);
+				
+				player.QueuePoints += add_points2[client];
 			}
 		}
 		default:
 		{
 			for(int client=1; client<=MaxClients; client++)
 			{
-				if(IsValidClient(client))
-				{
-					if(add_points[client]>0)
-					{
-						CPrintToChat(client, "{olive}[FF2]{default} %t", "Points Earned", add_points[client]);
-					}
-					SetClientQueuePoints(client, GetClientQueuePoints(client)+add_points[client]);
-				}
+				if(!IsValidClient(client)) 	continue;
+
+				FF2BasePlayer player = GetBasePlayer(client);
+
+				if(add_points[client] > 0)
+					CPrintToChat(client, "{olive}[FF2]{default} %t", "Points Earned", add_points[client]);
+				
+				player.QueuePoints += add_points[client];
 			}
 		}
 	}
@@ -2152,8 +2152,8 @@ public Action MakeBoss(Handle timer, int boss)
 		BossSkillDuration[boss][loop] = 0.0;
 	}
 
-	if(Boss[0]==client)
-		SetClientQueuePoints(client, 0);
+	if(MaxClients >= client && Boss[0] == client)
+		view_as<FF2BasePlayer>(player).QueuePoints = 0;
 
 	Call_StartForward(OnPlayBoss);
 	Call_PushCell(boss);
@@ -3534,18 +3534,20 @@ public Action Command_Points(int client, int args)
 
 	if(matches>1)
 	{
-		for(int target=1; target<matches; target++)
+		for(int target = 1; target < matches; target++)
 		{
+			FF2BasePlayer player = GetBasePlayer(targets[target]);
 			if(!IsClientSourceTV(targets[target]) && !IsClientReplay(targets[target]))
 			{
-				SetClientQueuePoints(targets[target], GetClientQueuePoints(targets[target])+points);
+				player.QueuePoints += points;
 				LogAction(client, targets[target], "\"%L\" added %d queue points to \"%L\"", client, points, targets[target]);
 			}
 		}
 	}
 	else
 	{
-		SetClientQueuePoints(targets[0], GetClientQueuePoints(targets[0])+points);
+		FF2BasePlayer player = GetBasePlayer(targets[0]);
+		player.QueuePoints += points;
 		LogAction(client, targets[0], "\"%L\" added %d queue points to \"%L\"", client, points, targets[0]);
 	}
 	CReplyToCommand(client, "{olive}[FF2]{default} Added %d queue points to %s", points, targetName);
@@ -6390,14 +6392,19 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 
 stock int GetClientWithMostQueuePoints(bool[] omit)
 {
-	int winner=0;
-	for(int client=1; client<=MaxClients; client++)
+	int winner = 0, maxQueue = -1;
+	for(int client = 1; client <= MaxClients; client++)
 	{
-		if(IsValidClient(client) && GetClientQueuePoints(client)>=GetClientQueuePoints(winner) && !omit[client])
+		FF2BasePlayer player = GetBasePlayer(client), 
+			winnerPlayer = GetBasePlayer(winner);	
+		
+		if(IsValidClient(client) && !omit[client])
 		{
-			if(SpecForceBoss || TF2_GetClientTeam(client)>TFTeam_Spectator)
+			if((winnerPlayer == null || player.QueuePoints >= maxQueue) 
+				&& (SpecForceBoss || TF2_GetClientTeam(client) > TFTeam_Spectator))
 			{
-				winner=client;
+				winner = client;
+				maxQueue = player.QueuePoints;
 			}
 		}
 	}
@@ -6408,14 +6415,17 @@ stock int GetClientWithMostQueuePoints(bool[] omit)
 stock int RandomlySelectClient(bool force, bool[] omit)
 {
 	int count;
-	ArrayList array=new ArrayList();
-	for(int client=1; client<=MaxClients; client++)
+	ArrayList array = new ArrayList();
+
+	for(int client = 1; client <= MaxClients; client++)
 	{
+		FF2BasePlayer player = GetBasePlayer(client);
+
 		if(IsValidClient(client) && !omit[client])
 		{
 			if(SpecForceBoss
 				|| (TF2_GetClientTeam(client)>TFTeam_Spectator
-					&& (force || (!force && GetClientQueuePoints(client) >= 0))))
+					&& (force || (!force && player.QueuePoints >= 0))))
 			{
 				array.Push(client);
 				count++;
@@ -6425,7 +6435,8 @@ stock int RandomlySelectClient(bool force, bool[] omit)
 
 	int winner = -1;
 	if(count > 0)
-		winner=array.Get(GetRandomInt(0, count-1));
+		winner = array.Get(GetRandomInt(0, count-1));
+
 	delete array;
 
 	return winner;
@@ -6903,28 +6914,6 @@ int GetClientClassInfoCookie(int client)
 	return GetSettingData(client, "class_info_view", DBSData_Int);
 }
 
-int GetClientQueuePoints(int client)
-{
-	if(!IsValidClient(client))
-		return 0;
-
-	if(IsFakeClient(client))
-		return botqueuepoints;
-
-	return queuePoints[client];
-}
-
-void SetClientQueuePoints(int client, int points)
-{
-	if(IsValidClient(client) && !IsFakeClient(client))
-	{
-		char buffer[12];
-		IntToString(points, buffer, sizeof(buffer));
-		SetClientCookie(client, FF2Cookie_QueuePoints, buffer);
-		queuePoints[client] = points;
-	}
-}
-
 public Action HookSound(int clients[64], int& numClients, char sound[PLATFORM_MAX_PATH], int& client, int& channel, float& volume, int& level, int& pitch, int& flags, char soundEntry[PLATFORM_MAX_PATH], int& seed)
 {
 	if(!Enabled || !IsValidClient(client) || channel<1)
@@ -7349,12 +7338,14 @@ public /*void*/int Native_SetFF2Flags(Handle plugin, int numParams)
 
 public int Native_GetQueuePoints(Handle plugin, int numParams)
 {
-	return GetClientQueuePoints(GetNativeCell(1));
+	FF2BasePlayer player = GetBasePlayer(GetNativeCell(1));
+	return player.QueuePoints;
 }
 
 public /*void*/int Native_SetQueuePoints(Handle plugin, int numParams)
 {
-	SetClientQueuePoints(GetNativeCell(1), GetNativeCell(2));
+	FF2BasePlayer player = GetBasePlayer(GetNativeCell(1));
+	player.QueuePoints = GetNativeCell(2);
 	return 0;
 }
 

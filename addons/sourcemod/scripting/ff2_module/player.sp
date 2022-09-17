@@ -138,17 +138,17 @@ methodmap FF2BasePlayer < FF2BaseEntity
                 char buffer[12];
                 IntToString(queuepoints, buffer, sizeof(buffer));
                 SetClientCookie(this.Index, FF2Cookie_QueuePoints, buffer);
-                this.Set(FF2P_QueuePoints, queuepoints);
+                this.Set(FF2BE_MAX_COUNT + FF2P_QueuePoints, queuepoints);
             }
         }
     }
 
     property Handle MusicTimer {
         public get() {
-            return this.Get(FF2P_MusicTimer);
+            return this.Get(FF2BE_MAX_COUNT + FF2P_MusicTimer);
         }
         public set(Handle timer) {
-            this.Set(FF2P_MusicTimer, timer);
+            this.Set(FF2BE_MAX_COUNT + FF2P_MusicTimer, timer);
         }
     }    
 

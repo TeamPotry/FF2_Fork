@@ -6,7 +6,7 @@ int Incoming[MAXPLAYERS+1];
 int uberTarget[MAXPLAYERS+1];
 int shield[MAXPLAYERS+1];
 int detonations[MAXPLAYERS+1];
-int queuePoints[MAXPLAYERS+1];
+// int queuePoints[MAXPLAYERS+1];
 
 int FF2Flags[MAXPLAYERS+1];
 
