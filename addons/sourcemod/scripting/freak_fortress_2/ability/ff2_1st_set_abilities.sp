@@ -137,7 +137,6 @@ public void OnClientDisconnect(int client)
 	if(CloneOwnerIndex[client]!=-1)
 	{
 		CloneOwnerIndex[client]=-1;
-		FF2_SetFF2Flags(client, FF2_GetFF2Flags(client) & ~FF2FLAG_CLASSTIMERDISABLED);
 	}
 }
 
