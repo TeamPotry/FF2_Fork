@@ -244,6 +244,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 	OnWaveStarted=CreateGlobalForward("FF2_OnWaveStarted", ET_Hook, Param_Cell); // wave
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
+	OnAddRage=CreateGlobalForward("FF2_OnAddRage", ET_Hook, Param_Cell, Param_FloatByRef); // Boss
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_Cell, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
@@ -2036,6 +2037,7 @@ void EquipBoss(int boss)
 
 				if(!kv.GetNum("show", 0))
 				{
+					SetEntProp(weapon, Prop_Send, "m_iWorldModelIndex", -1);
 					SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", 0.001);
 				}
 			}
@@ -5512,7 +5514,23 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 		}
 */
 		if(rage)
-			AddBossCharge(boss, 0, damage*100.0/BossRageDamage[boss]);
+		{
+			float adding = damage*100.0/BossRageDamage[boss],
+				temp = adding; 
+			Action action = Plugin_Continue;
+
+			Call_StartForward(OnAddRage);
+			Call_PushCell(boss);
+			Call_PushFloatRef(temp);
+			Call_Finish(action);
+
+			if(action == Plugin_Changed)
+				adding = temp;
+			
+			if(action != Plugin_Handled
+				&& action != Plugin_Stop)
+				AddBossCharge(boss, 0, adding);
+		}
 	}
 
 	int[] healers=new int[MaxClients+1];

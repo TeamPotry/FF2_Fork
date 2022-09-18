@@ -186,6 +186,18 @@ forward void FF2_OnWaveStarted(int wave);
 forward void FF2_OnPlayBoss(int boss);
 
 /**
+ * Called when boss adding their rage.
+ *
+ * @param boss    boss index
+ * @param rage    rage amount
+ * @return
+ *  - Plugin_Continue: Nothing..
+ *  - Plugin_Changed: Change result.
+ *  - Plugin_Stop, Plugin_Handled: Do not add rage.
+ */
+forward Action FF2_OnAddRage(int boss, float &rage);
+
+/**
  * Called when Boss damaged that was Special Attack.
  *
  * @param attacker    attacker client index

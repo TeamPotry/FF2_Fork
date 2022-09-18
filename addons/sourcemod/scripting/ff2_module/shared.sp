@@ -134,5 +134,6 @@ Handle OnParseUnknownVariable;
 // ff2_modules/general.inc
 Handle OnWaveStarted;
 Handle OnPlayBoss;
+Handle OnAddRage;
 Handle OnSpecialAttack;
 Handle OnSpecialAttack_Post;
