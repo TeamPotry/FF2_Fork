@@ -112,6 +112,18 @@ public void OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
+public Action FF2_OnAddRage(int boss, float &rage)
+{
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+	if(FF2_HasAbility(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME)
+		&& g_iCurrentAdditionalHealth[client] > 0)
+	{
+		rage *= 0.5;
+	}
+
+	return Plugin_Continue;
+}
+
 public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcast)
 {
 	int client = GetClientOfUserId(event.GetInt("userid")), attacker = GetClientOfUserId(event.GetInt("attacker"));
