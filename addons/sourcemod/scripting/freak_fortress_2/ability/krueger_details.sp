@@ -73,6 +73,8 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 	if(StrEqual(abilityName, COPIED_DUMMY))
 	{
+		// Unused for now.
+		// This will crash some clients.
 		ActivateCopiedDummys(boss);
 	}
 }
