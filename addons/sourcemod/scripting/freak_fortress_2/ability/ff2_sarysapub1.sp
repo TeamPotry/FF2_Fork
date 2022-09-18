@@ -757,7 +757,7 @@ public void FF2_OnAbility(int bossIdx, const char[] plugin_name, const char[] ab
 		return;
 
 	if (!strcmp(ability_name, RW_STRING))
-		Rage_ROTTWeapons(ability_name, bossIdx);
+		Rage_ROTTWeapons(ability_name, bossIdx, slot == -2 ? 4 : -1);
 	// ROTT props not activated this way
 
 	return;
@@ -778,7 +778,7 @@ public Action:CmdForceRage(user, argsInt)
 	if (!strcmp("rott", unparsedArgs))
 	{
 		PrintToConsole(user, "ROTT weapons rage.");
-		Rage_ROTTWeapons(RW_STRING, 0);
+		Rage_ROTTWeapons(RW_STRING, 0, -1);
 		return Plugin_Handled;
 	}
 	else if (!strcmp("prop", unparsedArgs))
@@ -851,22 +851,26 @@ public ROTT_UpdateHUD(clientIdx)
 /**
  * ROTT Weapons
  */
-public Rage_ROTTWeapons(const String:ability_name[], bossIdx)
+public Rage_ROTTWeapons(const String:ability_name[], bossIdx, forceWeapon)
 {
 	new clientIdx = GetClientOfUserId(FF2_GetBossUserId(bossIdx));
 
 	// pick a random weapon
+	new weaponSpec = forceWeapon;
 	new randomInt = GetRandomInt(1, 100);
 
-	new weaponSpec = -1;
-	new add = 0;
-	for (new i = 0; i < RW_WeaponCount[clientIdx]; i++)
+	if(weaponSpec == -1)
 	{
-		add += RW_WeaponChances[clientIdx][i];
-		if (add >= randomInt)
+		new add = 0;
+
+		for (new i = 0; i < RW_WeaponCount[clientIdx]; i++)
 		{
-			weaponSpec = i;
-			break;
+			add += RW_WeaponChances[clientIdx][i];
+			if (add >= randomInt)
+			{
+				weaponSpec = i;
+				break;
+			}
 		}
 	}
 
