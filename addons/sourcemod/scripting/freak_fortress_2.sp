@@ -2037,7 +2037,8 @@ void EquipBoss(int boss)
 
 				if(!kv.GetNum("show", 0))
 				{
-					SetEntProp(weapon, Prop_Send, "m_iWorldModelIndex", -1);
+					if(HasEntProp(weapon, Prop_Send, "m_iWorldModelIndex"))
+						SetEntProp(weapon, Prop_Send, "m_iWorldModelIndex", -1);
 					SetEntPropFloat(weapon, Prop_Send, "m_flModelScale", 0.001);
 				}
 			}
