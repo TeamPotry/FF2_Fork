@@ -3946,7 +3946,7 @@ public Action ClientTimer(Handle timer)
 						hudDisplay=FF2HudDisplay.CreateDisplay("Your Damage Dealt", hudText);
 						PlayerHudQueue[client].AddHud(hudDisplay, client);
 
-						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, observer.Damage);
+						Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observerIndex, observer.Damage);
 						if(observer.Assist > 0)
 							Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, observer.Assist);
 
@@ -3967,7 +3967,7 @@ public Action ClientTimer(Handle timer)
 
 						if(BossTeam != TF2_GetClientTeam(observerIndex))
 						{
-							Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observer, observer.Damage);
+							Format(hudText, sizeof(hudText), "%t", "Spectator Damage Dealt", observerIndex, observer.Damage);
 							if(observer.Assist > 0)
 								Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, observer.Assist);
 
