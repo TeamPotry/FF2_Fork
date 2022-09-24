@@ -25,6 +25,7 @@ public Plugin myinfo=
 #define THIS_PLUGIN_NAME        "krueger detail"
 
 #define NOISE_REDUCE			"noise reduce"
+#define TRANSMIT_BLOCK			"transmit block"
 #define PLAYER_HUD_NOISE		"player hud noise"
 #define COPIED_DUMMY			"copied dummy"
 
@@ -37,6 +38,9 @@ Handle g_hResetSequence;
 
 bool g_bNoiseReduced;
 float g_flHudNoiseTime;
+
+// bool g_bTransmitBlock[MAXPLAYERS+1];
+float g_flTransmitBlockTime[MAXPLAYERS+1];
 
 public void OnPluginStart()
 {
@@ -65,11 +69,20 @@ public void OnPluginStart()
     }
 }
 
+public void OnClientPostAdminCheck(int client)
+{
+	SDKHook(client, SDKHook_SetTransmit, TransmitHook);
+}
+
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
 {
 	if(StrEqual(abilityName, PLAYER_HUD_NOISE))
 	{
 		AddHudNoiseTime(boss);
+	}
+	if(StrEqual(abilityName, TRANSMIT_BLOCK))
+	{
+		TransmitBlock(boss);
 	}
 	if(StrEqual(abilityName, COPIED_DUMMY))
 	{
@@ -95,6 +108,35 @@ void AddHudNoiseTime(int boss)
 
 		FadeClientVolume(target, 80.0, inOut, fadeDuration, inOut);
 	}
+}
+
+void TransmitBlock(int boss)
+{
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+	float duration = FF2_GetAbilityArgumentFloat(boss, THIS_PLUGIN_NAME, TRANSMIT_BLOCK, "duration", 12.0);
+
+	for(int target = 1; target <= MaxClients; target++)
+	{
+		if(!IsClientInGame(target) || !IsPlayerAlive(target)
+			|| GetClientTeam(client) == GetClientTeam(target)
+			|| FF2_GetBossIndex(target) != -1)
+				continue;
+
+		g_flTransmitBlockTime[target] = GetGameTime() + duration;
+	}
+}
+
+public Action TransmitHook(int entity, int toClient)
+{
+	if(entity > MaxClients 
+		|| g_flTransmitBlockTime[toClient] < GetGameTime()
+		|| entity == toClient) // FIXME: BOT
+			return Plugin_Continue;
+
+	if(GetClientTeam(entity) != GetClientTeam(toClient))
+		return Plugin_Continue;
+
+	return Plugin_Handled;
 }
 
 public Action SoundHook(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH],
@@ -190,6 +232,8 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 	int boss;
 	for(int client = 1; client <= MaxClients; client++)
 	{
+		g_flTransmitBlockTime[client] = 0.0;
+
 		boss = FF2_GetBossIndex(client);
 		if(boss == -1)	continue;
 
@@ -202,6 +246,11 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
 	g_flHudNoiseTime = -1.0;
 	g_bNoiseReduced = false;
+
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		g_flTransmitBlockTime[client] = 0.0;
+	}
 }
 
 stock bool IsValidClient(int client)
