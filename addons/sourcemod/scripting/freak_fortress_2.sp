@@ -1799,7 +1799,7 @@ void CorrectionBossHealth()
 		{
 			int heal = RoundFloat(BossHealthMax[boss] * ratio);
 
-			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal - 1);
+			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
 			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))));
 		}
 	}
