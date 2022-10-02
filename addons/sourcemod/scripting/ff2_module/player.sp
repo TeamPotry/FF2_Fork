@@ -2,9 +2,6 @@ Handle FF2Cookie_QueuePoints;
 
 int botqueuepoints;
 
-// TODO: 클라이언트에 한해서는 인덱스를 통한 직접 접근 허용
-// 기타 엔티티의 경우는 리스트화 하여 접근할 수 있도록 할 것
-
 enum
 {
     FF2BE_Ref = 0,
@@ -249,7 +246,6 @@ methodmap FF2BaseEntity_List < ArrayList
         while(left < right);
 
         // final check
-        PrintToChatAll("Enter the Final Check");
         if(right == mid
             && view_as<FF2BaseEntity>(this.Get(right - 1)).Ref == entRef)
             return right - 1;
