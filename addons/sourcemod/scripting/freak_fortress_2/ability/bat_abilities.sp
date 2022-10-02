@@ -18,6 +18,9 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
+#define	MAX_EDICT_BITS		12
+#define	MAX_EDICTS			(1 << MAX_EDICT_BITS)
+
 #define BALL_EXPLOSION_NAME "ball explosion"
 
 public void OnPluginStart()
@@ -68,16 +71,22 @@ public void OnBallTouched_Explosion(int entity)
 	float pos[3], targetPos[3], damage = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, BALL_EXPLOSION_NAME, "damage", 40.0);
 	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
 
-	for(int target = 1; target <= MaxClients; target++)
+	for(int target = 1; target < MAX_EDICTS; target++)
 	{
-		if(IsClientInGame(target) && IsPlayerAlive(target) && team != GetClientTeam(target)) {
-			GetClientAbsOrigin(target, targetPos);
-			if(RoundFloat(GetVectorDistance(pos, targetPos)) < (magnitude * 2)) {
-				SpawnExplosion(client, pos, magnitude, damage);
+		if(!IsValidEntity(target))	continue;
 
-				AcceptEntityInput(entity, "Kill");
-				return;
-			}
+		int targetTeam = GetEntProp(target, Prop_Send, "m_iTeamNum");
+		if(targetTeam <= 1 || team == targetTeam)	continue;
+		if((target <= MaxClients)
+			&& (!IsClientInGame(target) || !IsPlayerAlive(target)))
+				continue;
+
+		GetEntPropVector(target, Prop_Data, "m_vecOrigin", targetPos);
+		if(RoundFloat(GetVectorDistance(pos, targetPos)) < (magnitude * 2)) {
+			SpawnExplosion(client, pos, magnitude, damage);
+
+			AcceptEntityInput(entity, "Kill");
+			return;
 		}
 	}
 }
