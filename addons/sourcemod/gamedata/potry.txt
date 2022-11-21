@@ -60,11 +60,6 @@
 				"linux"		"@_ZNK13CEconItemView13GetStaticDataEv"
 				"windows"	" "
 			}
-			"CTFItemDefinition::GetLoadoutSlot"
-			{
-				"linux"		"@_ZNK17CTFItemDefinition14GetLoadoutSlotEi"
-				"windows"	" "
-			}
 			"CTFParticleCannon::FireChargedShot"
 			{
 				"linux"		"@_ZN17CTFParticleCannon15FireChargedShotEv"
