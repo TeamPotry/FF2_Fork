@@ -3,6 +3,71 @@
 #endif
 #define _ff2_stocks_included
 
+/*
+// Unused for now.
+stock void FF2_PrepareStocks()
+{
+	GameData gamedata = new GameData("potry");
+	if (gamedata)
+	{
+	}
+	else
+	{
+		SetFailState("Could not find potry gamedata");
+	}
+}
+*/
+
+stock void FF2_PlayAnimation(int client, const char[] anim, float duration = 0.0, float stopAt = 0.0)
+{
+
+	SetCommandFlags("mp_playanimation", GetCommandFlags("mp_playanimation") ^FCVAR_CHEAT);
+	FakeClientCommand(client, "mp_playanimation %s", anim);
+	SetCommandFlags("mp_playanimation", GetCommandFlags("mp_playanimation") | FCVAR_CHEAT);
+
+	if(duration > 0.0)
+		CreateTimer(duration, Timer_FF2AnimEnd, client, TIMER_FLAG_NO_MAPCHANGE);
+
+	// FIXME: Not working
+	if(stopAt > 0.0)
+		CreateTimer(stopAt, Timer_FF2AnimStop, client, TIMER_FLAG_NO_MAPCHANGE);
+}
+
+
+// TODO: Replace this to Frame-dependent timer
+// NOTE: Default Sourcemod Timer does not allow under 0.1s. and intarval follows server's tickrate.
+public Action Timer_FF2AnimEnd(Handle timer, int client)
+{
+	if(!IsClientConnected(client) || !IsPlayerAlive(client))
+		return Plugin_Continue;
+
+	FF2_PlayAnimation(client, "0");
+	
+	SetEntProp(client, Prop_Send, "m_bIsPlayerSimulated", 1);
+	SetEntProp(client, Prop_Send, "m_bSimulatedEveryTick", 1);
+	SetEntProp(client, Prop_Send, "m_bAnimatedEveryTick", 1);
+	// SetEntProp(client, Prop_Send, "m_bClientSideAnimation", 1);
+	// SetEntProp(client, Prop_Send, "m_bClientSideFrameReset", 0);
+
+	return Plugin_Continue;
+}
+
+public Action Timer_FF2AnimStop(Handle timer, int client)
+{
+	if(!IsClientConnected(client) || !IsPlayerAlive(client))
+		return Plugin_Continue;
+
+	// I wrote this on shulk's timestop ability. and it works at that time.
+	// but i don't know why is this not working this time..
+	SetEntProp(client, Prop_Send, "m_bIsPlayerSimulated", 0);
+	SetEntProp(client, Prop_Send, "m_bSimulatedEveryTick", 0);
+	SetEntProp(client, Prop_Send, "m_bAnimatedEveryTick", 0);
+	// SetEntProp(client, Prop_Send, "m_bClientSideAnimation", 0);
+	// SetEntProp(client, Prop_Send, "m_bClientSideFrameReset", 1);
+
+	return Plugin_Continue;
+}
+
 // NOTE: Precache on OnMapStart
 stock void FF2_PrecacheEffect()
 {

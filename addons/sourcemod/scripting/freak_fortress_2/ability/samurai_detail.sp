@@ -85,6 +85,8 @@ int g_iRushTargetCount[MAXPLAYERS+1];
 
 #if defined _ff2_fork_general_included
 	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+
+    // FF2_PrepareStocks();
 #endif
 }
 
@@ -177,13 +179,14 @@ void TriggerRush(int boss, int status)
     SetEntityMoveType(client, MOVETYPE_NONE);
 
     // TODO: 특정 프레임에 고정
-    int animationProp = PlayAnimation(client, "Melee_Swing", _, stopTime, true);
+    /* int animationProp = */
+    FF2_PlayAnimation(client, "Melee_Swing", _, 0.25);
 
-    // FIXME: 모델 문제로 각도가 이상하게 꺾여서 여기서 강제로 고정
-    float animationAngles[3];
-    GetEntPropVector(animationProp, Prop_Data, "m_angRotation", animationAngles);
-    animationAngles[1] += 90.0;
-    TeleportEntity(animationProp, NULL_VECTOR, animationAngles, NULL_VECTOR);
+    // // FIXME: 모델 문제로 각도가 이상하게 꺾여서 여기서 강제로 고정
+    // float animationAngles[3];
+    // GetEntPropVector(animationProp, Prop_Data, "m_angRotation", animationAngles);
+    // animationAngles[1] += 90.0;
+    // TeleportEntity(animationProp, NULL_VECTOR, animationAngles, NULL_VECTOR);
 
     InitRushTargetList(client);
     OnRushTick(client);
