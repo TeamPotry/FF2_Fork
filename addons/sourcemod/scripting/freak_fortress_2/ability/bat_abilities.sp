@@ -73,7 +73,8 @@ public void OnBallTouched_Explosion(int entity)
 
 	for(int target = 1; target < MAX_EDICTS; target++)
 	{
-		if(!IsValidEntity(target))	continue;
+		// after 22/12/02 Update, some entity has no "m_iTeamNum".
+		if(!IsValidEntity(target) || !HasEntProp(target, Prop_Send, "m_iTeamNum"))	continue;
 
 		int targetTeam = GetEntProp(target, Prop_Send, "m_iTeamNum");
 		if(targetTeam <= 1 || team == targetTeam)	continue;
