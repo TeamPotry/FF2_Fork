@@ -746,7 +746,7 @@ stock void RandomlyDisguise(int client)	//Original code was mecha's, but the ori
 			TF2_AddCondition(client, TFCond_Disguised, -1.0);
 			SetEntProp(client, Prop_Send, "m_nDisguiseTeam", view_as<int>(team));
 			SetEntProp(client, Prop_Send, "m_nDisguiseClass", classArray[playerclass]);
-			SetEntProp(client, Prop_Send, "m_iDisguiseTargetIndex", disguiseTarget);
+			SetEntPropEnt(client, Prop_Send, "m_hDisguiseTarget", disguiseTarget);
 			SetEntProp(client, Prop_Send, "m_iDisguiseHealth", 200);
 		}
 	}
