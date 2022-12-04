@@ -29,9 +29,6 @@ public Plugin myinfo=
 #define PLAYER_HUD_NOISE		"player hud noise"
 #define COPIED_DUMMY			"copied dummy"
 
-// Handle g_hMyNextBotPointer;
-// Handle g_hGetLocomotionInterface;
-// Handle g_hGetStepHeight;
 Handle g_hStudioFrameAdvance;
 Handle g_hAllocateLayer;
 Handle g_hResetSequence;
@@ -389,50 +386,6 @@ public MRESReturn DHookCallback_GetCurrencyValue_Pre(int ent, DHookReturn ret)
     ret.Value = 0;
     return MRES_Supercede;
 }
-
-/*
-Handle PrepSDKCall_MyNextBotPointer(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::MyNextBotPointer");
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CBaseEntity::MyNextBotPointer");
-
-	return call;
-}
-
-int SDKCall_MyNextBotPointer(int ent)
-{
-    if(g_hMyNextBotPointer)
-        SDKCall(g_hMyNextBotPointer, ent);
-
-    return -1;
-}
-
-Handle PrepSDKCall_GetLocomotionInterface(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Raw);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "INextBot::GetLocomotionInterface");
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: INextBot::GetLocomotionInterface");
-
-	return call;
-}
-
-any SDKCall_GetLocomotionInterface(int address)
-{
-    if(g_hGetLocomotionInterface)
-        SDKCall(g_hGetLocomotionInterface, address);
-
-    return -1;
-}
-*/
 
 Handle PrepSDKCall_StudioFrameAdvance(GameData gamedata)
 {

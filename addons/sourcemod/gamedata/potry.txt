@@ -4,11 +4,6 @@
 	{
 		"Signatures"
 		{
-			"CTFWeaponBaseMelee::DoMeleeDamage"
-			{
-				"linux"		"@_ZN18CTFWeaponBaseMelee13DoMeleeDamageEP11CBaseEntityR10CGameTracef"
-				"windows"	" "
-			}
 			"CTFWeaponBaseMelee::OnEntityHit"
 			{
 				"linux"		"@_ZN18CTFWeaponBaseMelee11OnEntityHitEP11CBaseEntityP15CTakeDamageInfo"
@@ -18,11 +13,6 @@
 			{
 			    "linux"		"@_ZN9CTFPlayer8GiveAmmoEiib"
 			    "windows"	" "
-			}
-			"CTFWeaponBase::GetEffectBarProgress"
-			{
-				"linux"		"@_ZN13CTFWeaponBase20GetEffectBarProgressEv"
-				"windows"	" "
 			}
 			"CTFPlayer::GetMaxAmmo"
 			{
@@ -37,7 +27,7 @@
 			"CTFPlayer::PickupWeaponFromOther"
 			{
 				"linux"		"@_ZN9CTFPlayer21PickupWeaponFromOtherEP16CTFDroppedWeapon"
-				"windows"	" "
+				"windows"	"\x55\x8B\xEC\x83\xEC\x24\x56\x8B\x75\x08\x57\x8B\xF9\x81\xC6\x88\x04\x00\x00"
 			}
 			"CTFPlayer::TeamFortress_SetSpeed()"
 			{
@@ -55,52 +45,9 @@
 				"linux"		"@_ZN16CTFDroppedWeapon6CreateEP9CTFPlayerRK6VectorRK6QAnglePKcPK13CEconItemView"
 				"windows"	" "
 			}
-			"CEconItemView::GetStaticData"
-			{
-				"linux"		"@_ZNK13CEconItemView13GetStaticDataEv"
-				"windows"	" "
-			}
 			"CTFParticleCannon::FireChargedShot"
 			{
 				"linux"		"@_ZN17CTFParticleCannon15FireChargedShotEv"
-				"windows"	" "
-			}
-			"CBaseEntity::SetAbsVelocity"
-			{
-				"linux"		"@_ZN11CBaseEntity14SetAbsVelocityERK6Vector"
-				"windows"	" "
-			}
-			"CBaseEntity::GetVelocity"
-			{
-				"linux"		"@_ZN11CBaseEntity11GetVelocityEP6VectorS1_"
-				"windows"	" "
-			}
-			"CTFPlayer::CanAirDash"
-			{
-				"library"	"server"
-				"linux"		"@_ZNK9CTFPlayer10CanAirDashEv"
-				"windows"	"\x55\x8B\xEC\x83\xEC\x08\x57\x8B\xF9\xF7\x87\x84\x1A\x00\x00\x00\x00\x04\x00"
-			}
-			"CPasstimeBall::SetStateCarried"
-			{
-				"library"	"server"
-				"linux"		"@_ZN13CPasstimeBall15SetStateCarriedEP9CTFPlayer"
-				"windows"	" "
-			}
-			"CCaptureFlag::PickUp"
-			{
-				"library"	"server"
-				"linux"		"@_ZN12CCaptureFlag6PickUpEP9CTFPlayerb"
-				"windows"	" "
-			}
-			"CTFWeaponBase::GetProjectileFireSetup"
-			{
-				"linux"		"@_ZN13CTFWeaponBase22GetProjectileFireSetupEP9CTFPlayer6VectorPS2_P6QAnglebf"
-				"windows"	" "
-			}
-			"CBaseEntity::SetAbsOrigin"
-			{
-				"linux"		"@_ZN11CBaseEntity12SetAbsOriginERK6Vector"
 				"windows"	" "
 			}
 			"CBaseEntity::MyNextBotPointer"
@@ -284,67 +231,11 @@
 					}
 				}
 			}
-			"CEconItemView::GetStaticData"
-			{
-				"signature"	"CEconItemView::GetStaticData"
-				"callconv"	"thiscall"
-				"return"	"int" 	// address??
-				"this"		"address"
-			}
-			"CTFItemDefinition::GetLoadoutSlot"
-			{
-				"signature"	"CTFItemDefinition::GetLoadoutSlot"
-				"callconv"	"thiscall"
-				"return"	"int"
-				"this"		"ignore"
-			}
-
 			"CTFParticleCannon::FireChargedShot"
 			{
 				"signature"		"CTFParticleCannon::FireChargedShot"
 				"callconv"		"thiscall"
 				"return"		"void"
-				"this"			"entity"
-			}
-			"CTFWeaponBase::GetProjectileFireSetup"
-			{
-				"signature"		"CTFWeaponBase::GetProjectileFireSetup"
-				"callconv"		"thiscall"
-				"return"		"void"
-				"this"			"entity"
-				"arguments"
-				{
-					"pPlayer"
-					{
-						"type"	"cbaseentity"
-					}
-					"vecOffset"
-					{
-						"type"	"vectorptr"
-					}
-					"vecSrc"
-					{
-						"type"	"vectorptr"
-					}
-					"angForward"
-					{
-						"type"	"vectorptr"
-					}
-					"bHitTeammates"
-					{
-						"type"	"bool"
-					}
-					"flEndDist"
-					{
-						"type"	"float"
-					}
-				}
-			}
-			"CTFPlayer::CanAirDash"
-			{
-				"signature"		"CTFPlayer::CanAirDash"
-				"callconv"		"thiscall"
-				"return"		"bool"
 				"this"			"entity"
 			}
 			"CTFBaseBoss::GetCurrencyValue"
@@ -360,24 +251,6 @@
 				"callconv"		"thiscall"
 				"return"		"float"
 				"this"			"address"
-			}
-			"CCaptureFlag::PickUp"
-			{
-				"signature"		"CCaptureFlag::PickUp"
-				"callconv"		"thiscall"
-				"return"		"void"
-				"this"			"entity"
-				"arguments"
-				{
-					"pPlayer"
-					{
-						"type"	"cbaseentity"
-					}
-					"bInvisible"
-					{
-						"type"	"bool"
-					}
-				}
 			}
 		}
     }

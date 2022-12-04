@@ -35,13 +35,6 @@ public Plugin myinfo=
 #define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
 #define mclamp(%1,%2,%3)        min(max(%1,%2),%3)
 
-Handle g_SDKCallGetVelocity;
-Handle g_SDKCallSetAbsVelocity;
-// Handle g_SDKCallFireBullets;
-// Handle g_SDKCallApplyLocalAngularVelocityImpulse;
-
-// Handle g_SDKCallVPhysicsGetObjectList;
-
 bool g_bReflecter[MAXPLAYERS+1];
 bool g_bReflecterForce[MAXPLAYERS+1];
 float g_flReflecterHealth[MAXPLAYERS+1];
@@ -59,12 +52,6 @@ public void OnPluginStart()
 	GameData gamedata = new GameData("potry");
 	if (gamedata)
 	{
-		g_SDKCallGetVelocity = PrepSDKCall_GetVelocity(gamedata);
-		g_SDKCallSetAbsVelocity = PrepSDKCall_SetAbsVelocity(gamedata);
-		// g_SDKCallFireBullets = PrepSDKCall_FireBullets(gamedata);
-		// g_SDKCallApplyLocalAngularVelocityImpulse = PrepSDKCall_ApplyLocalAngularVelocityImpulse(gamedata);
-		// g_SDKCallVPhysicsGetObjectList = PrepSDKCall_VPhysicsGetObjectList(gamedata);
-
 		CreateDynamicDetour(gamedata, "CTFParticleCannon::FireChargedShot", _, DHookCallback_FireChargedShot_Post);
 		delete gamedata;
 	}
@@ -384,13 +371,11 @@ public void OnReflecterThink(int client)
 
 		if(speed <= 0.0)
 		{
-			// Does not work
-			// SDKCall_GetVelocity(projectile, velocity, impulse);
-
 			// FIXME: 현재 속도를 기준으로 할 것
 			// GetEntPropVector(projectile, Prop_Send, "m_vecVelocity", velocity);
 			GetEntPropVector(projectile, Prop_Send, "m_vInitialVelocity", velocity);
 			speed = GetVectorLength(velocity);
+
 			/*
 			// QAngleToAngularImpulse(angles, impulse);
 			// ScaleVector(impulse, speed * -1.0);
@@ -646,129 +631,6 @@ static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallb
 		LogError("Failed to create detour setup handle for %s", name);
 	}
 }
-
-Handle PrepSDKCall_GetVelocity(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::GetVelocity");
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer);
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CBaseEntity::GetVelocity");
-
-	return call;
-}
-
-public void SDKCall_GetVelocity(int entity, float velocity[3], float impulse[3])
-{
-	if (g_SDKCallGetVelocity)
-		SDKCall(g_SDKCallGetVelocity, entity, velocity, impulse);
-}
-
-Handle PrepSDKCall_SetAbsVelocity(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::SetAbsVelocity");
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CBaseEntity::SetAbsVelocity");
-
-	return call;
-}
-
-public void SDKCall_SetAbsVelocity(int entity, float velocity[3])
-{
-	if (g_SDKCallSetAbsVelocity)
-		SDKCall(g_SDKCallSetAbsVelocity, entity, velocity);
-}
-/*
-Handle PrepSDKCall_FireBullets(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Static);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "TE_FireBullets");
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer);
-    PrepSDKCall_AddParameter(SDKType_QAngle, SDKPass_Pointer);
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-    PrepSDKCall_AddParameter(SDKType_Float, SDKPass_Plain);
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: TE_FireBullets");
-
-	return call;
-}
-
-public void SDKCall_FireBullets(int iPlayerIndex, float vOrigin[3], float vAngles[3],
-					 int iWeaponID, int	iMode, int iSeed, float flSpread, bool bCritical)
-{
-	if (g_SDKCallFireBullets)
-		SDKCall(g_SDKCallFireBullets, iPlayerIndex, vOrigin, vAngles, iWeaponID, iMode, iSeed, flSpread, bCritical);
-}
-
-Handle PrepSDKCall_ApplyLocalAngularVelocityImpulse(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::ApplyLocalAngularVelocityImpulse");
-    PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CBaseEntity::ApplyLocalAngularVelocityImpulse");
-
-	return call;
-}
-
-public void SDKCall_ApplyLocalAngularVelocityImpulse(int entity, float angImpulse[3])
-{
-	if (g_SDKCallApplyLocalAngularVelocityImpulse)
-		SDKCall(g_SDKCallApplyLocalAngularVelocityImpulse, entity, angImpulse);
-}
-
-
-Handle PrepSDKCall_VPhysicsGetObjectList(GameData gamedata)
-{
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(gamedata, SDKConf_Signature, "CBaseEntity::VPhysicsGetObjectList");
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Pointer);
-    PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-    PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-
-	Handle call = EndPrepSDKCall();
-	if (!call)
-		LogMessage("Failed to create SDK call: CBaseEntity::VPhysicsGetObjectList");
-
-	return call;
-}
-
-public int SDKCall_VPhysicsGetObjectList(int entity, int[] list, int maxCount)
-{
-	if (g_SDKCallVPhysicsGetObjectList)
-		return SDKCall(g_SDKCallVPhysicsGetObjectList, entity, list, maxCount);
-
-	return 0;
-}
-*/
-/*
-public void QAngleToAngularImpulse(const float angles[3], float impulse[3])
-{
-	// angles: (0: x, 1: z, 2: y)
-	// angles[0] = impulse[2];
-	// angles[2] = impulse[1];
-	// angles[1] = impulse[0];
-
-	impulse[2] = angles[0];
-	impulse[1] = angles[2];
-	impulse[0] = angles[1];
-}
-*/
 
 stock int AttachParticle(int entity, char[] particleType, float offset=0.0, bool attach=true)
 {
