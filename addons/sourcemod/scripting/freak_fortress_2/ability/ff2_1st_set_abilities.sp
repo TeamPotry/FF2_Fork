@@ -626,14 +626,15 @@ public Action Timer_Rage_Explosive_Dance(Handle timer, int boss)
 
 void Rage_Slowmo(int boss, const char[] abilityName)
 {
-	FF2_SetFF2Flags(boss, FF2_GetFF2Flags(boss)|FF2FLAG_CHANGECVAR);
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+	FF2_SetFF2Flags(client, FF2_GetFF2Flags(client)|FF2FLAG_CHANGECVAR);
+	
 	cvarTimeScale.FloatValue=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "timescale", 0.1);
 	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 1.0)+1.0;
 	SlowMoTimer=CreateTimer(duration, Timer_StopSlowMo, boss, TIMER_FLAG_NO_MAPCHANGE);
 	FF2Flags[boss]=FF2Flags[boss]|FLAG_ONSLOWMO;
 	UpdateClientCheatValue(1);
 
-	int client=GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(client)
 	{
 		CreateTimer(duration, Timer_RemoveEntity, EntIndexToEntRef(AttachParticle(client, BossTeam==TFTeam_Blue ? "scout_dodge_blue" : "scout_dodge_red", 75.0)), TIMER_FLAG_NO_MAPCHANGE);
