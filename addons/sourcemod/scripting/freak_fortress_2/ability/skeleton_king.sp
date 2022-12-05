@@ -381,10 +381,10 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 
 			if(charge < 0.0)
 				Format(text, sizeof(text), "%t", "charge_cooldown", -RoundFloat(charge));
-			else if(charge == 100.0)
-				Format(text, sizeof(text), "%t", "charge_ready");
-			else
+			else if(charge > 0.0)
 				Format(text, sizeof(text), "%t", "charge_status", RoundFloat(charge)/*, buttonText*/);
+			else
+				Format(text, sizeof(text), "%t", "charge_ready");
 
 			hudDisplay = FF2HudDisplay.CreateDisplay("charge_status", text);
 			hudQueue.AddHud(hudDisplay, client);
