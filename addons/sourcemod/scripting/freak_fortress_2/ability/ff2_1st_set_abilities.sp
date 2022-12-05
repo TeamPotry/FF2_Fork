@@ -631,8 +631,8 @@ void Rage_Slowmo(int boss, const char[] abilityName)
 	
 	cvarTimeScale.FloatValue=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "timescale", 0.1);
 	float duration=FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, abilityName, "duration", 1.0)+1.0;
-	SlowMoTimer=CreateTimer(duration, Timer_StopSlowMo, boss, TIMER_FLAG_NO_MAPCHANGE);
-	FF2Flags[boss]=FF2Flags[boss]|FLAG_ONSLOWMO;
+	SlowMoTimer = CreateTimer(duration, Timer_StopSlowMo, client, TIMER_FLAG_NO_MAPCHANGE);
+	FF2Flags[client] = FF2Flags[client]|FLAG_ONSLOWMO;
 	UpdateClientCheatValue(1);
 
 	if(client)
@@ -644,16 +644,16 @@ void Rage_Slowmo(int boss, const char[] abilityName)
 	EmitSoundToAll(SOUND_SLOW_MO_START, _, _, _, _, _, _, _, _, _, false);
 }
 
-public Action Timer_StopSlowMo(Handle timer, int boss)
+public Action Timer_StopSlowMo(Handle timer, int client)
 {
 	SlowMoTimer=null;
 	oldTarget=0;
 	cvarTimeScale.FloatValue=1.0;
 	UpdateClientCheatValue(0);
-	if(boss!=-1)
+	if(client != -1)
 	{
-		FF2_SetFF2Flags(boss, FF2_GetFF2Flags(boss) & ~FF2FLAG_CHANGECVAR);
-		FF2Flags[boss]&=~FLAG_ONSLOWMO;
+		FF2_SetFF2Flags(client, FF2_GetFF2Flags(client) & ~FF2FLAG_CHANGECVAR);
+		FF2Flags[client] &= ~FLAG_ONSLOWMO;
 	}
 	EmitSoundToAll(SOUND_SLOW_MO_END, _, _, _, _, _, _, _, _, _, false);
 	EmitSoundToAll(SOUND_SLOW_MO_END, _, _, _, _, _, _, _, _, _, false);
