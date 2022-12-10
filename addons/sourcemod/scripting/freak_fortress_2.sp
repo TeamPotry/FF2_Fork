@@ -5112,7 +5112,7 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 		}
 		UpdateHealthBar(false);
 	}
-	else if(client != iHealer)
+	else if(client != iHealer && iHealer != 0)
 	{
 		FF2BaseEntity healer = g_hBasePlayer[iHealer];
 		healer.Assist += healed/2;
