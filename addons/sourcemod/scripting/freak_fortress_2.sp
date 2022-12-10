@@ -1367,17 +1367,19 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 	FF2BaseEntity baseEnt;
 	for(int client=0; client<=MaxClients; client++)
 	{
-		if(!IsValidClient(client) || Damage[client]<=0 || (IsBoss(client) && BossTeam == TF2_GetClientTeam(client)))
+		if(!IsValidClient(client) || (IsBoss(client) && BossTeam == TF2_GetClientTeam(client)))
 			continue;
 
 		baseEnt = g_hBasePlayer[client];
-
 		Damage[client] = baseEnt.Damage;
-		int assist = baseEnt.Assist;
 
-		SetClientGlow(client, 0.0, 0.0);
+		int assist = baseEnt.Assist;
 		if(assist >= 2)
 			Damage[client] += assist / 2;
+
+		if(Damage[client] <= 0)		continue;
+
+		SetClientGlow(client, 0.0, 0.0);
 
 		if(Damage[client]>=Damage[top[0]])
 		{
