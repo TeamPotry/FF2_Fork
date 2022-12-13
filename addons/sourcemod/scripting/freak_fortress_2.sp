@@ -5632,7 +5632,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 			if(TF2_IsPlayerInCondition(client, TFCond_DefenseBuffed))
 			{
 				ScaleVector(damageForce, 9.0);
-				damage*=0.3;
+				// damage*=0.3;
 				return Plugin_Changed;
 			}
 
