@@ -5665,12 +5665,13 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				}
 				else
 				{
-					// RemoveShield(client, iAttacker, position);
-					PlayShieldBreakSound(client, position, volume);
+					float realDamage = damage - GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
 					float charge = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") - damage;
 					SetEntPropFloat(client, Prop_Send, "m_flChargeMeter",
 						charge > 0.0 ? charge : 0.0);
-					return Plugin_Continue;
+					
+					damage = realDamage;
+					bChanged = true;
 				}
 			}
 
