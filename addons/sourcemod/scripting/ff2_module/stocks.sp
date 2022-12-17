@@ -476,6 +476,14 @@ void ForceTeamWin(TFTeam team)
 	AcceptEntityInput(entity, "SetWinner");
 }
 
+stock bool TF2_IsPlayerInvulnerable(int client)
+{
+    return (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) 
+            || TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden)
+            || TF2_IsPlayerInCondition(client, TFCond_UberchargedCanteen)
+            || TF2_IsPlayerInCondition(client, TFCond_UberchargedOnTakeDamage));
+}
+
 stock int GetClientCloakIndex(int client)
 {
 	if(!IsValidClient(client, false))

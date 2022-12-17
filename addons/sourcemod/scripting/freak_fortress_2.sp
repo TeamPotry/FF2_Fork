@@ -5574,7 +5574,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 	bool bChanged=false;
 
 	if(CheckRoundState()==FF2RoundState_Setup ||
-		(IsBoss(client)	&& (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) || TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden))))
+		(IsBoss(client)	&& TF2_IsPlayerInvulnerable(client)))
 	{
 		damage=0.0;
 		return Plugin_Changed;
@@ -5649,7 +5649,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				return Plugin_Changed;
 			}
 
-			if(shield[client] && damage)
+			if(shield[client] && damage && (!TF2_IsPlayerInvulnerable(client)))
 			{
 				float volume = fmin(damage / 100.0, 1.0) * 0.7;
 
