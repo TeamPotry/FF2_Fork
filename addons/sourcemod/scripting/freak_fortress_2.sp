@@ -5651,13 +5651,11 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 			if(shield[client] && damage && (!TF2_IsPlayerInvulnerable(client)))
 			{
-				float volume = fmin(damage / 100.0, 1.0) * 0.7;
-
 				if(GetEntProp(shield[client], Prop_Send, "m_iItemDefinitionIndex")==57)
 				{
 					if(GetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", TFWeaponSlot_Secondary)>=100.0)
 					{
-						PlayShieldBreakSound(client, position, volume);
+						PlayShieldBreakSound(client, position, 0.7);
 						SetEntPropFloat(client, Prop_Send, "m_flItemChargeMeter", 0.0, TFWeaponSlot_Secondary);
 						return Plugin_Handled;
 					}
