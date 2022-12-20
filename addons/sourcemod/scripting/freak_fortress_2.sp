@@ -5690,6 +5690,8 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 	}
 	else
 	{
+		FF2BaseEntity victim = g_hBasePlayer[client];
+
 		int boss=GetBossIndex(client);
 		float victimPosition[3];
 		GetEntPropVector(iAttacker, Prop_Send, "m_vecOrigin", position);
@@ -5991,9 +5993,11 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					}
 					case 416:  //Market Gardener (courtesy of Chdata)
 					{
-						if(FF2Flags[iAttacker] & FF2FLAG_BLAST_JUMPING)
+						FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
+
+						if(attacker.Flags & FF2FLAG_BLAST_JUMPING)
 						{
-							damage=(Pow(float(BossHealthMax[boss]), 0.54074)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
+							damage=(Pow(float(BossHealthMax[boss]), 0.27037)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
 							if(damage < 500.0)
 								damage = 500.0; // x3
 
@@ -6110,9 +6114,8 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 				if(damagecustom==TF_CUSTOM_BACKSTAB)
 				{
-					FF2BaseEntity victim = g_hBasePlayer[client],
-						attacker = g_hBasePlayer[iAttacker];
-					
+					FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
+
 					bool isSlient = TF2Attrib_HookValueInt(0, "set_silent_killer", iAttacker) > 0;
 					damage=BossHealthMax[boss]*(LastBossIndex()+1)*BossLivesMax[boss]*(0.12-Stabbed[boss]/80);
 					// damage = BossHealth[boss] * 0.06;
@@ -6218,7 +6221,6 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 					int iTeleowner=FindTeleOwner(iAttacker);
 					FF2BaseEntity teleowner = g_hBasePlayer[iTeleowner],
-						victim = g_hBasePlayer[client],
 						attacker = g_hBasePlayer[iAttacker];
 
 					if(IsValidClient(iTeleowner) && iTeleowner != iAttacker)
