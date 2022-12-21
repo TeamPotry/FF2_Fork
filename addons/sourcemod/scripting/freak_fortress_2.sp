@@ -3991,16 +3991,6 @@ public Action ClientTimer(Handle timer)
 			}
 			else
 			{
-#if defined _MVM_included
-// TODO: move this to mvm
-				if(mannvsmann)
-				{
-					Format(hudText, sizeof(hudText), "$%d", MVM_GetPlayerCurrency(client));
-					hudDisplay=FF2HudDisplay.CreateDisplay("Your Money", hudText);
-					PlayerHudQueue[client].AddHud(hudDisplay, client);
-				}
-#endif
-
 				Format(hudText, sizeof(hudText), "%t", "Your Damage Dealt", player.Damage);
 				if(player.Assist > 0)
 					Format(hudText, sizeof(hudText), "%s + ASSIST: %d", hudText, player.Assist);
