@@ -5987,9 +5987,13 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 						if(attacker.Flags & FF2FLAG_BLAST_JUMPING)
 						{
+							/*
 							damage=(Pow(float(BossHealthMax[boss]), 0.27037)+512.0-(Marketed[client]/128.0*float(BossHealthMax[boss])));
 							if(damage < 500.0)
 								damage = 500.0; // x3
+							*/
+
+							damage = 200.0;
 
 							float velocity[3]; // TODO: move this when anything use this in OnTakeDamage
 							GetEntPropVector(iAttacker, Prop_Data, "m_vecVelocity", velocity);
