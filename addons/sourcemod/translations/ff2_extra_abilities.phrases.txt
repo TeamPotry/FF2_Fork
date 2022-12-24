@@ -38,4 +38,20 @@
         "#format"   "{1:i}"
         "en"        "Extra HP: {1}"
     }
+
+    "HHH Warn Victim"
+    {
+        "en"        "YOU ARE IT!  MELEE HIT AN FRIENDLY TO TAG THEM IT!"
+    }
+
+    "HHH Lost Aggro"
+    {
+        "en"        "You are no longer IT."
+    }
+
+    "HHH Announce Tag"
+    {
+        "#format"   "{1:N},{2:N}"
+        "ko"        "{1} tagged {2} as IT!"
+    }
 }
