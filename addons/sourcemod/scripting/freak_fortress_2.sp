@@ -499,7 +499,6 @@ public void OnMapStart()
 	doorCheckTimer=null;
 	RoundCount=0;
 
-	
 	for(int client = 0; client <= MaxClients; client++)
 	{
 		// FF2BasePlayer player = GetBasePlayer(client);
@@ -529,6 +528,9 @@ public void OnMapStart()
 
 	bossesArray.Clear();
 	bossesArrayOriginal.Clear();
+
+	// ff2_module/database.sp
+	DB_Init();
 }
 
 public void OnMapEnd()
@@ -3807,7 +3809,10 @@ public void OnClientDisconnect(int client)
 		delete MusicTimer[client];
 
 	if(g_hBasePlayer[client] != null)
-		delete g_hBasePlayer[client];
+	{
+		view_as<FF2BasePlayer>(g_hBasePlayer[client]).KillSelf();
+		g_hBasePlayer[client] = null;
+	}
 
 	delete PlayerHudQueue[client];
 }

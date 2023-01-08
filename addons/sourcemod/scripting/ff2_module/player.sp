@@ -283,7 +283,7 @@ FF2BaseEntity g_hBasePlayer[MAXPLAYERS+1];
 
 enum
 {
-    FF2P_QueuePoints = 0,
+    FF2P_QueuePoints = 0, // TODO: REPLACE THIS TO DATA
     FF2P_MusicTimer,
     FF2P_CurrentMusicPath,
     // FF2P_MusicPacks
@@ -303,6 +303,13 @@ methodmap FF2BasePlayer < FF2BaseEntity
         newArray.Push(0);   // 
         
         return view_as<FF2BasePlayer>(newArray); 
+    }
+
+    public void KillSelf()
+    {
+        PlayerData_Kill(this.Index);
+
+        delete this;
     }
 
     property int QueuePoints {
@@ -349,6 +356,9 @@ methodmap FF2BasePlayer < FF2BaseEntity
             SetClientCookie(this.Index, FF2Cookie_QueuePoints, "0");
         }
 
+        PlayerData_Init(this.Index);
+
+        // TODO: REPLACE THIS
         this.QueuePoints = StringToInt(buffer);
 
         return true;

@@ -72,3 +72,113 @@ public void DBS_OnLoadData(DBSData data)
 	data.Add(FF2DATABASE_CONFIG_NAME, tabledata);
 	delete tabledata;
 }
+
+#define FF2DATA_STEAMID_NAME		"private_steamid"
+
+enum
+{
+	PlayerData_SteamID = 0,
+	PlayerData_SettingID,
+	PlayerData_Value,
+	PlayerData_LastSavedTime
+};
+
+enum
+{
+	PlayerDataType_Setting = 0,
+	PlayerDataType_HUD,
+	PlayerDataType_Music
+};
+
+static const char g_strIDName[][] = {
+	"setting_id",
+	"hud_id",
+	"music_id"
+};
+
+static const char g_strTableName[][] = {
+	FF2_DB_PLAYERDATA_TABLENAME,
+	FF2_DB_PLAYER_HUDDATA_TABLENAME,
+	FF2_DB_PLAYER_MUSICDATA_TABLENAME
+};
+
+methodmap FF2PlayerData < StringMap {	
+	// constructor: LoadPlayerData(int client)
+	public void UpdateData() {
+		
+	}
+}
+
+FF2PlayerData LoadPlayerData(int client, int type = 0)
+{
+	FF2PlayerData data = view_as<FF2PlayerData>(new StringMap());
+
+	char authId[32];
+	GetClientAuthId(client, AuthId_SteamID64, authId, sizeof(authId));
+	data.SetString(FF2DATA_STEAMID_NAME, authId, true);
+
+	return data;
+}
+
+Database g_hFF2DB;
+FF2PlayerData g_hPlayerSettingData[MAXPLAYERS+1];
+FF2PlayerData g_hPlayerHUDData[MAXPLAYERS+1];
+FF2PlayerData g_hPlayerMusicData[MAXPLAYERS+1];
+
+void DB_Init()
+{
+	if(g_hFF2DB != null)
+		delete g_hFF2DB;
+/*
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		PlayerData_Kill(client);
+	}
+*/
+	Database.Connect(DB_Connected, FF2DATABASE_CONFIG_NAME);
+}
+
+public void DB_Connected(Database db, const char[] error, any data)
+{
+	if(db == null)
+	{
+		SetFailState("[FF2] DB Connection failed! error: %s", error);
+		return;
+	}
+	
+	g_hFF2DB = db;
+}
+
+void DB_LoadAuthId(char[] authId)
+{
+	
+}
+
+void PlayerData_Init(int client)
+{
+	g_hPlayerSettingData[client] = LoadPlayerData(client, PlayerDataType_Setting);
+	g_hPlayerHUDData[client] = LoadPlayerData(client, PlayerDataType_HUD);
+	g_hPlayerMusicData[client] = LoadPlayerData(client, PlayerDataType_Music);
+	
+}
+
+void PlayerData_Kill(int client)
+{
+	if(g_hPlayerSettingData[client] != null)
+	{
+		delete g_hPlayerSettingData[client];
+		g_hPlayerSettingData[client] = null;
+	}
+
+	if(g_hPlayerHUDData[client] != null)
+	{
+		delete g_hPlayerHUDData[client];
+		g_hPlayerHUDData[client] = null;
+	}
+
+	if(g_hPlayerMusicData[client] != null)
+	{
+		delete g_hPlayerMusicData[client];
+		g_hPlayerMusicData[client] = null;
+	}
+}
