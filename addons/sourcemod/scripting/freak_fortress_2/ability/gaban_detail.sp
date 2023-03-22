@@ -1,5 +1,142 @@
 #pragma semicolon 1
 
+/*
+	"card throw"
+	{
+		"speed"			"2000.0"
+		"damage"		"10.0"
+		"model path"	""
+		"touch type"	"0"
+		"card range"	"10.0"
+
+		"slot %d degree diff"	"5.0"
+		"slot %d card count"	"3"
+	}
+
+	"discount"
+	{
+		"on hit sale"		"10.0"
+		"free sale sound"	"sound path"
+	}
+
+	"loadout disable"
+	{
+		"duration"		"20.0"
+		"sound path"	""
+
+		"scout 0"		""
+		"scout 1"		""
+		"scout 2"		""
+
+		"soldier 0"		""
+		"soldier 1"		""
+		"soldier 2"		""
+
+		"pyro 0"		""
+		"pyro 1"		""
+		"pyro 2"		""
+
+		"demoman 0"		""
+		"demoman 1"		""
+		"demoman 2"		""
+
+		"heavy 0"		""
+		"heavy 1"		""
+		"heavy 2"		""
+
+		"engineer 0"		""
+		"engineer 1"		""
+		"engineer 2"		""
+		"engineer 3"		""
+		"engineer 4"		""
+		"engineer 5"		""
+
+		"medic 0"		""
+		"medic 1"		""
+		"medic 2"		""
+
+		"sniper 0"		""
+		"sniper 1"		""
+		"sniper 2"		""
+
+		"spy 0"		""
+		"spy 1"		""
+		"spy 2"		""
+		"spy 3"		""
+		"spy 4"		""
+		"spy 5"		""
+	}
+	
+*/
+
+/*
+	"card throw"
+	{
+		"1"		"2000.0"
+		"2"		"10.0"
+		"3"		"model path"
+		"6"		"1"
+		"7"		"10.0"
+
+		"4+(무기 슬릇 인덱스*100)"	"5.0"
+		"5+(무기 슬릇 인덱스*100)"	"3"
+	}
+
+	"discount"
+	{
+		"1"		"10.0"
+		"2"		"sound path"
+	}	
+
+	"loadout disable"
+	{
+		"1"		"20.0"
+		"2"		"sound path"
+
+		"11"		""
+		"12"		""
+		"13"		""
+
+		"31"		""
+		"32"		""
+		"33"		""
+
+		"71"		""
+		"72"		""
+		"73"		""
+
+		"41"		""
+		"42"		""
+		"43"		""
+
+		"61"		""
+		"62"		""
+		"63"		""
+
+		"91"		""
+		"92"		""
+		"93"		""
+		"94"		""
+		"95"		""
+		"96"		""
+
+		"51"		""
+		"52"		""
+		"53"		""
+
+		"21"		""
+		"22"		""
+		"23"		""
+
+		"81"		""
+		"82"		""
+		"83"		""
+		"84"		""
+		"85"		""
+		// "86"		"" // unused
+	}
+*/
+
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
