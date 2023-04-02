@@ -1578,7 +1578,7 @@ public Action StartBossTimer(Handle timer)
 			isBossAlive=true;
 			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
 
-			BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((760.8+float(RedAlivePlayers))*(float(RedAlivePlayers)-1.0), 1.0341)+2046.0));
+			BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((560.8+float(RedAlivePlayers))*(float(RedAlivePlayers)-1.0), 1.0341)+2046.0));
 			BossHealth[boss]=BossHealthLast[boss]=BossHealthMax[boss]*BossLivesMax[boss];
 
 			// 초기 쿨타임
