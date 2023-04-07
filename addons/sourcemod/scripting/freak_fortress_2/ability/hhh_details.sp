@@ -1,6 +1,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <tf2_stocks>
+#include <dhooks>
 #include <freak_fortress_2>
 #include <ff2_modules/general>
 
@@ -33,14 +34,14 @@ public void OnPluginStart()
     FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
 
     GameData gamedata = new GameData("potry");
-	if (gamedata)
-	{
+    if (gamedata)
+    {
         CreateDynamicDetour(gamedata, "CTFWeaponBaseMelee::OnEntityHit", _, DHookCallback_OnEntityHit_Post);
-		delete gamedata;
-	}
-	else
-	{
-		SetFailState("Could not find potry gamedata");
+        delete gamedata;
+    }
+    else
+    {
+        SetFailState("Could not find potry gamedata");
 	}
 }
 
@@ -179,7 +180,7 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVel
         TF2_AddCondition(client, TFCond_Charging, 0.12);  
 
         float yAngle = betweenAngles[0] * -1.0;
-        if(yAngle > 0.0)
+        if(yAngle > -10.0)
         {
             // float velocity[3];
             // GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
@@ -228,6 +229,8 @@ int GetItTarget(int client, float currentPos[3], float eyeAngles[3])
 
 int GetItTargetOwner(int client)
 {
+    int clientTeam = GetClientTeam(client);
+
     for(int target = 1; target <= MaxClients; target++)
     {
         if(!IsClientInGame(target) || !IsPlayerAlive(target) || clientTeam == GetClientTeam(target))
@@ -276,27 +279,27 @@ stock bool IsValidClient(int client)
 
 stock int SpawnParticle(float pos[3], char[] particleType, float offset=0.0, int attachToEntity=-1, float time=1.0)
 {
-	int particle=CreateEntityByName("info_particle_system");
+    int particle=CreateEntityByName("info_particle_system");
 
-	char targetName[128];
-	pos[2]+=offset;
-	TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
-	DispatchKeyValue(particle, "targetname", "tf2particle");
-	
-	DispatchKeyValue(particle, "effect_name", particleType);
-	DispatchSpawn(particle);
-	SetVariantString(targetName);
+    char targetName[128];
+    pos[2]+=offset;
+    TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
+    DispatchKeyValue(particle, "targetname", "tf2particle");
 
-	if(attachToEntity > 0)
-	{
-		Format(targetName, sizeof(targetName), "target%i", attachToEntity);
-		DispatchKeyValue(attachToEntity, "targetname", targetName);
-		DispatchKeyValue(particle, "parentname", targetName);
+    DispatchKeyValue(particle, "effect_name", particleType);
+    DispatchSpawn(particle);
+    SetVariantString(targetName);
 
-		SetVariantString(targetName);
-		AcceptEntityInput(particle, "SetParent", particle, particle, 0);
-		SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", attachToEntity);
-	}
+    if(attachToEntity > 0)
+    {
+        Format(targetName, sizeof(targetName), "target%i", attachToEntity);
+        DispatchKeyValue(attachToEntity, "targetname", targetName);
+        DispatchKeyValue(particle, "parentname", targetName);
+
+        SetVariantString(targetName);
+        AcceptEntityInput(particle, "SetParent", particle, particle, 0);
+        SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", attachToEntity);
+    }
 
     ActivateEntity(particle);
 
@@ -313,53 +316,53 @@ stock int SpawnParticle(float pos[3], char[] particleType, float offset=0.0, int
 
 stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleType, int parent=0, float time=1.0, int controlpoint=0)
 {
-	int particle = CreateEntityByName("info_particle_system");
+    int particle = CreateEntityByName("info_particle_system");
 
-	char temp[128], targetName[64];
-	if (IsValidEdict(particle))
-	{
-		TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
+    char temp[128], targetName[64];
+    if (IsValidEdict(particle))
+    {
+        TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
 
-		Format(targetName, sizeof(targetName), "tf2particle%i", particle);
-		DispatchKeyValue(particle, "targetname", targetName);
-		DispatchKeyValue(particle, "effect_name", particleType);
+        Format(targetName, sizeof(targetName), "tf2particle%i", particle);
+        DispatchKeyValue(particle, "targetname", targetName);
+        DispatchKeyValue(particle, "effect_name", particleType);
 
-		DispatchSpawn(particle);
-		ActivateEntity(particle);
+        DispatchSpawn(particle);
+        ActivateEntity(particle);
 
-		if(parent > 0)
-		{
-			Format(targetName, sizeof(targetName), "target%i", parent);
-			DispatchKeyValue(parent, "targetname", targetName);
-			SetVariantString(targetName);
+        if(parent > 0)
+        {
+            Format(targetName, sizeof(targetName), "target%i", parent);
+            DispatchKeyValue(parent, "targetname", targetName);
+            SetVariantString(targetName);
 
-			AcceptEntityInput(particle, "SetParent", particle, particle, 0);
-			SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", parent);
-		}
+            AcceptEntityInput(particle, "SetParent", particle, particle, 0);
+            SetEntPropEnt(particle, Prop_Send, "m_hOwnerEntity", parent);
+        }
 
         // Only one???
-		if(controlpoint > 0)
-		{
-			// TODO: This shit does not work.
-			int cpParticle = CreateEntityByName("info_particle_system");
-			if (IsValidEdict(cpParticle))
-			{
+        if(controlpoint > 0)
+        {
+            // TODO: This shit does not work.
+            int cpParticle = CreateEntityByName("info_particle_system");
+            if (IsValidEdict(cpParticle))
+            {
                 float cpPos[3]; // zero
-				// GetEntPropVector(controlpoint, Prop_Data, "m_vecOrigin", cpPos);
-				TeleportEntity(cpParticle, cpPos, angles, NULL_VECTOR);
+                // GetEntPropVector(controlpoint, Prop_Data, "m_vecOrigin", cpPos);
+                TeleportEntity(cpParticle, cpPos, angles, NULL_VECTOR);
 
-				char cpName[64];
+                char cpName[64];
                 // char cpTargetName[64];
-				// Format(cpTargetName, sizeof(cpTargetName), "target%i", controlpoint);
-				// DispatchKeyValue(controlpoint, "targetname", cpTargetName);
+                // Format(cpTargetName, sizeof(cpTargetName), "target%i", controlpoint);
+                // DispatchKeyValue(controlpoint, "targetname", cpTargetName);
 
-				Format(cpName, sizeof(cpName), "tf2particle%i", cpParticle);
-				DispatchKeyValue(cpParticle, "targetname", cpName);
+                Format(cpName, sizeof(cpName), "tf2particle%i", cpParticle);
+                DispatchKeyValue(cpParticle, "targetname", cpName);
 
-				DispatchKeyValue(particle, "cpoint1", cpName);
+                DispatchKeyValue(particle, "cpoint1", cpName);
 
                 DispatchSpawn(cpParticle);
-		        ActivateEntity(cpParticle);
+                ActivateEntity(cpParticle);
 
                 Format(targetName, sizeof(targetName), "target%i", controlpoint);
                 DispatchKeyValue(controlpoint, "targetname", targetName);
@@ -373,22 +376,22 @@ stock int DispatchParticleEffect(float pos[3], float angles[3], char[] particleT
 
                 AcceptEntityInput(cpParticle, "AddOutput");
                 AcceptEntityInput(cpParticle, "FireUser1");
-			}
-		}
+            }
+        }
 
-		Format(temp, sizeof(temp), "OnUser1 !self:kill::%.1f:1", time);
-		SetVariantString(temp);
+        Format(temp, sizeof(temp), "OnUser1 !self:kill::%.1f:1", time);
+        SetVariantString(temp);
 
-		AcceptEntityInput(particle, "AddOutput");
-		AcceptEntityInput(particle, "FireUser1");
+        AcceptEntityInput(particle, "AddOutput");
+        AcceptEntityInput(particle, "FireUser1");
 
-		DispatchKeyValueVector(particle, "angles", angles);
-		AcceptEntityInput(particle, "start");
+        DispatchKeyValueVector(particle, "angles", angles);
+        AcceptEntityInput(particle, "start");
 
-		return particle;
-	}
+        return particle;
+    }
 
-	return -1;
+    return -1;
 }
 
 public bool TraceAnything(int entity, int contentsMask, any data)

@@ -1,5 +1,150 @@
 #pragma semicolon 1
 
+/*
+	"card throw"
+	{
+		"speed"			"2000.0"
+		"damage"		"10.0"
+		"model path"	""
+		"touch type"	"0"
+		"card range"	"10.0"
+
+		"slot %d degree diff"	"5.0"
+		"slot %d card count"	"3"
+	}
+
+	"discount"
+	{
+		"on hit sale"		"10.0"
+		"free sale sound"	"sound path"
+
+		"free sale duration"		"5.0"
+		"free sale stun"			"1"
+		"free sale instant kill"	"0"
+	}
+
+	"loadout disable"
+	{
+		"duration"		"20.0"
+		"sound path"	""
+
+		"scout 0"		""
+		"scout 1"		""
+		"scout 2"		""
+
+		"soldier 0"		""
+		"soldier 1"		""
+		"soldier 2"		""
+
+		"pyro 0"		""
+		"pyro 1"		""
+		"pyro 2"		""
+
+		"demoman 0"		""
+		"demoman 1"		""
+		"demoman 2"		""
+
+		"heavy 0"		""
+		"heavy 1"		""
+		"heavy 2"		""
+
+		"engineer 0"		""
+		"engineer 1"		""
+		"engineer 2"		""
+		"engineer 3"		""
+		"engineer 4"		""
+		"engineer 5"		""
+
+		"medic 0"		""
+		"medic 1"		""
+		"medic 2"		""
+
+		"sniper 0"		""
+		"sniper 1"		""
+		"sniper 2"		""
+
+		"spy 0"		""
+		"spy 1"		""
+		"spy 2"		""
+		"spy 3"		""
+		"spy 4"		""
+		"spy 5"		""
+	}
+	
+*/
+
+/*
+	"card throw"
+	{
+		"1"		"2000.0"
+		"2"		"10.0"
+		"3"		"model path"
+		"6"		"1"
+		"7"		"10.0"
+
+		"4+(무기 슬릇 인덱스*100)"	"5.0"
+		"5+(무기 슬릇 인덱스*100)"	"3"
+	}
+
+	"discount"
+	{
+		"1"		"10.0"
+		"2"		"sound path"
+
+		"3"		"5.0"
+		"4"		"1"
+		"5"		"0"
+	}	
+
+	"loadout disable"
+	{
+		"1"		"20.0"
+		"2"		"sound path"
+
+		"11"		""
+		"12"		""
+		"13"		""
+
+		"31"		""
+		"32"		""
+		"33"		""
+
+		"71"		""
+		"72"		""
+		"73"		""
+
+		"41"		""
+		"42"		""
+		"43"		""
+
+		"61"		""
+		"62"		""
+		"63"		""
+
+		"91"		""
+		"92"		""
+		"93"		""
+		"94"		""
+		"95"		""
+		"96"		""
+
+		"51"		""
+		"52"		""
+		"53"		""
+
+		"21"		""
+		"22"		""
+		"23"		""
+
+		"81"		""
+		"82"		""
+		"83"		""
+		"84"		""
+		"85"		""
+		// "86"		"" // unused
+	}
+*/
+
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -16,7 +161,7 @@
 	#include <freak_fortress_2_subplugin>
 #endif
 
-#define PLUGIN_VERSION "20210813"
+#define PLUGIN_VERSION "20230326"
 
 public Plugin myinfo=
 {
@@ -50,6 +195,7 @@ char g_strSpriteModelPath[11][PLATFORM_MAX_PATH];
 int g_iSpriteModelIndex[11];
 int g_iDiscountValue[MAXPLAYERS+1];
 float g_flDiscountDisplayTime[MAXPLAYERS+1];
+float g_flFreeSaleDuration[MAXPLAYERS+1];
 
 float g_flCardLifeTime[MAX_EDICTS+1];
 
@@ -642,6 +788,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		g_iDiscountValue[client] = 0;
 		g_flLoadoutDisableTime[client] = 0.0;
 		g_flDiscountDisplayTime[client] = 0.0;
+		g_flFreeSaleDuration[client] = 0.0;
 	}
 	for(int loop = 0; loop <= MAX_EDICTS; loop++)
 	{
@@ -679,21 +826,47 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 	int boss = FF2_GetBossIndex(attacker);
 	if(boss == -1 || !FF2_HasAbility(boss, PLUGIN_NAME, DISCOUNT_NAME))	return Plugin_Continue;
 
-	bool insertKill = g_iDiscountValue[client] >= 100;
+	bool insertKill, stun;
 	int addDiscount;
-
 #if defined _ff2_fork_general_included
+	stun = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale stun", 1) > 0;
+	insertKill = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale instant kill", 0) > 0;
 	addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "on hit sale", 10);
 #else
+	stun = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 4, 1) > 0;
+	insertKill = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 5, 0) > 0;
 	addDiscount = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 1, 10);
 #endif
 
-	if(insertKill)
+	if(g_iDiscountValue[client] >= 100 && g_flFreeSaleDuration[client] < GetGameTime())
 	{
-		if(FF2_GetBossIndex(client) == -1)
-			damage = 10000.0;
+#if defined _ff2_fork_general_included
+		g_flFreeSaleDuration[client] = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale duration", 5.0);
+#else
+		g_flFreeSaleDuration[client] = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, DISCOUNT_NAME, 3, 5.0);
+#endif
+		if(insertKill)
+		{
+			if(FF2_GetBossIndex(client) == -1)
+				damage = 10000.0;
+			else
+				damage *= 2.0;
+		}
 		else
-		 	damage *= 2.0;
+			damage *= 2.0;
+
+		if(g_flFreeSaleDuration[client] > 0.0)
+		{
+			if(stun && !TF2_IsPlayerInvulnerable(client))
+			{
+				if(FF2_GetBossIndex(client) != -1)
+					g_flFreeSaleDuration[client] *= 0.5;
+
+				TF2_StunPlayer(client, g_flFreeSaleDuration[client], 0.0, TF_STUNFLAG_BONKSTUCK|TF_STUNFLAG_NOSOUNDOREFFECT, attacker);
+			}
+				
+			g_flFreeSaleDuration[client] += GetGameTime();
+		}
 
 		g_iDiscountValue[client] = 0;
 	}
@@ -708,6 +881,9 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 
 void AddDiscount(int client, int attacker, int addValue)
 {
+	if(g_flFreeSaleDuration[client] > GetGameTime())
+		return;
+	
 	char soundPath[PLATFORM_MAX_PATH];
 	int boss = FF2_GetBossIndex(attacker);
 
@@ -717,15 +893,13 @@ void AddDiscount(int client, int attacker, int addValue)
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, DISCOUNT_NAME, 2, soundPath, sizeof(soundPath));
 #endif
 
-	if(g_iDiscountValue[client] >= 100)
+	if(addValue > 0)
 	{
 		StopSound(client, 0, soundPath);
 		StopSound(client, 0, soundPath);
-
-		g_iDiscountValue[client] = 0;
 	}
-	else
-		g_iDiscountValue[client] += addValue;
+	
+	g_iDiscountValue[client] += addValue;
 
 	if(g_iDiscountValue[client] >= 100)
 	{
@@ -737,6 +911,16 @@ void AddDiscount(int client, int attacker, int addValue)
 			SetGlobalTransTarget(client);
 			PrintToChat(client, "%t", "Free Sale");
 		}
+/*
+		bool insertKill, stun;
+#if defined _ff2_fork_general_included
+		stun = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale stun", 1) > 0;
+		insertKill = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale instant kill", 0) > 0;
+#else
+		stun = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 4, 1) > 0;
+		insertKill = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 5, 0) > 0;
+#endif
+*/
 	}
 }
 
@@ -781,7 +965,13 @@ void UpdateSaleSprite(int client)
         }
 	}
 */
-	TE_SetupGlowSprite(pos, g_iSpriteModelIndex[g_iDiscountValue[client] / 10], 0.1, 0.1, 200);
+	int index;
+	if(g_iDiscountValue[client] > 100)
+		index = 10;
+	else
+		index = g_iDiscountValue[client] / 10;
+		
+	TE_SetupGlowSprite(pos, g_iSpriteModelIndex[index], 0.1, 0.1, 200);
 	TE_SendToAll();
 }
 
@@ -828,6 +1018,14 @@ stock int SpawnWeapon(int client, char[] name, int index, int level, int quality
 	CloseHandle(weapon);
 	EquipPlayerWeapon(client, entity);
 	return entity;
+}
+
+stock bool TF2_IsPlayerInvulnerable(int client)
+{
+    return (TF2_IsPlayerInCondition(client, TFCond_Ubercharged) 
+            || TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden)
+            || TF2_IsPlayerInCondition(client, TFCond_UberchargedCanteen)
+            || TF2_IsPlayerInCondition(client, TFCond_UberchargedOnTakeDamage));
 }
 
 stock bool IsValidClient(int client)
