@@ -17,7 +17,7 @@
 #define REQUIRE_PLUGIN
 
 #define PLUGIN_NAME "wolf detail"
-#define PLUGIN_VERSION 	"20210904"
+#define PLUGIN_VERSION 	"20230402"
 
 public Plugin myinfo=
 {
@@ -29,14 +29,16 @@ public Plugin myinfo=
 
 #define DELETE_AFTER_CHARGE_NAME        "delete after chargeshot"
 #define REFLECTER_NAME                  "reflect"
-#define REFLECTER_BY_FORCE_NAME         "turn on reflect by force"
+#define REFLECTER_BY_FORCE_NAME			"turn on reflect by force"
+
+#define REFLECTER_DUCKHEALING_NAME		"healing on duck"
+#define REFLECTER_MINIMUNHEALTH_NAME	"turn on minimum health"
 
 #define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
 #define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
 #define mclamp(%1,%2,%3)        min(max(%1,%2),%3)
 
 bool g_bReflecter[MAXPLAYERS+1];
-bool g_bReflecterForce[MAXPLAYERS+1];
 float g_flReflecterHealth[MAXPLAYERS+1];
 int g_hReflecterEffect[MAXPLAYERS+1] = {-1, ...};
 
@@ -120,10 +122,19 @@ void InvokeReflecter(int boss)
 {
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 
-	g_bReflecterForce[client] =
-		(GetEntProp(client, Prop_Send, "m_bDucked")) > 0;
+	if(GetEntProp(client, Prop_Send, "m_bDucked") > 0 && (GetEntityFlags(client) & FL_ONGROUND))
+	{
+		float healing = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, REFLECTER_NAME, REFLECTER_DUCKHEALING_NAME, 100.0),
+			minimum = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, REFLECTER_NAME, REFLECTER_MINIMUNHEALTH_NAME, 200.0),
+			maximum = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, REFLECTER_NAME, "initial health", 2000.0);
 
-	InitReflecter(client);
+		healing *= GetTickInterval();
+		if(g_flReflecterHealth[client] + healing <= maximum)
+			g_flReflecterHealth[client] += healing;
+
+		if(g_flReflecterHealth[client] >= minimum)
+			InitReflecter(client);
+	}
 }
 
 void InvokeReflecterRage(int boss)
@@ -135,7 +146,9 @@ void InvokeReflecterRage(int boss)
 	float health = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, REFLECTER_NAME, "initial health", 2000.0);
 	health += FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, REFLECTER_NAME, "health per person", 200.0) * count;
 
-	g_flReflecterHealth[client] = health;
+	g_flReflecterHealth[client] += health;
+	g_flReflecterHealth[client] = mclamp(0.0, g_flReflecterHealth[client], health);
+
 	InitReflecter(client);
 
 	delete humanArray;
@@ -143,7 +156,7 @@ void InvokeReflecterRage(int boss)
 
 void InitReflecter(int client)
 {
-	bool able = g_flReflecterHealth[client] > 0.0 || g_bReflecterForce[client];
+	bool able = g_flReflecterHealth[client] > 0.0;
 	if(able && !g_bReflecter[client])
     {
 		g_bReflecter[client] = true;
@@ -153,9 +166,6 @@ void InitReflecter(int client)
 
 		if(g_flReflecterHealth[client] > 0.0)
 			TF2_AddCondition(client, TFCond_UberBlastResist, TFCondDuration_Infinite);
-		else
-			TF2_AddCondition(client, TFCond_UberBulletResist, TFCondDuration_Infinite);
-
 		float pos[3];
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", pos);
 
@@ -167,11 +177,6 @@ void InitReflecter(int client)
 			}
 		}
     }
-	else if(g_bReflecter[client] && g_flReflecterHealth[client] > 0.0)
-	{
-		TF2_RemoveCondition(client, TFCond_UberBulletResist);
-		TF2_AddCondition(client, TFCond_UberBlastResist, TFCondDuration_Infinite);
-	}
 }
 
 void PlayReflectSound(int ent, float pos[3])
@@ -201,7 +206,7 @@ void PlayProjectileReflectSound(int projectile, float pos[3])
 
 public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if(FF2_GetRoundState() != 1 || (g_flReflecterHealth[client] <= 0.0 && !g_bReflecterForce[client]))  return Plugin_Continue;
+	if(FF2_GetRoundState() != 1 || g_flReflecterHealth[client] <= 0.0)  return Plugin_Continue;
 /*
 	PrintToServer("damage: %.1f", damage);
 	float realDamage = damage;
@@ -217,18 +222,8 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 	}
 
 	int boss = FF2_GetBossIndex(client);
-	if(g_flReflecterHealth[client] <= 0.0 && g_bReflecterForce[client])
-	{
-		float drainCharge = (damage * 100.0 / FF2_GetBossRageDamage(boss)) * -0.5;
-		if(FF2_GetBossCharge(client, 0) < drainCharge)
-			return Plugin_Continue;
 
-		FF2_AddBossCharge(boss, 0, drainCharge);
-	}
-	else
-	{
-		g_flReflecterHealth[client] -= damage;
-	}
+	g_flReflecterHealth[client] -= damage;
 
 	float playerPos[3], effectPos[3], angles[3], targetPos[3];
 	playerPos = WorldSpaceCenter(client);
@@ -302,7 +297,7 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 
 public void OnReflecterThink(int client)
 {
-	if(FF2_GetRoundState() != 1 || (g_flReflecterHealth[client] <= 0.0 && !g_bReflecterForce[client]))
+	if(FF2_GetRoundState() != 1 || (g_flReflecterHealth[client] <= 0.0))
 	{
 		SDKUnhook(client, SDKHook_PostThink, OnReflecterThink);
 		SDKUnhook(client, SDKHook_OnTakeDamageAlive, OnReflecterDamage);
@@ -328,8 +323,6 @@ public void OnReflecterThink(int client)
 	}
 
 	// PrintToServer("%.1f + %.1f", FF2_GetClientGlow(client), GetTickInterval());
-	// TODO: 리플렉터 모델 작동되면 삭제
-	// int boss = FF2_GetBossIndex(client);
 	FF2_SetClientGlow(client, GetTickInterval() * 0.5);
 
 	float playerPos[3], pos[3], endPos[3], velocity[3], speed;
@@ -354,7 +347,7 @@ public void OnReflecterThink(int client)
 		if(GetEntProp(projectile, Prop_Send, "m_iTeamNum") == GetClientTeam(client))
 			continue;
 
-		if(g_flReflecterHealth[client] <= 0.0 && g_bReflecterForce[client])
+		if(g_flReflecterHealth[client] <= 0.0)
 		{
 			break;
 		}
