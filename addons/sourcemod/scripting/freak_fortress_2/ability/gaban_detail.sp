@@ -881,7 +881,7 @@ public Action OnTakeDamage(int client, int& attacker, int& inflictor, float& dam
 
 void AddDiscount(int client, int attacker, int addValue)
 {
-	if(g_flFreeSaleDuration[client] > GetGameTime())
+	if(g_flFreeSaleDuration[client] > GetGameTime() || g_iDiscountValue[client] >= 100)
 		return;
 	
 	char soundPath[PLATFORM_MAX_PATH];
@@ -892,35 +892,20 @@ void AddDiscount(int client, int attacker, int addValue)
 #else
 	FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, DISCOUNT_NAME, 2, soundPath, sizeof(soundPath));
 #endif
-
-	if(addValue > 0)
+	
+	g_iDiscountValue[client] += addValue;
+	if(g_iDiscountValue[client] < 100)
 	{
 		StopSound(client, 0, soundPath);
 		StopSound(client, 0, soundPath);
 	}
-	
-	g_iDiscountValue[client] += addValue;
-
 	if(g_iDiscountValue[client] >= 100)
 	{
 		EmitSoundToClient(client, soundPath);
 		EmitSoundToClient(client, soundPath);
 
 		if(FF2_GetBossIndex(client) == -1)
-		{
-			SetGlobalTransTarget(client);
-			PrintToChat(client, "%t", "Free Sale");
-		}
-/*
-		bool insertKill, stun;
-#if defined _ff2_fork_general_included
-		stun = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale stun", 1) > 0;
-		insertKill = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, "free sale instant kill", 0) > 0;
-#else
-		stun = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 4, 1) > 0;
-		insertKill = FF2_GetAbilityArgument(boss, PLUGIN_NAME, DISCOUNT_NAME, 5, 0) > 0;
-#endif
-*/
+			PrintToChat(client, "%T", "Free Sale", client);
 	}
 }
 
