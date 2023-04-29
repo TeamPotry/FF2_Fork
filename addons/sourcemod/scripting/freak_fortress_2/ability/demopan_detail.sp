@@ -16,11 +16,28 @@ public Plugin myinfo=
 #define AIR_CHARGE_ABILITY 		"air charge"
 #define FORCE_CHARGE_ABILITY 	"force charge"
 
+#define BUTTONS_MOVEMENT		(IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT)
+
 float g_flChargeRemain[MAXPLAYERS+1];
+bool g_bChargeCorrection[MAXPLAYERS+1];
 
 public void OnPluginStart()
 {
+	HookEvent("player_spawn", OnPlayerSpawnOrDeath);
+	HookEvent("player_death", OnPlayerSpawnOrDeath);
+
 	FF2_RegisterSubplugin(THIS_PLUGIN_NAME);
+}
+
+public Action OnPlayerSpawnOrDeath(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+
+	g_flChargeRemain[client] = 0.0;
+	g_bChargeCorrection[client] = false;
+	// g_iCurrentChargeButton[client] = 0;
+
+	return Plugin_Continue;
 }
 
 public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilityName, int slot, int status)
@@ -38,28 +55,35 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
     }
 }
 
-// 데모판의 돌진을 감지하고 Y축 속도값을 시야와 일치하도록 변경
 public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVelocity[3], float deAngles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
 {
 	int boss = FF2_GetBossIndex(client);
 	if(!IsPlayerAlive(client) || boss == -1) return Plugin_Continue;
 
 	// force charge
-
 	if(FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY))
 	{
 		if(!TF2_IsPlayerInCondition(client, TFCond_Charging)
 			&& !TF2_IsPlayerInCondition(client, TFCond_Dazed)
-			&& (buttons & (IN_ATTACK2|IN_RELOAD)) > 0 // IN_RELOAD should be in Post function.
-			&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 30.0)
+			&& ((buttons & (IN_ATTACK2|IN_RELOAD)) > 0)
+			/*&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 30.0*/)
+		{
+			SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
 			TF2_AddCondition(client, TFCond_Charging, -1.0, client);
 
-		g_flChargeRemain[client] = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
+			g_bChargeCorrection[client] = true;
+			RequestFrame(DemoChargeCorrection, client);
+		}
+
+		if(!g_bChargeCorrection[client])
+			g_flChargeRemain[client] = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
 	}
 
 	// Air charge
+	// 데모판의 돌진을 감지하고 Y축 속도값을 시야와 일치하도록 변경
 	if(TF2_IsPlayerInCondition(client, TFCond_Charging)
-	&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, AIR_CHARGE_ABILITY))
+	&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, AIR_CHARGE_ABILITY)
+	&& (buttons & (IN_JUMP|IN_DUCK)) == 0)
 	{
 		float angles[3], velocity[3];
 		GetClientEyeAngles(client, angles);
@@ -86,6 +110,25 @@ public void TF2_OnConditionRemoved(int client, TFCond cond)
 	{
 		SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", g_flChargeRemain[client]);
 	}
+}
+
+public void DemoChargeCorrection(int client)
+{
+	float velocity[3];
+	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
+	if(GetVectorLength(velocity) > 300.0)
+	{
+		if(g_bChargeCorrection[client])
+		{
+			g_bChargeCorrection[client] = false;
+			SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", g_flChargeRemain[client]);
+
+			return;
+		}
+	}
+
+	RequestFrame(DemoChargeCorrection, client);
+	TF2_AddCondition(client, TFCond_Charging, -1.0, client);
 }
 
 stock bool IsBoss(int client)
