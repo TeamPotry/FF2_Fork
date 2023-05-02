@@ -255,13 +255,23 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 void AddAdditionalHealth(int boss, int addhealth)
 {
 	int health = FF2_GetBossHealth(boss);
-	FF2_SetBossHealth(boss, health + addhealth);
+
+	// prevent overheal
+	int over = health + addhealth - FF2_GetBossMaxHealth(boss);
+
+	int applied = health + addhealth;
+	if(over > 0)
+		applied -= over;
+	else
+		over = 0;
+
+	FF2_SetBossHealth(boss, applied);
 
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	if(g_iCurrentAdditionalHealth[client] > 0)
-		g_iCurrentAdditionalHealth[client] += addhealth;
+		g_iCurrentAdditionalHealth[client] += addhealth - over;
 	else
-		g_iCurrentAdditionalHealth[client] = addhealth;
+		g_iCurrentAdditionalHealth[client] = addhealth - over;
 }
 
 public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
