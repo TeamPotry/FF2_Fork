@@ -404,7 +404,8 @@ public void OnMapStart()
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
-    SDKHook(entity, SDKHook_SpawnPost, OnEntitySpawned);
+	if(StrContains(classname, "tf_projectile_rocket") != -1)
+    	SDKHook(entity, SDKHook_SpawnPost, OnEntitySpawned);
 }
 
 public void OnEntitySpawned(int entity)
