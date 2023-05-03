@@ -1573,7 +1573,8 @@ public Action StartBossTimer(Handle timer)
 
 	for(int boss; boss<=MaxClients; boss++)
 	{
-		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss]))
+		if(IsValidClient(Boss[boss]) && IsPlayerAlive(Boss[boss])
+			&& BossTeam == TF2_GetClientTeam(Boss[boss]))
 		{
 			isBossAlive=true;
 			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
