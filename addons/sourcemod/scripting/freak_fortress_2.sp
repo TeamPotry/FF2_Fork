@@ -5094,7 +5094,7 @@ public Action OnPlayerHealed(Event event, const char[] name, bool dontBroadcast)
 	// TODO: 자가치유 가능 여부 설정
 	if(TF2_GetClientTeam(client) != BossTeam && IsBoss(client))
 	{
-		BossHealth[boss] += RoundFloat(healed * 0.1);
+		BossHealth[boss] += healed;
 
 		int maxHealth = BossHealthMax[boss] * BossLivesMax[boss];
 		if(BossHealth[boss] > maxHealth)
