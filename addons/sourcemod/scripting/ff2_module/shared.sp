@@ -30,6 +30,9 @@
 
 #define KILLSTREAK_DAMAGE_INTERVAL 500
 
+#define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
+#define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
+
 bool Enabled=true;
 bool Enabled2=true;
 
