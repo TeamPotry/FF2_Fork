@@ -1792,23 +1792,19 @@ public Action Timer_StartDrawGame(Handle timer)
 
 void CorrectionBossHealth()
 {
-	int correctionWave = maxWave / 2, boss;
-	float ratio = Pow(1.05, float(correctionWave)) - 1.0;
-
+	int boss;
 	for(int client = 1; client <= MaxClients; client++)
 	{
-		if(IsValidClient(client) && IsPlayerAlive(client)
-			&& ((boss = GetBossIndex(client)) != -1 && BossTeam == TF2_GetClientTeam(client)))
-		{
-			int heal = RoundFloat(BossHealthMax[boss] * ratio);
+		if(!IsValidClient(client) || !IsPlayerAlive(client)
+			|| (boss = GetBossIndex(client)) == -1)
+			continue;
 
-			FF2_SetBossHealth(boss, FF2_GetBossHealth(boss) + heal);
-			FF2_SetBossMaxHealth(boss, (FF2_GetBossMaxHealth(boss) + (heal / FF2_GetBossMaxLives(boss))));
-		}
+		float multiplier = 1.0;
+
+		int heal = RoundFloat(BossHealthMax[boss] * (multiplier - 1.0));
+		BossHealth[boss] += heal;
+		BossHealthMax[boss] += (heal / BossLivesMax[boss]) - (BossLivesMax[boss] - 1);  
 	}
-
-	CPrintToChatAll("{olive}[FF2]{default} %t", "Wave Correction Boss Health", RoundFloat(ratio * 100.0));
-	return;
 }
 
 public Action Timer_NextBossPanel(Handle timer)
