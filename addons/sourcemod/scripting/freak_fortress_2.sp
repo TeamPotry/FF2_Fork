@@ -236,12 +236,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_GetBossCreatorFlags", Native_GetBossCreatorFlags);
 	CreateNative("FF2_GetBossCreators", Native_GetBossCreators);
 
-	// ff2_modules/database.inc
-	CreateNative("FF2_GetSettingData", Native_GetSettingData);
-	CreateNative("FF2_GetSettingStringData", Native_GetSettingStringData);
-	CreateNative("FF2_SetSettingData", Native_SetSettingData);
-	CreateNative("FF2_SetSettingStringData", Native_SetSettingStringData);
-
 	OnWaveStarted=CreateGlobalForward("FF2_OnWaveStarted", ET_Hook, Param_Cell); // wave
 	OnPlayBoss=CreateGlobalForward("FF2_OnPlayBoss", ET_Hook, Param_Cell); // Boss
 	OnAddRage=CreateGlobalForward("FF2_OnAddRage", ET_Hook, Param_Cell, Param_FloatByRef); // Boss
@@ -249,6 +243,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_Cell, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
 
+	// ff2_modules/database.inc
+	CreateNative("FF2_GetSettingData", Native_GetSettingData);
+	CreateNative("FF2_GetSettingStringData", Native_GetSettingStringData);
+	CreateNative("FF2_SetSettingData", Native_SetSettingData);
+	CreateNative("FF2_SetSettingStringData", Native_SetSettingStringData);
+	
 	//ff2_module/hud.sp
 	HudInit();
 
