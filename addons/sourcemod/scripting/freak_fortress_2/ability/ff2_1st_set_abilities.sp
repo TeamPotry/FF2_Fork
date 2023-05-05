@@ -574,9 +574,9 @@ public Action Timer_Rage_Explosive_Dance(Handle timer, int boss)
 		for(int i; i<5; i++)
 		{
 			int explosion=CreateEntityByName("env_explosion");
-			DispatchKeyValueFloat(explosion, "DamageForce", 10.0);
+			DispatchKeyValueFloat(explosion, "DamageForce", 20.0);
 
-			SetEntProp(explosion, Prop_Data, "m_iMagnitude", 280, 4);
+			SetEntProp(explosion, Prop_Data, "m_iMagnitude", 100, 4);
 			SetEntProp(explosion, Prop_Data, "m_iRadiusOverride", 200, 4);
 			SetEntPropEnt(explosion, Prop_Data, "m_hOwnerEntity", client);
 
