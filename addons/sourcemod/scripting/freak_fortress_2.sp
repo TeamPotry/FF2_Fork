@@ -5613,8 +5613,10 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 		}
 	}
 
+	int boss=GetBossIndex(client);
 	float position[3];
 	GetEntPropVector(iAttacker, Prop_Send, "m_vecOrigin", position);
+	
 	if(IsBoss(iAttacker))
 	{
 		if(damagecustom == TF_CUSTOM_BACKSTAB)
@@ -5686,12 +5688,14 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				}
 			}
 		}
-	}
+
+		if(IsValidEntity(weapon))
+			KillStreakCheck(iAttacker, client, boss, damage);
+	}	
 	else
 	{
 		FF2BaseEntity victim = g_hBasePlayer[client];
 
-		int boss=GetBossIndex(client);
 		float victimPosition[3];
 		GetEntPropVector(iAttacker, Prop_Send, "m_vecOrigin", position);
 		GetEntPropVector(client, Prop_Send, "m_vecOrigin", victimPosition);
@@ -5729,23 +5733,6 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				{
 					//TODO
 				}*/
-
-				if(IsValidEntity(weapon))
-				{
-					// TODO: Move this to Onplayerhit event
-					FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
-					int currentDamage = RoundFloat(damage);
-/*
-					PrintToChatAll("attacker.Damage: %d, currentDamage: %d, attacker.LastNoticedDamage: %d",
-						attacker.Damage, currentDamage, attacker.LastNoticedDamage);
-*/
-					if(attacker.Damage + currentDamage >= attacker.LastNoticedDamage)
-					{
-						int interval = (attacker.Damage + currentDamage) / KILLSTREAK_DAMAGE_INTERVAL;
-						attacker.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
-						CreateKillStreak(iAttacker, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
-					}			
-				}
 
 				//Sniper rifles aren't handled by the switch/case because of the amount of reskins there are
 				if(StrContains(classname, "tf_weapon_sniperrifle")!=-1)
@@ -6252,6 +6239,9 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					damage*=5;
 					bChanged = true;
 				}
+
+				if(IsValidEntity(weapon))
+					KillStreakCheck(iAttacker, client, boss, damage);
 			}
 			else
 			{
@@ -6306,6 +6296,25 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 */
 	}
 	return bChanged ? Plugin_Changed : Plugin_Continue;
+}
+
+void KillStreakCheck(int attackerIndex, int client, int boss, float damage)
+{
+	// TODO: Move this to Onplayerhit event
+	FF2BaseEntity attacker = g_hBasePlayer[attackerIndex];
+	int currentDamage = RoundFloat(damage);
+/*
+	PrintToChatAll("attacker.Damage: %d, currentDamage: %d, attacker.LastNoticedDamage: %d",
+		attacker.Damage, currentDamage, attacker.LastNoticedDamage);
+*/
+	if(attacker.Damage + currentDamage >= attacker.LastNoticedDamage)
+	{
+		int interval = (attacker.Damage + currentDamage) / KILLSTREAK_DAMAGE_INTERVAL,
+			lastNoticedInterval = attacker.LastNoticedDamage / KILLSTREAK_DAMAGE_INTERVAL;
+
+		attacker.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
+		CreateKillStreak(attackerIndex, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
+	}			
 }
 
 public Action TF2_OnPlayerTeleport(int client, int teleporter, bool& result)
