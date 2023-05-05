@@ -1611,8 +1611,7 @@ public Action StartBossTimer(Handle timer)
 		}
 	}
 
-	if(timeType == FF2Timer_WaveTimer)
-		CorrectionBossHealth();
+	CorrectionBossHealth();
 
 	CreateTimer(0.1, BossTimer, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.2, StartRound, _, TIMER_FLAG_NO_MAPCHANGE);
