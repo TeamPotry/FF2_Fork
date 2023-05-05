@@ -6314,6 +6314,22 @@ void KillStreakCheck(int attackerIndex, int client, int boss, float damage)
 
 		attacker.LastNoticedDamage = KILLSTREAK_DAMAGE_INTERVAL * (interval + 1);
 		CreateKillStreak(attackerIndex, client, "world", interval * KILLSTREAK_DAMAGE_INTERVAL);
+
+		// TODO: move this to freak_fortress_2/mvm.sp
+		// make configable 
+		float totalHealth = float(BossHealthMax[boss] * BossLivesMax[boss]);
+		float currencyRatio = float(KILLSTREAK_DAMAGE_INTERVAL) / totalHealth,
+			currency = (1200.0 * min((totalHealth / 80000.0), 1.0)) * currencyRatio;
+
+		int count = interval - (lastNoticedInterval - 1);
+		for(int loop = 0; loop < count; loop++)
+		{
+			MVM_DropCurrency(client, TF_CURRENCY_PACK_CUSTOM, RoundToCeil(currency),
+				_, _, TF2_GetClientTeam(attackerIndex));
+		}
+
+		// PrintToChatAll("%d, %d, %d", interval, lastNoticedInterval, count);
+		// PrintToChatAll("%.1f, %.1f, %d", currencyRatio, currency, RoundToCeil(currency));
 	}			
 }
 
