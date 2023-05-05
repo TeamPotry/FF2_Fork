@@ -5786,7 +5786,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						else if((damagetype & DMG_CRIT) && TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed) && !TF2_IsPlayerCritBuffed(iAttacker))
 							damage *= damageAdjust;
 
-						return Plugin_Changed;
+						bChanged = true;
 					}
 				}
 
@@ -5838,7 +5838,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 */
 					damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-					return Plugin_Changed;
+					bChanged = true;
 				}
 
 				if(damagecustom==TF_CUSTOM_BURNING_ARROW)
@@ -5861,14 +5861,14 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						else
 							damage *= 0.5;
 
-						return Plugin_Changed;
+						bChanged = true;
 					}
 					case 61, 1006:  //Ambassador, Festive Ambassador
 					{
 						if(damagecustom==TF_CUSTOM_HEADSHOT)
 						{
 							damage=255.0 > damage ? damage : 255.0;
-							return Plugin_Changed;
+							bChanged = true;
 						}
 					}
 					case 132, 266, 482, 1082:  //Eyelander, HHHH, Nessie's Nine Iron, Festive Eyelander, Vita-Saw(?)
@@ -5889,7 +5889,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 							SpecialAttackToBoss(iAttacker, boss, weapon, "combo_punch", damage);
 							CreateKillStreak(iAttacker, client, "robot_arm_combo_kill", ++ComboPunchCount[iAttacker]);
 
-							return Plugin_Changed;
+							bChanged = true;
 						}
 					}
 					case 214:  //Powerjack
@@ -5953,7 +5953,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						if(TF2_IsPlayerInCondition(client, TFCond_OnFire))
 						{
 							damage*=2.0;
-							return Plugin_Changed;
+							bChanged = true;
 						}
 						else
 						{
@@ -6034,7 +6034,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 							// EmitSoundToClient(client, "player/doubledonk.wav", _, _, _, _, 0.6, _, _, position, _, false);
-							return Plugin_Changed;
+							bChanged = true;
 						}
 					}
 					case 525, 595:  //Diamondback, Manmelter
@@ -6042,7 +6042,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						if(GetEntProp(iAttacker, Prop_Send, "m_iRevengeCrits"))  //If a revenge crit was used, give a damage bonus
 						{
 							damage=255.0;
-							return Plugin_Changed;
+							bChanged = true;
 						}
 					}
 					case 528:  //Short Circuit
@@ -6094,7 +6094,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						if(!TF2_IsPlayerInCondition(iAttacker, TFCond_CritMmmph))
 						{
 							damage/=2.0;
-							return Plugin_Changed;
+							bChanged = true;
 						}
 					}
 /*
@@ -6210,7 +6210,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
 						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
 					}
-					return Plugin_Changed;
+					bChanged = true;
 				}
 				else if(damagecustom==TF_CUSTOM_TELEFRAG)
 				{
@@ -6218,7 +6218,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					if(!IsPlayerAlive(iAttacker))
 					{
 						damage=1.0;
-						return Plugin_Changed;
+						bChanged = true;
 					}
 					damage=(BossHealth[boss]>9001 ? 9001.0 : float(GetEntProp(Boss[boss], Prop_Send, "m_iHealth"))+90.0);
 
@@ -6245,12 +6245,12 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					{
 						PrintHintText(client, "TELEFRAG! Be careful around quantum tunneling devices!");
 					}
-					return Plugin_Changed;
+					bChanged = true;
 				}
 				else if(damagecustom==TF_CUSTOM_BOOTS_STOMP)
 				{
 					damage*=5;
-					return Plugin_Changed;
+					bChanged = true;
 				}
 			}
 			else
