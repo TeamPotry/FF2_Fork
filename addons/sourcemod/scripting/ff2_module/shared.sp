@@ -55,6 +55,7 @@ bool isCharSetSelected;
 KeyValues kvCharacterConfig;
 
 Handle OnCheckRules;
+Handle OnApplyBossHealthCorrection;
 
 KeyValues kvWeaponMods;
 KeyValues kvHudConfigs;

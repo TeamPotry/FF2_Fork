@@ -219,6 +219,19 @@ forward void FF2_OnSpecialAttack_Post(int attacker, int victimBoss, const char[]
 */
 forward Action FF2_OnCheckRules(int client, int characterIndex, int &chance, const char[] ruleName, const char[] value);
 
+/**
+ * Called when before round start.
+ *
+ * @param boss          boss index 
+ * @param multiplier    
+ *
+ * @return
+ *  - Plugin_Continue: Nothing..
+ *  - Plugin_Changed: Change result.
+ *  - Plugin_Stop, Plugin_Handled: ignore all of changes.
+ */
+forward Action FF2_OnApplyBossHealthCorrection(int boss, float &multiplier /*= 1.0*/);
+
 /****
     THE HUD UPDATE
 ****/

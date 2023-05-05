@@ -242,6 +242,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	OnSpecialAttack=CreateGlobalForward("FF2_OnSpecialAttack", ET_Hook, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_FloatByRef);
 	OnSpecialAttack_Post=CreateGlobalForward("FF2_OnSpecialAttack_Post", ET_Hook, Param_Cell, Param_Cell, Param_String, Param_Float);
 	OnCheckRules=CreateGlobalForward("FF2_OnCheckRules", ET_Hook, Param_Cell, Param_Cell, Param_CellByRef, Param_String, Param_String); // Client, characterIndex, chance, Rule String, value
+	OnApplyBossHealthCorrection=CreateGlobalForward("FF2_OnApplyBossHealthCorrection", ET_Hook, Param_Cell, Param_FloatByRef); // boss, multiplier
 
 	// ff2_modules/database.inc
 	CreateNative("FF2_GetSettingData", Native_GetSettingData);
@@ -1798,8 +1799,19 @@ void CorrectionBossHealth()
 		if(!IsValidClient(client) || !IsPlayerAlive(client)
 			|| (boss = GetBossIndex(client)) == -1)
 			continue;
+		
+		Action temp = Plugin_Continue;
+		float multiplier = 1.0, multiplier2 = 1.0;
 
-		float multiplier = 1.0;
+		Call_StartForward(OnApplyBossHealthCorrection);
+		Call_PushCell(boss);
+		Call_PushFloatRef(multiplier2);
+		Call_Finish(temp);
+
+		if(temp != Plugin_Changed)
+			continue;
+
+		multiplier = multiplier2;
 
 		int heal = RoundFloat(BossHealthMax[boss] * (multiplier - 1.0));
 		BossHealth[boss] += heal;
