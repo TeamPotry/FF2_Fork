@@ -1771,17 +1771,18 @@ public Action Timer_StartDrawGame(Handle timer)
 	{
 		case FF2Timer_RoundTimer:
 		{
-			timeleft=(bosscount*40.0)+(playerCount*30.0)+60.0;
+			timeleft = (bosscount * 40.0) + (playerCount * 30.0)
+				+ 30.0;
 		}
 		case FF2Timer_WaveTimer:
 		{
-			maxTime=30.0+(playerCount > 18 ? float(playerCount-18) : 0.0), timeleft = maxTime;
-			maxWave=6+(playerCount > 18 ? 18 : playerCount);
-			currentWave=1;
+			maxTime = 30.0 + (playerCount > 18 ? float(playerCount-18) : 0.0), timeleft = maxTime;
+			maxWave = 6 + (playerCount > 18 ? 18 : playerCount);
+			currentWave = 1;
 		}
 		default:
 		{
-			timeleft=-1.0;
+			timeleft = -1.0;
 		}
 	}
 
