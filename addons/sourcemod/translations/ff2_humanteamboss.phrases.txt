@@ -1,0 +1,69 @@
+"Phrases"
+{
+    "HTB Menu Prefix Use Currency"
+    {
+        "#format"   "{1:i}"
+        "en"        "USE {1} Currency: "
+    }
+
+    "HTB Menu Name"
+    {
+        "en"    "Become boss in TEAM"
+    }
+
+    "HTB Menu Block Reason In BossTeam"
+    {
+        "en"    "You are in BOSS team"
+    }
+
+    "HTB Menu Block Reason Round Started"
+    {
+        "en"    "Round has already started"
+    }
+
+    "HTB Menu Block Reason Not Enough Currency"
+    {
+        "en"    "Not enough currency"
+    }
+
+    "HTB Menu Block Reason No Character Remaining"
+    {
+        "en"    "The character is on the battlefield"
+    }
+
+    "HTB Menu Block Reason Already Boss"
+    {
+        "en"    "Already became boss"
+    }
+
+    "HTB Chat Block Reason In BossTeam"
+    {
+        "en"    "This option is only for HUMAN team."
+    }
+
+    "HTB Chat Block Reason Round Started"
+    {
+        "en"    "The round has already started!"
+    }
+
+    "HTB Chat Block Reason Not Enough Currency"
+    {
+        "ko"    "Not enough currency!"
+    }
+
+    "HTB Chat Block Reason No Character Remaining"
+    {
+        "en"    "The character is already on the battlefield!"
+    }
+
+    "HTB Chat Block Reason Already Boss"
+    {
+        "en"    "You are already became boss!"
+    }
+
+    "HTB Chat Player Become Boss"
+    {
+        "#format"   "{1:N},{2:s}"
+        "en"    "{red}{1}{default} has become {olive}{2}{default}!"
+    }
+}

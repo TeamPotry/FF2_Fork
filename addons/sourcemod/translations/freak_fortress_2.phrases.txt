@@ -501,11 +501,6 @@
 	{
 		"en"	"Developer Mode(∞)"
 	}
-	"Human Hero"
-	{
-		"#format"	"{1:N},{2:s}"
-		"en"	"{1} has became Hero({orange}{2}{default})! "
-	}
 	"Wave Started"
 	{
 		"en"	"WAVE STARTED! Players earned money, Bosses gained their HP!"
