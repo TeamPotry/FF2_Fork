@@ -145,7 +145,7 @@ public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcas
 			else if(addHealth <= 100)
 				addHealth = 100;
 
-			AddAdditionalHealth(boss, addHealth);
+			addHealth = AddAdditionalHealth(boss, addHealth);
 
 			float stunDuration =
 				FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, ADDITIONAL_HEALTH_NAME, ON_KILL_ADDITIONAL_HEALTH_STUN_DURATION, 0.0);
@@ -252,7 +252,7 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 	}
 }
 
-void AddAdditionalHealth(int boss, int addhealth)
+int AddAdditionalHealth(int boss, int addhealth)
 {
 	int health = FF2_GetBossHealth(boss);
 
@@ -268,10 +268,13 @@ void AddAdditionalHealth(int boss, int addhealth)
 	FF2_SetBossHealth(boss, applied);
 
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+	int result = addhealth - over;
 	if(g_iCurrentAdditionalHealth[client] > 0)
-		g_iCurrentAdditionalHealth[client] += addhealth - over;
+		g_iCurrentAdditionalHealth[client] += result;
 	else
-		g_iCurrentAdditionalHealth[client] = addhealth - over;
+		g_iCurrentAdditionalHealth[client] = result;
+
+	return result;
 }
 
 public void GetCharacterName(KeyValues characterKv, char[] bossName, int size, const int client)
