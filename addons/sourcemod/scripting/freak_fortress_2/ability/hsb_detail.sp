@@ -51,7 +51,7 @@ void PrepareExplode(int boss)
 	g_flPriviousRage[client] = FF2_GetBossCharge(boss, 0);
 
 	CreateTimer(0.1, SentryBustPrepare, boss, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(2.1, SentryBusting, boss, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(2.1 + g_flPriviousRage[client] * 0.001, SentryBusting, boss, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action SentryBustPrepare(Handle timer, any boss)
