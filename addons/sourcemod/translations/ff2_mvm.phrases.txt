@@ -12,4 +12,14 @@
     {
         "en"    "Sapper Charge"
     }
+    "MVM Boss Health Correction"
+    {
+        "#format"   "{1:i},{2:i}"
+        "en"        "Bosses HP: +{orange}{1}%%{default} (Average currency spent: {2})"
+    }
+    "MVM Upgrade MVP"
+    {
+        "#format"   "{1:N},{2:i}"
+        "en"        "Player Upgrade MVP: {red}{1}{default} ({orange}{2}{default})"
+    }
 }

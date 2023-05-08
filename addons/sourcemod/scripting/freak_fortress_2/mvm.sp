@@ -261,6 +261,9 @@ public /*void*/int Native_EqiupWeaponFromDropped(Handle plugin, int numParams)
 
 public void OnPluginStart()
 {
+	HookEvent("teamplay_round_start", OnRoundStart);
+	HookEvent("player_death", OnPlayerDeath);
+
 	LoadTranslations("ff2_mvm.phrases");
 
 	GameData gamedata = new GameData("potry");
@@ -486,6 +489,91 @@ public void OnMapStart()
 	}
 }
 
+int	TotalSpend, TotalAlive;
+float CorrectionRatio = 1.0;
+
+int MaxSpent, MaxSpentIndex;
+
+public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	TotalAlive = 0, TotalSpend = 0;
+	CorrectionRatio = 1.0;
+
+	MaxSpent = 0, MaxSpentIndex = 0;
+
+	return Plugin_Continue;
+}
+
+public Action FF2_OnApplyBossHealthCorrection(int boss, float &multiplier)
+{
+	// Round State?
+	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+	if(TF2_GetClientTeam(client) != FF2_GetBossTeam())
+		return Plugin_Continue;
+
+	if(TotalSpend == 0)
+	{
+		for(int target = 1; target <= MaxClients; target++)
+		{
+			if(!IsClientInGame(target) || !IsPlayerAlive(target)
+				|| TF2_GetClientTeam(target) == FF2_GetBossTeam())
+				continue;
+
+			TotalAlive++;
+
+			int curSpent =
+				MVM_GetPlayerCurrencySpent(target) + RoundFloat(MVM_GetPlayerCurrency(target) * 0.8); 
+			TotalSpend += curSpent;
+
+			if(MaxSpent < curSpent)
+			{
+				MaxSpentIndex = target;
+				MaxSpent = curSpent;
+			}
+		}
+
+		float avgSpend = float(TotalSpend) / float(TotalAlive);
+		CorrectionRatio = (avgSpend / 4000.0) + 1.0;
+
+		CPrintToChatAll("{olive}[FF2]{default} %t", "MVM Boss Health Correction",
+			RoundFloat((CorrectionRatio - 1.0) * 100.0), RoundFloat(avgSpend));
+		CPrintToChatAll("{olive}[FF2]{default} %t", "MVM Upgrade MVP", MaxSpentIndex, MaxSpent);
+	}
+
+	multiplier = CorrectionRatio;
+
+	float value = 1.0, knockback;
+	Address address = TF2Attrib_GetByDefIndex(client, 252);
+	if(address != Address_Null)
+		value = TF2Attrib_GetValue(address);
+
+	knockback = CorrectionRatio - 1.0;
+	if(knockback > 1.0)
+		knockback = 1.0;
+
+	value -= knockback * 0.5;
+	// value min?
+	TF2Attrib_SetByDefIndex(client, 252, value);
+
+	return Plugin_Changed;
+}
+
+public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
+{
+	int attacker = GetClientOfUserId(event.GetInt("attacker"));
+	// client = GetClientOfUserId(event.GetInt("userid"))
+
+	if(IsBoss(attacker) && TF2_GetClientTeam(attacker) == FF2_GetBossTeam())
+	{
+		if(!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
+		{
+			MVM_SetPlayerCurrency(attacker, MVM_GetPlayerCurrency(attacker) + 50);
+		}
+	}
+
+	return Plugin_Continue;
+}
+
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
 	float carteenCooltime = MVM_GetPlayerCarteenCooldown(client),
@@ -579,7 +667,8 @@ public void FF2_OnWaveStarted(int wave)
 
 public Action MVM_OnTouchedUpgradeStation(int upgradeStation, int client)
 {
-	if(IsBoss(client) || (FF2_GetFF2Flags(client) & FF2FLAG_CLASSTIMERDISABLED) > 0)
+	if((IsBoss(client) && FF2_GetBossTeam() == TF2_GetClientTeam(client)) 
+		|| (FF2_GetFF2Flags(client) & FF2FLAG_CLASSTIMERDISABLED) > 0)
 		return Plugin_Handled;
 
 	return Plugin_Continue;

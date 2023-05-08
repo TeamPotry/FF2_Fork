@@ -12,4 +12,14 @@
     {
         "ko"    "전자 교란기 충전"
     }
+    "MVM Boss Health Correction"
+    {
+        "#format"   "{1:i},{2:i}"
+        "ko"        "플레이어 강화 비례 보스 체력 강화: +{orange}{1}%%{default} (평균 자금 사용: {2})"
+    }
+    "MVM Upgrade MVP"
+    {
+        "#format"   "{1:N},{2:i}"
+        "ko"        "강화 MVP: {red}{1}{default} ({orange}{2}{default})"
+    }
 }
