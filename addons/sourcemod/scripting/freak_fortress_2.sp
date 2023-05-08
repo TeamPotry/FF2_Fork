@@ -5570,7 +5570,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 		return Plugin_Continue;
 	}
 
-	bool bChanged=false;
+	bool bChanged=false, currencyDistributed = false;
 
 	if(CheckRoundState()==FF2RoundState_Setup ||
 		(IsBoss(client)	&& TF2_IsPlayerInvulnerable(client)))
@@ -5690,7 +5690,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 		}
 
 		if(IsValidEntity(weapon))
-			KillStreakCheck(iAttacker, client, boss, damage);
+			KillStreakCheck(iAttacker, client, boss, damage, currencyDistributed);
 	}	
 	else
 	{
@@ -5774,6 +5774,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 							damage *= damageAdjust;
 
 						bChanged = true;
+						currencyDistributed = true;
 					}
 				}
 
@@ -5877,6 +5878,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 							CreateKillStreak(iAttacker, client, "robot_arm_combo_kill", ++ComboPunchCount[iAttacker]);
 
 							bChanged = true;
+							currencyDistributed = true;
 						}
 					}
 					case 214:  //Powerjack
@@ -6022,6 +6024,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 							EmitSoundToAll("potry_v2/se/homerun_bat.wav", client);
 							// EmitSoundToClient(client, "player/doubledonk.wav", _, _, _, _, 0.6, _, _, position, _, false);
 							bChanged = true;
+							currencyDistributed = true;
 						}
 					}
 					case 525, 595:  //Diamondback, Manmelter
@@ -6198,6 +6201,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, sound);
 					}
 					bChanged = true;
+					currencyDistributed = true;
 				}
 				else if(damagecustom==TF_CUSTOM_TELEFRAG)
 				{
@@ -6233,6 +6237,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 						PrintHintText(client, "TELEFRAG! Be careful around quantum tunneling devices!");
 					}
 					bChanged = true;
+					// currencyDistributed = true; // THIS IS NOT SPECIAL ATTACK.
 				}
 				else if(damagecustom==TF_CUSTOM_BOOTS_STOMP)
 				{
@@ -6241,7 +6246,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				}
 
 				if(IsValidEntity(weapon))
-					KillStreakCheck(iAttacker, client, boss, damage);
+					KillStreakCheck(iAttacker, client, boss, damage, currencyDistributed);
 			}
 			else
 			{
@@ -6298,7 +6303,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
 
-void KillStreakCheck(int attackerIndex, int client, int boss, float damage)
+void KillStreakCheck(int attackerIndex, int client, int boss, float damage, bool currencyDistributed = false)
 {
 	// TODO: Move this to Onplayerhit event
 	FF2BaseEntity attacker = g_hBasePlayer[attackerIndex];
@@ -6325,7 +6330,7 @@ void KillStreakCheck(int attackerIndex, int client, int boss, float damage)
 		for(int loop = 0; loop < count; loop++)
 		{
 			MVM_DropCurrency(client, TF_CURRENCY_PACK_CUSTOM, RoundToCeil(currency),
-				_, _, TF2_GetClientTeam(attackerIndex));
+				currencyDistributed, _, TF2_GetClientTeam(attackerIndex));
 		}
 
 		// PrintToChatAll("%d, %d, %d", interval, lastNoticedInterval, count);
