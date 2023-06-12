@@ -7,7 +7,7 @@
 #include <ff2_modules/general>
 
 #define PLUGIN_NAME 	"painis detail"
-#define PLUGIN_VERSION 	"20211113"
+#define PLUGIN_VERSION 	"20230507"
 
 public Plugin myinfo=
 {
@@ -25,8 +25,10 @@ public void OnPluginStart()
 {
     // LoadTranslations("ff2_extra_abilities.phrases");
 
-    HookEvent("arena_round_start", Event_RoundStart);
-    HookEvent("teamplay_round_active", Event_RoundStart); // for non-arena maps
+    HookEvent("arena_round_start", OnRoundStart);
+    HookEvent("teamplay_round_active", OnRoundStart); // for non-arena maps
+
+    HookEvent("teamplay_round_win", OnRoundEnd);
 
     HookEvent("player_death", OnPlayerDeath, EventHookMode_Post);
 
@@ -44,12 +46,32 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
     }
 }
 
-public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+public void OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	for(int client = 1; client <= MaxClients; client++)
 	{
 		g_flPainisRageDuration[client] = 0.0;
 	}
+}
+
+public void OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+    // Rage sound stop on round end
+    char sound[PLATFORM_MAX_PATH];
+
+    for(int client = 1; client <= MaxClients; client++)
+    {
+        int boss;
+        if(!IsClientInGame(client) || (boss = FF2_GetBossIndex(client)) == -1)
+            continue;
+
+        if(!FF2_HasAbility(boss, PLUGIN_NAME, PAINIS_RAGE_NAME))
+            continue;
+        
+        FF2_GetAbilityArgumentString(boss, PLUGIN_NAME, PAINIS_RAGE_NAME, "sound path", sound, PLATFORM_MAX_PATH, "");
+        if(sound[0] != '\0')
+            StopRageSound(sound);
+    }
 }
 
 public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcast)
@@ -73,7 +95,15 @@ public void OnPlayerDeath(Event event, const char[] eventName, bool dontBroadcas
         if(slot != -3)
             UseAbilityOfSlot(boss, slot);
 
-        // TODO: 능력 시간 추가
+        bool reset = FF2_GetAbilityArgument(boss, PLUGIN_NAME, PAINIS_RAGE_NAME, "reset duration") > 0;
+        if(reset)
+        {
+            float duration = FF2_GetAbilityArgumentFloat(boss, PLUGIN_NAME, PAINIS_RAGE_NAME, "duration", 10.0);
+            g_flPainisRageDuration[attacker] = GetGameTime() + duration;
+
+            // TODO: not only SkillType_200Rage
+            FF2_SetBossSkillDuration(boss, SkillType_200Rage, duration);
+        }
     }
 }
 
@@ -84,32 +114,51 @@ void PlayRageSound(int speaker, const char[] sound)
         for(int target = 1; target <= MaxClients; target++)
     	{
     		if(IsClientInGame(target))
-    			StopSound(target, 0, sound);
+            {
+                StopSound(target, 0, sound);
+                StopSound(target, 0, sound);
+            }
     	}
     }
-    EmitSoundToAll(sound, speaker, 0, 140, 0, 1.0);
+
+    if(FF2_GetRoundState() == 1)
+        EmitSoundToAll(sound, speaker, 0, 140, 0, 1.0);
+}
+
+void StopRageSound(const char[] sound)
+{
+    for(int target = 1; target <= MaxClients; target++)
+    {
+        if(IsClientInGame(target))
+        {
+            StopSound(target, 0, sound);
+            StopSound(target, 0, sound);
+        }
+    }
 }
 
 void UseAbilityOfSlot(int boss, int targetSlot)
 {
     char pluginName[64], abilityName[64];
+
     KeyValues kv = FF2_GetBossKV(boss);
-    int currentSpot;
-    kv.GetSectionSymbol(currentSpot);
     kv.Rewind();
 
     if(kv.JumpToKey("abilities"))
     {
-        kv.GotoFirstSubKey();
+        KeyValues abilityKv = new KeyValues("abilities");
+        abilityKv.Import(kv);
+
+        abilityKv.GotoFirstSubKey();
         do
         {
-            kv.GetSectionName(pluginName, sizeof(pluginName));
+            abilityKv.GetSectionName(pluginName, sizeof(pluginName));
 
-            kv.GotoFirstSubKey();
+            abilityKv.GotoFirstSubKey();
             do
             {
-                kv.GetSectionName(abilityName, sizeof(abilityName));
-                int slot = kv.GetNum("slot", 0);
+                abilityKv.GetSectionName(abilityName, sizeof(abilityName));
+                int slot = abilityKv.GetNum("slot", 0);
 
                 if(slot == targetSlot)
                 {
@@ -117,12 +166,10 @@ void UseAbilityOfSlot(int boss, int targetSlot)
                     FF2_UseAbility(boss, pluginName, abilityName, slot);
                 }
             }
-            while(kv.GotoNextKey());
-            kv.GoBack();
+            while(abilityKv.GotoNextKey());
+            abilityKv.GoBack();
         }
-        while(kv.GotoNextKey());
+        while(abilityKv.GotoNextKey());
+        delete abilityKv;
     }
-
-    kv.Rewind();
-    kv.JumpToKeySymbol(currentSpot);
 }
