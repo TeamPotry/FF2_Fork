@@ -24,6 +24,15 @@ enum
     FF2Timer_WaveTimer
 };
 
+enum
+{
+	SkillType_Rage = 0,
+	SkillType_200Rage,
+	SkillType_LostLife,
+
+	SkillType_MaxCounts
+};
+
 /*
 *   Get Boss's character index
 *   If you want to change character of boss, see FF2_MakePlayerToBoss Function.
@@ -61,6 +70,25 @@ native float FF2_GetBossMaxCharge(int boss);
  * @noreturn
  */
 native void FF2_SetBossMaxCharge(int boss, float value);
+
+/**
+ * Gets the time of specific skill
+ *
+ * @param boss      Boss's index
+ * @param type      type of skill
+ * @return time of specific skill 
+ */
+native float FF2_GetBossSkillDuration(int boss, int type);
+
+/**
+ * Sets the time of specific skill
+ *
+ * @param boss      Boss's index
+ * @param type      type of skill
+ * @param time      New value of time 
+ * @noreturn
+ */
+native void FF2_SetBossSkillDuration(int boss, int type, float time);
 
 /**
  * Get timer's type.
@@ -410,6 +438,8 @@ public SharedPlugin __pl_ff2_fork_general=
 public __pl_ff2_fork_general_SetNTVOptional()
 {
     MarkNativeAsOptional("FF2_AddBossCharge");
+    MarkNativeAsOptional("FF2_GetBossSkillDuration");
+    MarkNativeAsOptional("FF2_SetBossSkillDuration");
     MarkNativeAsOptional("FF2_GetTimerType");
     MarkNativeAsOptional("FF2_GetRoundTime");
     MarkNativeAsOptional("FF2_SetRoundTime");

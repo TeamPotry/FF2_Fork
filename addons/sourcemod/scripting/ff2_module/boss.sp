@@ -181,7 +181,7 @@ public bool GetBossSkillName(int boss, int type, char[] skillName, int length, i
 	return false;
 }
 
-float GetBossSkillDuration(int boss, int type)
+float GetBossSkillDurationMax(int boss, int type)
 {
 	KeyValues bossKv = GetCharacterKV(character[boss]);
 	int posId;
@@ -198,6 +198,16 @@ float GetBossSkillDuration(int boss, int type)
 	bossKv.JumpToKeySymbol(posId);
 
 	return 0.0;
+}
+
+float GetBossSkillDuration(int boss, int type)
+{
+	return BossSkillDuration[boss][type];
+}
+
+void SetBossSkillDuration(int boss, int type, float time)
+{
+	BossSkillDuration[boss][type] = GetGameTime() + time;
 }
 
 int GetBossCreatorFlags(char[] steamId, int boss, bool pushCharacterIndex=false)

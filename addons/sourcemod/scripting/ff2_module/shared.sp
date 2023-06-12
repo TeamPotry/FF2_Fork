@@ -115,16 +115,6 @@ enum Operators
 	Operator_Exponent,
 };
 
-enum
-{
-	SkillName_Rage = 0,
-	SkillName_200Rage,
-	SkillName_LostLife,
-
-	SkillName_MaxCounts
-};
-
-
 Handle PreAbility;
 Handle OnAbility;
 Handle OnTriggerHurt;

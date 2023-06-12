@@ -224,6 +224,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	CreateNative("FF2_AddBossCharge", Native_AddBossCharge);
 	CreateNative("FF2_GetBossMaxCharge", Native_GetBossMaxCharge);
 	CreateNative("FF2_SetBossMaxCharge", Native_SetBossMaxCharge);
+	CreateNative("FF2_GetBossSkillDuration", Native_GetBossSkillDuration);
+	CreateNative("FF2_SetBossSkillDuration", Native_SetBossSkillDuration);
 	CreateNative("FF2_GetTimerType", Native_GetTimerType);
 	CreateNative("FF2_GetRoundTime", Native_GetRoundTime);
 	CreateNative("FF2_SetRoundTime", Native_SetRoundTime);
@@ -4308,7 +4310,7 @@ public Action BossTimer(Handle timer)
 
 		SetHudTextParams(-1.0, 0.83, 0.12, 255, 255, 255, 255);
 
-		for(int loop = SkillName_MaxCounts - 1; loop >= 0; loop--)
+		for(int loop = SkillType_MaxCounts - 1; loop >= 0; loop--)
 		{
 			if(BossSkillDuration[boss][loop] <= GetGameTime())		continue;
 
@@ -4317,11 +4319,11 @@ public Action BossTimer(Handle timer)
 			{
 				switch(loop)
 				{
-					case SkillName_Rage, SkillName_200Rage:
+					case SkillType_Rage, SkillType_200Rage:
 					{
 						Format(text, sizeof(text), "%T", "Rage Duration", client);
 					}
-					case SkillName_LostLife:
+					case SkillType_LostLife:
 					{
 						Format(text, sizeof(text), "%T", "Life Skill Duration", client);
 					}
@@ -4360,8 +4362,8 @@ public Action BossTimer(Handle timer)
 			}
 			else
 			{
-				if(BossSkillDuration[boss][SkillName_Rage] > GetGameTime()
-					|| BossSkillDuration[boss][SkillName_200Rage] > GetGameTime())
+				if(BossSkillDuration[boss][SkillType_Rage] > GetGameTime()
+					|| BossSkillDuration[boss][SkillType_200Rage] > GetGameTime())
 					SetHudTextParams(-1.0, 0.83, 0.12, 0, 255, 0, 255);
 				else if((RoundFloat(BossMaxRageCharge[boss]) >= 200
 					&& (100 <= RoundFloat(BossCharge[boss][0]) && RoundFloat(BossCharge[boss][0]) < 200)))
@@ -4699,8 +4701,8 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		int slot = RoundFloat(BossMaxRageCharge[boss]) >= 200 && RoundFloat(BossCharge[boss][0]) >= 200
 			? -2 : 0;
 
-		if(BossSkillDuration[boss][SkillName_Rage] > GetGameTime()
-			|| BossSkillDuration[boss][SkillName_200Rage] > GetGameTime())
+		if(BossSkillDuration[boss][SkillType_Rage] > GetGameTime()
+			|| BossSkillDuration[boss][SkillType_200Rage] > GetGameTime())
 			return Plugin_Handled;
 
 		kv.Rewind();
@@ -4774,8 +4776,8 @@ public Action OnCallForMedic(int client, const char[] command, int args)
 		else 
 			AddBossCharge(boss, 0, slot == 0 ? -100.0 : -200.0);
 
-		int type = slot == 0 ? SkillName_Rage : SkillName_200Rage;
-		float duration = GetBossSkillDuration(boss, type);
+		int type = slot == 0 ? SkillType_Rage : SkillType_200Rage;
+		float duration = GetBossSkillDurationMax(boss, type);
 		BossSkillDuration[boss][type] = GetGameTime() + duration;
 
 		return Plugin_Handled;
@@ -5489,8 +5491,8 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 				EmitSoundToAllExcept(FF2SOUND_MUTEVOICE, ability);
 			}
 
-			float duration = GetBossSkillDuration(boss, SkillName_LostLife);
-			BossSkillDuration[boss][SkillName_LostLife] = GetGameTime() + duration;
+			float duration = GetBossSkillDurationMax(boss, SkillType_LostLife);
+			BossSkillDuration[boss][SkillType_LostLife] = GetGameTime() + duration;
 
 			break;
 		}

@@ -85,6 +85,16 @@ public /*void*/int Native_SetBossRageDamage(Handle plugin, int numParams)
 	return 0;
 }
 
+public /*float*/any Native_GetBossSkillDuration(Handle plugin, int numParams)
+{
+	return GetBossSkillDuration(GetNativeCell(1), GetNativeCell(2));
+}
+public /*void*/int Native_SetBossSkillDuration(Handle plugin, int numParams)
+{
+	SetBossSkillDuration(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
+	return 0;
+}
+
 public int Native_GetBossTeam(Handle plugin, int numParams)
 {
 	return view_as<int>(GetBossTeam());
