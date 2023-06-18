@@ -1816,8 +1816,9 @@ void CorrectionBossHealth()
 		multiplier = multiplier2;
 
 		int heal = RoundFloat(BossHealthMax[boss] * (multiplier - 1.0));
-		BossHealth[boss] += heal;
-		BossHealthMax[boss] += (heal / BossLivesMax[boss]) - (BossLivesMax[boss] - 1);  
+		// BossHealth[boss] += heal;
+		BossHealthMax[boss] += (heal / BossLivesMax[boss]) - (BossLivesMax[boss] - 1); 
+		BossHealth[boss] = BossHealthMax[boss] * BossLivesMax[boss];
 	}
 }
 
