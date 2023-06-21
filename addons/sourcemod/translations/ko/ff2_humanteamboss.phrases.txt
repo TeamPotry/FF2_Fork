@@ -63,7 +63,13 @@
 
     "HTB Chat Player Become Boss"
     {
-        "#format"   "{1:N},{2:s}"
-        "ko"    "{red}{1}{default}님이 {olive}{2}{default}(이)가 되었습니다!"
+        "#format"   "{1:N},{2:s},{3:s}"
+        "ko"    "{red}{1}{default}님이{3} {olive}{2}{default}(이)가 되었습니다!"
+    }
+
+    "HTB Chat Player Become Boss Reason Currency"
+    {
+        "#format"   "{1:i}"
+        "ko"    "자금 {1}을 사용하여"
     }
 }

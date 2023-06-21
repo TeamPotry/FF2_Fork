@@ -165,7 +165,14 @@ public void FF2Selection_OnInfoMenuCreated(int client, const char[] functionName
 		if(IsClientInGame(target))
 		{
 			GetCharacterName(kv, bossName, sizeof(bossName), target);
-			CPrintToChat(target, "{olive}[FF2]{default} %T", "HTB Chat Player Become Boss", target, client, bossName);
+
+			char reason[64];
+
+#if defined _MVM_included
+			Format(reason, sizeof(reason), " %T", "HTB Chat Player Become Boss Reason Currency", target, currencyCost);
+#endif			
+
+			CPrintToChat(target, "{olive}[FF2]{default} %T", "HTB Chat Player Become Boss", target, client, bossName, reason);
 		}
 	}
 }

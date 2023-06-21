@@ -63,7 +63,13 @@
 
     "HTB Chat Player Become Boss"
     {
-        "#format"   "{1:N},{2:s}"
-        "en"    "{red}{1}{default} has become {olive}{2}{default}!"
+        "#format"   "{1:N},{2:s},{3:s}"
+        "en"    "{red}{1}{default} has become {olive}{2}{default}{3}!"
+    }
+
+    "HTB Chat Player Become Boss Reason Currency"
+    {
+        "#format"   "{1:i}"
+        "en"    "by using {1} currency"
     }
 }
