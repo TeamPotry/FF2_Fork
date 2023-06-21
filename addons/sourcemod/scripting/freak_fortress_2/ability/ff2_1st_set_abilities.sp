@@ -663,7 +663,7 @@ public Action Timer_StopSlowMo(Handle timer, int client)
 public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float velocity[3], float angles[3], int& weapon)
 {
 	int boss=FF2_GetBossIndex(client);
-	if(boss==-1 || !(FF2Flags[boss] & FLAG_ONSLOWMO))
+	if(boss==-1 || !(FF2Flags[client] & FLAG_ONSLOWMO))
 	{
 		return Plugin_Continue;
 	}
