@@ -19,6 +19,8 @@ public Plugin myinfo=
 	version=PLUGIN_VERSION,
 };
 
+#define FOREACH_PLAYER(%1) for(int %1 = 1; %1 <= MaxClients; %1++)
+
 Handle g_SDKCallInitDroppedWeapon;
 Handle g_SDKCallPickupWeaponFromOther;
 
@@ -500,6 +502,32 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 	CorrectionRatio = 1.0;
 
 	MaxSpent = 0, MaxSpentIndex = 0;
+
+	CreateTimer(FindConVar("tf_arena_preround_time").FloatValue + 0.4,
+		OnArenaStart_InitAliveCurrencyBonus, _, TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+public Action OnArenaStart_InitAliveCurrencyBonus(Handle timer)
+{
+	CreateTimer(1.0, AliveCurrencyBonus, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	return Plugin_Continue;
+}
+
+public Action AliveCurrencyBonus(Handle timer)
+{
+	if(FF2_GetRoundState() != 1)
+		return Plugin_Stop;
+
+	FOREACH_PLAYER(client)
+	{
+		if(!IsClientInGame(client) || !IsPlayerAlive(client)
+			|| TF2_GetClientTeam(client) == FF2_GetBossTeam())
+			continue;
+
+		MVM_SetPlayerCurrency(client, MVM_GetPlayerCurrency(client) + 1);
+	}
 
 	return Plugin_Continue;
 }
