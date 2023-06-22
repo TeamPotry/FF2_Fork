@@ -167,7 +167,7 @@ void TriggerRush(int boss, int status)
     int client = GetClientOfUserId(FF2_GetBossUserId(boss));
     float readyTime = GetRushStateTime(boss, Rush_Ready);
 
-    // TODO: 준비 사운드, 준비 애니메이션 (애니메이션 값 (레이어) 캡쳐)
+    // TODO: 준비 사운드
     g_iRushState[client] = Rush_Ready;
     g_flRushStateTime[client] = GetGameTime() + readyTime;
 
@@ -177,16 +177,6 @@ void TriggerRush(int boss, int status)
 
     TF2_AddCondition(client, TFCond_HalloweenKartNoTurn, stopTime); // TODO: 커스터마이징
     SetEntityMoveType(client, MOVETYPE_NONE);
-
-    // TODO: 특정 프레임에 고정
-    /* int animationProp = */
-    FF2_PlayAnimation(client, "Melee_Swing", _, 0.25);
-
-    // // FIXME: 모델 문제로 각도가 이상하게 꺾여서 여기서 강제로 고정
-    // float animationAngles[3];
-    // GetEntPropVector(animationProp, Prop_Data, "m_angRotation", animationAngles);
-    // animationAngles[1] += 90.0;
-    // TeleportEntity(animationProp, NULL_VECTOR, animationAngles, NULL_VECTOR);
 
     InitRushTargetList(client);
     OnRushTick(client);
