@@ -588,16 +588,28 @@ public Action FF2_OnApplyBossHealthCorrection(int boss, float &multiplier)
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	int attacker = GetClientOfUserId(event.GetInt("attacker"));
-	// client = GetClientOfUserId(event.GetInt("userid"))
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	// attacker = GetClientOfUserId(event.GetInt("attacker"));
 
-	if(IsBoss(attacker) && TF2_GetClientTeam(attacker) == FF2_GetBossTeam())
+	if(TF2_GetClientTeam(client) != FF2_GetBossTeam() && !(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
 	{
-		if(!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
+		int boss, count = 0, indexes[MAXPLAYERS+1];
+		FOREACH_PLAYER(target)
 		{
-			MVM_SetPlayerCurrency(attacker, MVM_GetPlayerCurrency(attacker) + 50);
+			if((boss = FF2_GetBossIndex(boss)) != -1
+				&& TF2_GetClientTeam(target) == FF2_GetBossTeam())
+				indexes[count++] = target;
 		}
-	}
+
+		// TODO: configable
+		if(count == 0)		return Plugin_Continue;
+
+		int earn = 100 / count;
+		for(int loop = 0; loop < count; loop++)
+		{
+			MVM_SetPlayerCurrency(indexes[loop], MVM_GetPlayerCurrency(indexes[loop]) + earn);
+		}
+	}	
 
 	return Plugin_Continue;
 }
