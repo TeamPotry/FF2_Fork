@@ -437,7 +437,10 @@ public SharedPlugin __pl_ff2_fork_general=
 #if !defined REQUIRE_PLUGIN
 public __pl_ff2_fork_general_SetNTVOptional()
 {
+    MarkNativeAsOptional("FF2_GetCharacterIndex");
     MarkNativeAsOptional("FF2_AddBossCharge");
+    MarkNativeAsOptional("FF2_GetBossMaxCharge");
+    MarkNativeAsOptional("FF2_SetBossMaxCharge");
     MarkNativeAsOptional("FF2_GetBossSkillDuration");
     MarkNativeAsOptional("FF2_SetBossSkillDuration");
     MarkNativeAsOptional("FF2_GetTimerType");
