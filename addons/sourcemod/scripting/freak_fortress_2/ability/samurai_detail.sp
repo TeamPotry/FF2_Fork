@@ -49,7 +49,7 @@ public Plugin myinfo=
 	name="Freak Fortress 2: Samurai Abilities",
 	author="Nopied◎",
 	description="FF2: Special abilities",
-	version="20220421",
+	version="20230623",
 };
 
 enum
@@ -58,15 +58,29 @@ enum
     Rush_Ready,
     Rush_Slash,
     Rush_Rest,
-    Rush_DelayDamage
+    Rush_DelayDamage,
+
+    Rush_END
 };
 
-#define MAXIMUM_RUSH_TARGET_COUNT 10
+// NOTE: g_iRushState
+static const char g_strRushSoundKey[][] = {
+    "INACTIVE",     // not used
+    "rush ready",
+    "rush slash",
+    "rush rest",
+    "rush delay damage",
+};
+#define RUSH_VICTIM_DAMAGE_SOUND_KEY    "rush victim damage"
+
+#define FOREACH_PLAYER(%1) for(int %1 = 1; %1 <= MaxClients; %1++)
+
+#define RUSH_TARGET_MAX_COUNT 10
 
 int g_iRushState[MAXPLAYERS+1];
 float g_flRushStateTime[MAXPLAYERS+1];
 
-int g_hRushTargetList[MAXPLAYERS+1][MAXIMUM_RUSH_TARGET_COUNT];
+int g_hRushTargetList[MAXPLAYERS+1][RUSH_TARGET_MAX_COUNT];
 int g_iRushTargetCount[MAXPLAYERS+1];
 
 #if defined _ff2_fork_general_included
@@ -92,7 +106,7 @@ int g_iRushTargetCount[MAXPLAYERS+1];
 
 public void OnMapStart()
 {
-    for(int client = 1; client <= MaxClients; client++)
+    FOREACH_PLAYER(client)
     {
         InitRushState(client);
     }
@@ -113,7 +127,7 @@ public void OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 
 bool PushRushTarget(int client, int target)
 {
-    if(g_iRushTargetCount[client] >= MAXIMUM_RUSH_TARGET_COUNT)  return false;
+    if(g_iRushTargetCount[client] >= RUSH_TARGET_MAX_COUNT)  return false;
 
     int index = g_iRushTargetCount[client]++;
 
@@ -130,7 +144,7 @@ bool PushRushTarget(int client, int target)
 
 void InitRushTargetList(int client)
 {
-    for(int loop = 0; loop < MAXIMUM_RUSH_TARGET_COUNT; loop++)
+    for(int loop = 0; loop < RUSH_TARGET_MAX_COUNT; loop++)
     {
         g_hRushTargetList[client][loop] = 0;
     }
@@ -167,7 +181,6 @@ void TriggerRush(int boss, int status)
     int client = GetClientOfUserId(FF2_GetBossUserId(boss));
     float readyTime = GetRushStateTime(boss, Rush_Ready);
 
-    // TODO: 준비 사운드
     g_iRushState[client] = Rush_Ready;
     g_flRushStateTime[client] = GetGameTime() + readyTime;
 
@@ -208,6 +221,8 @@ void TriggerRush(int boss, int status)
         TE_DispatchEffect("sniper_dxhr_rail_noise", playerPos, effectPos);
         TE_SendToAll();
     }
+
+    PlayRushSound(boss, g_iRushState[client]);
 }
 
 void OnRushTick(int client)
@@ -250,6 +265,8 @@ void OnRushTick(int client)
 
                         DispatchParticleEffect(victimPos, NULL_VECTOR, "env_sawblood", target, 3.0);
                         DispatchParticleEffect(victimPos, NULL_VECTOR, "blood_decap_fountain", target, 3.0);
+
+                        PlayRushVictimDamageSound(boss, target);
                     }
                 }
 
@@ -257,7 +274,11 @@ void OnRushTick(int client)
             }
         }
 
-        g_flRushStateTime[client] = GetGameTime() + GetRushStateTime(boss, g_iRushState[client]);
+        if(g_iRushState[client] < Rush_END)
+        {
+            PlayRushSound(boss, g_iRushState[client]);
+            g_flRushStateTime[client] = GetGameTime() + GetRushStateTime(boss, g_iRushState[client]);
+        }
     }
 
     float stateTime = GetRushStateTime(boss, g_iRushState[client]);
@@ -359,6 +380,59 @@ float GetRushStateTime(int boss, int rushState)
     }
 
     return 0.0;
+}
+
+void PlayRushSound(int boss, int state)
+{
+    char sound[PLATFORM_MAX_PATH];
+    int client = GetClientOfUserId(FF2_GetBossUserId(boss));
+
+    float position[3];
+    GetEntPropVector(client, Prop_Send, "m_vecOrigin", position);
+
+    if(FF2_FindSound(g_strRushSoundKey[state], sound, sizeof(sound), boss, false))
+    {
+        if(FF2_CheckSoundFlags(client, FF2SOUND_MUTEVOICE))
+        {
+            EmitSoundToAll(sound, client, _, _, _, _, _, client, position);
+            EmitSoundToAll(sound, client, _, _, _, _, _, client, position);
+        }
+
+        FOREACH_PLAYER(target)
+        {
+            if(!IsClientInGame(target) || target == client)
+                continue;
+            
+            if(FF2_CheckSoundFlags(target, FF2SOUND_MUTEVOICE))
+            {
+                EmitSoundToClient(target, sound, client, _, _, _, _, _, client, position);
+                EmitSoundToClient(target, sound, client, _, _, _, _, _, client, position);
+            }
+        }
+    }
+}
+
+void PlayRushVictimDamageSound(int boss, int target)
+{
+    char sound[PLATFORM_MAX_PATH];
+
+    float position[3];
+    GetEntPropVector(target, Prop_Send, "m_vecOrigin", position);
+
+    if(FF2_FindSound(RUSH_VICTIM_DAMAGE_SOUND_KEY, sound, sizeof(sound), boss, false))
+    {
+        EmitSoundToAll(sound, target, _, _, _, _, _, target, position);
+        EmitSoundToAll(sound, target, _, _, _, _, _, target, position);
+        
+        FOREACH_PLAYER(client)
+        {
+            if(!IsClientInGame(client) || target == client)
+                continue;
+            
+            EmitSoundToClient(client, sound, target, _, _, _, _, _, target, position);
+            EmitSoundToClient(client, sound, target, _, _, _, _, _, target, position);
+        }
+    }
 }
 
 public bool TraceAnything(int entity, int contentsMask, any data)
