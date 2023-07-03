@@ -5764,12 +5764,11 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 							}
 						}
 
-						float distance = GetVectorDistance(position, victimPosition);
-						if(distance > 1800.0)
-							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+						float distance = GetVectorDistance(position, victimPosition),
+							multiplier = ((min(distance, 8000.0) - 8000.0) * -1.0) / 8000.0;
 
 						// NO CRIT
-						static float damageAdjust = 1.6;
+						float damageAdjust = max(3.0 * multiplier, 0.8);
 						if(!(damagetype & DMG_CRIT) /*&& !TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed)*/)
 							damage *= damageAdjust;
 						// MINI CRIT.. Just in case.
@@ -6327,7 +6326,7 @@ void KillStreakCheck(int attackerIndex, int client, int boss, float damage, bool
 		// make configable 
 		float totalHealth = float(BossHealthMax[boss] * BossLivesMax[boss]);
 		float currencyRatio = float(KILLSTREAK_DAMAGE_INTERVAL) / totalHealth,
-			currency = (1200.0 * min((totalHealth / 80000.0), 1.0)) * currencyRatio;
+			currency = (2200.0 * min((totalHealth / 50000.0), 1.0)) * currencyRatio;
 
 		int count = interval - (lastNoticedInterval - 1);
 		for(int loop = 0; loop < count; loop++)
