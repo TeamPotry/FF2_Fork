@@ -775,6 +775,25 @@ float GetMeleeDamage(int weapon, TFClassType class = TFClass_Unknown)
     return damage * multiplier * 1.13793; // THIS 1.13793 I DO NOT KNOW
 }
 
+float GetMeleeRange(int owner, int weapon)
+{
+    // AH YES. Another hardcoded stuff.
+    float range;
+    if(TF2_IsPlayerInCondition(owner, TFCond_Charging))
+        range = 128.0;
+    else
+    {
+        bool isSword = TF2Attrib_HookValueInt(0, "is_a_sword", weapon) > 0;
+        range = isSword ? 72.0 : 48.0;
+    }
+
+    float modelSize = max(1.0, GetEntPropFloat(owner, Prop_Send, "m_flModelScale")),
+        multiplier = TF2Attrib_HookValueFloat(1.0, "melee_range_multiplier", weapon);
+
+    range *= modelSize * multiplier;
+    return range;
+}
+
 /**
  * From https://github.com/nosoop/stocksoup/blob/master/tf/econ.inc
  * Creates a wearable DemoShield entity.
