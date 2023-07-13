@@ -24,6 +24,8 @@ public Plugin myinfo=
 Handle g_SDKCallInitDroppedWeapon;
 Handle g_SDKCallPickupWeaponFromOther;
 
+Handle AliveCurrencyTimer;
+
 enum
 {
 	Dropped_Index,
@@ -264,6 +266,7 @@ public /*void*/int Native_EqiupWeaponFromDropped(Handle plugin, int numParams)
 public void OnPluginStart()
 {
 	HookEvent("teamplay_round_start", OnRoundStart);
+	HookEvent("teamplay_round_win", OnRoundEnd);
 	HookEvent("player_death", OnPlayerDeath);
 
 	LoadTranslations("ff2_mvm.phrases");
@@ -489,6 +492,8 @@ public void OnMapStart()
 			delete g_hDroppedWeapons[loop];
 		}
 	}
+
+	AliveCurrencyTimer = null;
 }
 
 int	TotalSpend, TotalAlive;
@@ -503,9 +508,16 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 	MaxSpent = 0, MaxSpentIndex = 0;
 
-	CreateTimer(FindConVar("tf_arena_preround_time").FloatValue + 0.4,
-		OnArenaStart_InitAliveCurrencyBonus, _, TIMER_FLAG_NO_MAPCHANGE);
+	if(AliveCurrencyTimer == null)
+		AliveCurrencyTimer = CreateTimer(FindConVar("tf_arena_preround_time").FloatValue + 0.4,
+			OnArenaStart_InitAliveCurrencyBonus, _, TIMER_FLAG_NO_MAPCHANGE);
 
+	return Plugin_Continue;
+}
+
+public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+	AliveCurrencyTimer = null;
 	return Plugin_Continue;
 }
 
