@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <tf2_stocks>
+#include <tf2attributes>
 #include <freak_fortress_2>
 #include <ff2_modules/general>
 #include <ff2_boss_selection>
@@ -156,6 +157,10 @@ public void FF2Selection_OnInfoMenuCreated(int client, const char[] functionName
 	FF2_SetBossMaxLives(bossIndex, 1);
 	FF2_SetBossCharge(bossIndex, 0, 100.0);
 	FF2_SetBossMaxCharge(bossIndex, 100.0);
+
+	int flags = FF2_GetFF2Flags(client);
+	FF2_SetFF2Flags(client, flags | FF2FLAG_ALLOW_HEALTH_PICKUPS);	
+	TF2Attrib_AddCustomPlayerAttribute(client, "health from packs decreased", 0.5 , -1.0);
 	
 	char bossName[64];
 	KeyValues kv = FF2_GetCharacterKV(characterIndex);
