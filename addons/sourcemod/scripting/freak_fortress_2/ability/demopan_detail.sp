@@ -1,5 +1,7 @@
 #include <sourcemod>
 #include <tf2_stocks>
+#include <tf2utils>
+#include <tf2attributes>
 #include <freak_fortress_2>
 #include <ff2_modules/general>
 
@@ -10,6 +12,8 @@ public Plugin myinfo=
 	description="",
 	version="2(1.0)",
 };
+
+#define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
 
 #define THIS_PLUGIN_NAME 		"demopan_detail"
 
@@ -57,16 +61,19 @@ public void FF2_OnAbility(int boss, const char[] pluginName, const char[] abilit
 
 public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVelocity[3], float deAngles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
 {
+	if(FF2_GetRoundState() < 1)	return Plugin_Continue;
+
 	int boss = FF2_GetBossIndex(client);
-	if(!IsPlayerAlive(client) || boss == -1) return Plugin_Continue;
+	if(!IsPlayerAlive(client)) return Plugin_Continue;
 
 	// force charge
-	if(FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY))
+	if(boss != -1
+		&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, FORCE_CHARGE_ABILITY))
 	{
 		if(!TF2_IsPlayerInCondition(client, TFCond_Charging)
 			&& !TF2_IsPlayerInCondition(client, TFCond_Dazed)
 			&& ((buttons & (IN_ATTACK2|IN_RELOAD)) > 0)
-			/*&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 30.0*/)
+			&& GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") > 10.0)
 		{
 			SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", 100.0);
 			TF2_AddCondition(client, TFCond_Charging, -1.0, client);
@@ -81,22 +88,31 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float deVel
 
 	// Air charge
 	// 데모판의 돌진을 감지하고 Y축 속도값을 시야와 일치하도록 변경
+	float angles[3], yAngle;
+	GetClientEyeAngles(client, angles);
+
+	// y축 Index: angles = 0, velocity = 2
+	// angles 시야 기준, 맨 아래 90 ~ 맨 위 -90
 	if(TF2_IsPlayerInCondition(client, TFCond_Charging)
-	&& FF2_HasAbility(boss, THIS_PLUGIN_NAME, AIR_CHARGE_ABILITY)
-	&& (buttons & (IN_JUMP|IN_DUCK)) == 0)
+		&& (buttons & (IN_JUMP|IN_DUCK)) == 0
+		&& (yAngle = angles[0] * -1.0) > 0.0)
 	{
-		float angles[3], velocity[3];
-		GetClientEyeAngles(client, angles);
+		float velocity[3];
 		GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 
-		// y축 Index: angles = 0, velocity = 2
-		// angles 시야 기준, 맨 아래 90 ~ 맨 위 -90
-
-		float yAngle = angles[0] * -1.0;
-		if(yAngle <= 0.0)	return Plugin_Continue;
-
 		velocity[2] = yAngle * 10.0;
-		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+		if(velocity[2] > 270.0) // maybe???
+		{
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+
+			if(boss == -1 || !FF2_HasAbility(boss, THIS_PLUGIN_NAME, AIR_CHARGE_ABILITY))
+			{
+				float charge = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
+				charge -= (12.5 / GetTickInterval()) * 0.002;
+
+				SetEntPropFloat(client, Prop_Send, "m_flChargeMeter", charge);				
+			}
+		}
 	}
 
 	return Plugin_Continue;
