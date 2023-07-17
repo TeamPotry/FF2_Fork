@@ -521,6 +521,6 @@
 	"Wave Correction Boss Health"
 	{
 		"#format"	"{1:d}"
-		"en"		"웨이브 보정: 보스의 체력이 {orange}{1:d}%%{default} 증가됩니다!"
+		"ko"		"웨이브 보정: 보스의 체력이 {orange}{1:d}%%{default} 증가됩니다!"
 	}
 }
