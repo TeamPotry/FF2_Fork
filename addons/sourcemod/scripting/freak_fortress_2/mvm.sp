@@ -719,7 +719,7 @@ public void FF2_OnWaveStarted(int wave)
 
 public Action MVM_OnTouchedUpgradeStation(int upgradeStation, int client)
 {
-	if((IsBoss(client) && FF2_GetBossTeam() == TF2_GetClientTeam(client)) 
+	if(IsBoss(client)
 		|| (FF2_GetFF2Flags(client) & FF2FLAG_CLASSTIMERDISABLED) > 0)
 		return Plugin_Handled;
 
