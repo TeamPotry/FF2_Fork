@@ -12,7 +12,7 @@ public Plugin myinfo=
 	version="0.1",
 };
 
-int g_bTouched[MAXPLAYERS+1];
+int g_iTouched[MAXPLAYERS+1];
 
 public void OnEntityCreated(int entity, const char[] classname)
 {
@@ -25,14 +25,14 @@ public void OnEntityCreated(int entity, const char[] classname)
 
 public void OnClientPostAdminCheck(int client)
 {
-	g_bTouched[client] = false;
+	g_iTouched[client] = 0;
 	SDKHook(client, SDKHook_OnTakeDamageAlivePost, OnTakeDamageAlivePost);
 }
 
 public Action OnStartTouch(int entity, int other)
 {
 	if(MaxClients >= other && other > 0)
-		g_bTouched[other] = true;
+		g_iTouched[other]++;
 
 	return Plugin_Continue;
 }
@@ -41,13 +41,12 @@ public void OnTakeDamageAlivePost(int client, int attacker, int inflictor, float
 {
 	if(!(GetEntityFlags(client) & FL_ONGROUND) && !(GetEntityFlags(client) & FL_INWATER))
 	{
-		if(g_bTouched[client] && IsBoss(client) && TF2_IsPlayerInCondition(client, TFCond_BlastJumping))
+		if(IsBoss(client) && TF2_IsPlayerInCondition(client, TFCond_BlastJumping))
 		{
 			if(damageFloat > 90.0)
-				FF2_SpecialAttackToBoss(attacker, FF2_GetBossIndex(client), weapon, "projectile_airshot", damageFloat);
+				FF2_SpecialAttackToBoss(attacker, FF2_GetBossIndex(client), weapon, "projectile_airshot", g_iTouched[client]);
 		}
 	}
-	g_bTouched[client] = false;
 }
 
 stock bool IsBoss(int client)
