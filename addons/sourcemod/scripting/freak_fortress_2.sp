@@ -5387,6 +5387,8 @@ public Action Timer_DrawGame(Handle timer)
 	return Plugin_Continue;
 }
 
+
+bool AddRage = true;
 public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	if(!Enabled || CheckRoundState()!=FF2RoundState_RoundRunning)
@@ -5518,20 +5520,8 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 		FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
 
 		attacker.Damage += damage;
-		bool rage = true;
-/*
-		if(weapon > MaxClients && IsValidEntity(weapon))
-		{
-			switch(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
-			{
-				case 442, 588: // The Righteous Bison, The Pomson 6000
-				{
-					rage = false;
-				}
-			}
-		}
-*/
-		if(rage)
+
+		if(AddRage)
 		{
 			float adding = damage*100.0/BossRageDamage[boss],
 				temp = adding; 
@@ -5652,6 +5642,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 		return Plugin_Continue;
 	}
 
+	AddRage = true;
 	HitOnSmack = true;
 	bool bChanged=false, currencyDistributed = false;
 
