@@ -33,6 +33,8 @@
 #define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
 #define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
 
+#define FOREACH_PLAYER(%1) for(int %1 = 1; %1 <= MaxClients; %1++)
+
 bool Enabled=true;
 bool Enabled2=true;
 

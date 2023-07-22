@@ -9,6 +9,21 @@
 				"linux"		"@_ZN18CTFWeaponBaseMelee11OnEntityHitEP11CBaseEntityP15CTakeDamageInfo"
 				"windows"	" "
 			}
+			"CTFWeaponBaseMelee::Smack"
+			{
+				"linux"		"@_ZN18CTFWeaponBaseMelee5SmackEv"
+				"windows"	" "
+			}
+			"CTFPlayer::CanPlayerMove"
+			{
+				"linux"		"@_ZNK9CTFPlayer13CanPlayerMoveEv"
+				"windows"	" "
+			}
+			"CTFSword::GetSwingRange"
+			{
+				"linux"		"@_ZN8CTFSword13GetSwingRangeEv"
+				"windows"	" "
+			}
 			"CTFPlayer::GiveAmmo"
 			{
 			    "linux"		"@_ZN9CTFPlayer8GiveAmmoEiib"
@@ -140,6 +155,20 @@
 						"type"	"objectptr"
 					}
 				}
+			}
+			"CTFWeaponBaseMelee::Smack"
+			{
+				"signature"	"CTFWeaponBaseMelee::Smack"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+			}
+			"CTFPlayer::CanPlayerMove"
+			{
+				"signature"	"CTFPlayer::CanPlayerMove"
+				"callconv"	"thiscall"
+				"return"	"bool"
+				"this"		"entity"
 			}
 			"CTFPlayer::CanPickupDroppedWeapon"
 			{

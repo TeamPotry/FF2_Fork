@@ -50,8 +50,8 @@ Updated by Wliu, Chris, Lawd, and Carge after Powerlord quit FF2
 // #include "ff2_module/global_var.sp"
 #include "ff2_module/methodmap.sp"
 
-#include "ff2_module/stocks.sp"
 #include "ff2_module/sdkcalls.sp"
+#include "ff2_module/stocks.sp"
 
 #include "ff2_module/hud.sp"
 #include "ff2_module/music.sp"
@@ -72,6 +72,8 @@ bool mannvsmann = false;
 int Stabbed[MAXPLAYERS+1];
 int Marketed[MAXPLAYERS+1];
 int ComboPunchCount[MAXPLAYERS+1];
+float LastCharge[MAXPLAYERS+1];
+float OverCharge[MAXPLAYERS+1];
 float KSpreeTimer[MAXPLAYERS+1];
 int KSpreeCount[MAXPLAYERS+1];
 float GlowTimer[MAXPLAYERS+1];
@@ -4103,6 +4105,12 @@ public Action ClientTimer(Handle timer)
 					player.Flags &= ~FF2FLAG_ISBUFFED;
 				}
 			}
+			else if(OverCharge[client] > 0.0)
+			{
+				Format(hudText, sizeof(hudText), "%t: %d", "Overcharge", RoundFloat(OverCharge[client]));
+				hudDisplay = FF2HudDisplay.CreateDisplay("Overcharge", hudText);
+				PlayerHudQueue[client].AddHud(hudDisplay, client);
+			}
 
 			if(RedAlivePlayers==1 && !TF2_IsPlayerInCondition(client, TFCond_Cloaked))
 			{
@@ -4487,6 +4495,8 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
 	else
 		OnClientThink(client);
 */
+
+	LastCharge[client] = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
 
 	return Plugin_Continue;
 }
@@ -4913,6 +4923,7 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 	{
 		if(!(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER))
 		{
+			OverCharge[client] = 0.0;
 			CreateTimer(1.0, Timer_Damage, g_hBasePlayer[client], TIMER_FLAG_NO_MAPCHANGE);
 		}
 
@@ -5008,6 +5019,7 @@ public Action OnPlayerDeath(Event event, const char[] eventName, bool dontBroadc
 
 		Stabbed[boss]=0;
 		Marketed[boss]=0;
+		LastCharge[boss]=0.0;
 		ComboPunchCount[boss]=0;
 	}
 
@@ -5566,6 +5578,73 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	return Plugin_Continue;
 }
 
+void OnBossSmackMiss(int owner, int boss, int weapon)
+{
+	float attackerPos[3], attackerSwingPos[3], attackerAngles[3];
+	float targetPos[3], targetHullMax[3];
+
+	GetClientEyePosition(owner, attackerPos);
+	GetClientEyeAngles(owner, attackerAngles);
+
+	int team = GetClientTeam(owner);
+	float range = GetMeleeRange(owner, weapon),
+		maxDistance = range * 3.5;
+
+	float fwd[3];
+	GetAngleVectors(attackerAngles, fwd, NULL_VECTOR, NULL_VECTOR);
+	ScaleVector(fwd, range);
+	AddVectors(attackerPos, fwd, attackerSwingPos);
+
+	GetAngleVectors(attackerAngles, fwd, NULL_VECTOR, NULL_VECTOR);
+
+	FOREACH_PLAYER(target)
+	{
+		if(!IsClientInGame(target) || !IsPlayerAlive(target)
+			|| team == GetClientTeam(target))
+			continue;
+
+		// TODO: Only for shield.
+		if(!shield[target]
+			|| GetEntProp(shield[target], Prop_Send, "m_iItemDefinitionIndex") == 57)
+			continue;
+
+		GetEntPropVector(target, Prop_Send, "m_vecOrigin", targetPos);
+		GetEntPropVector(target, Prop_Send, "m_vecMaxs", targetHullMax);
+
+		float targetBestPos[3];
+		targetBestPos = targetPos;
+
+		if(targetPos[2] + targetHullMax[2] < attackerSwingPos[2])
+			targetBestPos[2] = targetPos[2] + targetHullMax[2];
+		else if(targetPos[2] < attackerSwingPos[2])
+			targetBestPos[2] = targetPos[2];
+		else
+			targetBestPos[2] = attackerSwingPos[2];
+
+		float distance = GetVectorDistance(targetBestPos, attackerSwingPos);
+		
+		if(maxDistance > distance)
+		// 48 * 3.0 = 144
+		{
+			float angleDiff, angles[3];
+			SubtractVectors(targetBestPos, attackerPos, angles);
+			NormalizeVector(angles, angles);
+
+			angleDiff = GetVectorDotProduct(fwd, angles);
+			float score = (((distance - maxDistance) * -1.0) / maxDistance)
+			 * 100.0 * angleDiff; /* * 2.0 */ 
+
+			if(score > 0.0)
+			{
+				OverCharge[target] = min(OverCharge[target] + score, 100.0);
+
+				// TODO: Effect
+				// PrintToChatAll("%N -> %N (%.1f, %.1f, score: %.1f)", owner, target, distance, angleDiff, score);
+			}
+		}
+	}
+}
+
 public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if(!Enabled || !IsValidEntity(iAttacker))
@@ -5573,6 +5652,7 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 		return Plugin_Continue;
 	}
 
+	HitOnSmack = true;
 	bool bChanged=false, currencyDistributed = false;
 
 	if(CheckRoundState()==FF2RoundState_Setup ||
@@ -5667,13 +5747,18 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				}
 				else
 				{
-					float realDamage = damage - GetEntPropFloat(client, Prop_Send, "m_flChargeMeter");
 					float charge = GetEntPropFloat(client, Prop_Send, "m_flChargeMeter") - damage;
 					SetEntPropFloat(client, Prop_Send, "m_flChargeMeter",
-						charge > 0.0 ? charge : 0.0);
-					
-					damage = realDamage;
-					bChanged = true;
+						max(0.0, charge));
+
+					if(OverCharge[client] > 0.0)
+					{
+						damage -= OverCharge[client];
+						bChanged = true;
+
+						OverCharge[client] = max(0.0, OverCharge[client] - damage);
+						PlayShieldBreakSound(client, position, 0.7);
+					}
 				}
 			}
 
@@ -5805,28 +5890,6 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
 				{
-/*
-					int sentry=-1, targettingCount=0, closestSentry, currentWeapon = GetEntPropEnt(iAttacker, Prop_Send, "m_hActiveWeapon");
-					float distance, closestdistanse=800.0, sentryPos[3];
-
-					if(IsValidEntity(currentWeapon) && GetEntProp(currentWeapon, Prop_Send, "m_iItemDefinitionIndex") == 141)
-						return Plugin_Continue;
-
-					while((sentry = FindEntityByClassname2(sentry, "obj_sentrygun")) != -1)
-					{
-						if(GetEntPropEnt(sentry, Prop_Send, "m_hEnemy") == client) {
-							targettingCount++;
-							GetEntPropVector(sentry, Prop_Send, "m_vecOrigin", sentryPos);
-							if((distance = GetVectorDistance(sentryPos, victimPosition)) < closestdistanse) {
-								closestSentry = sentry;
-								closestdistanse = distance;
-							}
-						}
-					}
-
-					if(targettingCount > 1 && closestSentry != inflictor)
-						damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-*/
 					damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 					bChanged = true;
 				}
@@ -5835,6 +5898,43 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 				{
 					bChanged = true;
 					damage *= 2.0;
+				}
+
+				if(damagecustom == TF_CUSTOM_PLASMA_CHARGED)
+				{
+					bChanged = true;
+					AddRage = false;
+
+					float clip = TF2Attrib_HookValueFloat(1.0, "mult_clipsize_upgrade", weapon);
+					damage *= clip;
+				}
+
+				if(damagecustom == TF_CUSTOM_CHARGE_IMPACT)
+				{
+					float charge = LastCharge[iAttacker];
+					if(charge < 75.0)
+					{
+						bChanged = true;
+						float score = (charge - 100.0) * -1.0,
+							tempDamage = (damage * 2.0) + score;
+						
+						CreateKillStreak(iAttacker, client, "demoshield", RoundFloat(score));
+
+						// IncrementHeadCount(iAttacker);
+						ScaleVector(damageForce, 10.0 * (score * 0.01));
+						damage = tempDamage;
+
+						if(OverCharge[iAttacker] > 50.0
+							&& SpecialAttackToBoss(iAttacker, boss, weapon, "shield_slam", tempDamage)
+							!= Plugin_Handled)
+						{
+							float slamPower = OverCharge[iAttacker] * 0.04;
+							damage *= slamPower * 0.5;
+
+							TF2_StunPlayer(client, slamPower, 1.0, TF_STUNFLAG_BONKSTUCK, iAttacker);
+							OverCharge[iAttacker] = 0.0;
+						}
+					}
 				}
 
 				switch(index)

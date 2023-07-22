@@ -523,4 +523,8 @@
 		"#format"	"{1:d}"
 		"ko"		"웨이브 보정: 보스의 체력이 {orange}{1:d}%%{default} 증가됩니다!"
 	}
+	"Overcharge"
+	{
+		"ko"		"방패 과충전"
+	}
 }

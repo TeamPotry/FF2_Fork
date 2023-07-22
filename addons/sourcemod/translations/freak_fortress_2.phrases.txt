@@ -523,4 +523,8 @@
 		"#format"	"{1:d}"
 		"en"		"Wave Correction: Boss's health {orange}{1:d}%%{default} increased!"
 	}
+	"Overcharge"
+	{
+		"en"		"Shield Overcharge"
+	}
 }
