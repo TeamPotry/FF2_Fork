@@ -220,11 +220,28 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 		g_flReflecterHealth[client] -= damage;
 		return Plugin_Continue;
 	}
+	
+	float vicAngles[3], ackAngles[3];
+	GetClientEyeAngles(client, vicAngles);
+	GetClientEyeAngles(attacker, ackAngles);
 
-	int boss = FF2_GetBossIndex(client);
+	GetAngleVectors(vicAngles, vicAngles, NULL_VECTOR, NULL_VECTOR);
+	GetAngleVectors(ackAngles, ackAngles, NULL_VECTOR, NULL_VECTOR);
+
+	NormalizeVector(vicAngles, vicAngles);
+	NormalizeVector(ackAngles, ackAngles);
+
+	float dotProduct = GetVectorDotProduct(ackAngles, vicAngles);
+	// PrintToChatAll("%.3f", dotProduct);
+	if(dotProduct > -0.309)
+	{
+		g_flReflecterHealth[client] -= damage;
+		return Plugin_Continue;
+	}
 
 	g_flReflecterHealth[client] -= damage;
 
+	int boss = FF2_GetBossIndex(client);
 	float playerPos[3], effectPos[3], angles[3], targetPos[3];
 	playerPos = WorldSpaceCenter(client);
 
@@ -247,8 +264,9 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 
 	SubtractVectors(targetPos, effectPos, angles);
 
-	float distance = GetVectorDistance(targetPos, effectPos);
-	AddRandomDegree(angles, distance * 0.06);
+	float distance = GetVectorDistance(targetPos, effectPos),
+		noise = 1.0 + dotProduct;
+	AddRandomDegree(angles, distance * 0.07854 * noise);
 
 	float distToTarget = GetVectorLength(angles);
 	float traceAngles[3];
