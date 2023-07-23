@@ -66,7 +66,7 @@ public void OnPluginStart()
 public void OnMapStart()
 {
 	FF2_PrecacheEffect();
-	FF2_PrecacheParticleEffect("bullet_pistol_tracer01_blue_crit");
+	FF2_PrecacheParticleEffect("dxhr_sniper_rail_blue");
 	FF2_PrecacheParticleEffect("impact_dirt");
 	FF2_PrecacheParticleEffect("blood_impact_heavy");
 	FF2_PrecacheParticleEffect("deflect_fx");
@@ -269,7 +269,7 @@ public Action OnReflecterDamage(int client, int& attacker, int& inflictor, float
 	else if(damagetype & DMG_CRIT && TF2_IsPlayerInCondition(attacker, TFCond_Buffed))
 		damage /= 1.35;
 
-	FireBullet(client, client, effectPos, angles, damage, distToTarget * 500, damagetype, "bullet_pistol_tracer01_blue_crit");
+	FireBullet(client, client, effectPos, angles, damage, distToTarget * 500, damagetype, "dxhr_sniper_rail_blue");
 
 #if defined _MVM_included
 	ResetMannVsMachineMode();
