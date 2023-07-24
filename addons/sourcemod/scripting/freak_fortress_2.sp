@@ -135,8 +135,9 @@ char currentmap[99];
 bool checkDoors;
 bool bMedieval;
 bool firstBlood;
+float roundTime;
 
-int tf_arena_preround_time;
+float tf_arena_preround_time;
 int tf_arena_use_queue;
 int mp_teams_unbalance_limit;
 int tf_arena_first_blood;
@@ -471,7 +472,7 @@ public void OnLibraryRemoved(const char[] name)
 
 public void OnConfigsExecuted()
 {
-	tf_arena_preround_time=FindConVar("tf_arena_preround_time").IntValue;
+	tf_arena_preround_time=FindConVar("tf_arena_preround_time").FloatValue;
 	tf_arena_use_queue=FindConVar("tf_arena_use_queue").IntValue;
 	mp_teams_unbalance_limit=FindConVar("mp_teams_unbalance_limit").IntValue;
 	tf_arena_first_blood=FindConVar("tf_arena_first_blood").IntValue;
@@ -601,6 +602,7 @@ public void EnableFF2()
 	FindConVar("tf_feign_death_activate_damage_scale").SetFloat(0.3);
 	FindConVar("tf_feign_death_damage_scale").SetFloat(1.0);
 	FindConVar("mp_humans_must_join_team").SetString("any");
+	FindConVar("tf_player_movement_restart_freeze").SetInt(0);
 
 	float time=Announce;
 	if(time>1.0)
@@ -952,6 +954,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		Enabled2=false;
 	}
 
+	roundTime = GetGameTime();
 	Enabled=Enabled2;
 	if(!Enabled)
 	{
