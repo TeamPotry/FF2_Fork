@@ -4539,6 +4539,16 @@ void OnBossThink(int client)
 
 		// stock
 		AddBossCharge(boss, 0, (tickTime * 0.1));
+
+		if(BossMaxRageCharge[boss] > 0.0 && BossMaxRageCharge[boss] <= BossCharge[boss][0])
+		{
+			int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+			if(weapon != -1 && weapon == GetPlayerWeaponSlot(client, TFWeaponSlot_Melee)
+				&& TF2Util_GetPlayerConditionDuration(client, TFCond_CritOnFirstBlood) < 0.02)
+			{
+				TF2_AddCondition(client, TFCond_CritOnFirstBlood, 0.1, client);
+			}
+		}
 	}
 
 	// 보스의 어빌리티 틱
