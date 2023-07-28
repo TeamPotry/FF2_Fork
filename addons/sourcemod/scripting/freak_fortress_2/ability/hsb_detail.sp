@@ -50,8 +50,13 @@ void PrepareExplode(int boss)
 	int client = GetClientOfUserId(FF2_GetBossUserId(boss));
 	g_flPriviousRage[client] = FF2_GetBossCharge(boss, 0);
 
+	float prepareTime = 2.1 + g_flPriviousRage[client] * 0.001;
+
 	CreateTimer(0.1, SentryBustPrepare, boss, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(2.1 + g_flPriviousRage[client] * 0.001, SentryBusting, boss, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(prepareTime, SentryBusting, boss, TIMER_FLAG_NO_MAPCHANGE);
+
+	// TODO: not only SkillType_200Rage
+	FF2_SetBossSkillDuration(boss, SkillType_Rage, prepareTime);
 }
 
 public Action SentryBustPrepare(Handle timer, any boss)
