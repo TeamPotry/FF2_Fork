@@ -6516,7 +6516,7 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 	if(!Enabled || CheckRoundState() != FF2RoundState_RoundRunning)
 		return Plugin_Continue;
 
-	if(IsBoss(client) || !TF2_IsPlayerCritBuffed(client) && !BossCrits)
+	if(IsBoss(client) && !TF2_IsPlayerCritBuffed(client) && !BossCrits)
 	{
 		result=false;
 		return Plugin_Changed;
