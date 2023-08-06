@@ -1577,7 +1577,7 @@ public Action StartBossTimer(Handle timer)
 	CreateTimer(0.1, Timer_Move, _, TIMER_FLAG_NO_MAPCHANGE);
 	bool isBossAlive;
 
-	static float firstAbilityCooldown = 15.0;
+	static float firstAbilityCooldown = 8.0;
 
 	for(int boss; boss<=MaxClients; boss++)
 	{
