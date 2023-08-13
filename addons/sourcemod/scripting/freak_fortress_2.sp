@@ -2863,6 +2863,18 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 				return Plugin_Changed;
 			}
 		}
+
+		if(!StrContains(classname, "tf_weapon_fist", false))
+		{
+			Handle itemOverride=PrepareItemHandle(item, _, _, "26 ; 50.0");
+			// 26: max health
+
+			if(itemOverride!=null)
+			{
+				item=itemOverride;
+				return Plugin_Changed;
+			}
+		}
 	}
 
 	if(TF2_GetPlayerClass(client) == TFClass_Spy &&
