@@ -413,6 +413,14 @@ public void ReAddPercentCharacter(char[] str, int buffer, int percentImplodeCoun
     ReplaceString(str, buffer, "%", implode);
 }
 
+public void GetEntRefKey(const int ref, char[] key, int buffer)
+{
+    // NOTE: Could be 64-bit?
+    // Currently, @buffer is enough with 10.
+    // but somehow when we get 64-bit update, 20 is enough.
+    Format(key, buffer, "%x", ref);
+}
+
 stock Handle FindCookieEx(char[] cookieName)
 {
     Handle cookieHandle = FindClientCookie(cookieName);

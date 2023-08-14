@@ -91,194 +91,59 @@ methodmap FF2BaseEntity < ArrayList
     }
 }
 
-methodmap FF2BaseEntity_List < ArrayList
+methodmap FF2BaseEntity_List < StringMap
 {
     public FF2BaseEntity_List()
     {
-        return view_as<FF2BaseEntity_List>(new ArrayList());
+        return view_as<FF2BaseEntity_List>(new StringMap());
     }
 
-    public int AddEntity(FF2BaseEntity baseEnt)
+    public void AddEntity(FF2BaseEntity baseEnt)
     {
-        int ref = baseEnt.Ref,
-            len = this.Length;
+        char refKey[ENT_REFKEY_LENGTH];
+        int ref = baseEnt.Ref;
+        GetEntRefKey(ref, refKey, ENT_REFKEY_LENGTH);
 
-        if(len < 1)
-        {
-            this.Push(baseEnt);
-            return 0;
-        }
-
-        int absRef = ref & 0x7FFFFFFF;
-        if(absRef < view_as<FF2BaseEntity>(this.Get(0)).Ref & 0x7FFFFFFF)
-        {
-            this.ShiftUp(0);
-            this.Set(0, baseEnt);
-            return 0;
-        }
-        else if(view_as<FF2BaseEntity>(this.Get(len - 1)).Ref & 0x7FFFFFFF < absRef)
-        {
-            this.Push(baseEnt);
-            return len;
-        }
-
-        for(int loop = 0; loop < len; loop++)
-        {
-            if(view_as<FF2BaseEntity>(this.Get(loop)).Ref & 0x7FFFFFFF > absRef)
-            {
-                this.ShiftUp(loop);
-                this.Set(loop, baseEnt);
-
-                return loop;
-            }
-        }
-
-        // Should not be.
-        return -1;
-    }
-/*
-    // NOTE: Not working 
-    public int AddEntity(FF2BaseEntity baseEnt)
-    {
-        int ref = baseEnt.Ref,
-            len = this.Length;
-
-        if(len < 1)
-        {
-            this.Push(baseEnt);
-            return 0;
-        }
-        // 초기값 검증 (왼쪽, 오른쪽 끝 값과 비교)
-        int absRef = ref & 0x7FFFFFFF;
-        if(absRef < view_as<FF2BaseEntity>(this.Get(0)).Ref & 0x7FFFFFFF)
-        {
-            // this.Resize(len + 1);
-            this.ShiftUp(0);
-            this.Set(0, baseEnt);
-            return 0;
-        }
-        else if(view_as<FF2BaseEntity>(this.Get(len - 1)).Ref & 0x7FFFFFFF < absRef)
-        {
-            this.Push(baseEnt);
-            return len;
-        }
-
-        int left = 0, right = len, mid;
-        do
-        {
-            mid = ((left + (right - 1)) / 2) + 1;
-            if(left == mid || right == mid || mid >= len)     break;
-
-            int midRef = view_as<FF2BaseEntity>(this.Get(mid)).Ref;
-
-            if(absRef > midRef)
-            {
-                left = mid;
-            }
-            // Can't be same.
-            else
-            {
-                right = mid;
-            }
-        }
-        while(left < right);
-
-        // is (left + 1) best position?
-        int bestPos = left + 1;
-        if(left == mid)
-            LogError("left is mid! (%d ==  %d)", left, mid);
-        if(right == mid)
-        {
-            if(right == len)
-            {
-                bestPos = right - 1;
-                this.Push(baseEnt);
-            }
-               
-            else
-                bestPos = right - 2;
-
-            LogError("right is mid! (%d == %d -> %d)", right, mid, bestPos);
-        }
-            
-        // this.Resize(len + 1);
-        this.ShiftUp(bestPos);
-        this.Set(bestPos, baseEnt);
-
-        return bestPos;
-    }
-*/
-
-    public int SearchEntityByRef(int entRef) 
-    {
-        int len = this.Length; 
-
-        if(len == 0)        return -1;
-        else if(len == 1)   return 0;
-
-        if(entRef == view_as<FF2BaseEntity>(this.Get(0)).Ref)
-            return 0;
-        else if(view_as<FF2BaseEntity>(this.Get(len - 1)).Ref == entRef)
-            return len - 1;
-
-        int absRef = entRef & 0x7FFFFFFF,
-            left = 0, right = len, mid;
-        do
-        {
-            mid = ((left + (right - 1)) / 2) + 1;
-            if(left == mid || right == mid || mid >= len)     break;
-            
-            int midRef = view_as<FF2BaseEntity>(this.Get(mid)).Ref & 0x7FFFFFFF;
-
-            if(absRef > midRef)
-            {
-                left = mid;
-            }
-            else if(absRef == midRef)
-            {
-                return mid;
-            }
-            else
-            {
-                right = mid;
-            }
-        }
-        while(left < right);
-
-        // final check
-        if(right == mid
-            && view_as<FF2BaseEntity>(this.Get(right - 1)).Ref == entRef)
-            return right - 1;
-        else if(left == mid
-            && view_as<FF2BaseEntity>(this.Get(left + 1)).Ref == entRef)
-            return left + 1;
-
-        return -1;
+        this.SetValue(refKey, baseEnt, true);
     }
 
     public void EraseEntity(int entRef)
     {
-        int index = this.SearchEntityByRef(entRef);
+        char refKey[ENT_REFKEY_LENGTH];
+        GetEntRefKey(entRef, refKey, ENT_REFKEY_LENGTH);
 
-        if(index >= 0)
-        {
-            this.Erase(index);
-        }
+        this.Remove(refKey);
+    }
+
+    public FF2BaseEntity GetByIndex(int ent)
+    {
+        char refKey[ENT_REFKEY_LENGTH];
+        int ref = EntIndexToEntRef(ent);
+        GetEntRefKey(ref, refKey, ENT_REFKEY_LENGTH);
+
+        FF2BaseEntity baseEnt = null;
+        this.GetValue(refKey, baseEnt);
+
+        return baseEnt;
     }
 
     public void PrintMe()
     {
-        int len = this.Length;
+        char refKey[ENT_REFKEY_LENGTH];
+        int len = this.Size;
+        StringMapSnapshot snapshot = this.Snapshot();
+
         for(int loop = 0; loop < len; loop++)
         {
-            LogError("%d: %X", loop, view_as<FF2BaseEntity>(this.Get(loop)).Ref);
+            snapshot.GetKey(loop, refKey, ENT_REFKEY_LENGTH);
+            LogError("%d: %s", loop, refKey);
         }
     }
 }
 
 // LOL. There is no prototype definition in SourcePawn.
 // This is the best spot for define this, I think..
-FF2BaseEntity_List g_hBaseEntityList;
+FF2BaseEntity_List g_hBaseEntityMap;
 FF2BaseEntity g_hBasePlayer[MAXPLAYERS+1];
 
 enum
@@ -355,21 +220,14 @@ methodmap FF2BasePlayer < FF2BaseEntity
     }
 }
 
-/*
- * Currently, only client index is supported.
- * TODO: add case of other entities.
- */
 FF2BaseEntity GetBaseByEntIndex(int ent)
 {
     if(0 < ent && ent <= MaxClients)
         return g_hBasePlayer[ent];
 
     // search in list array
-    int index = g_hBaseEntityList.SearchEntityByRef(EntIndexToEntRef(ent));
-    if(index != -1)
-        return g_hBaseEntityList.Get(index);
-
-    return null;
+    FF2BaseEntity baseEnt = g_hBaseEntityMap.GetByIndex(ent);
+    return baseEnt;
 }
 
 FF2BasePlayer GetBasePlayer(int ent)

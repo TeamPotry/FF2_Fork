@@ -364,7 +364,7 @@ public void OnPluginStart()
 
 	bossesArray = new ArrayList();
 	bossesArrayOriginal = new ArrayList();
-	g_hBaseEntityList = new FF2BaseEntity_List();
+	g_hBaseEntityMap = new FF2BaseEntity_List();
 
 	LoadTranslations("freak_fortress_2.phrases");
 	LoadTranslations("common.phrases");
@@ -7604,27 +7604,23 @@ public void OnEntityDestroyed(int entity)
 			g_Monoculus=FindEntityByClassname(entity, MONOCULUS);
 		}
 	}
-/*
-	int entRef = entity;
-	if(2048 >= entRef && entRef >= 0)
-		entRef = EntIndexToEntRef(entity);
-*/
 
-	if(IsEntNetworkable(entity) && g_hBaseEntityList != null)
+	if(g_hBaseEntityMap != null 		// Before PluginStart
+		&& IsEntNetworkable(entity))
 	{
+		FF2BaseEntity baseEnt = null;
+		baseEnt = g_hBaseEntityMap.GetByIndex(entity);
+
+		if(baseEnt == null)
+		{
+			LogError("[DEBUG] NULL IN %d!", entity);
+			return;
+		}
+
 		int entRef = EntIndexToEntRef(entity);
-		int index = g_hBaseEntityList.SearchEntityByRef(entRef);
-		if(index != -1)
-		{
-			g_hBaseEntityList.EraseEntity(entRef);
-			// LogError("Deleted %d", index);
-		}
-/*
-		else
-		{
-			LogError("Can't find %X", entRef);
-		}
-*/
+		g_hBaseEntityMap.EraseEntity(entRef);
+
+		delete baseEnt;
 	}	
 }
 
