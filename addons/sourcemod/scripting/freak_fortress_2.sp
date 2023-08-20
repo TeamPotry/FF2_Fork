@@ -4194,6 +4194,12 @@ public Action ClientTimer(Handle timer)
 				}
 				*/
 			}
+			
+			// Yes. This is addtional cond.
+			if(!StrContains(classname, "tf_weapon_fist"))
+			{
+				TF2_AddCondition(client, TFCond_DefenseBuffed, 0.3);
+			}
 
 			if(index==16 && IsValidEntity(FindPlayerBack(client, 642)))  //SMG, Cozy Camper
 			{
