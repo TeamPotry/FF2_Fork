@@ -2924,7 +2924,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(!StrContains(classname, "tf_weapon_medigun"))  //Mediguns
 	{
-		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.5 ; 482 ; 2.0 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 2 ; 547 ; 0.75", false);
+		Handle itemOverride=PrepareItemHandle(item, _, _, "10 ; 1.5 ; 144 ; 2.0 ; 199 ; 0.75 ; 314 ; 2 ; 547 ; 0.75", false);
 			//10: +50% faster charge rate
 			//11: +50% overheal bonus, 482: overheal_expert
 			//144: Quick-fix speed/jump effects
