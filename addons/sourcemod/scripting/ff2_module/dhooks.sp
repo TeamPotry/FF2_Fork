@@ -8,6 +8,7 @@ void DHooks_Init(GameData gamedata)
         return;
     }
 
+    CreateDynamicDetour(gamedata, "CTFLunchBox::DrainAmmo", DHookCallback_DrainAmmo_Pre);
     CreateDynamicDetour(gamedata, "CTFWeaponBaseMelee::OnEntityHit", _, DHookCallback_OnEntityHit_Post);
     CreateDynamicDetour(gamedata, "CTFWeaponBaseMelee::Smack", DHookCallback_Smack_Pre, DHookCallback_Smack_Post);
     CreateDynamicDetour(gamedata, "CTFPlayer::CanPlayerMove", DHookCallback_CanPlayerMove_Pre);
@@ -28,6 +29,12 @@ static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallb
 	{
 		LogError("Failed to create detour setup handle for %s", name);
 	}
+}
+
+public MRESReturn DHookCallback_DrainAmmo_Pre(int weapon, DHookParam params)
+{
+    params.Set(1, true);
+    return MRES_ChangedOverride;
 }
 
 public MRESReturn DHookCallback_OnEntityHit_Post(int weapon, DHookParam params)

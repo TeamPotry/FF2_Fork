@@ -4,6 +4,11 @@
 	{
 		"Signatures"
 		{
+			"CTFLunchBox::DrainAmmo"
+			{
+				"linux"		"@_ZN11CTFLunchBox9DrainAmmoEb"
+				"windows"	" "
+			}
 			"CTFWeaponBaseMelee::OnEntityHit"
 			{
 				"linux"		"@_ZN18CTFWeaponBaseMelee11OnEntityHitEP11CBaseEntityP15CTakeDamageInfo"
@@ -116,6 +121,20 @@
 		}
 		"Functions"
 		{
+			"CTFLunchBox::DrainAmmo"
+			{
+				"signature" "CTFLunchBox::DrainAmmo"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+				"arguments"
+				{
+					"bForceCooldown"
+					{
+						"type"	"bool"
+					}
+				}
+			}
 			"CTFWeaponBaseMelee::DoMeleeDamage"
 			{
 				"signature"	"CTFWeaponBaseMelee::DoMeleeDamage"
