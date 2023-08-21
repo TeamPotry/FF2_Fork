@@ -572,6 +572,9 @@ public Action FF2_OnApplyBossHealthCorrection(int boss, float &multiplier)
 			}
 		}
 
+		if(TotalAlive < 1)
+			TotalAlive = 1; // It happens sometimes..
+
 		float avgSpend = float(TotalSpend) / float(TotalAlive);
 		CorrectionRatio = (avgSpend / 4000.0) + 1.0;
 

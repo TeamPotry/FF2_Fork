@@ -6812,7 +6812,8 @@ stock int ParseFormula(int boss, const char[] key, int defaultValue)
 
 				if(StrEqual(variable, "players", false))
 				{
-					Operate(sumArray, bracket, float(RedAlivePlayers), _operator);
+					int count = max(RedAlivePlayers, 1);
+					Operate(sumArray, bracket, float(count), _operator);
 				}
 				else if(StrEqual(variable, "health", false))
 				{
