@@ -54,4 +54,20 @@
         "#format"   "{1:N},{2:N}"
         "ko"        "{1} 님이 {2} 님을 술래로 만들었습니다!"
     }
+
+    "Shotgun Ability"
+    {
+        "#format"   "{1:s}"
+        "ko"        "샷건: {1}"
+    }
+
+    "Shotgun Ability Vampire"
+    {
+        "ko"    "흡혈탄"
+    }
+
+    "Shotgun Ability Gold"
+    {
+        "ko"    "황금탄"
+    }
 }

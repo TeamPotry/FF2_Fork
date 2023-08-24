@@ -2840,17 +2840,17 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 
 	if(TF2_GetPlayerClass(client)==TFClass_Heavy)
 	{
-		if(!StrContains(classname, "tf_weapon_shotgun", false))
-		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "741 ; 50.0");
-			//741: On Hit: Gain up to +%1$s health per attack
+		// if(!StrContains(classname, "tf_weapon_shotgun", false))
+		// {
+		// 	Handle itemOverride=PrepareItemHandle(item, _, _, "741 ; 50.0");
+		// 	//741: On Hit: Gain up to +%1$s health per attack
 
-			if(itemOverride!=null)
-			{
-				item=itemOverride;
-				return Plugin_Changed;
-			}
-		}
+		// 	if(itemOverride!=null)
+		// 	{
+		// 		item=itemOverride;
+		// 		return Plugin_Changed;
+		// 	}
+		// }
 
 		if(!StrContains(classname, "tf_weapon_minigun", false))
 		{
@@ -5909,28 +5909,9 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 					}
 				}
 
-				if(TF2_GetPlayerClass(iAttacker) == TFClass_Heavy)
-				{
-					if(StrContains(classname, "tf_weapon_shotgun")!=-1)
-					{
-						int maxHealth = GetEntProp(iAttacker, Prop_Data, "m_iMaxHealth");
-						int currentHealth = GetEntProp(iAttacker, Prop_Data, "m_iHealth");
-						if(currentHealth <= maxHealth * 2)
-						{
-							currentHealth += 50;
-							TF2Util_TakeHealth(iAttacker, 50.0, TAKEHEALTH_IGNORE_MAXHEALTH);
-
-							if(currentHealth > maxHealth * 2)
-							{
-								SetEntProp(iAttacker, Prop_Data, "m_iHealth", maxHealth * 2);
-							}
-						}
-					}
-
-					float charge = GetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter") + (damage * 0.056);
-					SetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter",
-						charge > 100.0 ? 100.0 : charge);
-				}
+				// float charge = GetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter") + (damage * 0.056);
+				// SetEntPropFloat(iAttacker, Prop_Send, "m_flRageMeter",
+				// 	charge > 100.0 ? 100.0 : charge);
 
 				if(damagecustom==TF_WEAPON_SENTRY_BULLET)
 				{

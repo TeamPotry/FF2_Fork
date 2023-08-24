@@ -52,6 +52,22 @@
     "HHH Announce Tag"
     {
         "#format"   "{1:N},{2:N}"
-        "ko"        "{1} tagged {2} as IT!"
+        "en"        "{1} tagged {2} as IT!"
+    }
+
+    "Shotgun Ability"
+    {
+        "#format"   "{1:s}"
+        "en"        "Shotgun: {s}"
+    }
+
+    "Shotgun Ability Vampire"
+    {
+        "en"    "Vampire"
+    }
+
+    "Shotgun Ability Gold"
+    {
+        "en"    "Gold"
     }
 }

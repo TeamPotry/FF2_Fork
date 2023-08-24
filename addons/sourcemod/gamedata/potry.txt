@@ -19,6 +19,11 @@
 				"linux"		"@_ZN18CTFWeaponBaseMelee5SmackEv"
 				"windows"	" "
 			}
+			"CTFShotgun::PrimaryAttack"
+			{
+				"linux"		"@_ZN10CTFShotgun13PrimaryAttackEv"
+				"windows"	" "
+			}
 			"CTFPlayer::CanPlayerMove"
 			{
 				"linux"		"@_ZNK9CTFPlayer13CanPlayerMoveEv"
@@ -178,6 +183,13 @@
 			"CTFWeaponBaseMelee::Smack"
 			{
 				"signature"	"CTFWeaponBaseMelee::Smack"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+			}
+			"CTFShotgun::PrimaryAttack"
+			{
+				"signature"	"CTFShotgun::PrimaryAttack"
 				"callconv"	"thiscall"
 				"return"	"void"
 				"this"		"entity"
