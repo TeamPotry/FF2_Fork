@@ -91,11 +91,11 @@ methodmap FF2BaseEntity < ArrayList
     }
 }
 
-methodmap FF2BaseEntity_List < StringMap
+methodmap FF2BaseEntity_Map < StringMap
 {
-    public FF2BaseEntity_List()
+    public FF2BaseEntity_Map()
     {
-        return view_as<FF2BaseEntity_List>(new StringMap());
+        return view_as<FF2BaseEntity_Map>(new StringMap());
     }
 
     public void AddEntity(FF2BaseEntity baseEnt)
@@ -143,7 +143,7 @@ methodmap FF2BaseEntity_List < StringMap
 
 // LOL. There is no prototype definition in SourcePawn.
 // This is the best spot for define this, I think..
-FF2BaseEntity_List g_hBaseEntityMap;
+FF2BaseEntity_Map g_hBaseEntityMap;
 FF2BaseEntity g_hBasePlayer[MAXPLAYERS+1];
 
 enum

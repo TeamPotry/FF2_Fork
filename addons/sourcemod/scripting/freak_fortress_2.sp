@@ -364,7 +364,7 @@ public void OnPluginStart()
 
 	bossesArray = new ArrayList();
 	bossesArrayOriginal = new ArrayList();
-	g_hBaseEntityMap = new FF2BaseEntity_List();
+	g_hBaseEntityMap = new FF2BaseEntity_Map();
 
 	LoadTranslations("freak_fortress_2.phrases");
 	LoadTranslations("common.phrases");
