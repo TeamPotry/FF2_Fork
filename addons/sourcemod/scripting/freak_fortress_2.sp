@@ -2579,7 +2579,7 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int iItemDe
 		}*/
 		case 226:  //Battalion's Backup
 		{
-			Handle itemOverride=PrepareItemHandle(item, _, _, "140 ; 10.0");
+			Handle itemOverride=PrepareItemHandle(item, _, _, "140 ; 10.0 ; 4365 ; 1.5");
 			if(itemOverride!=null)
 			{
 				item=itemOverride;
@@ -5738,7 +5738,29 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 			if(TF2_IsPlayerInCondition(client, TFCond_DefenseBuffed))
 			{
 				ScaleVector(damageForce, 9.0);
-				// damage*=0.3;
+
+				// In real: realDamage: 606(202), damage = 39.2
+				// realDamage: 130.9, damage: 39.2
+				// rage: 62.3, drain: 54.6
+
+				float realDamage = damage * 1.53846; // player damamge -35%
+				if(TF2_IsPlayerCritBuffed(iAttacker))
+					realDamage *= 3.0;
+				else if(TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed))
+					realDamage *= 1.35;				
+				damage *= 0.3;
+
+				int buffer = TF2Util_GetPlayerConditionProvider(client, TFCond_DefenseBuffed);
+				if(!IsValidClient(buffer))	return Plugin_Changed;
+
+				float multiplier = TF2Attrib_HookValueFloat(1.0, "mod_buff_duration", buffer), 
+					rage = GetEntPropFloat(buffer, Prop_Send, "m_flRageMeter"),  
+					drain = rage - (max(0.0, (realDamage - damage) / (1200.0 * multiplier)) * 100.0);
+				SetEntPropFloat(buffer, Prop_Send, "m_flRageMeter", drain);
+
+				// PrintToChatAll("realDamage: %.1f, damage: %.1f", realDamage, damage);
+				// PrintToChatAll("rage: %.1f, drain: %.1f", rage, drain);
+
 				return Plugin_Changed;
 			}
 
