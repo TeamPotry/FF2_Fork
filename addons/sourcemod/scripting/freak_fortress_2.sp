@@ -7620,7 +7620,7 @@ public void OnEntityDestroyed(int entity)
 
 		if(baseEnt == null)
 		{
-			LogError("[DEBUG] NULL IN %d!", entity);
+			// LogError("[DEBUG] NULL IN %d!", entity);
 			return;
 		}
 
