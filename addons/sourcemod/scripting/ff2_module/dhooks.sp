@@ -61,26 +61,6 @@ public MRESReturn DHookCallback_OnEntityHit_Post(int weapon, DHookParam params)
             }
         }
     }
-    else if(TF2_GetClientTeam(iOwner) != BossTeam && !IsBoss(iOwner)
-        && ent == 0)
-    {
-        // WallJump
-        float velocity[3];
-        GetEntPropVector(iOwner, Prop_Data, "m_vecVelocity", velocity);
-        if(velocity[2] < -192.0)    return MRES_Ignored;
-        
-        // -48.0 ~ -192.0
-        float multiplier = 1.0;
-        if(velocity[2] < -48.0)
-            multiplier = 1.0 - ((velocity[2] * -1.0) * 0.0052083); // 1/192
-
-        velocity[2] = 600.0 * multiplier;
-        SetEntPropEnt(iOwner, Prop_Send, "m_hGroundEntity", -1);
-        SetEntityFlags(iOwner, GetEntityFlags(iOwner) & ~FL_ONGROUND);
-
-        TeleportEntity(iOwner, NULL_VECTOR, NULL_VECTOR, velocity);
-        SetEntPropVector(iOwner, Prop_Data, "m_vecAbsVelocity", velocity);
-    }
 
     return MRES_Ignored;
 }
