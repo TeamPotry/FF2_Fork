@@ -12,6 +12,7 @@ enum
     FF2BE_Assist,
     
     FF2BE_Flags,
+    FF2BE_HUD_Map,
 
     // TODO: Add FF2SpecialInfo
     FF2BE_SpecialInfo,
@@ -37,6 +38,7 @@ methodmap FF2BaseEntity < ArrayList
         newArray.Push(0);
 
         newArray.Push(0);
+        newArray.Push(new StringMap());
 
         return view_as<FF2BaseEntity>(newArray);
     }
@@ -88,6 +90,46 @@ methodmap FF2BaseEntity < ArrayList
         public set(int flags) {
             this.Set(FF2BE_Flags, flags);
         }
+    }
+    property StringMap HUD_Map {
+        public get() {
+            return this.Get(FF2BE_HUD_Map);
+        }
+    }
+
+    public FF2HudQueue GetHudQueue(const char[] key) {
+        StringMap map = this.HUD_Map;
+
+        FF2HudQueue queue = null;
+        map.GetValue(key, queue);
+
+        return queue;
+    }
+
+    public void SetHudQueue(const char[] key, FF2HudQueue queue) {
+        StringMap map = this.HUD_Map;
+        map.SetValue(key, queue, false);
+    }
+
+
+    public void KillSelf() {
+        char key[HUD_DISPLAY_NAME_MAX_LENGTH];
+
+        StringMap map = this.HUD_Map;
+        StringMapSnapshot snapshot = this.HUD_Map.Snapshot();
+
+        for(int loop = 0; loop < snapshot.Length; loop++)
+        {
+            snapshot.GetKey(loop, key, HUD_DISPLAY_NAME_MAX_LENGTH);
+
+            FF2HudQueue queue = null;
+            if(map.GetValue(key, queue))
+                delete queue;
+        }
+
+        delete this.HUD_Map;
+
+        delete this;
     }
 }
 
@@ -234,25 +276,6 @@ FF2BasePlayer GetBasePlayer(int ent)
 {
     return view_as<FF2BasePlayer>(GetBaseByEntIndex(ent));
 }
-
-/*
-methodmap Example < ArrayList {
-    property int ex {
-        public get()
-        {
-            return 2;
-        }
-    }
-}
-
-methodmap Example2 < Example {
-    public static void printtest()
-    {
-        PrintToServer(this.ex);
-    } 
-
-}
-*/
 
 // FF2SpecialInfo: 병과별 특수 변수 저장 (서브플러그인 호환)
 // ㄴ 방패 인덱스, 우버 타켓, 폭발물 등

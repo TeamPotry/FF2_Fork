@@ -30,6 +30,7 @@
 
 #define ENT_REFKEY_LENGTH	20
 #define KILLSTREAK_DAMAGE_INTERVAL 500
+#define HUD_DISPLAY_NAME_MAX_LENGTH		128
 
 #define min(%1,%2)            (((%1) < (%2)) ? (%1) : (%2))
 #define max(%1,%2)            (((%1) > (%2)) ? (%1) : (%2))
