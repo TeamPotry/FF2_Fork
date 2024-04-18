@@ -41,12 +41,29 @@ int g_iCurrentShotgunType[MAXPLAYERS+1] = {Shotgun_Normal, ...};
 int g_iPlayerShotgunType[MAXPLAYERS+1];
 bool g_bPressed[MAXPLAYERS+1];
 
+// Vampire
+int g_iVampireHealRemaining[MAXPLAYERS+1];
+float g_flVampireHealNextThinkTime[MAXPLAYERS+1];
+
 public void OnPluginStart()
 {
     LoadTranslations("ff2_extra_abilities.phrases");
 
     GameData gamedata = new GameData("potry");
     CreateDynamicDetour(gamedata, "CTFShotgun::PrimaryAttack", DHookCallback_PrimaryAttack_Pre);
+
+    HookEvent("teamplay_round_start", OnRoundStart);
+}
+
+public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	FOREACH_PLAYER(client)
+	{
+        g_iVampireHealRemaining[client] = 0;
+        g_flVampireHealNextThinkTime[client] = 0.0;
+	}
+
+	return Plugin_Continue;
 }
 
 static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallback callbackPre = INVALID_FUNCTION, DHookCallback callbackPost = INVALID_FUNCTION)
@@ -137,6 +154,20 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
         //     }
         // }
     }
+
+    if(g_iVampireHealRemaining[client] > 0 
+        && g_flVampireHealNextThinkTime[client] < GetGameTime())
+    {
+        g_iVampireHealRemaining[client]--;
+        g_flVampireHealNextThinkTime[client] = GetGameTime() + (GetTickInterval() / 24.0); // medigun heal rate
+
+        int maxHealth = TF2Util_GetPlayerMaxHealthBoost(client, false, false),
+            currentHealth = GetEntProp(client, Prop_Data, "m_iHealth");
+
+        if(currentHealth + 1 <= maxHealth)
+            TF2Util_TakeHealth(client, 1.0, TAKEHEALTH_IGNORE_MAXHEALTH);
+
+    }
     
     return Plugin_Continue;
 }
@@ -188,20 +219,12 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
             // damagetype = DMG_BUCKSHOT;
 
             static float healMaxCap = 30.0;
-            int maxHealth = TF2Util_GetPlayerMaxHealthBoost(iAttacker, false, false),
-                currentHealth = GetEntProp(iAttacker, Prop_Data, "m_iHealth");
-
             float realDamage = damage;
             if(TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed))
                 realDamage *= 1.35;	
 
             float heal = min(healMaxCap, realDamage);
-
-            currentHealth += RoundFloat(heal);
-            if(currentHealth > maxHealth)
-                heal -= currentHealth - maxHealth;
-
-            TF2Util_TakeHealth(iAttacker, heal, TAKEHEALTH_IGNORE_MAXHEALTH);
+            g_iVampireHealRemaining[iAttacker] += RoundFloat(heal);
         }
 // #if defined _MVM_included
 //         case Shotgun_Gold:
