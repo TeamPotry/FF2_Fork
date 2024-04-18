@@ -9,7 +9,7 @@
 
 #tryinclude <mannvsmann>
 
-#define PLUGIN_VERSION "20230828"
+#define PLUGIN_VERSION "20240418"
 
 public Plugin myinfo=
 {
