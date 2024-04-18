@@ -109,9 +109,17 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
             g_iPlayerShotgunType[client] = ++g_iPlayerShotgunType[client] % ShotgunType_MAX;
 
             RequestFrame(CancelFF2WeaponAbility, client);
-            // TODO: Sound
 
             SetEntProp(weapon, Prop_Data, "m_iClip1", 0);
+
+            FOREACH_PLAYER(target)
+            {
+                if(IsClientInGame(target))
+                {
+                    EmitSoundToClient(target, "weapons/shotgun_empty.wav", target, _, _, _, _, _, target);
+                    EmitSoundToClient(target, "weapons/shotgun_empty.wav", target, _, _, _, _, _, target);
+                }
+            }
         }
         else if(g_bPressed[client] && !(buttons & IN_ATTACK2))
             g_bPressed[client] = false;
