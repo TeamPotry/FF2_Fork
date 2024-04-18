@@ -28,9 +28,9 @@ enum
 {
     Shotgun_Normal = 0,
     Shotgun_Vampire,
-#if defined _MVM_included
-    Shotgun_Gold,
-#endif
+// #if defined _MVM_included
+//     Shotgun_Gold,
+// #endif
 
     ShotgunType_MAX  
 };
@@ -197,19 +197,19 @@ public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, floa
 
             TF2Util_TakeHealth(iAttacker, heal, TAKEHEALTH_IGNORE_MAXHEALTH);
         }
-#if defined _MVM_included
-        case Shotgun_Gold:
-        {
-            static float cost = 100.0;
-            bChanged = true;
+// #if defined _MVM_included
+//         case Shotgun_Gold:
+//         {
+//             static float cost = 100.0;
+//             bChanged = true;
 
-            int money = MVM_GetPlayerCurrency(iAttacker);
-            float missingMoney = min(float(money) - cost, 0.0);
+//             int money = MVM_GetPlayerCurrency(iAttacker);
+//             float missingMoney = min(float(money) - cost, 0.0);
         
-            damage += cost + missingMoney;
-            MVM_SetPlayerCurrency(iAttacker, money - RoundFloat(cost + missingMoney));
-        }
-#endif
+//             damage += cost + missingMoney;
+//             MVM_SetPlayerCurrency(iAttacker, money - RoundFloat(cost + missingMoney));
+//         }
+// #endif
     }
 
     return bChanged ? Plugin_Changed : Plugin_Continue;
