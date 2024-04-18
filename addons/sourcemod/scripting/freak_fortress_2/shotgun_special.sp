@@ -169,7 +169,8 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 
 public Action OnTakeDamageAlive(int client, int& iAttacker, int& inflictor, float& damage, int& damagetype, int& weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-    if(!IsValidClient(iAttacker) || !g_bShotgunFired[iAttacker])    return Plugin_Continue;
+    if(!IsValidClient(iAttacker) 
+        || !g_bShotgunFired[iAttacker] || !IsShotgun(weapon))    return Plugin_Continue;
     
     bool bChanged = false;
 
