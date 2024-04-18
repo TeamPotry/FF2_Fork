@@ -131,6 +131,13 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
     return Plugin_Continue;
 }
 
+static const char g_strShotgunAbilityTranslationToken[][] = {
+    "Normal",
+    "Vampire",
+    // "Gold" // Deleted
+    "ENDOFLINE"
+};
+
 public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 {
     int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -141,29 +148,18 @@ public void FF2_OnCalledQueue(FF2HudQueue hudQueue, int client)
 
     FF2HudDisplay hudDisplay = null;
     char text[60];
+
     hudQueue.GetName(text, sizeof(text));
 
     if(StrEqual(text, "Player Additional"))
     {
-        // TODO: 
-        if(g_iPlayerShotgunType[client] > Shotgun_Normal)
-        {
-            switch(g_iPlayerShotgunType[client])
-            {
-                case Shotgun_Vampire:
-                {
-                    Format(text, sizeof(text), "%t", "Shotgun Ability Vampire");
-                }
-                case Shotgun_Gold:
-                {
-                    Format(text, sizeof(text), "%t", "Shotgun Ability Gold");
-                }
-            }
-            Format(text, sizeof(text), "%t", "Shotgun Ability", text);
+        Format(text, sizeof(text), "Shotgun Ability %s",
+            g_strShotgunAbilityTranslationToken[g_iPlayerShotgunType[client]]);
+        Format(text, sizeof(text), "%t", text);
+        Format(text, sizeof(text), "%t", "Shotgun Ability", text);
 
-            hudDisplay = FF2HudDisplay.CreateDisplay("Shotgun Special", text);
-            hudQueue.PushDisplay(hudDisplay);
-        }
+        hudDisplay = FF2HudDisplay.CreateDisplay("Shotgun Special", text);
+        hudQueue.PushDisplay(hudDisplay);
     }
 }
 

@@ -58,7 +58,12 @@
     "Shotgun Ability"
     {
         "#format"   "{1:s}"
-        "ko"        "샷건: {1}"
+        "ko"        "샷건 탄환: {1} (우클릭: 탄환 교체)"
+    }
+
+    "Shotgun Ability Normal"
+    {
+        "ko"    "기본"
     }
 
     "Shotgun Ability Vampire"

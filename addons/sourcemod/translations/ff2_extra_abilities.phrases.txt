@@ -58,7 +58,12 @@
     "Shotgun Ability"
     {
         "#format"   "{1:s}"
-        "en"        "Shotgun: {s}"
+        "en"        "Shotgun Ability: {s} (RIGHT CLICK to change)"
+    }
+
+    "Shotgun Ability Normal"
+    {
+        "en"    "Normal"
     }
 
     "Shotgun Ability Vampire"
