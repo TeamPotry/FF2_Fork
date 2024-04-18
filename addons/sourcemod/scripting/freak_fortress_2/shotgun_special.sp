@@ -110,6 +110,8 @@ public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3
 
             RequestFrame(CancelFF2WeaponAbility, client);
             // TODO: Sound
+
+            SetEntProp(weapon, Prop_Data, "m_iClip1", 0);
         }
         else if(g_bPressed[client] && !(buttons & IN_ATTACK2))
             g_bPressed[client] = false;
