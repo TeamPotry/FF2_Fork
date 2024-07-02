@@ -24,11 +24,6 @@
 				"linux"		"@_ZN10CTFShotgun13PrimaryAttackEv"
 				"windows"	" "
 			}
-			"CTFPlayer::CanPlayerMove"
-			{
-				"linux"		"@_ZNK9CTFPlayer13CanPlayerMoveEv"
-				"windows"	" "
-			}
 			"CTFSword::GetSwingRange"
 			{
 				"linux"		"@_ZN8CTFSword13GetSwingRangeEv"
@@ -192,13 +187,6 @@
 				"signature"	"CTFShotgun::PrimaryAttack"
 				"callconv"	"thiscall"
 				"return"	"void"
-				"this"		"entity"
-			}
-			"CTFPlayer::CanPlayerMove"
-			{
-				"signature"	"CTFPlayer::CanPlayerMove"
-				"callconv"	"thiscall"
-				"return"	"bool"
 				"this"		"entity"
 			}
 			"CTFPlayer::CanPickupDroppedWeapon"

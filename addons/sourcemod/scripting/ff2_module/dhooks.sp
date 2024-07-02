@@ -11,7 +11,6 @@ void DHooks_Init(GameData gamedata)
     CreateDynamicDetour(gamedata, "CTFLunchBox::DrainAmmo", DHookCallback_DrainAmmo_Pre);
     CreateDynamicDetour(gamedata, "CTFWeaponBaseMelee::OnEntityHit", _, DHookCallback_OnEntityHit_Post);
     CreateDynamicDetour(gamedata, "CTFWeaponBaseMelee::Smack", DHookCallback_Smack_Pre, DHookCallback_Smack_Post);
-    CreateDynamicDetour(gamedata, "CTFPlayer::CanPlayerMove", DHookCallback_CanPlayerMove_Pre);
 }
 
 static void CreateDynamicDetour(GameData gamedata, const char[] name, DHookCallback callbackPre = INVALID_FUNCTION, DHookCallback callbackPost = INVALID_FUNCTION)
@@ -81,18 +80,5 @@ public MRESReturn DHookCallback_Smack_Post(int weapon)
     if(IsValidClient(owner) && (boss = GetBossIndex(owner)) != -1)
         OnBossSmackMiss(owner, boss, weapon);
     
-    return MRES_Ignored;
-}
-
-public MRESReturn DHookCallback_CanPlayerMove_Pre(int client, DHookReturn hReturn)
-{
-    if(CheckRoundState() < FF2RoundState_RoundRunning
-        && BossTeam == TF2_GetClientTeam(client))
-    {
-        hReturn.Value = false;
-        return MRES_Supercede;
-    }
-
-
     return MRES_Ignored;
 }

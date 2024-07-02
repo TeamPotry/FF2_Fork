@@ -1135,6 +1135,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		if(Boss[boss])
 		{
 			AssignTeam(Boss[boss], BossTeam);
+			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
+			
 			CreateTimer(0.3, MakeBoss, boss, TIMER_FLAG_NO_MAPCHANGE);
 			BossInfoTimer[boss][0]=CreateTimer(30.2, BossInfoTimer_Begin, boss, TIMER_FLAG_NO_MAPCHANGE);
 		}
@@ -1585,7 +1587,7 @@ public Action StartBossTimer(Handle timer)
 			&& BossTeam == TF2_GetClientTeam(Boss[boss]))
 		{
 			isBossAlive=true;
-			SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
+			// SetEntityMoveType(Boss[boss], MOVETYPE_NONE);
 
 			BossHealthMax[boss]=ParseFormula(boss, "health", RoundFloat(Pow((560.8+float(RedAlivePlayers))*(float(RedAlivePlayers)-1.0), 1.0341)+2046.0));
 			BossHealth[boss]=BossHealthLast[boss]=BossHealthMax[boss]*BossLivesMax[boss];
