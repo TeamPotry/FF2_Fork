@@ -1142,9 +1142,9 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 		}
 	}
 
-	CreateTimer((tf_arena_preround_time - 10.0) + 3.5, StartResponseTimer, _, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer((tf_arena_preround_time - 10.0) + 9.1, StartBossTimer, _, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer((tf_arena_preround_time - 10.0) + 9.6, MessageTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(tf_arena_preround_time - 6.5, StartResponseTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(tf_arena_preround_time - 0.9, StartBossTimer, _, TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(tf_arena_preround_time - 0.4, MessageTimer, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	for(int entity=MaxClients+1; entity<MAXENTITIES; entity++)
 	{
