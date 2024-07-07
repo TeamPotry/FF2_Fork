@@ -36,7 +36,7 @@ jobs:
           wget "https://raw.githubusercontent.com/Nopied/MannVsMann/master/addons/sourcemod/scripting/include/mannvsmann.inc" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/FF2_boss_selection/master/addons/sourcemod/scripting/include/ff2_boss_selection.inc" -P include
           wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/medigun_patch.inc" -P include
-          wget "https://forums.alliedmods.net/attachment.php?attachmentid=164494&d=1501170745" -O include/CBaseAnimatingOverlay.inc
+          wget "https://raw.githubusercontent.com/TeamPotry/plugins_in_FF2/master/addons/sourcemod/scripting/include/CBaseAnimatingOverlay.inc" -O include/CBaseAnimatingOverlay.inc
 
       - name: Compile
         working-directory: addons/sourcemod/scripting
