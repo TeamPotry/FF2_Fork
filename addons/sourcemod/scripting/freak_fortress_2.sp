@@ -5438,7 +5438,41 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 
 	// FF2BaseEntity client = g_hBasePlayer[iClient];
 
-	if(!IsBoss(iClient)) 	return Plugin_Continue;
+	if(IsValidClient(iClient) && IsValidClient(iAttacker)
+		&& iAttacker != iClient)
+	{
+		if(TF2_GetClientTeam(iAttacker) != BossTeam)
+		{
+			FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
+
+			if(IsBoss(iClient))
+				attacker.Damage += damage;
+			else
+				attacker.Assist += damage;
+		}
+
+		int targetBoss;
+		if((targetBoss = GetBossIndex(iAttacker)) != -1 && AddRage)
+		{
+			float adding = damage * 100.0 / BossRageDamage[targetBoss],
+				temp = adding; 
+			Action action = Plugin_Continue;
+
+			Call_StartForward(OnAddRage);
+			Call_PushCell(boss);
+			Call_PushFloatRef(temp);
+			Call_Finish(action);
+
+			if(action == Plugin_Changed)
+				adding = temp;
+			
+			if(action != Plugin_Handled
+				&& action != Plugin_Stop)
+				AddBossCharge(targetBoss, 0, adding);
+		}
+	}
+	
+	if(!IsBoss(iClient))	return Plugin_Continue;
 
 	for(int lives=1; lives<BossLives[boss]; lives++)
 	{
@@ -5547,32 +5581,6 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 	}
 
 	BossHealth[boss]-=damage;
-
-	if(IsValidClient(iAttacker) && iAttacker!=iClient)
-	{
-		FF2BaseEntity attacker = g_hBasePlayer[iAttacker];
-
-		attacker.Damage += damage;
-
-		if(AddRage)
-		{
-			float adding = damage*100.0/BossRageDamage[boss],
-				temp = adding; 
-			Action action = Plugin_Continue;
-
-			Call_StartForward(OnAddRage);
-			Call_PushCell(boss);
-			Call_PushFloatRef(temp);
-			Call_Finish(action);
-
-			if(action == Plugin_Changed)
-				adding = temp;
-			
-			if(action != Plugin_Handled
-				&& action != Plugin_Stop)
-				AddBossCharge(boss, 0, adding);
-		}
-	}
 
 	int[] healers=new int[MaxClients+1];
 	int healerCount = 0;
